@@ -1,0 +1,54 @@
+{% extends 'inventario/base.html' %}
+{% load static %}
+
+{% block title %}Login | Inventario SENA - Sibate{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+    <section class="login-split" aria-label="Acceso">
+        <aside class="login-visual" aria-hidden="true">
+            <div class="login-visual-inner">
+                <p class="visual-kicker">SENA · Inventario</p>
+                <h2 class="visual-title">Accede para continuar</h2>
+                <p class="visual-subtitle">Gestiona productos, categorías y alertas de stock desde un solo lugar.</p>
+            </div>
+        </aside>
+
+        <div class="login-panel">
+            <section class="login-card" aria-labelledby="login-title">
+                <h1 id="login-title" class="login-title">Iniciar sesión</h1>
+                <p class="login-subtitle">Accede al software de inventario.</p>
+
+                <form method="post" class="login-form">
+                    {% csrf_token %}
+                    {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                    {% endif %}
+
+                    {% if form.non_field_errors %}
+                        <div class="nonfield-errors">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="field">
+                        <label for="{{ form.username.id_for_label }}">Usuario</label>
+                        {{ form.username }}
+                        {{ form.username.errors }}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.password.id_for_label }}">Contraseña</label>
+                        {{ form.password }}
+                        {{ form.password.errors }}
+                    </div>
+
+                    <div class="login-actions">
+                        <button type="submit" class="btn btn--block">Entrar</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </section>
+{% endblock %}

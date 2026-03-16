@@ -1,39 +1,115 @@
+{% extends 'inventario/base.html' %}
 {% load static %}
-<!doctype html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Inventario SENA - Sibate</title>
+
+{% block title %}Inventario SENA - Sibate{% endblock %}
+
+{% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/css/dashboard.css' %}">
-</head>
-<body>
-    <main class="contenedor">
-        <header class="encabezado">
-            <h1>Software de Inventario SENA - Sibate</h1>
-            <p>Panel inicial del proyecto Django.</p>
-        </header>
+{% endblock %}
 
-        <section class="grid">
-            <article class="tarjeta">
-                <strong>Total de productos</strong>
-                <p class="valor">{{ total_productos }}</p>
-            </article>
+{% block header_center %}
+    <form id="tools-search" class="header-search" method="get" action="{% url 'dashboard' %}" role="search" aria-label="Buscar herramientas">
+        <input
+            name="q"
+            type="search"
+            value="{{ q }}"
+            placeholder="Buscar herramientas"
+            autocomplete="off"
+            aria-label="Buscar herramientas"
+        >
+        {% if categoria_activa %}
+            <input type="hidden" name="categoria" value="{{ categoria_activa }}">
+        {% endif %}
+        {% if bajo_stock %}
+            <input type="hidden" name="bajo_stock" value="1">
+        {% endif %}
+        <button type="submit" class="btn">Buscar</button>
+    </form>
+{% endblock %}
 
-            <article class="tarjeta">
-                <strong>Productos en bajo stock</strong>
-                <p class="valor alerta">{{ productos_bajo_stock }}</p>
-            </article>
+{% block content %}
+    <section class="home" aria-label="Inicio">
+        <section class="home-hero" aria-labelledby="hero-title">
+            <div class="hero-inner">
+                <h1 id="hero-title" class="hero-title">Todo tu inventario, en un solo lugar</h1>
+                <p class="hero-subtitle">Busca productos, explora categorías y revisa alertas de stock.</p>
+
+                <div class="hero-search" aria-label="Ambiente">
+                    <label class="search-label" for="ambiente">En que ambiente se encuentra?</label>
+                    <div class="search-row search-row--single">
+                        <input
+                            id="ambiente"
+                            name="ambiente"
+                            type="text"
+                            value="{{ ambiente }}"
+                            placeholder="Ej: Taller, Laboratorio, Aula"
+                            autocomplete="off"
+                            form="tools-search"
+                        >
+                    </div>
+
+                    <div class="search-hints" aria-label="Accesos rápidos">
+                        <a class="hint-link" href="{% url 'dashboard' %}">Ver todo</a>
+                        <a class="hint-link" href="/admin/">Administración</a>
+                        <a class="hint-link" href="{% url 'dashboard' %}?bajo_stock=1">Solo bajo stock</a>
+                    </div>
+                </div>
+            </div>
         </section>
 
-        <section class="acciones">
-            <a class="btn" href="/admin/">Ir al administrador</a>
-        </section>
+        <div class="home-inner">
+            <section class="quick-grid" aria-label="Atajos">
+                <a class="tile" href="/admin/inventario/producto/" aria-label="Ver productos en administración">
+                    <div class="tile-top">Productos</div>
+                    <div class="tile-value">{{ total_productos }}</div>
+                </a>
 
-        <footer class="pie">
-            Usuario admin: admin | clave: admin
-        </footer>
-    </main>
+                <a class="tile tile--attention" href="{% url 'dashboard' %}?bajo_stock=1" aria-label="Ver productos en bajo stock">
+                    <div class="tile-top">Bajo stock</div>
+                    <div class="tile-value">{{ productos_bajo_stock }}</div>
+                </a>
+            </section>
+
+            <section class="category-section" aria-label="Categorías">
+                <h2 class="section-title">Categorías</h2>
+                <div class="category-grid">
+                    {% for categoria in categorias %}
+                        <a class="category-card" href="{% url 'dashboard' %}?categoria={{ categoria.id }}" aria-label="Filtrar por {{ categoria.nombre }}">
+                            <div class="category-name">{{ categoria.nombre }}</div>
+                            <div class="category-meta">{{ categoria.total_productos }} productos</div>
+                        </a>
+                    {% empty %}
+                        <p class="empty">Aún no hay categorías registradas.</p>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="results" aria-label="Listado de productos">
+                <h2 class="section-title">
+                    {% if q or categoria_activa or bajo_stock %}
+                        Resultados
+                    {% else %}
+                        Productos recientes
+                    {% endif %}
+                </h2>
+
+                <div class="result-list">
+                    {% for producto in productos %}
+                        <article class="result-item">
+                            <div class="result-title">{{ producto.nombre }}</div>
+                            <div class="result-meta">{{ producto.codigo }} · {{ producto.categoria.nombre }} · Stock: {{ producto.stock }}</div>
+                        </article>
+                    {% empty %}
+                        <p class="empty">No se encontraron productos con ese criterio.</p>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <p class="page-footnote">Usuario admin: admin | clave: admin</p>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
     <script src="{% static 'inventario/js/dashboard.js' %}" defer></script>
-</body>
-</html>
+{% endblock %}

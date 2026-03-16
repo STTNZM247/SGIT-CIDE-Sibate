@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const pie = document.querySelector(".pie");
+    const pie = document.querySelector(".page-footnote");
 
     if (!pie) {
         return;
