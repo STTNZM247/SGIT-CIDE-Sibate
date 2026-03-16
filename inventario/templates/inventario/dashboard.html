@@ -73,10 +73,10 @@
             <section class="category-section" aria-label="Categorías">
                 <h2 class="section-title">Categorías</h2>
                 <div class="category-grid">
-                    {% for categoria in categorias %}
-                        <a class="category-card" href="{% url 'dashboard' %}?categoria={{ categoria.id }}" aria-label="Filtrar por {{ categoria.nombre }}">
-                            <div class="category-name">{{ categoria.nombre }}</div>
-                            <div class="category-meta">{{ categoria.total_productos }} productos</div>
+                    {% for catalogo in catalogos %}
+                        <a class="category-card" href="{% url 'dashboard' %}?categoria={{ catalogo.id_cat }}" aria-label="Filtrar por {{ catalogo.nombre_catalogo }}">
+                            <div class="category-name">{{ catalogo.nombre_catalogo }}</div>
+                            <div class="category-meta">{{ catalogo.total_productos }} productos</div>
                         </a>
                     {% empty %}
                         <p class="empty">Aún no hay categorías registradas.</p>
@@ -96,8 +96,8 @@
                 <div class="result-list">
                     {% for producto in productos %}
                         <article class="result-item">
-                            <div class="result-title">{{ producto.nombre }}</div>
-                            <div class="result-meta">{{ producto.codigo }} · {{ producto.categoria.nombre }} · Stock: {{ producto.stock }}</div>
+                            <div class="result-title">{{ producto.nombre_producto }}</div>
+                            <div class="result-meta">{{ producto.id_cat_fk.nombre_catalogo }} · Registrado: {{ producto.fch_registro|date:"d/m/Y" }}</div>
                         </article>
                     {% empty %}
                         <p class="empty">No se encontraron productos con ese criterio.</p>
