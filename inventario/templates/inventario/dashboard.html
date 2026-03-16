@@ -1,0 +1,39 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Inventario SENA - Sibate</title>
+    <link rel="stylesheet" href="{% static 'inventario/css/dashboard.css' %}">
+</head>
+<body>
+    <main class="contenedor">
+        <header class="encabezado">
+            <h1>Software de Inventario SENA - Sibate</h1>
+            <p>Panel inicial del proyecto Django.</p>
+        </header>
+
+        <section class="grid">
+            <article class="tarjeta">
+                <strong>Total de productos</strong>
+                <p class="valor">{{ total_productos }}</p>
+            </article>
+
+            <article class="tarjeta">
+                <strong>Productos en bajo stock</strong>
+                <p class="valor alerta">{{ productos_bajo_stock }}</p>
+            </article>
+        </section>
+
+        <section class="acciones">
+            <a class="btn" href="/admin/">Ir al administrador</a>
+        </section>
+
+        <footer class="pie">
+            Usuario admin: admin | clave: admin
+        </footer>
+    </main>
+    <script src="{% static 'inventario/js/dashboard.js' %}" defer></script>
+</body>
+</html>

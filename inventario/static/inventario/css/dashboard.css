@@ -1,0 +1,91 @@
+:root {
+    --fondo: #f4f6f8;
+    --panel: #ffffff;
+    --primario: #006c3b;
+    --texto: #1f2937;
+    --muted: #6b7280;
+    --alerta: #b91c1c;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: radial-gradient(circle at top right, #e8f5ee, var(--fondo));
+    color: var(--texto);
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.contenedor {
+    width: min(900px, 100%);
+    background: var(--panel);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.encabezado {
+    background: linear-gradient(120deg, #005f35, var(--primario));
+    color: #fff;
+    padding: 24px;
+}
+
+.encabezado h1 {
+    margin: 0;
+    font-size: clamp(1.2rem, 2.2vw, 1.8rem);
+}
+
+.encabezado p {
+    margin: 8px 0 0;
+    opacity: 0.9;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 16px;
+    padding: 20px;
+}
+
+.tarjeta {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    background: #fff;
+}
+
+.valor {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 8px 0 0;
+}
+
+.alerta {
+    color: var(--alerta);
+}
+
+.acciones {
+    padding: 0 20px 20px;
+}
+
+.btn {
+    display: inline-block;
+    background: var(--primario);
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.pie {
+    color: var(--muted);
+    font-size: 0.9rem;
+    padding: 0 20px 20px;
+}
