@@ -1,4 +1,4 @@
-{% extends 'inventario/shared/base.html' %}
+{% extends 'inventario/shared/base_login.html' %}
 {% load static %}
 
 {% block title %}Login | Inventario SENA - Sibate{% endblock %}
@@ -38,9 +38,12 @@
                         {{ form.username.errors }}
                     </div>
 
-                    <div class="field">
+                    <div class="field" style="position:relative;">
                         <label for="{{ form.password.id_for_label }}">Contraseña</label>
                         {{ form.password }}
+                        <button type="button" class="password-toggle" id="togglePwdBtn" aria-label="Mostrar/ocultar contraseña" tabindex="0">
+                            <ion-icon name="eye-outline" id="eyeIcon"></ion-icon>
+                        </button>
                         {{ form.password.errors }}
                     </div>
 
