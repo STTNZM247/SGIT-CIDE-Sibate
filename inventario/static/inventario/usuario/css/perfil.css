@@ -1,0 +1,64 @@
+/* Estilos para el panel de perfil de usuario */
+.perfil-usuario {
+    max-width: 420px;
+    margin: 32px auto;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(57,169,0,0.08);
+    padding: 32px 28px 24px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.perfil-usuario h1 {
+    font-size: 2rem;
+    margin-bottom: 18px;
+    color: #39A900;
+    font-weight: 800;
+}
+.perfil-foto {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #39A900;
+    margin-bottom: 18px;
+    background: #f3f6f3;
+}
+.perfil-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.perfil-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.perfil-form label {
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 2px;
+}
+.perfil-form input[type="text"],
+.perfil-form input[type="email"] {
+    border: 1px solid #d0e6d0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 1rem;
+    background: #f8fff8;
+}
+.perfil-form input[type="file"] {
+    margin-top: 4px;
+}
+.perfil-form .btn {
+    margin-top: 10px;
+    width: 100%;
+}
+.perfil-form .btn--inverse {
+    background: #fff;
+    color: #39A900;
+    border: 1px solid #39A900;
+    margin-top: 0;
+}

@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Catalogo, Producto
+from .models import Catalogo, Producto, Usuario
 
 
 class CatalogoForm(forms.ModelForm):
@@ -81,4 +81,24 @@ class ProductoForm(forms.ModelForm):
                 'class': 'form-file',
                 'accept': 'image/*',
             }),
+        }
+
+
+class UsuarioPerfilForm(forms.ModelForm):
+    class Meta:
+        model = Usuario
+        fields = ['cc', 'nombre', 'apellido', 'correo', 'fot_usu']
+        widgets = {
+            'cc': forms.TextInput(attrs={'class': 'form-control'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellido': forms.TextInput(attrs={'class': 'form-control'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control'}),
+            'fot_usu': forms.ClearableFileInput(attrs={'class': 'form-file', 'accept': 'image/*'}),
+        }
+        labels = {
+            'cc': 'Cédula',
+            'nombre': 'Nombre',
+            'apellido': 'Apellido',
+            'correo': 'Correo',
+            'fot_usu': 'Foto de perfil',
         }

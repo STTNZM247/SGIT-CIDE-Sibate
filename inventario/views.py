@@ -5,8 +5,8 @@ from django.db.models import OuterRef, Subquery
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .forms import CatalogoForm, ProductoForm
-from .models import Catalogo, Disponibilidad, Producto
+from .forms import CatalogoForm, ProductoForm, UsuarioPerfilForm
+from .models import Catalogo, Disponibilidad, Producto, Usuario
 
 
 @login_required
@@ -194,4 +194,33 @@ def dashboard(request):
             'productos_bajo_stock': productos_bajo_stock,
         },
     )
+
+
+@login_required
+def perfil_usuario(request):
+    usuario = request.user
+    if request.method == 'POST':
+        form = UsuarioPerfilForm(request.POST, request.FILES, instance=usuario)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Perfil actualizado correctamente.')
+            return redirect('perfil_usuario')
+        else:
+            messages.error(request, 'Corrige los errores en el formulario.')
+    else:
+        form = UsuarioPerfilForm(instance=usuario)
+    return render(request, 'inventario/usuario/perfil_usuario.html', {'form': form, 'usuario': usuario})
+
+
+@login_required
+def prestamos_panel(request):
+    return render(request, 'inventario/prestamos/panel_prestamos.html')
+
+@login_required
+def auditorias_panel(request):
+    return render(request, 'inventario/auditorias/panel_auditorias.html')
+
+@login_required
+def gestion_usuarios_panel(request):
+    return render(request, 'inventario/usuarios/panel_usuarios.html')
 

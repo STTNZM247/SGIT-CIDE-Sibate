@@ -36,6 +36,56 @@ body {
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.14);
 }
 
+@media (max-width: 767px) {
+    .navigation {
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        border-radius: 0;
+        transform: none;
+        min-width: 0;
+        max-width: 100vw;
+    }
+}
+
+
+/* Logo PC: solo visible en PC */
+.nav-brand {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    text-decoration: none;
+    z-index: 1200;
+}
+
+/* Logo móvil eliminado, no se muestra en móvil */
+@media (max-width: 767px) {
+    /* Oculta el logo de PC en móvil */
+    .nav-brand {
+        display: none !important;
+    }
+}
+
+.nav-brand__logo {
+    width: 34px;
+    height: 34px;
+    background-color: var(--sena-verde);
+    -webkit-mask-image: url('/static/inventario/img/Logo%20SENA.svg');
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+    mask-image: url('/static/inventario/img/Logo%20SENA.svg');
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+}
+
 .navigation ul {
     position: relative;
     display: flex;
@@ -258,10 +308,24 @@ body {
         box-shadow: none;
     }
 
+    .nav-brand {
+        position: absolute;
+        top: 12px;
+        left: 14px;
+        width: 44px;
+        height: 44px;
+        z-index: 4;
+    }
+
+    .nav-brand__logo {
+        background-color: #ffffff;
+    }
+
     .navigation ul {
         flex-direction: column;
         width: 60px;
-        height: 350px;
+        height: 420px;
+        margin-top: 88px;
     }
 
     .navigation ul li {

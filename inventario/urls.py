@@ -9,6 +9,10 @@ from .views import (
     productos_catalogo,
     registrar_catalogo,
     registrar_producto,
+    perfil_usuario,
+    prestamos_panel,
+    auditorias_panel,
+    gestion_usuarios_panel,
 )
 
 urlpatterns = [
@@ -32,4 +36,8 @@ urlpatterns = [
     path('catalogo/<int:cat_id>/productos/<int:prod_id>/eliminar/', eliminar_producto, name='eliminar_producto'),
     path('catalogo/nuevo/', registrar_catalogo, name='registrar_catalogo'),
     path('catalogo/nuevo-producto/', registrar_producto, name='registrar_producto'),
+    path('perfil/', perfil_usuario, name='perfil_usuario'),
+    path('prestamos/', prestamos_panel, name='prestamos_panel'),
+    path('auditorias/', auditorias_panel, name='auditorias_panel'),
+    path('usuarios/', gestion_usuarios_panel, name='gestion_usuarios_panel'),
 ]

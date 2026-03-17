@@ -46,6 +46,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         null=True,
         blank=True,
     )
+    fot_usu = models.ImageField(upload_to='usuarios/', null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 

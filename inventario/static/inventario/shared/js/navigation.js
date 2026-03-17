@@ -22,6 +22,20 @@ document.addEventListener("DOMContentLoaded", () => {
             return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/")?.closest(".list") || null;
         }
 
+        if (path === "/perfil/") {
+            return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/perfil/")?.closest(".list") || null;
+        }
+
+        if (path === "/usuarios/") {
+            return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/usuarios/")?.closest(".list") || null;
+        }
+        if (path === "/prestamos/") {
+            return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/prestamos/")?.closest(".list") || null;
+        }
+        if (path === "/auditorias/") {
+            return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/auditorias/")?.closest(".list") || null;
+        }
+
         return null;
     };
 
