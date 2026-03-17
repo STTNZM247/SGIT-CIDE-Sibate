@@ -1,0 +1,192 @@
+{% extends "inventario/shared/base.html" %}
+{% load static %}
+
+{% block title %}Productos por catálogo | SENA Sibate{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventario/catalogo/css/catalogo.css' %}" data-page-style="true">
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div class="catalogo-messages" role="alert">
+    {% for msg in messages %}
+    <div class="flash flash--{{ msg.tags }}">
+        <ion-icon name="{% if 'error' in msg.tags %}alert-circle-outline{% else %}checkmark-circle-outline{% endif %}"></ion-icon>
+        <span>{{ msg }}</span>
+        <button class="flash__close" type="button" aria-label="Cerrar"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<header class="cat-header">
+    <div class="cat-header__text">
+        <h1 class="cat-header__title">{{ catalogo.nombre_catalogo }}</h1>
+        <p class="cat-header__sub">Listado de productos registrados en este catálogo</p>
+    </div>
+    <div class="cat-header__actions">
+        <a class="cat-btn cat-btn--secondary" href="{% url 'catalogo' %}">
+            <ion-icon name="arrow-back-outline"></ion-icon>
+            Volver a catálogos
+        </a>
+    </div>
+</header>
+
+{% if productos %}
+<section class="cat-grid-section">
+    <div class="cat-grid cat-grid--productos">
+        {% for p in productos %}
+        <article class="cat-card product-tile">
+            <form
+                class="product-tile__delete-form"
+                method="post"
+                action="{% url 'eliminar_producto' catalogo.id_cat p.id_prod %}"
+                onsubmit="return confirm('¿Seguro que deseas eliminar este producto?');"
+            >
+                {% csrf_token %}
+                <button class="product-tile__delete" type="submit" title="Eliminar producto" aria-label="Eliminar producto">
+                    <ion-icon name="trash-outline"></ion-icon>
+                </button>
+            </form>
+
+            <button type="button" class="product-tile__open" data-open-modal="producto-{{ p.id_prod }}">
+                <div class="product-tile__thumb">
+                    {% if p.fot_prod %}
+                    <img src="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}" class="product-tile__img">
+                    {% else %}
+                    <ion-icon name="cube-outline"></ion-icon>
+                    {% endif %}
+                </div>
+                <div class="product-tile__body">
+                    <h3 class="cat-card__name">{{ p.nombre_producto }}</h3>
+                    <p class="cat-card__desc">{% if p.descripcion %}{{ p.descripcion|truncatechars:90 }}{% else %}Sin descripción registrada.{% endif %}</p>
+                    <div class="product-tile__chips">
+                        <span class="cat-card__count"><ion-icon name="layers-outline"></ion-icon>Cantidad: {{ p.cantidad_total|default:'0' }}</span>
+                        <span class="cat-card__count"><ion-icon name="archive-outline"></ion-icon>Stock: {{ p.stock_actual|default:'0' }}</span>
+                    </div>
+                </div>
+            </button>
+        </article>
+
+        <div class="product-modal-backdrop" id="producto-{{ p.id_prod }}" aria-hidden="true">
+            <div class="product-modal" role="dialog" aria-modal="true" aria-labelledby="producto-title-{{ p.id_prod }}">
+                <div class="product-modal__header">
+                    <h2 class="product-modal__title" id="producto-title-{{ p.id_prod }}">{{ p.nombre_producto }}</h2>
+                    <button class="product-modal__close" type="button" data-close-modal aria-label="Cerrar detalle">
+                        <ion-icon name="close-outline"></ion-icon>
+                    </button>
+                </div>
+
+                <div class="product-modal__media">
+                    {% if p.fot_prod %}
+                    <img src="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}" class="product-modal__img">
+                    {% else %}
+                    <div class="product-modal__placeholder"><ion-icon name="image-outline"></ion-icon></div>
+                    {% endif %}
+                </div>
+
+                <div class="product-modal__content">
+                    <div class="product-detail-grid">
+                        <div>
+                            <p class="product-detail-label">Catálogo</p>
+                            <p class="product-detail-value">{{ catalogo.nombre_catalogo }}</p>
+                        </div>
+                        <div>
+                            <p class="product-detail-label">Stock fijo</p>
+                            <p class="product-detail-value">{{ p.stock_actual|default:'0' }}</p>
+                        </div>
+                        <div>
+                            <p class="product-detail-label">Cantidad actual</p>
+                            <p class="product-detail-value">{{ p.cantidad_total|default:'0' }}</p>
+                        </div>
+                    </div>
+                    <div class="product-detail-block">
+                        <p class="product-detail-label">Descripción del producto</p>
+                        <p class="product-detail-value product-detail-value--preserve">{% if p.descripcion %}{{ p.descripcion }}{% else %}Sin descripción.{% endif %}</p>
+                    </div>
+                    <div class="product-detail-block">
+                        <p class="product-detail-label">Disponibilidad</p>
+                        <p class="product-detail-value product-detail-value--preserve">{% if p.descr_dispo_actual %}{{ p.descr_dispo_actual }}{% else %}Sin observaciones de disponibilidad.{% endif %}</p>
+                    </div>
+                    <form
+                        class="product-modal__danger"
+                        method="post"
+                        action="{% url 'eliminar_producto' catalogo.id_cat p.id_prod %}"
+                        onsubmit="return confirm('¿Seguro que deseas eliminar este producto?');"
+                    >
+                        {% csrf_token %}
+                        <button class="cat-btn cat-btn--danger" type="submit">
+                            <ion-icon name="trash-outline"></ion-icon>
+                            Eliminar producto
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% else %}
+<section class="cat-empty">
+    <div class="cat-empty__inner">
+        <ion-icon name="cube-outline"></ion-icon>
+        <h2>Sin productos en este catálogo</h2>
+        <p>Desde la pestaña de catálogo puedes registrar el primer producto.</p>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script data-page-script="true">
+(() => {
+const initProductosCatalogoPage = () => {
+    const openButtons = document.querySelectorAll('[data-open-modal]');
+    const closeButtons = document.querySelectorAll('[data-close-modal]');
+
+    const closeAll = () => {
+        document.querySelectorAll('.product-modal-backdrop').forEach(m => {
+            m.setAttribute('aria-hidden', 'true');
+        });
+        document.body.classList.remove('modal-open');
+    };
+
+    openButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-open-modal');
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            closeAll();
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+        });
+    });
+
+    closeButtons.forEach(btn => {
+        btn.addEventListener('click', closeAll);
+    });
+
+    document.querySelectorAll('.product-modal-backdrop').forEach(bd => {
+        bd.addEventListener('click', (e) => {
+            if (e.target === bd) closeAll();
+        });
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeAll();
+    });
+
+    document.querySelectorAll('.flash__close').forEach(btn => {
+        btn.addEventListener('click', () => btn.closest('.flash').remove());
+    });
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initProductosCatalogoPage, { once: true });
+} else {
+    initProductosCatalogoPage();
+}
+})();
+</script>
+{% endblock %}

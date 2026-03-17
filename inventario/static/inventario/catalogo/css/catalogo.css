@@ -1,0 +1,1479 @@
+/* =========================================================
+   CATÁLOGO — Página completa
+   ========================================================= */
+
+/* ---- Flashes / alertas --------------------------------- */
+.catalogo-messages {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    margin-bottom: 1.25rem;
+}
+
+.flash {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    padding: .7rem 1rem;
+    border-radius: 10px;
+    font-size: .88rem;
+    font-weight: 500;
+}
+
+.flash ion-icon { font-size: 1.1rem; flex-shrink: 0; }
+.flash span     { flex: 1; }
+
+.flash__close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: inherit;
+    opacity: .6;
+    padding: 0;
+}
+.flash__close:hover { opacity: 1; }
+
+.flash--success { background: #e6f9e6; color: #1a5e1a; }
+.flash--error   { background: #fde8e8; color: #8b0000; }
+
+/* ---- Encabezado ---------------------------------------- */
+.cat-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 2rem 0 1rem;
+}
+
+.cat-header__title {
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-weight: 800;
+    color: #1a1a2e;
+    margin: 0 0 .2rem;
+}
+
+.cat-header__sub {
+    font-size: .88rem;
+    color: #666;
+    margin: 0;
+}
+
+.cat-header__actions {
+    display: flex;
+    gap: .55rem;
+    flex-wrap: wrap;
+}
+
+/* ---- Botones de catálogo ------------------------------- */
+.cat-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-family: inherit;
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .18s, box-shadow .18s, transform .12s;
+    text-decoration: none;
+}
+
+.cat-btn:active { transform: scale(.97); }
+
+.cat-btn--primary {
+    background: #39A900;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(57,169,0,.25);
+}
+.cat-btn--primary:hover { background: #2d8600; }
+
+.cat-btn--secondary {
+    background: #f0fff0;
+    color: #39A900;
+    border: 1.5px solid #39A900;
+}
+.cat-btn--secondary:hover { background: #e0ffe0; }
+
+.cat-btn--ghost {
+    background: transparent;
+    color: #555;
+    border: 1.5px solid #ddd;
+}
+.cat-btn--ghost:hover { background: #f3f4f6; }
+
+/* ---- Estadísticas rápidas ------------------------------ */
+.cat-stats {
+    display: flex;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.stat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: .82rem;
+    color: #555;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+
+.stat-chip ion-icon { color: #39A900; font-size: .95rem; }
+
+/* ---- Grid de catálogos --------------------------------- */
+.cat-grid-section { margin-bottom: 2rem; }
+
+.cat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+}
+
+/* ---- Tarjeta de catálogo ------------------------------- */
+.cat-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow .22s, translate .22s;
+}
+
+.cat-card:hover {
+    box-shadow: 0 6px 24px rgba(57,169,0,.14);
+    translate: 0 -3px;
+}
+
+.cat-card__icon-wrap {
+    height: 80px;
+    background: linear-gradient(135deg, #39A900 0%, #2e7d00 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    color: #fff;
+}
+
+.cat-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    padding: 1rem 1rem .85rem;
+    flex: 1;
+}
+
+.cat-card__name {
+    font-size: .95rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+}
+
+.cat-card__desc {
+    font-size: .8rem;
+    color: #777;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.cat-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .45rem;
+    margin-top: auto;
+    padding-top: .6rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+.cat-card--catalogo {
+    border: 1px solid #e8edf3;
+    position: relative;
+}
+
+.cat-card--catalogo .cat-card__body {
+    gap: .5rem;
+}
+
+.cat-card--catalogo .cat-card__name {
+    font-size: 1.02rem;
+}
+
+.cat-card--catalogo .cat-card__footer {
+    display: block;
+    margin-top: .3rem;
+}
+
+.cat-card__actions {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    flex-wrap: wrap;
+}
+
+.cat-card__count {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .77rem;
+    color: #888;
+}
+
+.cat-card__count ion-icon { color: #39A900; }
+
+/* Botón mini "Agregar producto" en la tarjeta */
+.cat-btn-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: .2rem;
+    background: #f0fff0;
+    color: #39A900;
+    border: 1px solid #c5e8c0;
+    border-radius: 8px;
+    padding: 4px 9px;
+    font-family: inherit;
+    font-size: .75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.cat-card--catalogo .cat-btn-mini {
+    min-height: 32px;
+    border-radius: 9px;
+    padding: 5px 10px;
+}
+
+.cat-card__count--below {
+    margin-top: .5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+}
+.cat-btn-mini:hover { background: #d4f7d4; }
+
+.cat-btn-mini--view {
+    background: #eef6ff;
+    color: #1a6fb0;
+    border-color: #c9def1;
+}
+
+.cat-btn-mini--view:hover {
+    background: #ddebfa;
+}
+
+.cat-delete-form {
+    margin: 0;
+}
+
+.cat-card__delete {
+    position: absolute;
+    top: .6rem;
+    right: .6rem;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, .45);
+    background: rgba(255, 255, 255, .14);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 3;
+    transition: background .18s, transform .18s, opacity .18s;
+}
+
+.cat-card__delete:hover {
+    background: rgba(210, 20, 20, .85);
+    transform: translateY(-1px);
+}
+
+.cat-card__delete ion-icon {
+    font-size: 1rem;
+}
+
+.cat-card__delete:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    background: rgba(255, 255, 255, .1);
+}
+
+/* ---- Estado vacío -------------------------------------- */
+.cat-empty {
+    display: flex;
+    justify-content: center;
+    padding: 3rem 1rem 4rem;
+}
+
+.cat-empty__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .75rem;
+    max-width: 380px;
+    text-align: center;
+    color: #aaa;
+}
+
+.cat-empty__inner ion-icon { font-size: 3.5rem; }
+.cat-empty__inner h2 { font-size: 1.1rem; color: #444; margin: 0; }
+.cat-empty__inner p  { font-size: .88rem; margin: 0; }
+
+/* ====================================================
+   MODALES
+   ==================================================== */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0,0,0,.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .25s, visibility .25s;
+}
+
+.modal-backdrop[aria-hidden="false"] {
+    opacity: 1;
+    visibility: visible;
+}
+
+body.modal-open { overflow: hidden; }
+
+.modal {
+    background: #fff;
+    border-radius: 18px;
+    width: min(540px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    transform: translateY(20px) scale(.97);
+    transition: transform .25s;
+}
+
+.modal-backdrop[aria-hidden="false"] .modal {
+    transform: translateY(0) scale(1);
+}
+
+/* Ocultar scrollbar del modal en webkit */
+.modal::-webkit-scrollbar { width: 4px; }
+.modal::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+/* ---- Cabecera modal ------------------------------------ */
+.modal__header {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: 1.25rem 1.25rem .75rem;
+    border-bottom: 1px solid #f0f0f0;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 1;
+    border-radius: 18px 18px 0 0;
+}
+
+.modal__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #e6f9e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #39A900;
+    flex-shrink: 0;
+}
+
+.modal__icon--prod {
+    background: #e8f4ff;
+    color: #1a6fb0;
+}
+
+.modal__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+    flex: 1;
+}
+
+.modal__close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #999;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 8px;
+    transition: background .15s, color .15s;
+}
+.modal__close:hover { background: #f3f4f6; color: #333; }
+
+/* ---- Cuerpo del form modal ----------------------------- */
+.modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+    padding: 1.1rem 1.25rem 1.25rem;
+}
+
+.mf-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .75rem;
+}
+
+@media (max-width: 480px) {
+    .mf-row { grid-template-columns: 1fr; }
+}
+
+.mf-group {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+
+.mf-label {
+    font-size: .8rem;
+    font-weight: 600;
+    color: #444;
+    letter-spacing: .02em;
+}
+
+.mf-required {
+    color: #e74c3c;
+    margin-left: 2px;
+}
+
+.mf-error {
+    font-size: .76rem;
+    color: #c0392b;
+}
+
+.mf-hint {
+    font-size: .72rem;
+    color: #7a7a7a;
+}
+
+/* inputs del form — se aplica a los widgets de Django */
+.modal__form input[type="text"],
+.modal__form input[type="email"],
+.modal__form textarea,
+.modal__form select,
+.form-input,
+.form-textarea,
+.form-select {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1.5px solid #e2e4e7;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: .88rem;
+    color: #1a1a2e;
+    background: #fafafa;
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.modal__form input[type="text"]:focus,
+.modal__form input[type="email"]:focus,
+.modal__form textarea:focus,
+.modal__form select:focus,
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+    border-color: #39A900;
+    box-shadow: 0 0 0 3px rgba(57,169,0,.1);
+    background: #fff;
+}
+
+.modal__form textarea,
+.form-textarea {
+    resize: vertical;
+    min-height: 78px;
+}
+
+/* ---- Zona de subida de imagen -------------------------- */
+.file-drop {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .3rem;
+    padding: 1.4rem 1rem;
+    border: 2px dashed #d0d5db;
+    border-radius: 12px;
+    background: #f9fafb;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color .2s, background .2s;
+    overflow: hidden;
+}
+
+.file-drop:hover {
+    border-color: #39A900;
+    background: #f0fff0;
+}
+
+.file-drop ion-icon { font-size: 1.9rem; color: #39A900; }
+
+.file-drop__text {
+    font-size: .84rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.file-drop__hint {
+    font-size: .73rem;
+    color: #aaa;
+}
+
+.file-drop input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+
+.file-drop__preview {
+    width: 100%;
+    max-height: 140px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: .4rem;
+}
+
+/* ---- Acciones del modal -------------------------------- */
+.modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: .5rem;
+    padding-top: .25rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* ====================================================
+   Acordeón productos por catálogo
+   ==================================================== */
+.cat-grid--productos {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+
+.product-accordion {
+    background: #fff;
+    border: 1px solid #e8edf3;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .06);
+}
+
+.product-accordion[open] {
+    box-shadow: 0 6px 24px rgba(57, 169, 0, .14);
+    border-color: #d2ebc5;
+}
+
+.product-accordion__summary {
+    list-style: none;
+    cursor: pointer;
+    display: grid;
+    grid-template-columns: 92px 1fr auto;
+    gap: .8rem;
+    align-items: center;
+    padding: .8rem;
+}
+
+.product-accordion__summary::-webkit-details-marker {
+    display: none;
+}
+
+.product-accordion__thumb {
+    width: 92px;
+    height: 92px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #39A900 0%, #2e7d00 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.product-accordion__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-accordion__head {
+    min-width: 0;
+}
+
+.product-accordion__head .cat-card__name {
+    margin-bottom: .2rem;
+}
+
+.product-accordion__head .cat-card__desc {
+    margin-bottom: .4rem;
+}
+
+.product-accordion__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+}
+
+.product-accordion__chips .cat-card__count {
+    background: #f6f8fb;
+    border: 1px solid #e7ecf2;
+    border-radius: 999px;
+    padding: 3px 8px;
+}
+
+.product-accordion__arrow {
+    color: #5f6f81;
+    font-size: 1.2rem;
+    transition: transform .2s;
+}
+
+.product-accordion[open] .product-accordion__arrow {
+    transform: rotate(180deg);
+}
+
+.product-accordion__body {
+    border-top: 1px solid #eef2f6;
+    padding: .9rem;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+}
+
+.product-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .65rem;
+}
+
+.product-detail-label {
+    margin: 0 0 .15rem;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #8c97a5;
+    font-weight: 700;
+}
+
+.product-detail-value {
+    margin: 0;
+    font-size: .88rem;
+    color: #1f2633;
+    line-height: 1.4;
+}
+
+.product-detail-value--preserve {
+    white-space: pre-wrap;
+}
+
+.product-detail-block {
+    background: #fafbfd;
+    border: 1px solid #e8edf3;
+    border-radius: 10px;
+    padding: .6rem .7rem;
+}
+
+@media (max-width: 560px) {
+    .product-accordion__summary {
+        grid-template-columns: 1fr;
+    }
+
+    .product-accordion__thumb {
+        width: 100%;
+        height: 140px;
+    }
+
+    .product-accordion__arrow {
+        justify-self: end;
+    }
+
+    .product-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ====================================================
+   Tarjetas y modal de detalle de producto (blur)
+   ==================================================== */
+.product-tile {
+    border: 1px solid #e8edf3;
+    position: relative;
+}
+
+.product-tile__open {
+    border: 0;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    padding: 0;
+    cursor: pointer;
+    color: inherit;
+    font-family: inherit;
+}
+
+.product-tile__open:focus-visible {
+    outline: 3px solid rgba(57, 169, 0, .35);
+    outline-offset: -3px;
+}
+
+.product-tile__delete-form {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+}
+
+.product-tile__delete {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid #f3b4b4;
+    background: rgba(255, 255, 255, .95);
+    color: #d32f2f;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+}
+
+.product-tile__delete:hover {
+    background: #ffecec;
+}
+
+.product-tile__thumb {
+    height: 120px;
+    background: linear-gradient(135deg, #39A900 0%, #2e7d00 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 2.1rem;
+    overflow: hidden;
+}
+
+.product-tile__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-tile__body {
+    padding: .85rem 1rem 1rem;
+}
+
+.product-tile__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    margin-top: .45rem;
+}
+
+.product-tile__chips .cat-card__count {
+    background: #f6f8fb;
+    border: 1px solid #e7ecf2;
+    border-radius: 999px;
+    padding: 3px 8px;
+}
+
+.product-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    z-index: 2100;
+    background: rgba(12, 18, 28, .35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .25s ease, visibility .25s ease;
+}
+
+.product-modal-backdrop[aria-hidden="false"] {
+    opacity: 1;
+    visibility: visible;
+}
+
+.product-modal {
+    width: min(680px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .28);
+    border: 1px solid #e8edf3;
+    transform: translateY(14px) scale(.98);
+    transition: transform .25s ease;
+}
+
+.product-modal-backdrop[aria-hidden="false"] .product-modal {
+    transform: translateY(0) scale(1);
+}
+
+.product-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: 1rem 1.1rem;
+    border-bottom: 1px solid #edf1f6;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 1;
+}
+
+.product-modal__title {
+    margin: 0;
+    font-size: 1.15rem;
+    color: #1a1a2e;
+}
+
+.product-modal__close {
+    border: 0;
+    background: #f5f7fa;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: #4d5a6a;
+}
+
+.product-modal__media {
+    padding: .9rem 1rem 0;
+}
+
+.product-modal__img,
+.product-modal__placeholder {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: contain;
+    border-radius: 12px;
+    border: 1px solid #e8edf3;
+    background: #f7fafc;
+}
+
+.product-modal__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #7d8b9a;
+    background: #f7fafc;
+}
+
+.product-modal__content {
+    padding: .95rem 1rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+}
+
+.product-modal__danger {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: .4rem;
+    border-top: 1px solid #edf1f6;
+}
+
+.cat-btn--danger {
+    background: #fff1f1;
+    color: #c62828;
+    border: 1px solid #efb5b5;
+}
+
+.cat-btn--danger:hover {
+    background: #ffe3e3;
+}
+
+
+/* --- Mensajes flash ------------------------------------- */
+.catalogo-messages {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+.alert {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .75rem 1rem;
+    border-radius: 10px;
+    font-size: .9rem;
+    font-weight: 500;
+}
+
+.alert--success {
+    background: #d4f7d4;
+    color: #1a5e1a;
+}
+
+.alert--error {
+    background: #fde8e8;
+    color: #8b0000;
+}
+
+/* --- Hero ------------------------------------------------ */
+.catalogo-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 2rem 0 1.5rem;
+}
+
+.catalogo-hero__title {
+    font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+    font-weight: 800;
+    color: #1a1a2e;
+    margin: 0 0 .25rem;
+    letter-spacing: -.5px;
+}
+
+.catalogo-hero__sub {
+    font-size: .9rem;
+    color: #555;
+    margin: 0;
+}
+
+.catalogo-hero__actions {
+    display: flex;
+    gap: .6rem;
+    flex-wrap: wrap;
+}
+
+.catalogo-hero__actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .88rem;
+    padding: 8px 14px;
+    border-radius: 10px;
+}
+
+.btn--outline {
+    background: transparent;
+    color: #39A900;
+    border: 1.5px solid #39A900;
+}
+
+.btn--outline:hover {
+    background: #f0fff0;
+}
+
+/* --- Panel de registro ---------------------------------- */
+.registro-panel {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .45s ease, margin .3s ease;
+    margin-bottom: 0;
+}
+
+.registro-panel[aria-hidden="false"] {
+    max-height: 700px;
+    margin-bottom: 1.5rem;
+}
+
+.registro-panel__inner {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 16px rgba(0,0,0,.08);
+    padding: 1.25rem 1.25rem 1.5rem;
+}
+
+.registro-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.1rem;
+}
+
+.registro-panel__title {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+}
+
+.registro-panel__title ion-icon {
+    color: #39A900;
+    font-size: 1.25rem;
+}
+
+.registro-panel__close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #999;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 8px;
+    transition: background .2s, color .2s;
+}
+
+.registro-panel__close:hover {
+    background: #f3f4f6;
+    color: #333;
+}
+
+/* --- Formulario ----------------------------------------- */
+.registro-form {
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+
+.form-label {
+    font-size: .82rem;
+    font-weight: 600;
+    color: #444;
+    letter-spacing: .02em;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid #ddd;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: .9rem;
+    color: #222;
+    background: #fafafa;
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    border-color: #39A900;
+    box-shadow: 0 0 0 3px rgba(57,169,0,.12);
+    background: #fff;
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-error {
+    font-size: .78rem;
+    color: #c0392b;
+}
+
+/* --- Zona de subida de imagen -------------------------- */
+.file-upload-zone {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    padding: 1.5rem 1rem;
+    border: 2px dashed #ccc;
+    border-radius: 12px;
+    background: #f9fafb;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    text-align: center;
+}
+
+.file-upload-zone:hover {
+    border-color: #39A900;
+    background: #f0fff0;
+}
+
+.file-upload-zone ion-icon {
+    font-size: 2rem;
+    color: #39A900;
+}
+
+.file-upload-zone__text {
+    font-size: .88rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.file-upload-zone__hint {
+    font-size: .75rem;
+    color: #999;
+}
+
+/* Ocultar el input nativo pero mantenerlo activo para el click */
+.file-upload-zone .form-file {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+
+/* --- Acciones del form ---------------------------------- */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.form-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .9rem;
+    padding: 9px 18px;
+}
+
+/* --- Sección carrusel ------------------------------------ */
+.carousel-section {
+    padding: 1rem 0 2.5rem;
+}
+
+.carousel-section__label {
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #39A900;
+    margin: 0 0 1.2rem 1rem;
+}
+
+/* --- Contenedor ------------------------------------------ */
+.carousel {
+    display: flex;
+    overflow: hidden;
+    width: 100%;
+    user-select: none;
+    mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 8%,
+        black 92%,
+        transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 8%,
+        black 92%,
+        transparent 100%
+    );
+}
+
+.carousel::-webkit-scrollbar { display: none; }
+
+/* --- Grupo ----------------------------------------------- */
+.grupo {
+    display: flex;
+    align-items: stretch;
+    gap: 1.2em;
+    padding: 1rem .5rem;
+    flex-shrink: 0;
+    animation: spin-carousel 18s infinite linear;
+}
+
+.carousel:hover .grupo {
+    animation-play-state: paused;
+}
+
+@keyframes spin-carousel {
+    from { translate: 0; }
+    to   { translate: -100%; }
+}
+
+/* --- Tarjeta --------------------------------------------- */
+.card {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    flex-shrink: 0;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+    overflow: hidden;
+    transition: box-shadow .25s, translate .25s;
+    cursor: default;
+}
+
+.card:hover {
+    box-shadow: 0 6px 24px rgba(57, 169, 0, .18);
+    translate: 0 -4px;
+}
+
+.card__thumb {
+    height: 130px;
+    background: linear-gradient(135deg, #39A900 0%, #2d8600 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 3rem;
+}
+
+.card__body {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    padding: .85rem 1rem 1rem;
+}
+
+.card__name {
+    font-size: .92rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card__count {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .78rem;
+    color: #777;
+}
+
+.card__count ion-icon {
+    font-size: .85rem;
+    color: #39A900;
+    flex-shrink: 0;
+}
+
+/* --- Estado vacío --------------------------------------- */
+.catalogo-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .75rem;
+    padding: 4rem 1rem;
+    color: #aaa;
+}
+
+.catalogo-empty ion-icon {
+    font-size: 3.5rem;
+}
+
+.catalogo-empty p {
+    font-size: .95rem;
+    margin: 0;
+}
+
+
+/* --- Hero ------------------------------------------------ */
+.catalogo-hero {
+    padding: 2.5rem 1rem 1.5rem;
+    text-align: center;
+}
+
+.catalogo-hero__title {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 800;
+    color: #1a1a2e;
+    margin: 0 0 .4rem;
+    letter-spacing: -.5px;
+}
+
+.catalogo-hero__sub {
+    font-size: .95rem;
+    color: #555;
+    margin: 0;
+}
+
+/* --- Sección carrusel ------------------------------------ */
+.carousel-section {
+    padding: 1rem 0 2.5rem;
+}
+
+.carousel-section__label {
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #39A900;
+    margin: 0 0 1.2rem 1rem;
+}
+
+/* --- Contenedor ------------------------------------------ */
+/*  Técnica: dos .grupo idénticos + translate: -100%        */
+.carousel {
+    display: flex;
+    overflow: hidden;           /* esconde lo que sale por los lados  */
+    width: 100%;
+    user-select: none;
+    mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 8%,
+        black 92%,
+        transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 8%,
+        black 92%,
+        transparent 100%
+    );
+}
+
+/* Ocultar scrollbar por si acaso */
+.carousel::-webkit-scrollbar { display: none; }
+
+/* --- Grupo (se duplica para el loop) --------------------- */
+.grupo {
+    display: flex;
+    align-items: stretch;
+    gap: 1.2em;
+    padding: 1rem .5rem;
+    flex-shrink: 0;             /* no encojerse, ocupar su ancho real  */
+    animation: spin-carousel 18s infinite linear;
+}
+
+/* Pausa al pasar el ratón sobre el carrusel */
+.carousel:hover .grupo {
+    animation-play-state: paused;
+}
+
+/* --- Keyframe: mover el grupo su propio ancho a la izq.-- */
+@keyframes spin-carousel {
+    from { translate: 0; }
+    to   { translate: -100%; }
+}
+
+/* --- Tarjeta --------------------------------------------- */
+.card {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    flex-shrink: 0;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+    overflow: hidden;
+    transition: box-shadow .25s, translate .25s;
+    cursor: default;
+}
+
+.card:hover {
+    box-shadow: 0 6px 24px rgba(57, 169, 0, .18);
+    translate: 0 -4px;
+}
+
+/* Área superior (placeholder de imagen / icono) */
+.card__thumb {
+    height: 130px;
+    background: linear-gradient(135deg, #39A900 0%, #2d8600 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 3rem;
+}
+
+/* Cuerpo de la tarjeta */
+.card__body {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    padding: .85rem 1rem 1rem;
+}
+
+.card__name {
+    font-size: .92rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card__count {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .78rem;
+    color: #777;
+}
+
+.card__count ion-icon {
+    font-size: .85rem;
+    color: #39A900;
+    flex-shrink: 0;
+}
+
+/* --- Estado vacío --------------------------------------- */
+.catalogo-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .75rem;
+    padding: 4rem 1rem;
+    color: #aaa;
+}
+
+.catalogo-empty ion-icon {
+    font-size: 3.5rem;
+}
+
+.catalogo-empty p {
+    font-size: .95rem;
+    margin: 0;
+}

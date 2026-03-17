@@ -1,0 +1,361 @@
+{% extends "inventario/shared/base.html" %}
+{% load static %}
+
+{% block title %}Catálogo | SENA Sibate{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventario/catalogo/css/catalogo.css' %}" data-page-style="true">
+{% endblock %}
+
+{% block content %}
+
+{% if messages %}
+<div class="catalogo-messages" role="alert">
+    {% for msg in messages %}
+    <div class="flash flash--{{ msg.tags }}">
+        <ion-icon name="{% if 'error' in msg.tags %}alert-circle-outline{% else %}checkmark-circle-outline{% endif %}"></ion-icon>
+        <span>{{ msg }}</span>
+        <button class="flash__close" type="button" aria-label="Cerrar"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- ENCABEZADO ------------------------------------------- -->
+<header class="cat-header">
+    <div class="cat-header__text">
+        <h1 class="cat-header__title">Catálogo de Equipos</h1>
+        <p class="cat-header__sub">Equipos y materiales disponibles en el CIDE Sibaté</p>
+    </div>
+    <div class="cat-header__actions">
+        <button class="cat-btn cat-btn--secondary" type="button" data-modal="modal-catalogo">
+            <ion-icon name="albums-outline"></ion-icon>
+            Nuevo catálogo
+        </button>
+        <button class="cat-btn cat-btn--primary" type="button" data-modal="modal-producto">
+            <ion-icon name="add-circle-outline"></ion-icon>
+            Nuevo producto
+        </button>
+    </div>
+</header>
+
+<!-- ESTADÍSTICAS RÁPIDAS --------------------------------- -->
+<div class="cat-stats">
+    <div class="stat-chip">
+        <ion-icon name="albums-outline"></ion-icon>
+        <span><strong>{{ catalogos|length }}</strong> categoría{{ catalogos|length|pluralize }}</span>
+    </div>
+</div>
+
+<!-- GRID DE CATÁLOGOS ------------------------------------ -->
+{% if catalogos %}
+<section class="cat-grid-section">
+    <div class="cat-grid">
+        {% for cat in catalogos %}
+        <article class="cat-card cat-card--catalogo">
+            <form
+                method="post"
+                action="{% url 'eliminar_catalogo' cat.id_cat %}"
+                class="cat-delete-form"
+                onsubmit="return confirm('¿Seguro que deseas eliminar el catálogo {{ cat.nombre_catalogo }}?');"
+            >
+                {% csrf_token %}
+                <button
+                    class="cat-card__delete"
+                    type="submit"
+                    {% if cat.total_productos %}disabled{% endif %}
+                    title="{% if cat.total_productos %}No se puede eliminar porque tiene productos{% else %}Eliminar catálogo{% endif %}"
+                    aria-label="Eliminar catálogo {{ cat.nombre_catalogo }}"
+                >
+                    <ion-icon name="trash-outline"></ion-icon>
+                </button>
+            </form>
+            <div class="cat-card__icon-wrap">
+                <ion-icon name="albums-outline"></ion-icon>
+            </div>
+            <div class="cat-card__body">
+                <h3 class="cat-card__name">{{ cat.nombre_catalogo }}</h3>
+                {% if cat.descripcion %}
+                <p class="cat-card__desc">{{ cat.descripcion|truncatechars:70 }}</p>
+                {% endif %}
+                <div class="cat-card__footer">
+                    <div class="cat-card__actions">
+                        <a
+                            class="cat-btn-mini cat-btn-mini--view"
+                            href="{% url 'productos_catalogo' cat.id_cat %}"
+                            title="Ver productos de {{ cat.nombre_catalogo }}"
+                        >
+                            <ion-icon name="eye-outline"></ion-icon>
+                            Ver productos
+                        </a>
+                        <button
+                            class="cat-btn-mini"
+                            type="button"
+                            data-modal="modal-producto"
+                            data-cat-id="{{ cat.id_cat }}"
+                            data-cat-name="{{ cat.nombre_catalogo }}"
+                            title="Agregar producto a {{ cat.nombre_catalogo }}"
+                        >
+                            <ion-icon name="add-outline"></ion-icon>
+                            Agregar
+                        </button>
+                    </div>
+                    <span class="cat-card__count cat-card__count--below">
+                        <ion-icon name="cube-outline"></ion-icon>
+                        {{ cat.total_productos }} producto{{ cat.total_productos|pluralize }}
+                    </span>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% else %}
+<section class="cat-empty">
+    <div class="cat-empty__inner">
+        <ion-icon name="albums-outline"></ion-icon>
+        <h2>Sin categorías aún</h2>
+        <p>Crea tu primer catálogo para comenzar a organizar los equipos.</p>
+    </div>
+</section>
+{% endif %}
+
+<!-- ====================================================
+     MODAL: Registrar catálogo
+     ==================================================== -->
+<div class="modal-backdrop" id="modal-catalogo" role="dialog" aria-modal="true" aria-labelledby="modal-cat-title" aria-hidden="true">
+    <div class="modal">
+        <div class="modal__header">
+            <span class="modal__icon"><ion-icon name="albums-outline"></ion-icon></span>
+            <h2 class="modal__title" id="modal-cat-title">Nuevo catálogo</h2>
+            <button class="modal__close" type="button" data-modal-close aria-label="Cerrar">
+                <ion-icon name="close-outline"></ion-icon>
+            </button>
+        </div>
+        <form method="post" action="{% url 'registrar_catalogo' %}" class="modal__form">
+            {% csrf_token %}
+            <div class="mf-group">
+                <label for="{{ cat_form.nombre_catalogo.id_for_label }}" class="mf-label">
+                    Nombre del catálogo <span class="mf-required">*</span>
+                </label>
+                {{ cat_form.nombre_catalogo }}
+                {% if cat_form.nombre_catalogo.errors %}
+                <span class="mf-error">{{ cat_form.nombre_catalogo.errors|join:", " }}</span>
+                {% endif %}
+            </div>
+            <div class="mf-group">
+                <label for="{{ cat_form.descripcion.id_for_label }}" class="mf-label">Descripción</label>
+                {{ cat_form.descripcion }}
+            </div>
+            <div class="modal__actions">
+                <button type="button" class="cat-btn cat-btn--ghost" data-modal-close>Cancelar</button>
+                <button type="submit" class="cat-btn cat-btn--primary">
+                    <ion-icon name="save-outline"></ion-icon>
+                    Guardar catálogo
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ====================================================
+     MODAL: Registrar producto
+     ==================================================== -->
+<div class="modal-backdrop" id="modal-producto" role="dialog" aria-modal="true" aria-labelledby="modal-prod-title" aria-hidden="true">
+    <div class="modal">
+        <div class="modal__header">
+            <span class="modal__icon modal__icon--prod"><ion-icon name="cube-outline"></ion-icon></span>
+            <h2 class="modal__title" id="modal-prod-title">Nuevo producto</h2>
+            <button class="modal__close" type="button" data-modal-close aria-label="Cerrar">
+                <ion-icon name="close-outline"></ion-icon>
+            </button>
+        </div>
+        <form method="post" action="{% url 'registrar_producto' %}" enctype="multipart/form-data" class="modal__form">
+            {% csrf_token %}
+            <div class="mf-row">
+                <div class="mf-group">
+                    <label for="{{ prod_form.nombre_producto.id_for_label }}" class="mf-label">
+                        Nombre del producto <span class="mf-required">*</span>
+                    </label>
+                    {{ prod_form.nombre_producto }}
+                    {% if prod_form.nombre_producto.errors %}
+                    <span class="mf-error">{{ prod_form.nombre_producto.errors|join:", " }}</span>
+                    {% endif %}
+                </div>
+                <div class="mf-group">
+                    <label for="{{ prod_form.id_cat_fk.id_for_label }}" class="mf-label">
+                        Catálogo <span class="mf-required">*</span>
+                    </label>
+                    {{ prod_form.id_cat_fk }}
+                    {% if prod_form.id_cat_fk.errors %}
+                    <span class="mf-error">{{ prod_form.id_cat_fk.errors|join:", " }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="mf-group">
+                <label for="{{ prod_form.descripcion.id_for_label }}" class="mf-label">Descripción</label>
+                {{ prod_form.descripcion }}
+            </div>
+            <div class="mf-row">
+                <div class="mf-group">
+                    <label for="{{ prod_form.stock_inicial.id_for_label }}" class="mf-label">
+                        {{ prod_form.stock_inicial.label }} <span class="mf-required">*</span>
+                    </label>
+                    {{ prod_form.stock_inicial }}
+                    <small class="mf-hint">Cantidad inicial disponible. Se guarda igual en cantidad y stock.</small>
+                </div>
+                <div class="mf-group">
+                    <label for="{{ prod_form.descr_dispo.id_for_label }}" class="mf-label">
+                        {{ prod_form.descr_dispo.label }}
+                    </label>
+                    {{ prod_form.descr_dispo }}
+                </div>
+            </div>
+            <div class="mf-group">
+                <label class="mf-label">Foto del producto</label>
+                <div class="file-drop" id="fot-zone">
+                    <ion-icon name="image-outline"></ion-icon>
+                    <span class="file-drop__text">Haz clic o arrastra una imagen</span>
+                    <span class="file-drop__hint">JPG · PNG · WEBP — máx. 5 MB</span>
+                    {{ prod_form.fot_prod }}
+                </div>
+            </div>
+            <div class="modal__actions">
+                <button type="button" class="cat-btn cat-btn--ghost" data-modal-close>Cancelar</button>
+                <button type="submit" class="cat-btn cat-btn--primary">
+                    <ion-icon name="save-outline"></ion-icon>
+                    Guardar producto
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script data-page-script="true">
+(() => {
+const initCatalogoPage = () => {
+
+    /* ---- Helpers ---------------------------------------- */
+    const openModal  = id => {
+        const m = document.getElementById(id);
+        if (!m) return;
+        m.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+        // Focus primer campo
+        const first = m.querySelector('input, select, textarea');
+        if (first) setTimeout(() => first.focus(), 80);
+    };
+    const closeAll = () => {
+        document.querySelectorAll('.modal-backdrop').forEach(m => m.setAttribute('aria-hidden', 'true'));
+        document.body.classList.remove('modal-open');
+    };
+
+    /* ---- Abrir modales ---------------------------------- */
+    document.querySelectorAll('[data-modal]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.dataset.modal;
+            // Si viene desde la tarjeta de catálogo, preseleccionar
+            const catId   = btn.dataset.catId;
+            const catName = btn.dataset.catName;
+            if (catId) {
+                const sel = document.querySelector('#modal-producto select[name="id_cat_fk"]');
+                if (sel) sel.value = catId;
+                const title = document.getElementById('modal-prod-title');
+                if (title && catName) title.textContent = `Nuevo producto en "${catName}"`;
+            } else {
+                // Reset title cuando se abre desde el botón general
+                const title = document.getElementById('modal-prod-title');
+                if (title) title.textContent = 'Nuevo producto';
+            }
+            openModal(id);
+        });
+    });
+
+    /* ---- Cerrar modales --------------------------------- */
+    document.querySelectorAll('[data-modal-close]').forEach(btn => btn.addEventListener('click', closeAll));
+    document.querySelectorAll('.modal-backdrop').forEach(bd => {
+        bd.addEventListener('click', e => { if (e.target === bd) closeAll(); });
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
+
+    /* ---- Cerrar flashes --------------------------------- */
+    document.querySelectorAll('.flash__close').forEach(btn => {
+        btn.addEventListener('click', () => btn.closest('.flash').remove());
+    });
+
+    /* ---- Icono dinámico por categoría ------------------ */
+    const iconMap = [
+        { keys: ['electr', 'voltaj', 'cable', 'circuito', 'corriente', 'enchufe'], icon: 'flash-outline' },
+        { keys: ['construc', 'obra', 'cemento', 'ladrillo', 'maquinaria', 'pala', 'martillo', 'clavo', 'tornillo', 'albañil'], icon: 'construct-outline' },
+        { keys: ['computa', 'tecnolog', 'informatic', 'hardware', 'software', 'servidor', 'red', 'digital', 'impresora'], icon: 'desktop-outline' },
+        { keys: ['audio', 'video', 'audiovisual', 'camara', 'sonido', 'musica', 'pantalla', 'proyector', 'microfono', 'televisor'], icon: 'videocam-outline' },
+        { keys: ['mueble', 'silla', 'mesa', 'escritorio', 'mobiliario', 'armario', 'estante'], icon: 'business-outline' },
+        { keys: ['medico', 'salud', 'enferm', 'medicina', 'sanitario', 'clinico', 'botiquin'], icon: 'medkit-outline' },
+        { keys: ['ropa', 'textil', 'uniforme', 'costura', 'tela', 'indumenta'], icon: 'shirt-outline' },
+        { keys: ['deporte', 'gimnasio', 'atletism', 'balon', 'pelota', 'ejercicio', 'futbol', 'baloncesto'], icon: 'basketball-outline' },
+        { keys: ['cocina', 'alimento', 'comida', 'bebida', 'gastronomia', 'nutricion', 'cafeteria'], icon: 'restaurant-outline' },
+        { keys: ['vehiculo', 'automovil', 'moto', 'camion', 'tractor', 'transporte'], icon: 'car-outline' },
+        { keys: ['plomeria', 'tuberia', 'fontaneria', 'hidraulica', 'grifo'], icon: 'water-outline' },
+        { keys: ['jardineria', 'planta', 'agricola', 'semilla', 'cultivo', 'huerta'], icon: 'leaf-outline' },
+        { keys: ['quimica', 'laboratorio', 'ciencias', 'reactivo', 'biologi'], icon: 'flask-outline' },
+        { keys: ['limpieza', 'aseo', 'higiene', 'detergente', 'escoba', 'trapero'], icon: 'sparkles-outline' },
+        { keys: ['seguridad', 'proteccion', 'casco', 'guante', 'epp', 'protector'], icon: 'shield-outline' },
+        { keys: ['papeleria', 'papel', 'boligrafo', 'lapiz', 'cuaderno', 'escritura'], icon: 'document-outline' },
+        { keys: ['madera', 'carpinteria', 'sierra', 'taladro', 'lija'], icon: 'hammer-outline' },
+        { keys: ['pintura', 'decoracion', 'barniz', 'brocha', 'rodillo', 'color'], icon: 'color-palette-outline' },
+        { keys: ['electrodomestic', 'nevera', 'lavadora', 'estufa', 'microonda', 'hogar'], icon: 'home-outline' },
+        { keys: ['comunicacion', 'telefon', 'celular', 'radio', 'walkie'], icon: 'call-outline' },
+        { keys: ['medida', 'calibracion', 'instrumento', 'sensor', 'metro', 'balanza', 'escala'], icon: 'speedometer-outline' },
+        { keys: ['energia', 'solar', 'bateria', 'panel', 'generador'], icon: 'battery-charging-outline' },
+    ];
+    document.querySelectorAll('.cat-card--catalogo').forEach(function(card) {
+        const name = (card.querySelector('.cat-card__name')?.textContent || '').toLowerCase();
+        const desc = (card.querySelector('.cat-card__desc')?.textContent || '').toLowerCase();
+        const text = name + ' ' + desc;
+        const iconEl = card.querySelector('.cat-card__icon-wrap ion-icon');
+        if (!iconEl) return;
+        for (const entry of iconMap) {
+            if (entry.keys.some(k => text.includes(k))) {
+                iconEl.setAttribute('name', entry.icon);
+                return;
+            }
+        }
+        // fallback: albums-outline (ya definido en el HTML)
+    });
+
+    /* ---- Vista previa imagen ---------------------------- */
+    const input = document.querySelector('#fot-zone input[type="file"]');
+    const zone  = document.getElementById('fot-zone');
+    if (input && zone) {
+        input.addEventListener('change', () => {
+            const file = input.files[0];
+            if (!file) return;
+            const text = zone.querySelector('.file-drop__text');
+            if (text) text.textContent = file.name;
+            // Previsualización
+            const reader = new FileReader();
+            reader.onload = e => {
+                let img = zone.querySelector('.file-drop__preview');
+                if (!img) {
+                    img = document.createElement('img');
+                    img.className = 'file-drop__preview';
+                    zone.prepend(img);
+                }
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCatalogoPage, { once: true });
+} else {
+    initCatalogoPage();
+}
+})();
+</script>
+{% endblock %}

@@ -16,6 +16,7 @@ create Table usuario (
     correo VARCHAR(255),
     contrasena VARCHAR(255),
     id_rol_fk INT NOT NULL,
+    fot_usu VARCHAR(255),
     INDEX (id_rol_fk),
     FOREIGN KEY (id_rol_fk) REFERENCES rol(id_rol) ON DELETE CASCADE ON UPDATE CASCADE
 ) engine=InnoDB;
@@ -44,6 +45,7 @@ CREATE table producto (
     id_prod INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     nombre_producto VARCHAR(255),
     descripcion TEXT,
+    fot_prod VARCHAR(255),
     id_cat_fk INT NOT NULL,
     INDEX (id_cat_fk),
     FOREIGN KEY (id_cat_fk) REFERENCES catalogo(id_cat) ON DELETE CASCADE ON UPDATE CASCADE,

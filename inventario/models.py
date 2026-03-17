@@ -101,6 +101,7 @@ class Producto(models.Model):
     id_prod = models.AutoField(primary_key=True)
     nombre_producto = models.CharField(max_length=255, null=True, blank=True)
     descripcion = models.TextField(null=True, blank=True)
+    fot_prod = models.ImageField(upload_to='productos/', null=True, blank=True)
     id_cat_fk = models.ForeignKey(
         Catalogo,
         on_delete=models.CASCADE,

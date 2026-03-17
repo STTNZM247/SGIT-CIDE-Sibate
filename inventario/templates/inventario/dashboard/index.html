@@ -1,0 +1,116 @@
+{% extends 'inventario/shared/base.html' %}
+{% load static %}
+
+{% block title %}Inventario SENA - Sibate{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/dashboard/css/dashboard.css' %}" data-page-style="true">
+{% endblock %}
+
+{% block header_center %}
+<form class="inventory-filters" method="get" action="{% url 'dashboard' %}">
+    <div class="inventory-filters__row">
+        <input
+            type="search"
+            name="q"
+            value="{{ q }}"
+            placeholder="Buscar producto o catálogo..."
+            aria-label="Buscar en inventario"
+        >
+        <select name="categoria" aria-label="Filtrar por catálogo">
+            <option value="">Todos los catálogos</option>
+            {% for cat in catalogos %}
+            <option value="{{ cat.id_cat }}" {% if categoria_activa == cat.id_cat|stringformat:'s' %}selected{% endif %}>
+                {{ cat.nombre_catalogo }}
+            </option>
+            {% endfor %}
+        </select>
+        <button class="btn btn--filter" type="submit">Aplicar</button>
+    </div>
+    <label class="inventory-filters__check">
+        <input type="checkbox" name="bajo_stock" value="1" {% if bajo_stock %}checked{% endif %}>
+        Solo mostrar productos con stock bajo
+    </label>
+</form>
+{% endblock %}
+
+{% block content %}
+<section class="inventory-home">
+    <section class="market-section">
+        <div class="section-head">
+            <h2>Todos los productos</h2>
+            <span>{{ productos|length }} resultado{{ productos|length|pluralize }}</span>
+        </div>
+
+        {% if productos %}
+        <div class="market-carousel" data-market-carousel>
+            <div class="market-track">
+                {% for p in productos %}
+                <article class="market-card">
+                    <a href="{% url 'productos_catalogo' p.id_cat_fk.id_cat %}" class="market-card__media" title="Ir al catálogo {{ p.id_cat_fk.nombre_catalogo }}">
+                        {% if p.fot_prod %}
+                        <img src="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}">
+                        {% else %}
+                        <div class="market-card__placeholder">
+                            <ion-icon name="image-outline"></ion-icon>
+                        </div>
+                        {% endif %}
+                    </a>
+                    <div class="market-card__body">
+                        <h3>{{ p.nombre_producto }}</h3>
+                        <p class="market-card__cat">{{ p.id_cat_fk.nombre_catalogo }}</p>
+                        <p class="market-card__desc">{% if p.descripcion %}{{ p.descripcion|truncatechars:90 }}{% else %}Sin descripción registrada.{% endif %}</p>
+                        <div class="market-card__meta">
+                            <span><ion-icon name="archive-outline"></ion-icon> Stock: {{ p.stock_actual|default:'0' }}</span>
+                            <span><ion-icon name="layers-outline"></ion-icon> Cantidad: {{ p.cantidad_actual|default:'0' }}</span>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <p class="inventory-empty">No hay productos con los filtros actuales.</p>
+        {% endif %}
+    </section>
+
+    {% if secciones_catalogo %}
+    <section class="catalog-lanes">
+        <div class="section-head">
+            <h2>Categorías organizadas</h2>
+            <span>Vista por catálogo</span>
+        </div>
+
+        {% for bloque in secciones_catalogo %}
+        <article class="lane">
+            <header class="lane__head">
+                <h3>{{ bloque.catalogo.nombre_catalogo }}</h3>
+                <a href="{% url 'productos_catalogo' bloque.catalogo.id_cat %}">Ver todo</a>
+            </header>
+            <div class="lane__track">
+                {% for p in bloque.productos %}
+                <a href="{% url 'productos_catalogo' bloque.catalogo.id_cat %}" class="lane-card">
+                    <div class="lane-card__thumb">
+                        {% if p.fot_prod %}
+                        <img src="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}">
+                        {% else %}
+                        <ion-icon name="cube-outline"></ion-icon>
+                        {% endif %}
+                    </div>
+                    <div class="lane-card__body">
+                        <p class="lane-card__name">{{ p.nombre_producto }}</p>
+                        <p class="lane-card__stock">Stock {{ p.stock_actual|default:'0' }}</p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </article>
+        {% endfor %}
+    </section>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'inventario/dashboard/js/dashboard.js' %}" data-page-script="true" defer></script>
+{% endblock %}
