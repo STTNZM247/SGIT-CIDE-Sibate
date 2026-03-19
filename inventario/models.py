@@ -4,6 +4,7 @@ from django.db import models
 
 class Rol(models.Model):
     id_rol = models.AutoField(primary_key=True)
+    nombre_rol = models.CharField(max_length=255, null=True, blank=True)
     fch_registro = models.DateTimeField(null=True, blank=True)
     fch_ult_act = models.DateTimeField(null=True, blank=True)
 

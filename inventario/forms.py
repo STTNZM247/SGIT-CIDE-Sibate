@@ -66,7 +66,7 @@ class ProductoForm(forms.ModelForm):
         widgets = {
             'nombre_producto': forms.TextInput(attrs={
                 'class': 'form-input',
-                'placeholder': 'Ej: Proyector Epson',
+                'placeholder': 'Nombre del producto',
                 'autocomplete': 'off',
             }),
             'descripcion': forms.Textarea(attrs={

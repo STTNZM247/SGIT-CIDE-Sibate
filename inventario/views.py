@@ -1,3 +1,98 @@
+
+from django.http import Http404
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from django.contrib import messages
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Producto, Catalogo, Disponibilidad, Rol
+from .forms import ProductoForm
+@login_required
+def producto_editar(request, prod_id):
+    # Solo admin puede editar
+    if not (request.user.is_authenticated and request.user.id_rol_fk and request.user.id_rol_fk.nombre_rol == 'admin'):
+        messages.error(request, 'No tienes permisos para editar productos.')
+        return redirect('producto_detalle', prod_id=prod_id)
+
+    producto = get_object_or_404(Producto, pk=prod_id)
+    catalogos = Catalogo.objects.all().order_by('nombre_catalogo')
+    disp = (
+        Disponibilidad.objects
+        .filter(id_prod_fk=producto)
+        .order_by('-id_disp')
+        .first()
+    )
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre_producto', '').strip()
+        descripcion = request.POST.get('descripcion', '').strip()
+        id_cat_fk = request.POST.get('id_cat_fk')
+        stock = request.POST.get('stock')
+        cantidad = request.POST.get('cantidad')
+        descr_dispo = request.POST.get('descr_dispo', '').strip()
+        fot_prod = request.FILES.get('fot_prod')
+        # Validaciones mínimas
+        if not nombre or not id_cat_fk or stock is None or cantidad is None:
+            messages.error(request, 'Completa todos los campos obligatorios.')
+        else:
+            producto.nombre_producto = nombre
+            producto.descripcion = descripcion
+            producto.id_cat_fk_id = id_cat_fk
+            if fot_prod:
+                producto.fot_prod = fot_prod
+            producto.fch_ult_act = timezone.now()
+            producto.save()
+            # Actualizar disponibilidad
+            if disp:
+                disp.stock = stock
+                disp.cantidad = cantidad
+                disp.descr_dispo = descr_dispo
+                disp.fch_ult_act = timezone.now()
+                disp.save()
+            else:
+                Disponibilidad.objects.create(
+                    id_prod_fk=producto,
+                    stock=stock,
+                    cantidad=cantidad,
+                    descr_dispo=descr_dispo,
+                    fch_registro=timezone.now(),
+                    fch_ult_act=timezone.now(),
+                )
+            messages.success(request, 'Producto actualizado correctamente.')
+            return redirect('producto_detalle', prod_id=producto.id_prod)
+    return render(request, 'inventario/catalogo/producto_editar.html', {
+        'producto': producto,
+        'catalogos': catalogos,
+        'disponibilidad': disp,
+    })
+from django.http import Http404
+from django.contrib.auth.decorators import login_required
+
+# ...existing code...
+
+@login_required
+def producto_detalle(request, prod_id):
+    from .models import Producto, Disponibilidad
+    try:
+        producto = Producto.objects.select_related('id_cat_fk').get(pk=prod_id)
+    except Producto.DoesNotExist:
+        raise Http404('Producto no encontrado')
+    disp = (
+        Disponibilidad.objects
+        .filter(id_prod_fk=producto)
+        .order_by('-id_disp')
+        .first()
+    )
+    return render(request, 'inventario/catalogo/producto_detalle.html', {
+        'producto': producto,
+        'catalogo': producto.id_cat_fk,
+        'disponibilidad': disp,
+    })
+
+# Panel de almacenista
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def panel_almacenista(request):
+    return render(request, 'inventario/almacenista/panel_almacenista.html')
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import models
@@ -6,7 +101,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from .forms import CatalogoForm, ProductoForm, UsuarioPerfilForm
-from .models import Catalogo, Disponibilidad, Producto, Usuario
+from .models import Catalogo, Disponibilidad, Producto, Usuario, Rol
 
 
 @login_required
@@ -222,5 +317,79 @@ def auditorias_panel(request):
 
 @login_required
 def gestion_usuarios_panel(request):
-    return render(request, 'inventario/usuarios/panel_usuarios.html')
+    query = request.GET.get('q', '').strip()
+    usuarios = Usuario.objects.all().select_related('id_rol_fk').order_by('nombre', 'apellido')
+    if query:
+        usuarios = usuarios.filter(
+            models.Q(nombre__icontains=query) |
+            models.Q(apellido__icontains=query) |
+            models.Q(correo__icontains=query) |
+            models.Q(cc__icontains=query)
+        )
+    roles = Rol.objects.all().order_by('nombre_rol')
+    return render(request, 'inventario/usuarios/panel_usuarios.html', {
+        'usuarios': usuarios,
+        'query': query,
+        'roles': roles,
+    })
+
+
+from django.views.decorators.http import require_POST
+@login_required
+@require_POST
+def crear_usuario(request):
+    cc = request.POST.get('cc', '').strip()
+    nombre = request.POST.get('nombre', '').strip()
+    apellido = request.POST.get('apellido', '').strip()
+    correo = request.POST.get('correo', '').strip()
+    password = request.POST.get('password', '').strip()
+    id_rol_fk = request.POST.get('id_rol_fk')
+    if not (cc and nombre and apellido and correo and password and id_rol_fk):
+        messages.error(request, 'Todos los campos son obligatorios.')
+        return redirect('gestion_usuarios_panel')
+    if Usuario.objects.filter(correo=correo).exists():
+        messages.error(request, 'Ya existe un usuario con ese correo.')
+        return redirect('gestion_usuarios_panel')
+    if Usuario.objects.filter(cc=cc).exists():
+        messages.error(request, 'Ya existe un usuario con esa cédula.')
+        return redirect('gestion_usuarios_panel')
+    try:
+        rol = Rol.objects.get(pk=id_rol_fk)
+    except Rol.DoesNotExist:
+        messages.error(request, 'Rol inválido.')
+        return redirect('gestion_usuarios_panel')
+    usuario = Usuario(
+        cc=cc,
+        nombre=nombre,
+        apellido=apellido,
+        correo=correo,
+        id_rol_fk=rol,
+        is_active=True,
+    )
+    usuario.set_password(password)
+    usuario.save()
+    messages.success(request, 'Usuario creado correctamente.')
+    return redirect('gestion_usuarios_panel')
+
+@login_required
+@require_POST
+def editar_rol_usuario(request, usuario_id):
+    usuario = Usuario.objects.get(pk=usuario_id)
+    nuevo_rol_id = request.POST.get('id_rol_fk')
+    if not nuevo_rol_id:
+        messages.error(request, 'Debes seleccionar un rol.')
+        return redirect('gestion_usuarios_panel')
+    try:
+        nuevo_rol = Rol.objects.get(pk=nuevo_rol_id)
+    except Rol.DoesNotExist:
+        messages.error(request, 'Rol inválido.')
+        return redirect('gestion_usuarios_panel')
+    # No permitir cambiar el rol de admin
+    if usuario.id_rol_fk and usuario.id_rol_fk.nombre_rol == 'admin':
+        messages.error(request, 'No puedes editar el rol de un usuario admin.')
+        return redirect('gestion_usuarios_panel')
+    usuario.id_rol_fk = nuevo_rol
+    usuario.save()
+    messages.success(request, 'Rol actualizado correctamente.')
+    return redirect('gestion_usuarios_panel')
 

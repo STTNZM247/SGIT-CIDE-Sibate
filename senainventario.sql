@@ -4,6 +4,7 @@ use invsena;
 
 CREATE table rol (
     id_rol INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    nombre_rol VARCHAR(255),
     fch_registro DATETIME,
     fch_ult_act DATETIME
 ) engine=InnoDB;

@@ -218,6 +218,9 @@
                     <span class="file-drop__text">Haz clic o arrastra una imagen</span>
                     <span class="file-drop__hint">JPG · PNG · WEBP — máx. 5 MB</span>
                     {{ prod_form.fot_prod }}
+                    <button type="button" class="file-drop__remove" style="display:none;position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.5);border:none;border-radius:50%;width:32px;height:32px;z-index:2;align-items:center;justify-content:center;color:#fff;font-size:1.3em;cursor:pointer;" aria-label="Quitar imagen">
+                        <ion-icon name="close-outline"></ion-icon>
+                    </button>
                 </div>
             </div>
             <div class="modal__actions">
@@ -275,7 +278,31 @@ const initCatalogoPage = () => {
     });
 
     /* ---- Cerrar modales --------------------------------- */
-    document.querySelectorAll('[data-modal-close]').forEach(btn => btn.addEventListener('click', closeAll));
+    document.querySelectorAll('[data-modal-close]').forEach(btn => {
+        btn.addEventListener('click', e => {
+            // Si es el modal de producto, limpiar campos
+            const modal = btn.closest('.modal-backdrop');
+            if (modal && modal.id === 'modal-producto') {
+                const form = modal.querySelector('form');
+                if (form) {
+                    form.reset();
+                }
+                // Limpiar imagen
+                const zone = modal.querySelector('#fot-zone');
+                if (zone) {
+                    const img = zone.querySelector('.file-drop__preview');
+                    if (img) img.remove();
+                    const input = zone.querySelector('input[type="file"]');
+                    if (input) input.value = '', input.style.display = '';
+                    const removeBtn = zone.querySelector('.file-drop__remove');
+                    if (removeBtn) removeBtn.style.display = 'none';
+                    const text = zone.querySelector('.file-drop__text');
+                    if (text) text.textContent = 'Haz clic o arrastra una imagen';
+                }
+            }
+            closeAll();
+        });
+    });
     document.querySelectorAll('.modal-backdrop').forEach(bd => {
         bd.addEventListener('click', e => { if (e.target === bd) closeAll(); });
     });
@@ -329,24 +356,48 @@ const initCatalogoPage = () => {
     /* ---- Vista previa imagen ---------------------------- */
     const input = document.querySelector('#fot-zone input[type="file"]');
     const zone  = document.getElementById('fot-zone');
-    if (input && zone) {
+    const removeBtn = zone ? zone.querySelector('.file-drop__remove') : null;
+    if (input && zone && removeBtn) {
         input.addEventListener('change', () => {
             const file = input.files[0];
             if (!file) return;
             const text = zone.querySelector('.file-drop__text');
             if (text) text.textContent = file.name;
             // Previsualización
+            let img = zone.querySelector('.file-drop__preview');
+            if (!img) {
+                img = document.createElement('img');
+                img.className = 'file-drop__preview';
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '120px';
+                img.style.display = 'block';
+                img.style.margin = '0 auto 8px auto';
+                img.style.borderRadius = '10px';
+                img.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+                img.style.position = 'relative';
+                zone.prepend(img);
+            }
             const reader = new FileReader();
             reader.onload = e => {
-                let img = zone.querySelector('.file-drop__preview');
-                if (!img) {
-                    img = document.createElement('img');
-                    img.className = 'file-drop__preview';
-                    zone.prepend(img);
-                }
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
+            // Ocultar input y mostrar X
+            input.style.display = 'none';
+            removeBtn.style.display = 'flex';
+        });
+        removeBtn.addEventListener('click', () => {
+            // Eliminar preview
+            const img = zone.querySelector('.file-drop__preview');
+            if (img) img.remove();
+            // Limpiar input
+            input.value = '';
+            // Restaurar textos
+            const text = zone.querySelector('.file-drop__text');
+            if (text) text.textContent = 'Haz clic o arrastra una imagen';
+            // Mostrar input y ocultar X
+            input.style.display = '';
+            removeBtn.style.display = 'none';
         });
     }
 };

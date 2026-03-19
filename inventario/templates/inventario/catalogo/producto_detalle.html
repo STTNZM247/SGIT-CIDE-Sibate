@@ -1,0 +1,55 @@
+{% extends "inventario/shared/base.html" %}
+{% load static %}
+
+{% block title %}Detalle de Producto | {{ producto.nombre_producto }}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventario/catalogo/css/catalogo.css' %}" data-page-style="true">
+{% endblock %}
+
+{% block content %}
+<div class="product-detail-page">
+    <a class="cat-btn cat-btn--secondary" href="{% url 'productos_catalogo' catalogo.id_cat %}">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+        Volver a productos
+    </a>
+    <div class="product-modal__header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <h1 class="product-modal__title">{{ producto.nombre_producto }}</h1>
+        {% if request.user.is_authenticated and request.user.id_rol_fk.nombre_rol == 'admin' %}
+        <a href="{% url 'producto_editar' producto.id_prod %}" class="cat-btn cat-btn--primary" style="margin-left:auto;">
+            <ion-icon name="create-outline"></ion-icon> Editar
+        </a>
+        {% endif %}
+    </div>
+    <div class="product-modal__media">
+        {% if producto.fot_prod %}
+        <img src="{{ producto.fot_prod.url }}" alt="{{ producto.nombre_producto }}" class="product-modal__img">
+        {% else %}
+        <div class="product-modal__placeholder"><ion-icon name="image-outline"></ion-icon></div>
+        {% endif %}
+    </div>
+    <div class="product-modal__content">
+        <div class="product-detail-grid">
+            <div>
+                <p class="product-detail-label">Catálogo</p>
+                <p class="product-detail-value">{{ catalogo.nombre_catalogo }}</p>
+            </div>
+            <div>
+                <p class="product-detail-label">Stock fijo</p>
+                <p class="product-detail-value">{{ disponibilidad.stock|default:'0' }}</p>
+            </div>
+            <div>
+                <p class="product-detail-label">Cantidad actual</p>
+                <p class="product-detail-value">{{ disponibilidad.cantidad|default:'0' }}</p>
+            </div>
+        </div>
+        <div class="product-detail-block">
+            <p class="product-detail-label">Descripción del producto</p>
+            <p class="product-detail-value product-detail-value--preserve">{% if producto.descripcion %}{{ producto.descripcion }}{% else %}Sin descripción.{% endif %}</p>
+        </div>
+        <div class="product-detail-block">
+            <p class="product-detail-label">Disponibilidad</p>
+            <p class="product-detail-value product-detail-value--preserve">{% if disponibilidad.descr_dispo %}{{ disponibilidad.descr_dispo }}{% else %}Sin observaciones de disponibilidad.{% endif %}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

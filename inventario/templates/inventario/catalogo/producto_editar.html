@@ -1,0 +1,66 @@
+{% extends "inventario/shared/base.html" %}
+{% load static %}
+
+{% block title %}Editar Producto | {{ producto.nombre_producto }}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventario/catalogo/css/catalogo.css' %}" data-page-style="true">
+{% endblock %}
+
+{% block content %}
+<div class="product-detail-page">
+    <a class="cat-btn cat-btn--secondary" href="{% url 'productos_catalogo' producto.id_cat_fk.id_cat %}">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+        Volver a productos
+    </a>
+    <div class="product-modal__header">
+        <h1 class="product-modal__title">Editar producto</h1>
+    </div>
+    <form method="post" enctype="multipart/form-data" class="modal__form" style="max-width:600px;margin:auto;">
+        {% csrf_token %}
+        <div class="mf-group">
+            <label class="mf-label">Nombre del producto *</label>
+            <input type="text" name="nombre_producto" class="form-input" value="{{ producto.nombre_producto }}" required>
+        </div>
+        <div class="mf-group">
+            <label class="mf-label">Descripción</label>
+            <textarea name="descripcion" class="form-input form-textarea" rows="3">{{ producto.descripcion }}</textarea>
+        </div>
+        <div class="mf-group">
+            <label class="mf-label">Catálogo *</label>
+            <select name="id_cat_fk" class="form-input form-select" required>
+                {% for cat in catalogos %}
+                <option value="{{ cat.id_cat }}" {% if cat.id_cat == producto.id_cat_fk.id_cat %}selected{% endif %}>{{ cat.nombre_catalogo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mf-row">
+            <div class="mf-group">
+                <label class="mf-label">Stock fijo *</label>
+                <input type="number" name="stock" class="form-input" min="0" value="{{ disponibilidad.stock|default:'0' }}" required>
+            </div>
+            <div class="mf-group">
+                <label class="mf-label">Cantidad actual *</label>
+                <input type="number" name="cantidad" class="form-input" min="0" value="{{ disponibilidad.cantidad|default:'0' }}" required>
+            </div>
+        </div>
+        <div class="mf-group">
+            <label class="mf-label">Descripción de disponibilidad</label>
+            <textarea name="descr_dispo" class="form-input form-textarea" rows="2">{{ disponibilidad.descr_dispo }}</textarea>
+        </div>
+        <div class="mf-group">
+            <label class="mf-label">Foto del producto</label>
+            {% if producto.fot_prod %}
+            <img src="{{ producto.fot_prod.url }}" alt="{{ producto.nombre_producto }}" style="max-width:180px;display:block;margin-bottom:8px;">
+            {% endif %}
+            <input type="file" name="fot_prod" class="form-file" accept="image/*">
+        </div>
+        <div class="modal__actions">
+            <a href="{% url 'producto_detalle' producto.id_prod %}" class="cat-btn cat-btn--ghost">Cancelar</a>
+            <button type="submit" class="cat-btn cat-btn--primary">
+                <ion-icon name="save-outline"></ion-icon>
+                Guardar cambios
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+.temu-searchbar {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 480px;
+    border-radius: 2em;
+    border: 2.5px solid #222;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,.04);
+}
+.temu-searchbar input[type="search"] {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 1.08rem;
+    padding: .7em 1.2em;
+    flex: 1;
+    color: #222;
+}
+.temu-searchbar input[type="search"]::placeholder {
+    color: #888;
+    font-weight: 400;
+}
+.temu-searchbar button {
+    background: #222;
+    border: none;
+    border-radius: 50%;
+    width: 2.5em;
+    height: 2.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: .3em;
+    cursor: pointer;
+    transition: background .18s;
+}
+.temu-searchbar button:hover {
+    background: #444;
+}
+.temu-searchbar button svg {
+    width: 1.3em;
+    height: 1.3em;
+    color: #fff;
+}

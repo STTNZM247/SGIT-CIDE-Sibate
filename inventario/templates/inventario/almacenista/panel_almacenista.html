@@ -1,0 +1,35 @@
+{% extends 'inventario/shared/base.html' %}
+{% load static %}
+{% block title %}Panel Almacenista | Inventario SENA{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/dashboard/css/dashboard.css' %}">
+{% endblock %}
+{% block navbar %}
+<nav class="navigation" aria-label="Principal">
+    <a class="nav-brand" href="{% url 'panel_almacenista' %}" aria-label="Inicio SENA">
+        <span class="nav-brand__logo" aria-hidden="true"></span>
+    </a>
+    <ul>
+        <li class="list {% if request.resolver_match.url_name == 'panel_almacenista' %}active{% endif %}">
+            <a href="{% url 'panel_almacenista' %}">
+                <span class="icon"><ion-icon name="file-tray-stacked-outline"></ion-icon></span>
+                <span class="text">inventario</span>
+            </a>
+        </li>
+        <li class="list {% if request.resolver_match.url_name == 'prestamos_panel' %}active{% endif %}">
+            <a href="{% url 'prestamos_panel' %}">
+                <span class="icon"><ion-icon name="git-compare-outline"></ion-icon></span>
+                <span class="text">préstamos</span>
+            </a>
+        </li>
+        <div class="indicator"></div>
+    </ul>
+</nav>
+{% endblock %}
+{% block content %}
+<section class="panel-simple">
+    <h1>Panel de Almacenista</h1>
+    <p>Bienvenido, aquí puedes ver el inventario y gestionar la confirmación de préstamos.</p>
+    <!-- Aquí puedes incluir el dashboard de inventario o un resumen -->
+</section>
+{% endblock %}

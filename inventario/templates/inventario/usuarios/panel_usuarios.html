@@ -1,8 +1,173 @@
 {% extends 'inventario/shared/base.html' %}
+{% load static %}
 {% block title %}Gestión de Usuarios | Inventario SENA{% endblock %}
+    <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 20px;">
+        <form id="formGuardarRoles" method="post" action="{% url 'guardar_roles_masivo' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Guardar cambios de roles</button>
+        </form>
+    </div>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventario/usuarios/css/panel_usuarios.css' %}" data-page-style="true">
+{% endblock %}
 {% block content %}
 <section class="panel-simple">
     <h1>Gestión de Usuarios</h1>
-    <p>Aquí podrás ver y administrar los usuarios registrados en el sistema.</p>
+    <button class="btn btn-success" id="btnAbrirModalCrearUsuario" style="margin-bottom: 20px;">Crear usuario</button>
+
+    <!-- Modal Crear Usuario -->
+    <div id="modalCrearUsuario" class="modal">
+        <div class="modal-content">
+            <h2>Crear nuevo usuario</h2>
+            <form method="post" action="{% url 'crear_usuario' %}" autocomplete="off">
+                {% csrf_token %}
+                <input type="text" name="cc" class="form-input" placeholder="Cédula" required>
+                <input type="text" name="nombre" class="form-input" placeholder="Nombre" required>
+                <input type="text" name="apellido" class="form-input" placeholder="Apellido" required>
+                <input type="email" name="correo" class="form-input" placeholder="Correo" required>
+                <div class="form-group" style="margin-bottom: 6px;">
+                    <input type="password" name="password" id="inputPassword" class="form-input" placeholder="Contraseña" required>
+                    <button type="button" class="toggle-password" id="togglePassword" tabindex="-1" aria-label="Mostrar/Ocultar contraseña">
+                        <span id="iconEye">
+                            <ion-icon name="eye-outline"></ion-icon>
+                        </span>
+                    </button>
+                </div>
+                <select name="id_rol_fk" class="form-input" required>
+                    <option value="">Selecciona un rol</option>
+                    {% for rol in roles %}
+                        <option value="{{ rol.id_rol }}">{{ rol.nombre_rol }}</option>
+                    {% endfor %}
+                </select>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" id="btnCerrarModalCrearUsuario" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Crear</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="busqueda-contenedor-centrado">
+        <form method="get" class="busqueda-form barra-busqueda-moderna">
+        <button type="submit" class="icono-busqueda" aria-label="Buscar">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="10" cy="10" r="7" stroke="#888" stroke-width="2"/>
+                <line x1="16.0607" y1="16.4749" x2="20" y2="20.4142" stroke="#888" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <input type="text" name="q" value="{{ query }}" placeholder="Buscar por nombre, correo, cédula…" class="form-input input-busqueda-moderna">
+        </form>
+    </div>
+
+    <div class="tabla-usuarios-wrapper" style="overflow-x:auto;">
+        <table class="tabla-usuarios" style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Cédula</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Correo</th>
+                    <th>Rol</th>
+                    <th>Acciones</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                <tr>
+                    <td>{{ usuario.id_usu }}</td>
+                    <td>{{ usuario.cc|default:'—' }}</td>
+                    <td>{{ usuario.nombre|default:'—' }}</td>
+                    <td>{{ usuario.apellido|default:'—' }}</td>
+                    <td>{{ usuario.correo }}</td>
+                    <td>
+                        {% if usuario.id_rol_fk and usuario.id_rol_fk.nombre_rol != 'admin' %}
+                        <form method="post" action="{% url 'editar_rol_usuario' usuario.id_usu %}" class="form-rol-personalizado" style="display:inline;">
+                            {% csrf_token %}
+                            <div class="custom-select-rol" tabindex="0">
+                                <div class="selected-rol">{{ usuario.id_rol_fk.nombre_rol }}</div>
+                                <div class="rol-options" style="display:none;">
+                                    {% for rol in roles %}
+                                        <div class="rol-option{% if usuario.id_rol_fk.id_rol == rol.id_rol %} selected{% endif %}" data-value="{{ rol.id_rol }}">{{ rol.nombre_rol }}</div>
+                                    {% endfor %}
+                                </div>
+                                <input type="hidden" name="id_rol_fk" value="{{ usuario.id_rol_fk.id_rol }}">
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="margin-left:5px;">Guardar</button>
+                        </form>
+                        {% elif usuario.id_rol_fk and usuario.id_rol_fk.nombre_rol == 'admin' %}
+                            <span style="color:#888;">No editable</span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if usuario.is_active %}
+                            <span style="color: #39A900; font-weight:600;">Activo</span>
+                        {% else %}
+                            <span style="color: #c00; font-weight:600;">Inactivo</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="text-align:center;">No se encontraron usuarios.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% block extra_js %}
+<script data-page-script="true">
+// Modal crear usuario
+const btnAbrir = document.getElementById('btnAbrirModalCrearUsuario');
+const modal = document.getElementById('modalCrearUsuario');
+const btnCerrar = document.getElementById('btnCerrarModalCrearUsuario');
+if(btnAbrir && modal && btnCerrar){
+    btnAbrir.onclick = () => { modal.style.display = 'flex'; };
+    btnCerrar.onclick = () => { modal.style.display = 'none'; };
+    window.onclick = (e) => { if(e.target === modal) modal.style.display = 'none'; };
+}
+// Mostrar/ocultar contraseña con ion-icon
+const inputPassword = document.getElementById('inputPassword');
+const togglePassword = document.getElementById('togglePassword');
+const iconEye = document.getElementById('iconEye');
+if(inputPassword && togglePassword && iconEye){
+    togglePassword.onclick = function(e){
+        e.preventDefault();
+        if(inputPassword.type === 'password'){
+            inputPassword.type = 'text';
+            iconEye.innerHTML = '<ion-icon name="eye-off-outline"></ion-icon>';
+        }else{
+            inputPassword.type = 'password';
+            iconEye.innerHTML = '<ion-icon name="eye-outline"></ion-icon>';
+        }
+    };
+}
+// Custom select para rol (masivo)
+document.querySelectorAll('.custom-select-rol').forEach(function(select) {
+    const selected = select.querySelector('.selected-rol');
+    const options = select.querySelector('.rol-options');
+    const input = select.querySelector('input[type="hidden"]');
+    select.addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.querySelectorAll('.rol-options').forEach(o => { if(o !== options) o.style.display = 'none'; });
+        options.style.display = options.style.display === 'block' ? 'none' : 'block';
+    });
+    options.querySelectorAll('.rol-option').forEach(function(option) {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            selected.textContent = this.textContent;
+            input.value = this.getAttribute('data-value');
+            options.style.display = 'none';
+            options.querySelectorAll('.rol-option').forEach(o => o.classList.remove('selected'));
+            this.classList.add('selected');
+        });
+    });
+});
+document.addEventListener('click', function() {
+    document.querySelectorAll('.rol-options').forEach(o => o.style.display = 'none');
+});
+</script>
+{% endblock %}
 </section>
 {% endblock %}

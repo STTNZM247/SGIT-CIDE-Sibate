@@ -1,4 +1,8 @@
 {% extends 'inventario/shared/base.html' %}
+{% load static %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/shared/css/base.css' %}">
+{% endblock %}
 {% block title %}Auditorías | Inventario SENA{% endblock %}
 {% block content %}
 <section class="panel-simple">

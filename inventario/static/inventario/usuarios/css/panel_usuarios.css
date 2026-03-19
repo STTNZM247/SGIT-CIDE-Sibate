@@ -1,0 +1,261 @@
+/* Custom select para rol en tabla usuarios */
+.custom-select-rol {
+    position: relative;
+    min-width: 120px;
+    display: inline-block;
+    font-size: 1rem;
+    user-select: none;
+    cursor: pointer;
+}
+.selected-rol {
+    background: #f6f9f6;
+    border: 1.5px solid #e0f2e0;
+    border-radius: 8px;
+    padding: 7px 32px 7px 12px;
+    color: #222;
+    min-width: 100px;
+    font-weight: 600;
+    transition: border 0.18s;
+}
+.custom-select-rol:focus .selected-rol,
+.custom-select-rol .selected-rol:focus {
+    border-color: #39A900;
+}
+.rol-options {
+    position: absolute;
+    left: 0;
+    top: 110%;
+    background: #fff;
+    border: 1.5px solid #e0f2e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(57,169,0,0.08);
+    z-index: 10;
+    min-width: 100%;
+    padding: 4px 0;
+    margin-top: 2px;
+}
+.rol-option {
+    padding: 7px 16px;
+    cursor: pointer;
+    color: #222;
+    font-weight: 500;
+    transition: background 0.13s;
+}
+.rol-option.selected,
+.rol-option:hover {
+    background: #e0f2e0;
+    color: #39A900;
+}
+.custom-select-rol input[type="hidden"] {
+    display: none;
+}
+/* Modal Crear Usuario */
+#modalCrearUsuario {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.3);
+    align-items: center;
+    justify-content: center;
+}
+#modalCrearUsuario .modal-content {
+    background: #fff;
+    border-radius: 18px;
+    padding: 32px 32px 24px 32px;
+    min-width: 340px;
+    max-width: 95vw;
+    box-shadow: 0 4px 32px rgba(57,169,0,0.13);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: modalFadeIn 0.2s;
+}
+@keyframes modalFadeIn {
+    from { transform: translateY(-30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+#modalCrearUsuario h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 18px;
+    color: #222;
+}
+#modalCrearUsuario form input,
+#modalCrearUsuario form select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #e0f2e0;
+    border-radius: 8px;
+    font-size: 1.08rem;
+    margin-bottom: 6px;
+    background: #f6f9f6;
+    color: #222;
+    outline: none;
+    transition: border 0.18s;
+}
+#modalCrearUsuario form input:focus,
+#modalCrearUsuario form select:focus {
+    border-color: #39A900;
+}
+#modalCrearUsuario .btn {
+    font-size: 1.13rem;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 10px 28px;
+    border: none;
+    margin-top: 8px;
+    cursor: pointer;
+    transition: background 0.18s;
+}
+#modalCrearUsuario .btn-success {
+    background: #39A900;
+    color: #fff;
+}
+#modalCrearUsuario .btn-success:hover {
+    background: #2e7d0b;
+}
+#modalCrearUsuario .btn-secondary {
+    background: #e0f2e0;
+    color: #222;
+}
+#modalCrearUsuario .btn-secondary:hover {
+    background: #b0e6b0;
+}
+#modalCrearUsuario .form-group {
+    position: relative;
+}
+#modalCrearUsuario .toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+    color: #888;
+    padding: 0 4px;
+}
+/* Centrar la barra de búsqueda en la parte superior */
+.busqueda-contenedor-centrado {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+    margin-top: 8px;
+}
+/* Gestión de Usuarios - Estilos tabla y búsqueda */
+
+
+/* Barra de búsqueda moderna */
+.barra-busqueda-moderna {
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border-radius: 40px;
+    box-shadow: 0 2px 16px 0 rgba(57,169,255,0.07);
+    padding: 0 8px 0 0;
+    max-width: 700px;
+    width: 100%;
+    border: none;
+    position: relative;
+}
+.icono-busqueda {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 18px;
+    margin-right: 8px;
+    background: none;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 0;
+    height: 40px;
+    width: 40px;
+    transition: background 0.18s;
+}
+.icono-busqueda:focus, .icono-busqueda:hover {
+    background: #f2fbe9;
+    border-radius: 50%;
+}
+.input-busqueda-moderna {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 1.13rem;
+    flex: 1;
+    padding: 16px 0 16px 0;
+    border-radius: 40px;
+    color: #222;
+}
+.input-busqueda-moderna::placeholder {
+    color: #b0b8c9;
+    font-weight: 400;
+}
+.btn-busqueda-moderna {
+    background: #39A900;
+    color: #fff;
+    border: none;
+    border-radius: 40px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 10px 28px;
+    margin-left: 8px;
+    transition: background 0.2s;
+    box-shadow: 0 2px 8px 0 rgba(57,169,0,0.07);
+}
+.btn-busqueda-moderna:hover {
+    background: #2e7d0b;
+}
+
+.tabla-usuarios-wrapper {
+    overflow-x: auto;
+}
+.tabla-usuarios {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(57,169,0,0.06);
+    font-size: 1rem;
+    margin-bottom: 24px;
+}
+.tabla-usuarios th, .tabla-usuarios td {
+    padding: 12px 10px;
+    text-align: left;
+}
+.tabla-usuarios th {
+    background: #f6f9f6;
+    color: #222;
+    font-weight: 800;
+    border-bottom: 2px solid #e0f2e0;
+}
+.tabla-usuarios td {
+    border-bottom: 1px solid #e0f2e0;
+}
+.tabla-usuarios tr:last-child td {
+    border-bottom: none;
+}
+.tabla-usuarios tr:hover {
+    background: #f2fbe9;
+}
+.tabla-usuarios td span {
+    font-weight: 600;
+}
+@media (max-width: 700px) {
+    .tabla-usuarios th, .tabla-usuarios td {
+        padding: 8px 6px;
+        font-size: 0.97em;
+    }
+    .busqueda-form .btn {
+        padding: 8px 12px;
+        font-size: 1em;
+    }
+}
