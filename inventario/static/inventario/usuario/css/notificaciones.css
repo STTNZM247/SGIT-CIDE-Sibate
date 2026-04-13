@@ -1,0 +1,270 @@
+/* ─── Panel de Notificaciones ─────────────────────────────────────────────── */
+
+.page-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.page-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #39393c;
+    margin: 0;
+}
+
+.page-title ion-icon {
+    font-size: 1.6rem;
+    color: #39c0ba;
+}
+
+.btn-marcar-todas {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #f0fafa;
+    border: 1.5px solid #39c0ba;
+    color: #2aafa9;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s;
+    white-space: nowrap;
+}
+
+.btn-marcar-todas:hover {
+    background: #39c0ba;
+    color: #fff;
+}
+
+/* ─── Lista ─────────────────────────────────────────────────────────────────── */
+
+.notif-panel {
+    padding: 8px 0 40px;
+}
+
+.notif-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #aaa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.notif-empty ion-icon {
+    font-size: 3.5rem;
+    color: #ccc;
+}
+
+.notif-empty p {
+    font-size: 1rem;
+    margin: 0;
+}
+
+.notif-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* ─── Tarjeta ────────────────────────────────────────────────────────────────── */
+
+.notif-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px 18px;
+    border: 1.5px solid #e8eaed;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    transition: box-shadow 0.18s, border-color 0.18s;
+    position: relative;
+    overflow: hidden;
+}
+
+.notif-card:hover {
+    box-shadow: 0 4px 14px rgba(0,0,0,0.09);
+}
+
+.notif-card.notif-unread {
+    border-left: 4px solid #39c0ba;
+    background: #f7fffe;
+}
+
+.notif-card.notif-unread::before {
+    content: '';
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 8px;
+    height: 8px;
+    background: #39c0ba;
+    border-radius: 50%;
+}
+
+/* ─── Colores por tipo ────────────────────────────────────────────────────── */
+
+.notif-tipo-pedido_creado .notif-icon-wrap   { background: #e8f5e9; color: #4caf50; }
+.notif-tipo-esperando_entrega .notif-icon-wrap { background: #fff3e0; color: #ff9800; }
+.notif-tipo-entregado .notif-icon-wrap       { background: #e3f2fd; color: #2196f3; }
+.notif-tipo-rechazado .notif-icon-wrap       { background: #fce4ec; color: #e91e63; }
+.notif-tipo-no_disponible .notif-icon-wrap   { background: #fff8e1; color: #f9a825; }
+.notif-tipo-aviso_devolucion .notif-icon-wrap { background: #f3e5f5; color: #9c27b0; }
+
+/* Staff */
+.notif-tipo-staff_nuevo_pedido .notif-icon-wrap    { background: #e0f7fa; color: #0097a7; }
+.notif-tipo-staff_pedido_cancelado .notif-icon-wrap { background: #fce4ec; color: #c62828; }
+.notif-tipo-staff_pedido_entregado .notif-icon-wrap { background: #e8f5e9; color: #2e7d32; }
+
+.notif-tipo-pedido_creado.notif-unread       { border-left-color: #4caf50; }
+.notif-tipo-esperando_entrega.notif-unread   { border-left-color: #ff9800; }
+.notif-tipo-entregado.notif-unread           { border-left-color: #2196f3; }
+.notif-tipo-rechazado.notif-unread           { border-left-color: #e91e63; }
+.notif-tipo-no_disponible.notif-unread       { border-left-color: #f9a825; }
+.notif-tipo-aviso_devolucion.notif-unread    { border-left-color: #9c27b0; }
+
+/* Staff unread */
+.notif-tipo-staff_nuevo_pedido.notif-unread    { border-left-color: #0097a7; }
+.notif-tipo-staff_pedido_cancelado.notif-unread { border-left-color: #c62828; }
+.notif-tipo-staff_pedido_entregado.notif-unread { border-left-color: #2e7d32; }
+
+/* ─── Ícono ──────────────────────────────────────────────────────────────── */
+
+.notif-icon-wrap {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f0f0;
+    color: #888;
+    margin-top: 2px;
+}
+
+.notif-icon {
+    font-size: 1.4rem;
+}
+
+/* ─── Cuerpo ─────────────────────────────────────────────────────────────── */
+
+.notif-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.notif-titulo {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #2b2b2e;
+    margin: 0 0 4px;
+    line-height: 1.3;
+}
+
+.notif-mensaje {
+    font-size: 0.875rem;
+    color: #666;
+    margin: 0 0 8px;
+    line-height: 1.5;
+}
+
+.notif-meta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.notif-fecha {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    color: #aaa;
+}
+
+.notif-fecha ion-icon {
+    font-size: 0.95rem;
+}
+
+.notif-link-pedido {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: #39c0ba;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 6px;
+    padding: 2px 8px;
+    background: #f0fafa;
+    border: 1px solid #b2e8e6;
+    transition: background 0.15s, color 0.15s;
+}
+
+.notif-link-pedido:hover {
+    background: #39c0ba;
+    color: #fff;
+    border-color: #39c0ba;
+}
+
+.notif-link-pedido ion-icon {
+    font-size: 0.95rem;
+}
+
+/* ─── Acciones ────────────────────────────────────────────────────────────── */
+
+.notif-actions {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding-top: 2px;
+}
+
+.btn-leida {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1.5px solid #39c0ba;
+    background: transparent;
+    color: #39c0ba;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: background 0.15s, color 0.15s;
+}
+
+.btn-leida:hover {
+    background: #39c0ba;
+    color: #fff;
+}
+
+.notif-leida-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    color: #bbb;
+    white-space: nowrap;
+}
+
+.notif-leida-label ion-icon {
+    font-size: 1rem;
+    color: #39c0ba;
+}

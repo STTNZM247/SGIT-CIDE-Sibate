@@ -1,0 +1,569 @@
+/* =====================================================
+   PANEL PRÉSTAMOS — panel_prestamos.css
+   ===================================================== */
+
+.prestamos-page {
+  width: min(1280px, 100%);
+  margin: 0 auto;
+  padding: 10px 0 48px;
+}
+
+/* Hero */
+.prestamos-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.prestamos-eyebrow {
+  margin: 0 0 8px;
+  color: #39a900;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.prestamos-hero h1 {
+  margin: 0;
+  color: #1d251f;
+  font-size: clamp(1.9rem, 2.8vw, 3rem);
+  line-height: 1.05;
+}
+
+.prestamos-hero p:not(.prestamos-eyebrow) {
+  margin: 10px 0 0;
+  color: #5b665d;
+  max-width: 680px;
+  font-size: 1rem;
+}
+
+/* Badge de vencidos */
+.prestamos-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 16px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.prestamos-hero-badge--ok {
+  background: #eef8e7;
+  color: #2a7600;
+  border: 1px solid #c8e8b0;
+}
+
+.prestamos-hero-badge--warn {
+  background: #fff0f0;
+  color: #b63a3a;
+  border: 1px solid #ffc8c8;
+}
+
+/* Flashes */
+.prestamos-flashes {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.prestamos-flash {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.prestamos-flash--success { background: #edfaf2; color: #1a6b45; border: 1px solid #b6e8ce; }
+.prestamos-flash--error   { background: #fff3f3; color: #b43a3a; border: 1px solid #ffc8c8; }
+
+/* Resumen de stats */
+.prestamos-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.prestamos-stat-tile {
+  border-radius: 18px;
+  border: 1px solid #dde8d8;
+  background: #fff;
+  padding: 16px 18px;
+  display: grid;
+  gap: 4px;
+}
+
+.prestamos-stat-tile span {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #667068;
+}
+
+.prestamos-stat-tile strong {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #1d251f;
+  line-height: 1;
+}
+
+.prestamos-stat-tile--vencido {
+  border-color: #ffc8c8;
+  background: #fff5f5;
+}
+
+.prestamos-stat-tile--vencido strong {
+  color: #b43a3a;
+}
+
+.prestamos-stat-tile--cancelado {
+  border-color: #e8c8c8;
+  background: #fff8f8;
+}
+
+.prestamos-stat-tile--cancelado strong {
+  color: #9a2020;
+}
+
+/* Lista de préstamos */
+.prestamos-list {
+  display: grid;
+  gap: 14px;
+}
+
+/* Filtros */
+.prestamos-filtros {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.prestamos-filtro {
+  border: 1px solid #dce7d7;
+  border-radius: 14px;
+  background: #fff;
+  text-decoration: none;
+  color: #2a342c;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-weight: 700;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.prestamos-filtro strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #eef7e8;
+  color: #2b7600;
+  font-size: 0.8rem;
+}
+
+.prestamos-filtro.is-active {
+  border-color: #4ba41f;
+  background: #eef8e7;
+  color: #1f5c00;
+}
+
+/* Vencido */
+.prestamos-filtro--vencido strong {
+  background: #ffecec;
+  color: #b43a3a;
+}
+
+.prestamos-filtro--vencido.is-active {
+  border-color: #e88;
+  background: #fff5f5;
+  color: #9a2020;
+}
+
+/* Cancelado */
+.prestamos-filtro--cancelado strong {
+  background: #ffecec;
+  color: #9a2020;
+}
+
+.prestamos-filtro--cancelado.is-active {
+  border-color: #e8c8c8;
+  background: #fff8f8;
+  color: #7a1818;
+}
+
+/* Cabecera de columnas */
+.prestamos-list-header {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.6fr) minmax(160px, 1.2fr) 130px 160px 150px auto;
+  gap: 0;
+  padding: 8px 16px;
+  color: #667268;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* Tarjeta de préstamo */
+.prestamo-row {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.6fr) minmax(160px, 1.2fr) 130px 160px 150px auto;
+  gap: 0;
+  border: 1px solid #e1eadc;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(57, 169, 0, 0.06);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.prestamo-row:hover {
+  box-shadow: 0 12px 32px rgba(57, 169, 0, 0.11);
+}
+
+.prestamo-row--vencido {
+  border-left: 5px solid #ff6b6b;
+  border-color: #ffcece;
+  background: #fffafa;
+}
+
+.prestamo-row--ok {
+  border-left: 5px solid #39a900;
+}
+
+.prestamo-row--sin-fecha {
+  border-left: 5px solid #aab8ac;
+}
+
+.prestamo-row--cancelado {
+  border-left: 5px solid #c0392b;
+  border-color: #ffcece;
+  background: #fff5f5;
+  opacity: 0.82;
+}
+
+/* Celdas */
+.prestamo-row > div {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid #f0f4ed;
+}
+
+.prestamo-row > div:last-child {
+  border-right: none;
+}
+
+/* Columna usuario */
+.prestamo-row__usuario {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 12px;
+}
+
+.prestamo-row__avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid #d8ead0;
+}
+
+.prestamo-row__avatar-placeholder {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #e8f4e0;
+  display: grid;
+  place-items: center;
+  color: #39a900;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  border: 2px solid #c8e4b8;
+}
+
+.prestamo-row__nombre {
+  margin: 0;
+  font-weight: 800;
+  color: #1d251f;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+.prestamo-row__meta {
+  margin: 3px 0 0;
+  font-size: 0.78rem;
+  color: #667268;
+}
+
+/* Área / ambiente */
+.prestamo-row__area {
+  font-size: 0.88rem;
+  color: #3a4a3c;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Tipo devolución */
+.prestamo-row__tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #dde8d8;
+  background: #f4f8f1;
+  color: #3a5c30;
+  width: fit-content;
+}
+
+/* Fecha devolución */
+.prestamo-row__fecha strong {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #1d251f;
+}
+
+.prestamo-row__fecha small {
+  font-size: 0.78rem;
+  color: #667268;
+  margin-top: 2px;
+}
+
+.prestamo-row--vencido .prestamo-row__fecha strong {
+  color: #b43a3a;
+}
+
+/* Badge de estado */
+.prestamo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  border: 1px solid transparent;
+  width: fit-content;
+}
+
+.prestamo-badge--ok {
+  background: #eef8e7;
+  color: #1f6200;
+  border-color: #c2e4a4;
+}
+
+.prestamo-badge--vencido {
+  background: #ffecec;
+  color: #b43a3a;
+  border-color: #ffcece;
+  animation: prestamo-pulse 2s ease-in-out infinite;
+}
+
+.prestamo-badge--sin-fecha {
+  background: #f4f6f4;
+  color: #667268;
+  border-color: #dde8d5;
+}
+
+.prestamo-badge--cancelado {
+  background: #ffecec;
+  color: #b43a3a;
+  border-color: #ffcece;
+  font-weight: 900;
+}
+
+@keyframes prestamo-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.72; }
+}
+
+/* Conteo días */
+.prestamo-dias {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.prestamo-dias--ok    { color: #2a7600; }
+.prestamo-dias--warn  { color: #b05c00; }
+.prestamo-dias--vencido { color: #c0392b; }
+
+/* Acciones */
+.prestamo-row__actions {
+  align-items: center;
+  gap: 8px;
+  flex-direction: column !important;
+}
+
+.prestamo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.prestamo-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+.prestamo-btn--detail {
+  background: #f0f8ea;
+  color: #1f5800;
+  border-color: #c5e4a8;
+}
+
+.prestamo-btn--aviso {
+  background: #fff0f0;
+  color: #b43a3a;
+  border-color: #ffc8c8;
+}
+
+/* Vacío */
+.prestamos-empty {
+  text-align: center;
+  padding: 60px 24px;
+  border: 1px solid #e1eadc;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #ffffff, #f9fcf7);
+}
+
+.prestamos-empty__icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  background: #eef8e8;
+  color: #39a900;
+  font-size: 2.2rem;
+}
+
+.prestamos-empty h2 { margin: 0 0 8px; color: #1f2721; }
+.prestamos-empty p  { margin: 0; color: #5b665d; }
+
+/* Productos inline (details/summary) */
+.prestamo-productos-toggle {
+  margin-top: 0;
+  border: 1px solid #e4ece0;
+  border-radius: 12px;
+  background: #f8fbf6;
+  font-size: 0.82rem;
+  overflow: hidden;
+}
+
+.prestamo-productos-toggle summary {
+  list-style: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 700;
+  color: #3a4c3c;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.prestamo-productos-toggle summary::-webkit-details-marker { display: none; }
+
+.prestamo-productos-list {
+  padding: 4px 12px 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.prestamo-producto-item {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #e4ece0;
+}
+
+.prestamo-producto-item__name {
+  font-weight: 700;
+  color: #1d251f;
+  flex: 1;
+}
+
+.prestamo-producto-item__qty {
+  font-size: 0.76rem;
+  color: #667268;
+}
+
+.prestamo-producto-item__fecha {
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.prestamo-producto-item__fecha--ok      { color: #2a7600; }
+.prestamo-producto-item__fecha--vencido { color: #b43a3a; }
+.prestamo-producto-item__fecha--none    { color: #9aaa9c; }
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .prestamo-row,
+  .prestamos-list-header {
+    grid-template-columns: minmax(180px, 1.4fr) minmax(140px, 1fr) 110px 140px 140px auto;
+  }
+}
+
+@media (max-width: 860px) {
+  .prestamos-list-header { display: none; }
+  .prestamos-filtros { grid-template-columns: 1fr 1fr; }
+
+  .prestamo-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto auto;
+  }
+
+  .prestamo-row__usuario  { grid-column: 1 / -1; border-right: none; border-bottom: 1px solid #f0f4ed; }
+  .prestamo-row__area     { grid-column: 1; }
+  .prestamo-row__tipo     { grid-column: 2; }
+  .prestamo-row__fecha    { grid-column: 1; }
+  .prestamo-row__estado   { grid-column: 2; }
+  .prestamo-row__actions  { grid-column: 1 / -1; flex-direction: row !important; border-right: none; border-top: 1px solid #f0f4ed; }
+}
+
+@media (max-width: 580px) {
+  .prestamo-row {
+    grid-template-columns: 1fr;
+  }
+  .prestamo-row > div { border-right: none; border-bottom: 1px solid #f0f4ed; }
+  .prestamo-row > div:last-child { border-bottom: none; }
+}

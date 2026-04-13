@@ -1,0 +1,36 @@
+<nav class="navigation" aria-label="Navegacion usuario">
+    <a class="nav-brand" href="{% url 'panel_usuario' %}" aria-label="Inicio SENA">
+        <span class="nav-brand__logo" aria-hidden="true"></span>
+    </a>
+    <ul>
+        <li class="list {% if request.resolver_match.url_name == 'panel_usuario' or request.resolver_match.url_name == 'producto_detalle_usuario' %}active{% endif %}">
+            <a href="{% url 'panel_usuario' %}">
+                <span class="icon"><ion-icon name="storefront-outline"></ion-icon></span>
+                <span class="text">Productos</span>
+            </a>
+        </li>
+        <li class="list {% if request.resolver_match.url_name == 'carrito_usuario' %}active{% endif %}">
+            <a href="{% url 'carrito_usuario' %}">
+                <span class="icon"><ion-icon name="cart-outline"></ion-icon></span>
+                <span class="text">Carrito</span>
+            </a>
+        </li>
+        <li class="list {% if request.resolver_match.url_name == 'pedidos_usuario' %}active{% endif %}">
+            <a href="{% url 'pedidos_usuario' %}">
+                <span class="icon"><ion-icon name="receipt-outline"></ion-icon></span>
+                <span class="text">Pedidos</span>
+            </a>
+        </li>
+        <li class="list {% if request.resolver_match.url_name == 'perfil_usuario' %}active{% endif %}">
+            <a href="{% url 'perfil_usuario' %}">
+                <span class="icon"><ion-icon name="person-outline"></ion-icon></span>
+                <span class="text">Perfil</span>
+            </a>
+        </li>
+        <div class="indicator"></div>
+    </ul>
+    <a href="{% url 'notificaciones_panel' %}" class="nav-notif-btn {% if notif_no_leidas %}has-notif{% endif %}" aria-label="Notificaciones" title="{% if notif_no_leidas %}{{ notif_no_leidas }} notificacion{% if notif_no_leidas != 1 %}es{% endif %} sin leer{% else %}Notificaciones{% endif %}">
+        <ion-icon name="notifications-outline"></ion-icon>
+        <span class="nav-notif-dot" aria-hidden="true"></span>
+    </a>
+</nav>

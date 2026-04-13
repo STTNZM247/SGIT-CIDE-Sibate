@@ -1,0 +1,113 @@
+﻿{% extends 'inventario/shared/base.html' %}
+{% load static %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/shared/css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/pedidos/css/panel_pedidos.css' %}" data-page-style="true">
+{% endblock %}
+{% block title %}Panel de Pedidos | Inventario SENA{% endblock %}
+{% block content %}
+<section class="pedidos-page">
+    <header class="pedidos-page__hero">
+        <div>
+            <p class="pedidos-page__eyebrow">Panel de pedidos</p>
+            <h1>Solicitudes de préstamo</h1>
+            <p>Pedidos pendientes y en espera de entrega. Los pedidos ya entregados se gestionan en el <a href="{% url 'prestamos_panel' %}" style="color:#39a900;font-weight:700;">panel de préstamos</a>.</p>
+        </div>
+        <div class="pedidos-page__summary">
+            <ion-icon name="albums-outline"></ion-icon>
+            <span>{{ pedidos|length }} pedido{{ pedidos|length|pluralize }}</span>
+        </div>
+    </header>
+
+    {% if pedidos %}
+    <div class="pedidos-cards">
+        {% for pedido in pedidos %}
+        <article class="pedido-row pedido-row--{{ pedido.estado|slugify }}">
+
+            <!-- Columna 1: Usuario + ID -->
+            <div class="pedido-row__usuario">
+                <div class="pedido-row__avatar">
+                    {% if pedido.id_usuario_fk.fot_usu %}
+                    <img src="{{ pedido.id_usuario_fk.fot_usu.url }}" alt="Foto de {{ pedido.id_usuario_fk.nombre }}">
+                    {% else %}
+                    <ion-icon name="person-outline"></ion-icon>
+                    {% endif %}
+                </div>
+                <div>
+                    <strong>{{ pedido.id_usuario_fk.nombre }} {{ pedido.id_usuario_fk.apellido }}</strong>
+                    <span>{{ pedido.id_usuario_fk.correo }}</span>
+                    {% if pedido.id_usuario_fk.cc %}
+                    <span class="pedido-row__cc"><ion-icon name="id-card-outline"></ion-icon> CC {{ pedido.id_usuario_fk.cc }}</span>
+                    {% endif %}
+                    <span class="pedido-row__id">#{{ pedido.id_pedido }} · {{ pedido.fch_registro|date:'d/m/Y H:i' }}</span>
+                </div>
+            </div>
+
+            <!-- Columna 2: Estado -->
+            <div class="pedido-row__estado">
+                <span class="pedido-row__label">Estado</span>
+                <span class="pedidos-estado pedidos-estado--{{ pedido.estado|slugify }}">{{ pedido.estado|title }}</span>
+                <span class="pedido-row__unidades">{{ pedido.total_unidades }} unidad{{ pedido.total_unidades|pluralize:"es" }}</span>
+            </div>
+
+            <!-- Columna 3: Área + Devolución -->
+            <div class="pedido-row__prestamo">
+                <div class="pedido-row__meta-item">
+                    <span><ion-icon name="location-outline"></ion-icon> Área</span>
+                    {% if pedido.area_ubicacion %}
+                    <strong>{{ pedido.area_ubicacion }}</strong>
+                    {% else %}
+                    <strong class="pedido-row__empty">No indicada</strong>
+                    {% endif %}
+                </div>
+                <div class="pedido-row__meta-item">
+                    <span><ion-icon name="calendar-outline"></ion-icon> Devolución</span>
+                    {% if pedido.fecha_devolucion %}
+                    <strong>{{ pedido.fecha_devolucion|date:'d/m/Y' }} <em>{{ pedido.fecha_devolucion|date:'H:i' }}</em></strong>
+                    {% elif pedido.tipo_devolucion == 'individual' %}
+                    <strong class="pedido-row__individual"><ion-icon name="list-outline"></ion-icon> Por producto</strong>
+                    {% else %}
+                    <strong class="pedido-row__empty">No indicada</strong>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Columna 4: Carnet -->
+            <div class="pedido-row__carnet">
+                <span class="pedido-row__label">Carnet SENA</span>
+                {% if pedido.foto_carnet %}
+                <a href="{{ pedido.foto_carnet.url }}" target="_blank" rel="noopener" class="pedido-row__carnet-img" title="Ver carnet de {{ pedido.id_usuario_fk.nombre }}">
+                    <img src="{{ pedido.foto_carnet.url }}" alt="Carnet">
+                    <span class="pedido-row__carnet-overlay"><ion-icon name="expand-outline"></ion-icon></span>
+                </a>
+                <span class="pedido-row__carnet-ok"><ion-icon name="checkmark-circle"></ion-icon> Adjunto</span>
+                {% else %}
+                <div class="pedido-row__carnet-missing">
+                    <ion-icon name="alert-circle-outline"></ion-icon>
+                    <span>Sin carnet</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Columna 5: Acciones -->
+            <div class="pedido-row__actions">
+                <a class="pedido-row__btn-detalle" href="{% url 'pedido_detalle_panel' pedido.id_pedido %}" target="_blank" rel="noopener">
+                    <ion-icon name="eye-outline"></ion-icon>
+                    Ver detalle
+                </a>
+            </div>
+
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <section class="pedidos-empty">
+        <div class="pedidos-empty__icon">
+            <ion-icon name="file-tray-outline"></ion-icon>
+        </div>
+        <h2>No hay pedidos todavía</h2>
+        <p>Cuando un usuario realice una solicitud desde su carrito, aparecerá aquí con el detalle completo.</p>
+    </section>
+    {% endif %}
+</section>
+{% endblock %}

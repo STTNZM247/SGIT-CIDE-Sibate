@@ -48,6 +48,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         blank=True,
     )
     fot_usu = models.ImageField(upload_to='usuarios/', null=True, blank=True)
+    banner_usu = models.ImageField(upload_to='usuarios/banners/', null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
@@ -156,3 +157,146 @@ class Auditorio(models.Model):
 
     def __str__(self):
         return self.nombre_auditorio or f'Auditorio {self.id_aud}'
+
+
+class Pedido(models.Model):
+    id_pedido = models.AutoField(primary_key=True)
+    id_usuario_fk = models.ForeignKey(
+        Usuario,
+        on_delete=models.CASCADE,
+        db_column='id_usuario_fk',
+        related_name='pedidos',
+    )
+    estado = models.CharField(max_length=50, default='pendiente')
+    total_productos = models.PositiveIntegerField(default=0)
+    total_unidades = models.PositiveIntegerField(default=0)
+    codigo_entrega = models.CharField(max_length=6, null=True, blank=True)
+    codigo_expira_en = models.DateTimeField(null=True, blank=True)
+    area_ubicacion = models.TextField(null=True, blank=True)
+    foto_carnet = models.ImageField(upload_to='pedidos/carnets/', null=True, blank=True)
+    tipo_devolucion = models.CharField(max_length=10, default='global', null=True, blank=True)
+    fecha_devolucion = models.DateTimeField(null=True, blank=True)
+    fch_registro = models.DateTimeField(null=True, blank=True)
+    fch_ult_act = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'pedido'
+        ordering = ['-fch_registro', '-id_pedido']
+
+    def __str__(self):
+        return f'Pedido {self.id_pedido} - {self.id_usuario_fk}'
+
+
+class DetallePedido(models.Model):
+    id_det_pedido = models.AutoField(primary_key=True)
+    id_pedido_fk = models.ForeignKey(
+        Pedido,
+        on_delete=models.CASCADE,
+        db_column='id_pedido_fk',
+        related_name='detalles',
+    )
+    id_prod_fk = models.ForeignKey(
+        Producto,
+        on_delete=models.SET_NULL,
+        db_column='id_prod_fk',
+        null=True,
+        blank=True,
+    )
+    nombre_producto = models.CharField(max_length=255)
+    nombre_catalogo = models.CharField(max_length=255, null=True, blank=True)
+    cantidad_solicitada = models.PositiveIntegerField(default=1)
+    stock_referencia = models.IntegerField(null=True, blank=True)
+    estado_detalle = models.CharField(max_length=50, default='pendiente')
+    fecha_devolucion = models.DateTimeField(null=True, blank=True)
+    fch_registro = models.DateTimeField(null=True, blank=True)
+    fch_ult_act = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'detalle_pedido'
+        ordering = ['id_det_pedido']
+
+    def __str__(self):
+        return f'{self.nombre_producto} x {self.cantidad_solicitada}'
+
+
+class PedidoEvidencia(models.Model):
+    id_evidencia = models.AutoField(primary_key=True)
+    id_pedido_fk = models.ForeignKey(
+        Pedido,
+        on_delete=models.CASCADE,
+        db_column='id_pedido_fk',
+        related_name='evidencias',
+    )
+    foto_evidencia = models.ImageField(upload_to='pedidos/evidencias/')
+    fch_registro = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'pedido_evidencia'
+        ordering = ['id_evidencia']
+
+    def __str__(self):
+        return f'Evidencia {self.id_evidencia} pedido {self.id_pedido_fk_id}'
+
+
+class CarritoItem(models.Model):
+    id_carrito_item = models.AutoField(primary_key=True)
+    id_usuario_fk = models.ForeignKey(
+        Usuario,
+        on_delete=models.CASCADE,
+        db_column='id_usuario_fk',
+        related_name='carrito_items',
+    )
+    id_prod_fk = models.ForeignKey(
+        Producto,
+        on_delete=models.CASCADE,
+        db_column='id_prod_fk',
+        related_name='carrito_items',
+    )
+    cantidad = models.PositiveIntegerField(default=1)
+    fch_registro = models.DateTimeField(null=True, blank=True)
+    fch_ult_act = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'carrito_item'
+        constraints = [
+            models.UniqueConstraint(fields=['id_usuario_fk', 'id_prod_fk'], name='uq_carrito_usuario_producto'),
+        ]
+
+    def __str__(self):
+        return f'Carrito {self.id_usuario_fk_id} - Prod {self.id_prod_fk_id} x {self.cantidad}'
+
+
+class Notificacion(models.Model):
+    TIPOS = [
+        ('pedido_creado', 'Pedido creado'),
+        ('esperando_entrega', 'Esperando entrega'),
+        ('entregado', 'Entregado'),
+        ('rechazado', 'Rechazado'),
+        ('no_disponible', 'Producto no disponible'),
+        ('aviso_devolucion', 'Aviso de devolución'),
+        # Staff (admin / almacenista)
+        ('staff_nuevo_pedido', 'Nuevo pedido recibido'),
+        ('staff_pedido_cancelado', 'Pedido cancelado por usuario'),
+        ('staff_pedido_entregado', 'Pedido entregado'),
+    ]
+
+    id_noti = models.AutoField(primary_key=True)
+    id_usuario_fk = models.ForeignKey(
+        Usuario,
+        on_delete=models.CASCADE,
+        db_column='id_usuario_fk',
+        related_name='notificaciones',
+    )
+    tipo = models.CharField(max_length=30, choices=TIPOS)
+    titulo = models.CharField(max_length=120)
+    mensaje = models.TextField()
+    leida = models.BooleanField(default=False)
+    id_pedido_ref = models.PositiveIntegerField(null=True, blank=True)
+    fch_registro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'notificacion'
+        ordering = ['-fch_registro']
+
+    def __str__(self):
+        return f'Notif {self.id_noti} → usuario {self.id_usuario_fk_id}'

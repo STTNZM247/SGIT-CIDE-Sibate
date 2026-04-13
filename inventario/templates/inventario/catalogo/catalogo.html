@@ -27,6 +27,7 @@
         <h1 class="cat-header__title">Catálogo de Equipos</h1>
         <p class="cat-header__sub">Equipos y materiales disponibles en el CIDE Sibaté</p>
     </div>
+    {% if puede_gestionar_catalogo %}
     <div class="cat-header__actions">
         <button class="cat-btn cat-btn--secondary" type="button" data-modal="modal-catalogo">
             <ion-icon name="albums-outline"></ion-icon>
@@ -37,6 +38,7 @@
             Nuevo producto
         </button>
     </div>
+    {% endif %}
 </header>
 
 <!-- ESTADÍSTICAS RÁPIDAS --------------------------------- -->
@@ -53,6 +55,7 @@
     <div class="cat-grid">
         {% for cat in catalogos %}
         <article class="cat-card cat-card--catalogo">
+            {% if puede_gestionar_catalogo %}
             <form
                 method="post"
                 action="{% url 'eliminar_catalogo' cat.id_cat %}"
@@ -70,6 +73,7 @@
                     <ion-icon name="trash-outline"></ion-icon>
                 </button>
             </form>
+            {% endif %}
             <div class="cat-card__icon-wrap">
                 <ion-icon name="albums-outline"></ion-icon>
             </div>
@@ -88,6 +92,7 @@
                             <ion-icon name="eye-outline"></ion-icon>
                             Ver productos
                         </a>
+                        {% if puede_gestionar_catalogo %}
                         <button
                             class="cat-btn-mini"
                             type="button"
@@ -99,6 +104,7 @@
                             <ion-icon name="add-outline"></ion-icon>
                             Agregar
                         </button>
+                        {% endif %}
                     </div>
                     <span class="cat-card__count cat-card__count--below">
                         <ion-icon name="cube-outline"></ion-icon>
@@ -115,7 +121,11 @@
     <div class="cat-empty__inner">
         <ion-icon name="albums-outline"></ion-icon>
         <h2>Sin categorías aún</h2>
+        {% if puede_gestionar_catalogo %}
         <p>Crea tu primer catálogo para comenzar a organizar los equipos.</p>
+        {% else %}
+        <p>Aun no hay categorías registradas para consultar.</p>
+        {% endif %}
     </div>
 </section>
 {% endif %}
@@ -123,6 +133,7 @@
 <!-- ====================================================
      MODAL: Registrar catálogo
      ==================================================== -->
+{% if puede_gestionar_catalogo %}
 <div class="modal-backdrop" id="modal-catalogo" role="dialog" aria-modal="true" aria-labelledby="modal-cat-title" aria-hidden="true">
     <div class="modal">
         <div class="modal__header">
@@ -233,6 +244,7 @@
         </form>
     </div>
 </div>
+{% endif %}
 
 {% endblock %}
 

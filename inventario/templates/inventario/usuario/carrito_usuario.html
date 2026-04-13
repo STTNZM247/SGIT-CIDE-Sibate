@@ -1,0 +1,346 @@
+{% extends 'inventario/shared/base.html' %}
+{% load static %}
+
+{% block title %}Carrito de Compras{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventario/dashboard/css/dashboard.css' %}" data-page-style="true">
+<link rel="stylesheet" href="{% static 'inventario/usuario/css/panel_usuario.css' %}" data-page-style="true">
+<link rel="stylesheet" href="{% static 'inventario/usuario/css/carrito_usuario.css' %}" data-page-style="true">
+{% endblock %}
+
+{% block content %}
+<div class="usuario-carrito-page">
+    {% if messages %}
+    <div class="usuario-carrito-flashes" role="alert">
+        {% for msg in messages %}
+        <div class="usuario-carrito-flash usuario-carrito-flash--{{ msg.tags|default:'info' }}">
+            <ion-icon name="{% if 'error' in msg.tags %}alert-circle-outline{% else %}checkmark-circle-outline{% endif %}"></ion-icon>
+            <span>{{ msg }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <header class="usuario-carrito-hero">
+        <div>
+            <p class="usuario-carrito-eyebrow">Mi carrito</p>
+            <h1>Productos guardados para tu pedido</h1>
+            <p class="usuario-carrito-subtitle">Revisa cantidades y organiza tu solicitud antes de enviarla al almacenista.</p>
+        </div>
+    </header>
+
+    {% if carrito_items %}
+    <section class="usuario-carrito-layout">
+        <div class="usuario-carrito-lista">
+            <div class="usuario-carrito-toolbar">
+                <span class="usuario-carrito-pill">{{ total_productos }} producto{{ total_productos|pluralize }}</span>
+                <span class="usuario-carrito-pill">{{ total_unidades }} unidad{{ total_unidades|pluralize:"es" }} solicitada{{ total_unidades|pluralize:"s" }}</span>
+            </div>
+
+            {% for item in carrito_items %}
+            <article class="usuario-carrito-card {% if item.supera_stock %}usuario-carrito-card--warning{% endif %}">
+                <div class="usuario-carrito-card__media">
+                    {% if item.producto.fot_prod %}
+                    <img src="{{ item.producto.fot_prod.url }}" alt="{{ item.producto.nombre_producto }}">
+                    {% else %}
+                    <span class="usuario-carrito-card__placeholder">
+                        <ion-icon name="cube-outline"></ion-icon>
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="usuario-carrito-card__content">
+                    <div class="usuario-carrito-card__top">
+                        <div>
+                            <p class="usuario-carrito-card__categoria">{{ item.producto.id_cat_fk.nombre_catalogo }}</p>
+                            <h2 class="usuario-carrito-card__titulo">{{ item.producto.nombre_producto }}</h2>
+                        </div>
+                        <form method="post" action="{% url 'usuario_eliminar_carrito' item.producto.id_prod %}">
+                            {% csrf_token %}
+                            <button type="submit" class="usuario-carrito-remove" aria-label="Eliminar {{ item.producto.nombre_producto }} del carrito">
+                                <ion-icon name="trash-outline"></ion-icon>
+                            </button>
+                        </form>
+                    </div>
+
+                    <p class="usuario-carrito-card__desc">
+                        {% if item.producto.descripcion %}
+                            {{ item.producto.descripcion|truncatechars:150 }}
+                        {% else %}
+                            Sin descripción registrada para este producto.
+                        {% endif %}
+                    </p>
+
+                    <div class="usuario-carrito-card__meta">
+                        <div class="usuario-carrito-meta-box">
+                            <span class="usuario-carrito-meta-box__label">Cantidad solicitada</span>
+                            <strong>{{ item.cantidad }}</strong>
+                        </div>
+                        <div class="usuario-carrito-meta-box usuario-carrito-meta-box--status {% if item.supera_stock or item.producto.stock_actual|default:0 == 0 %}is-warning{% else %}is-ok{% endif %}">
+                            <span class="usuario-carrito-meta-box__label">Estado</span>
+                            <strong>
+                                {% if item.producto.stock_actual|default:0 == 0 %}
+                                    Sin stock
+                                {% elif item.supera_stock %}
+                                    Ajustar cantidad
+                                {% else %}
+                                    Disponible
+                                {% endif %}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        <aside class="usuario-carrito-resumen">
+            <div class="usuario-carrito-resumen__card">
+                <p class="usuario-carrito-resumen__eyebrow">Resumen del pedido</p>
+                <h2>Tu selección actual</h2>
+
+                <div class="usuario-carrito-resumen__stats">
+                    <div>
+                        <span>Productos</span>
+                        <strong>{{ total_productos }}</strong>
+                    </div>
+                    <div>
+                        <span>Unidades</span>
+                        <strong>{{ total_unidades }}</strong>
+                    </div>
+                    <div>
+                        <span>Disponibles</span>
+                        <strong>{{ productos_disponibles }}</strong>
+                    </div>
+                    <div>
+                        <span>Sin stock</span>
+                        <strong>{{ productos_sin_stock }}</strong>
+                    </div>
+                </div>
+
+                <div class="usuario-carrito-resumen__notice">
+                    <ion-icon name="shield-checkmark-outline"></ion-icon>
+                    <p>Cuando envíes el pedido, el almacenista lo verá en su panel de pedidos con el detalle completo de los productos solicitados.</p>
+                </div>
+
+                {% if carrito_valido %}
+                <button type="button" class="usuario-carrito-resumen__action usuario-carrito-resumen__action--submit" id="prestamo-open-btn">
+                    <ion-icon name="paper-plane-outline"></ion-icon>
+                    Realizar pedido
+                </button>
+                {% else %}
+                <div class="usuario-carrito-resumen__warning">
+                    <ion-icon name="warning-outline"></ion-icon>
+                    <span>Ajusta los productos sin disponibilidad antes de realizar el pedido.</span>
+                </div>
+                {% endif %}
+
+                <a href="{% url 'panel_usuario' %}" class="usuario-carrito-resumen__action usuario-carrito-resumen__action--secondary">
+                    <ion-icon name="bag-add-outline"></ion-icon>
+                    Agregar más productos
+                </a>
+            </div>
+        </aside>
+    </section>
+    {% else %}
+    <section class="usuario-carrito-empty">
+        <div class="usuario-carrito-empty__icon">
+            <ion-icon name="cart-outline"></ion-icon>
+        </div>
+        <h2>Tu carrito está vacío</h2>
+        <p>Aún no has guardado productos. Explora el inventario y agrega los elementos que necesites.</p>
+        <a href="{% url 'panel_usuario' %}" class="cat-btn cat-btn--secondary">Ver productos</a>
+    </section>
+    {% endif %}
+</div>
+
+<!-- ===== Modal Préstamo ===== -->
+<div class="prestamo-modal-overlay" id="prestamo-modal" role="dialog" aria-modal="true" aria-labelledby="prestamo-modal-title" style="display:none">
+    <div class="prestamo-modal">
+        <button type="button" class="prestamo-modal__close" id="prestamo-modal-close" aria-label="Cerrar">
+            <ion-icon name="close-outline"></ion-icon>
+        </button>
+
+        <div class="prestamo-modal__header">
+            <span class="prestamo-modal__icon"><ion-icon name="bookmark-outline"></ion-icon></span>
+            <div>
+                <h2 id="prestamo-modal-title">Datos del préstamo</h2>
+                <p>Completa la información antes de enviar tu solicitud al almacenista.</p>
+            </div>
+        </div>
+
+        <form method="post" action="{% url 'usuario_realizar_pedido' %}" enctype="multipart/form-data" id="prestamo-form">
+            {% csrf_token %}
+
+            <!-- Área / Ambiente -->
+            <div class="prestamo-field">
+                <label for="area_ubicacion">
+                    <ion-icon name="location-outline"></ion-icon>
+                    Área / Ambiente donde se usarán los productos <span class="prestamo-required">*</span>
+                </label>
+                <textarea id="area_ubicacion" name="area_ubicacion" rows="3" required
+                    placeholder="Ej: Aula 301, Laboratorio de redes, Taller eléctrico..."></textarea>
+            </div>
+
+            <!-- Carnet institucional -->
+            <div class="prestamo-field">
+                <label>
+                    <ion-icon name="card-outline"></ion-icon>
+                    Foto del carnet institucional SENA <span class="prestamo-required">*</span>
+                </label>
+                <label class="prestamo-file-area" id="carnet-drop" for="foto_carnet">
+                    <ion-icon name="cloud-upload-outline"></ion-icon>
+                    <span id="carnet-label">Arrastra o haz clic para subir la foto</span>
+                    <input type="file" id="foto_carnet" name="foto_carnet" accept="image/*" required>
+                </label>
+                <img id="carnet-preview" src="" alt="Vista previa carnet" style="display:none">
+            </div>
+
+            <!-- Fecha de devolución -->
+            <div class="prestamo-field">
+                <label>
+                    <ion-icon name="calendar-outline"></ion-icon>
+                    Fecha de devolución <span class="prestamo-required">*</span>
+                </label>
+
+                <div class="prestamo-devolucion-tabs">
+                    <label class="prestamo-tab">
+                        <input type="radio" name="tipo_devolucion" value="mismo_dia" id="tipo-mismo-dia">
+                        <span><ion-icon name="today-outline"></ion-icon> Mismo día</span>
+                    </label>
+                    <label class="prestamo-tab">
+                        <input type="radio" name="tipo_devolucion" value="por_dias" id="tipo-por-dias">
+                        <span><ion-icon name="calendar-outline"></ion-icon> Por días</span>
+                    </label>
+                </div>
+
+                <!-- Mismo día: solo hora -->
+                <div id="devolucion-mismo-dia" class="prestamo-devolucion-panel" style="display:none">
+                    <p class="prestamo-devolucion-hint">
+                        <ion-icon name="time-outline"></ion-icon>
+                        Hoy <strong id="hoy-fecha-display"></strong> — indica la hora de entrega:
+                    </p>
+                    <input type="time" name="hora_devolucion" id="hora_devolucion"
+                           class="prestamo-time-input">
+                </div>
+
+                <!-- Por días: solo fecha futura -->
+                <div id="devolucion-por-dias" class="prestamo-devolucion-panel" style="display:none">
+                    <p class="prestamo-devolucion-hint">
+                        <ion-icon name="calendar-outline"></ion-icon>
+                        Selecciona el día en que devolverás los productos:
+                    </p>
+                    <input type="date" name="fecha_devolucion_dias" id="fecha_devolucion_dias"
+                           class="prestamo-date-input">
+                </div>
+            </div>
+
+            <button type="submit" class="prestamo-submit-btn" id="prestamo-submit-btn" disabled>
+                <ion-icon name="paper-plane-outline"></ion-icon>
+                Confirmar y enviar pedido
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script data-page-script="true">
+(function () {
+    var modal      = document.getElementById('prestamo-modal');
+    var openBtn    = document.getElementById('prestamo-open-btn');
+    var closeBtn   = document.getElementById('prestamo-modal-close');
+    var submitBtn  = document.getElementById('prestamo-submit-btn');
+    var areaInput  = document.getElementById('area_ubicacion');
+    var carnetInput = document.getElementById('foto_carnet');
+    var carnetPreview = document.getElementById('carnet-preview');
+    var carnetLabel   = document.getElementById('carnet-label');
+
+    var radioDia  = document.getElementById('tipo-mismo-dia');
+    var radioDias = document.getElementById('tipo-por-dias');
+    var panelDia  = document.getElementById('devolucion-mismo-dia');
+    var panelDias = document.getElementById('devolucion-por-dias');
+    var horaInput = document.getElementById('hora_devolucion');
+    var fechaInput = document.getElementById('fecha_devolucion_dias');
+    var hoyDisplay = document.getElementById('hoy-fecha-display');
+
+    if (!modal) return;
+
+    /* ── Fecha mínima para el input date ── */
+    var hoy = new Date();
+    var pad = function (n) { return String(n).padStart(2, '0'); };
+    var hoyISO = hoy.getFullYear() + '-' + pad(hoy.getMonth() + 1) + '-' + pad(hoy.getDate());
+    var mananaISO = (function () {
+        var d = new Date(hoy); d.setDate(d.getDate() + 1);
+        return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    }());
+    if (fechaInput) fechaInput.min = mananaISO;   // Por días: solo fechas futuras
+
+    /* Mostrar fecha de hoy en el panel "Mismo día" */
+    if (hoyDisplay) {
+        var dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+        var meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        hoyDisplay.textContent = dias[hoy.getDay()] + ' ' + hoy.getDate() + ' de ' + meses[hoy.getMonth()];
+    }
+
+    /* ── Abrir / cerrar modal ── */
+    function openModal() { modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+    function closeModal() { modal.style.display = 'none'; document.body.style.overflow = ''; }
+
+    if (openBtn)  openBtn.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.style.display !== 'none') closeModal();
+    });
+
+    /* ── Toggle paneles de fecha ── */
+    function showPanel(tipo) {
+        panelDia.style.display  = tipo === 'mismo_dia'  ? '' : 'none';
+        panelDias.style.display = tipo === 'por_dias'   ? '' : 'none';
+        // Limpiar el otro campo para que no se envíe vacío de forma errónea
+        if (tipo === 'mismo_dia' && fechaInput) fechaInput.value = '';
+        if (tipo === 'por_dias'  && horaInput)  horaInput.value  = '';
+        checkForm();
+    }
+
+    if (radioDia)  radioDia.addEventListener('change',  function () { if (this.checked) showPanel('mismo_dia'); });
+    if (radioDias) radioDias.addEventListener('change', function () { if (this.checked) showPanel('por_dias'); });
+    if (horaInput)  horaInput.addEventListener('input',  checkForm);
+    if (fechaInput) fechaInput.addEventListener('input', checkForm);
+
+    /* ── Habilitar botón solo si todo está completo ── */
+    function checkForm() {
+        var areaOk   = areaInput  && areaInput.value.trim().length > 0;
+        var carnetOk = carnetInput && carnetInput.files && carnetInput.files.length > 0;
+
+        var fechaOk = false;
+        if (radioDia  && radioDia.checked  && horaInput  && horaInput.value)  fechaOk = true;
+        if (radioDias && radioDias.checked && fechaInput && fechaInput.value) fechaOk = true;
+
+        if (submitBtn) {
+            submitBtn.disabled = !(areaOk && carnetOk && fechaOk);
+        }
+    }
+
+    if (areaInput)   areaInput.addEventListener('input', checkForm);
+    if (carnetInput) carnetInput.addEventListener('change', checkForm);
+    checkForm();
+
+    /* ── Vista previa del carnet ── */
+    if (carnetInput) {
+        carnetInput.addEventListener('change', function () {
+            var file = carnetInput.files[0];
+            if (!file) return;
+            if (carnetLabel) carnetLabel.textContent = file.name;
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                carnetPreview.src = e.target.result;
+                carnetPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+}());
+</script>
+{% endblock %}

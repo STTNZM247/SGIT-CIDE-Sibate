@@ -1,0 +1,116 @@
+{% extends 'inventario/shared/base.html' %}
+{% load static %}
+
+{% block title %}Notificaciones — Inventario SENA{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventario/usuario/css/notificaciones.css' %}" data-page-style="true">
+{% endblock %}
+
+{% block header_center %}
+<div class="page-title-row">
+    <h1 class="page-title">
+        <ion-icon name="notifications-outline"></ion-icon>
+        Notificaciones
+    </h1>
+    {% if notificaciones %}
+    <form method="post" action="{% url 'notificaciones_marcar_todas_leidas' %}" style="margin-left:auto;">
+        {% csrf_token %}
+        <button type="submit" class="btn-marcar-todas">
+            <ion-icon name="checkmark-done-outline"></ion-icon>
+            Marcar todas como leídas
+        </button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="notif-panel">
+
+    {% if not notificaciones %}
+    <div class="notif-empty">
+        <ion-icon name="notifications-off-outline"></ion-icon>
+        <p>No tienes notificaciones aún.</p>
+    </div>
+    {% else %}
+
+    <ul class="notif-list">
+        {% for noti in notificaciones %}
+        <li class="notif-card {% if not noti.leida %}notif-unread{% endif %} notif-tipo-{{ noti.tipo }}">
+
+            <div class="notif-icon-wrap">
+                {% if noti.tipo == 'pedido_creado' %}
+                    <ion-icon name="cart-outline" class="notif-icon"></ion-icon>
+                {% elif noti.tipo == 'esperando_entrega' %}
+                    <ion-icon name="time-outline" class="notif-icon"></ion-icon>
+                {% elif noti.tipo == 'entregado' %}
+                    <ion-icon name="checkmark-circle-outline" class="notif-icon"></ion-icon>
+                {% elif noti.tipo == 'rechazado' %}
+                    <ion-icon name="close-circle-outline" class="notif-icon"></ion-icon>
+                {% elif noti.tipo == 'no_disponible' %}
+                    <ion-icon name="alert-circle-outline" class="notif-icon"></ion-icon>
+                {% elif noti.tipo == 'aviso_devolucion' %}
+                    <ion-icon name="return-down-back-outline" class="notif-icon"></ion-icon>
+                {% elif noti.tipo == 'staff_nuevo_pedido' %}
+                    <ion-icon name="bag-add-outline" class="notif-icon"></ion-icon>
+                {% elif noti.tipo == 'staff_pedido_cancelado' %}
+                    <ion-icon name="close-circle-outline" class="notif-icon"></ion-icon>
+                {% elif noti.tipo == 'staff_pedido_entregado' %}
+                    <ion-icon name="checkmark-done-circle-outline" class="notif-icon"></ion-icon>
+                {% else %}
+                    <ion-icon name="information-circle-outline" class="notif-icon"></ion-icon>
+                {% endif %}
+            </div>
+
+            <div class="notif-body">
+                <p class="notif-titulo">{{ noti.titulo }}</p>
+                <p class="notif-mensaje">{{ noti.mensaje }}</p>
+                <div class="notif-meta">
+                    <span class="notif-fecha">
+                        <ion-icon name="calendar-outline"></ion-icon>
+                        {{ noti.fch_registro|date:"d/m/Y H:i" }}
+                    </span>
+                    {% if noti.id_pedido_ref %}
+                        {% with rol=request.user.id_rol_fk.nombre_rol %}
+                        {% if rol == 'admin' or rol == 'almacenista' %}
+                        <a href="{% url 'pedido_detalle_panel' noti.id_pedido_ref %}"
+                           class="notif-link-pedido">
+                            <ion-icon name="receipt-outline"></ion-icon>
+                            Ver pedido #{{ noti.id_pedido_ref }}
+                        </a>
+                        {% else %}
+                        <a href="{% url 'pedidos_usuario' %}?pedido={{ noti.id_pedido_ref }}"
+                           class="notif-link-pedido">
+                            <ion-icon name="receipt-outline"></ion-icon>
+                            Ver pedido #{{ noti.id_pedido_ref }}
+                        </a>
+                        {% endif %}
+                        {% endwith %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="notif-actions">
+                {% if not noti.leida %}
+                <form method="post" action="{% url 'notificacion_marcar_leida' noti.id_noti %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-leida" title="Marcar como leída">
+                        <ion-icon name="checkmark-outline"></ion-icon>
+                    </button>
+                </form>
+                {% else %}
+                <span class="notif-leida-label">
+                    <ion-icon name="checkmark-done-outline"></ion-icon>
+                    Leída
+                </span>
+                {% endif %}
+            </div>
+
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+</div>
+{% endblock %}

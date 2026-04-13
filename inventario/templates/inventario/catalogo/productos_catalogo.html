@@ -38,6 +38,7 @@
     <div class="cat-grid cat-grid--productos">
         {% for p in productos %}
         <article class="cat-card product-tile">
+            {% if puede_gestionar_catalogo %}
             <form
                 class="product-tile__delete-form"
                 method="post"
@@ -49,6 +50,7 @@
                     <ion-icon name="trash-outline"></ion-icon>
                 </button>
             </form>
+            {% endif %}
 
             <button type="button" class="product-tile__open" data-open-modal="producto-{{ p.id_prod }}">
                 <div class="product-tile__thumb">

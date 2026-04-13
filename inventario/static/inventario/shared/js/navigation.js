@@ -3,39 +3,73 @@ document.addEventListener("DOMContentLoaded", () => {
     const navLinks = Array.from(document.querySelectorAll(".navigation .list a"));
     const NAV_ANIMATION_DELAY = 280;
 
+    const syncIndicator = () => {
+        const navList = document.querySelector(".navigation ul");
+        if (!navList) {
+            return;
+        }
+        const allItems = Array.from(navList.querySelectorAll(".list"));
+        const activeIdx = allItems.findIndex((li) => li.classList.contains("active"));
+        navList.style.setProperty("--nav-items", String(Math.max(allItems.length, 1)));
+        navList.style.setProperty("--active-index", String(activeIdx >= 0 ? activeIdx : 0));
+    };
+
     const setActive = (targetItem) => {
         items.forEach((li) => li.classList.remove("active"));
         if (targetItem) {
             targetItem.classList.add("active");
         }
+        syncIndicator();
     };
 
     const resolveActiveItemByUrl = (url) => {
         const parsed = new URL(url, window.location.origin);
         const path = parsed.pathname;
 
+        // Panel usuario (productos)
+        if (path === "/panel_usuario/" || path === "/usuario/inventario/") {
+            return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/panel_usuario/")?.closest(".list") ||
+                   navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/usuario/inventario/")?.closest(".list") || null;
+        }
+        if (path.startsWith("/usuario/producto/")) {
+            return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/panel_usuario/")?.closest(".list") || null;
+        }
+        // Carrito usuario
+        if (path === "/usuario/carrito/" || path === "/carrito_usuario/") {
+            return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/usuario/carrito/")?.closest(".list") ||
+                   navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/carrito_usuario/")?.closest(".list") || null;
+        }
+        // Pedidos usuario
+        if (path === "/usuario/pedidos/") {
+            return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/usuario/pedidos/")?.closest(".list") || null;
+        }
+        // Perfil usuario
+        if (path === "/perfil/" || path === "/perfil_usuario/") {
+            return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/perfil/")?.closest(".list") ||
+                   navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/perfil_usuario/")?.closest(".list") || null;
+        }
+        // Admin/almacenista paneles
         if (path.startsWith("/catalogo/")) {
             return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/catalogo/")?.closest(".list") || null;
         }
-
+        if (path.startsWith("/producto/")) {
+            return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/catalogo/")?.closest(".list") || null;
+        }
         if (path === "/") {
             return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/")?.closest(".list") || null;
         }
-
-        if (path === "/perfil/") {
-            return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/perfil/")?.closest(".list") || null;
-        }
-
         if (path === "/usuarios/") {
             return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/usuarios/")?.closest(".list") || null;
         }
         if (path === "/prestamos/") {
             return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/prestamos/")?.closest(".list") || null;
         }
+        if (path.startsWith("/pedidos/")) {
+            return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/pedidos/")?.closest(".list") || null;
+        }
         if (path === "/auditorias/") {
             return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/auditorias/")?.closest(".list") || null;
         }
-
         return null;
     };
 
@@ -123,6 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     setActive(resolveActiveItemByUrl(window.location.href));
+    syncIndicator();
 
     navLinks.forEach((link) => {
         link.addEventListener("click", async (event) => {

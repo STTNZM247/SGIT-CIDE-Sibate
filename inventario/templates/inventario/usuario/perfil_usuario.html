@@ -1,45 +1,289 @@
 {% extends 'inventario/shared/base.html' %}
 {% load static %}
 
-{% block title %}Perfil de Usuario{% endblock %}
+{% block title %}Mi Perfil{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'inventario/usuario/css/perfil.css' %}" data-page-style="true">
 {% endblock %}
 
 {% block content %}
-<section class="perfil-usuario">
-    <h1>Mi Perfil</h1>
-    {% if usuario.fot_usu %}
-        <img src="{{ usuario.fot_usu.url }}" alt="Foto de perfil" class="perfil-foto">
-    {% else %}
-        <img src="{% static 'inventario/img/default-user.png' %}" alt="Foto de perfil" class="perfil-foto">
-    {% endif %}
-    <form method="post" class="perfil-form" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-        <div class="form-group">
-            <label for="id_cc">Cédula</label>
+<div class="perfil-page">
+
+  {% if messages %}
+    <div class="perfil-messages">
+      {% for message in messages %}
+        <div class="perfil-alert perfil-alert--{{ message.tags }}">
+          <ion-icon name="{% if message.tags == 'success' %}checkmark-circle-outline{% else %}alert-circle-outline{% endif %}"></ion-icon>
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="post" class="perfil-form" enctype="multipart/form-data" id="perfil-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <!-- Input files ocultos para subir fotos -->
+    <div style="display:none">
+      {{ form.fot_usu }}
+      {{ form.banner_usu }}
+    </div>
+
+    <!-- ====== TARJETA HERO (portada + avatar) ====== -->
+    <div class="perfil-card">
+
+      <!-- Portada -->
+      <div class="perfil-cover" id="perfil-cover-area">
+        {% if usuario.banner_usu %}
+          <img src="{{ usuario.banner_usu.url }}" alt="Portada" class="perfil-cover-img" id="perfil-cover-preview">
+        {% else %}
+          <div class="perfil-cover-img perfil-cover-img--gradient" id="perfil-cover-preview-fallback"></div>
+          <img src="" alt="Portada" class="perfil-cover-img" id="perfil-cover-preview" style="display:none">
+        {% endif %}
+        <button type="button" class="perfil-cover-btn" id="perfil-cover-trigger" title="Cambiar portada">
+          <ion-icon name="camera-outline"></ion-icon>
+          <span>Cambiar portada</span>
+        </button>
+
+
+      </div>
+
+      <!-- Avatar -->
+      <div class="perfil-avatar-wrap">
+        <div class="perfil-avatar-ring">
+          {% if usuario.fot_usu %}
+            <img src="{{ usuario.fot_usu.url }}" alt="Foto de perfil" class="perfil-avatar-img" id="perfil-avatar-preview">
+          {% else %}
+            <img src="{% static 'inventario/img/default-user.png' %}" alt="Foto de perfil" class="perfil-avatar-img" id="perfil-avatar-preview">
+          {% endif %}
+          <button type="button" class="perfil-avatar-btn" id="perfil-avatar-trigger" title="Cambiar foto">
+            <ion-icon name="camera-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Nombre y rol -->
+      <div class="perfil-identity">
+        <h1 class="perfil-nombre">{{ usuario.nombre }} {{ usuario.apellido }}</h1>
+        {% if usuario.id_rol_fk %}
+          <span class="perfil-rol-badge perfil-rol-badge--{{ usuario.id_rol_fk.nombre_rol }}">
+            <ion-icon name="{% if usuario.id_rol_fk.nombre_rol == 'admin' %}shield-checkmark-outline{% elif usuario.id_rol_fk.nombre_rol == 'almacenista' %}cube-outline{% else %}person-outline{% endif %}"></ion-icon>
+            {{ usuario.id_rol_fk.nombre_rol|capfirst }}
+          </span>
+        {% endif %}
+      </div>
+
+      <!-- ====== DATOS PERSONALES ====== -->
+      <div class="perfil-section">
+        <h2 class="perfil-section-title">
+          <ion-icon name="person-circle-outline"></ion-icon>
+          Datos personales
+        </h2>
+        <div class="perfil-grid">
+          <div class="perfil-field">
+            <label for="id_cc">
+              <ion-icon name="card-outline"></ion-icon>
+              Cédula
+            </label>
             {{ form.cc }}
-        </div>
-        <div class="form-group">
-            <label for="id_nombre">Nombre</label>
+          </div>
+          <div class="perfil-field">
+            <label for="id_nombre">
+              <ion-icon name="person-outline"></ion-icon>
+              Nombre
+            </label>
             {{ form.nombre }}
-        </div>
-        <div class="form-group">
-            <label for="id_apellido">Apellido</label>
+          </div>
+          <div class="perfil-field">
+            <label for="id_apellido">
+              <ion-icon name="person-outline"></ion-icon>
+              Apellido
+            </label>
             {{ form.apellido }}
-        </div>
-        <div class="form-group">
-            <label for="id_correo">Correo</label>
+          </div>
+          <div class="perfil-field perfil-field--full">
+            <label for="id_correo">
+              <ion-icon name="mail-outline"></ion-icon>
+              Correo electrónico
+            </label>
             {{ form.correo }}
+          </div>
         </div>
-        <div class="form-group">
-            <label for="id_fot_usu">Foto de perfil</label>
-            {{ form.fot_usu }}
-        </div>
-        <button type="submit" class="btn btn--primary">Guardar cambios</button>
-        <a href="{% url 'logout' %}" class="btn btn--inverse">Cerrar sesión</a>
-    </form>
-</section>
+      </div>
+
+      <!-- ====== BOTONES DE ACCIÓN ====== -->
+      <div class="perfil-actions">
+        <button type="submit" class="perfil-btn perfil-btn--save">
+          <ion-icon name="save-outline"></ion-icon>
+          Guardar cambios
+        </button>
+        <a href="{% url 'logout' %}" class="perfil-btn perfil-btn--logout">
+          <ion-icon name="log-out-outline"></ion-icon>
+          Cerrar sesión
+        </a>
+      </div>
+
+    </div>
+  </form>
+
+  <!-- Picker de portada (fuera de contenedores overflow:hidden) -->
+  <div class="perfil-cover-picker" id="perfil-cover-picker">
+    <p class="perfil-cover-picker-title">Elige un color</p>
+    <div class="perfil-cover-picker-colors">
+      <button type="button" class="perfil-cover-color" data-color="#39A900" title="Verde institucional" style="background:#39A900"></button>
+      <button type="button" class="perfil-cover-color" data-color="#007832" title="Verde secundario" style="background:#007832"></button>
+      <button type="button" class="perfil-cover-color" data-color="#00304D" title="Azul marino" style="background:#00304D"></button>
+      <button type="button" class="perfil-cover-color" data-color="#71277A" title="Púrpura" style="background:#71277A"></button>
+      <button type="button" class="perfil-cover-color" data-color="#50E5F9" title="Cyan" style="background:#50E5F9"></button>
+      <button type="button" class="perfil-cover-color" data-color="#FDC300" title="Amarillo" style="background:#FDC300"></button>
+      <button type="button" class="perfil-cover-color" data-color="#F6F6F6" title="Neutro" style="background:#F6F6F6"></button>
+      <button type="button" class="perfil-cover-color" data-color="#000000" title="Negro" style="background:#000000"></button>
+    </div>
+    <div class="perfil-cover-picker-divider"></div>
+    <button type="button" class="perfil-cover-picker-upload" id="perfil-cover-upload-btn">
+      <ion-icon name="image-outline"></ion-icon>
+      <span>Subir imagen</span>
+    </button>
+  </div>
+
+</div>
 {% endblock %}
+
+{% block extra_js %}
+<script data-page-script="true">
+(function () {
+  var avatarTrigger  = document.getElementById('perfil-avatar-trigger');
+  var avatarInput    = document.getElementById('id_fot_usu');
+  var avatarPreview  = document.getElementById('perfil-avatar-preview');
+  var coverTrigger   = document.getElementById('perfil-cover-trigger');
+  var coverInput     = document.getElementById('id_banner_usu');
+  var coverPreview   = document.getElementById('perfil-cover-preview');
+  var coverFallback  = document.getElementById('perfil-cover-preview-fallback');
+  var coverPicker    = document.getElementById('perfil-cover-picker');
+  var coverUploadBtn = document.getElementById('perfil-cover-upload-btn');
+  var coverArea      = document.getElementById('perfil-cover-area');
+
+  if (!avatarTrigger || !coverTrigger || !coverPicker) return;
+
+  var BANNER_URL = '{% url "perfil_actualizar_banner" %}';
+  var CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  /* ---- Indicador de estado en la portada ---- */
+  function showCoverStatus(msg, type) {
+    var existing = document.getElementById('perfil-cover-status');
+    if (existing) existing.remove();
+    var el = document.createElement('span');
+    el.id = 'perfil-cover-status';
+    el.className = 'perfil-cover-status perfil-cover-status--' + type;
+    el.textContent = msg;
+    coverArea.appendChild(el);
+    if (type === 'ok') {
+      setTimeout(function () { el.remove(); }, 2500);
+    }
+  }
+
+  /* ---- Enviar banner por AJAX ---- */
+  function saveBanner(blob, filename) {
+    showCoverStatus('Guardando…', 'loading');
+    var fd = new FormData();
+    fd.append('csrfmiddlewaretoken', CSRF_TOKEN);
+    fd.append('banner_usu', blob, filename || 'portada.png');
+    fetch(BANNER_URL, { method: 'POST', body: fd, credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok) {
+          showCoverStatus('✓ Guardado', 'ok');
+          /* Actualizar src para que la siguiente carga muestre la imagen */
+          if (coverPreview) {
+            coverPreview.src = data.url + '?t=' + Date.now();
+            coverPreview.style.display = 'block';
+          }
+          if (coverFallback) coverFallback.style.display = 'none';
+        } else {
+          showCoverStatus('✗ ' + (data.error || 'Error'), 'error');
+        }
+      })
+      .catch(function () { showCoverStatus('✗ Error de red', 'error'); });
+  }
+
+  // Avatar
+  avatarTrigger.addEventListener('click', function () { avatarInput.click(); });
+  avatarInput.addEventListener('change', function () {
+    if (this.files && this.files[0]) {
+      avatarPreview.src = URL.createObjectURL(this.files[0]);
+    }
+  });
+
+  // Abrir / cerrar picker de portada
+  coverTrigger.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (coverPicker.classList.contains('is-open')) {
+      coverPicker.classList.remove('is-open');
+      return;
+    }
+    var rect = this.getBoundingClientRect();
+    coverPicker.style.top = (rect.bottom + 8) + 'px';
+    var rightOffset = window.innerWidth - rect.right;
+    coverPicker.style.right = rightOffset + 'px';
+    coverPicker.style.left = 'auto';
+    coverPicker.classList.add('is-open');
+  });
+
+  // Cerrar al hacer clic fuera
+  document.addEventListener('click', function (e) {
+    if (!coverPicker.contains(e.target) && !coverTrigger.contains(e.target)) {
+      coverPicker.classList.remove('is-open');
+    }
+  });
+
+  // Seleccionar color → canvas → AJAX save
+  document.querySelectorAll('.perfil-cover-color').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var color = this.dataset.color;
+      coverArea.style.background = color;
+      if (coverPreview) coverPreview.style.display = 'none';
+      if (coverFallback) coverFallback.style.display = 'none';
+      document.querySelectorAll('.perfil-cover-color').forEach(function (b) { b.classList.remove('is-selected'); });
+      this.classList.add('is-selected');
+      coverPicker.classList.remove('is-open');
+      var canvas = document.createElement('canvas');
+      canvas.width = 1200; canvas.height = 400;
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, 1200, 400);
+      canvas.toBlob(function (blob) {
+        saveBanner(blob, 'portada-color.png');
+        /* Mantener también en el input por si el usuario guarda el form completo */
+        var dt = new DataTransfer();
+        dt.items.add(new File([blob], 'portada-color.png', { type: 'image/png' }));
+        coverInput.files = dt.files;
+      });
+    });
+  });
+
+  // Subir imagen
+  coverUploadBtn.addEventListener('click', function () {
+    coverPicker.classList.remove('is-open');
+    coverInput.click();
+  });
+
+  // Preview + AJAX save al subir imagen
+  coverInput.addEventListener('change', function () {
+    if (this.files && this.files[0]) {
+      var file = this.files[0];
+      if (coverPreview) {
+        coverPreview.src = URL.createObjectURL(file);
+        coverPreview.style.display = 'block';
+      }
+      if (coverFallback) coverFallback.style.display = 'none';
+      coverArea.style.background = '';
+      document.querySelectorAll('.perfil-cover-color').forEach(function (b) { b.classList.remove('is-selected'); });
+      saveBanner(file, file.name);
+    }
+  });
+})();
+</script>
+{% endblock %}
+

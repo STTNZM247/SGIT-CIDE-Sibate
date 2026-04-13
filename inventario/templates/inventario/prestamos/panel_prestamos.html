@@ -1,12 +1,239 @@
-{% extends 'inventario/shared/base.html' %}
+﻿{% extends "inventario/shared/base.html" %}
 {% load static %}
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventario/shared/css/base.css' %}">
+<link rel="stylesheet" href="{% static 'inventario/shared/css/base.css' %}">
+<link rel="stylesheet" href="{% static 'inventario/prestamos/css/panel_prestamos.css' %}" data-page-style="true">
 {% endblock %}
-{% block title %}Préstamos | Inventario SENA{% endblock %}
+{% block title %}Préstamos activos | Inventario SENA{% endblock %}
 {% block content %}
-<section class="panel-simple">
-    <h1>Panel de Préstamos</h1>
-    <p>Aquí podrás gestionar los préstamos de equipos y materiales.</p>
+<section class="prestamos-page">
+
+    {% if messages %}
+    <div class="prestamos-flashes" role="alert">
+        {% for msg in messages %}
+        <div class="prestamos-flash prestamos-flash--{{ msg.tags|default:'info' }}">
+            <ion-icon name="{% if 'error' in msg.tags %}alert-circle-outline{% else %}checkmark-circle-outline{% endif %}"></ion-icon>
+            <span>{{ msg }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <header class="prestamos-hero">
+        <div>
+            <p class="prestamos-eyebrow">Control de préstamos</p>
+            <h1>Préstamos activos</h1>
+            <p>Lista de todos los equipos entregados actualmente a los aprendices. Se marca en rojo cuando la fecha de devolución ha vencido.</p>
+        </div>
+        {% if total_vencidos > 0 %}
+        <span class="prestamos-hero-badge prestamos-hero-badge--warn">
+            <ion-icon name="alert-circle-outline"></ion-icon>
+            {{ total_vencidos }} préstamo{{ total_vencidos|pluralize }} vencido{{ total_vencidos|pluralize }}
+        </span>
+        {% elif prestamos %}
+        <span class="prestamos-hero-badge prestamos-hero-badge--ok">
+            <ion-icon name="checkmark-circle-outline"></ion-icon>
+            Todo al día
+        </span>
+        {% endif %}
+    </header>
+
+    <div class="prestamos-stats">
+        <div class="prestamos-stat-tile">
+            <span>Préstamos activos</span>
+            <strong>{{ total_activos }}</strong>
+        </div>
+        <div class="prestamos-stat-tile prestamos-stat-tile--vencido">
+            <span>Vencidos</span>
+            <strong>{{ total_vencidos }}</strong>
+        </div>
+        <div class="prestamos-stat-tile">
+            <span>Al día</span>
+            <strong>{{ total_al_dia }}</strong>
+        </div>
+        {% if total_cancelados > 0 %}
+        <div class="prestamos-stat-tile prestamos-stat-tile--cancelado">
+            <span>Cancelados</span>
+            <strong>{{ total_cancelados }}</strong>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if prestamos or filtro_activo != 'todos' %}
+    <nav class="prestamos-filtros" aria-label="Filtrar préstamos">
+        <a href="?filtro=todos" class="prestamos-filtro {% if filtro_activo == 'todos' %}is-active{% endif %}">
+            <span>Todos</span>
+            <strong>{{ total_activos|add:total_cancelados }}</strong>
+        </a>
+        <a href="?filtro=al-dia" class="prestamos-filtro {% if filtro_activo == 'al-dia' %}is-active{% endif %}">
+            <span>Al día</span>
+            <strong>{{ total_al_dia }}</strong>
+        </a>
+        <a href="?filtro=vencido" class="prestamos-filtro prestamos-filtro--vencido {% if filtro_activo == 'vencido' %}is-active{% endif %}">
+            <span>Vencidos</span>
+            <strong>{{ total_vencidos }}</strong>
+        </a>
+        <a href="?filtro=cancelado" class="prestamos-filtro prestamos-filtro--cancelado {% if filtro_activo == 'cancelado' %}is-active{% endif %}">
+            <span>Cancelados</span>
+            <strong>{{ total_cancelados }}</strong>
+        </a>
+    </nav>
+    {% endif %}
+
+    {% if prestamos %}
+    <div class="prestamos-list-header">
+        <span>Usuario</span>
+        <span>Área / Ambiente</span>
+        <span>Tipo dev.</span>
+        <span>Fecha devolución</span>
+        <span>Estado</span>
+        <span>Acciones</span>
+    </div>
+
+    <div class="prestamos-list">
+        {% for prestamo in prestamos %}
+        <div class="prestamo-row {% if prestamo.estado == 'rechazado' %}prestamo-row--cancelado{% elif prestamo.es_vencido %}prestamo-row--vencido{% elif prestamo.fecha_devolucion_display %}prestamo-row--ok{% else %}prestamo-row--sin-fecha{% endif %}">
+
+            <!-- Usuario -->
+            <div class="prestamo-row__usuario">
+                {% if prestamo.id_usuario_fk.fot_usu %}
+                <img class="prestamo-row__avatar" src="{{ prestamo.id_usuario_fk.fot_usu.url }}" alt="{{ prestamo.id_usuario_fk.nombre }}">
+                {% else %}
+                <div class="prestamo-row__avatar-placeholder">
+                    <ion-icon name="person-outline"></ion-icon>
+                </div>
+                {% endif %}
+                <div>
+                    <p class="prestamo-row__nombre">{{ prestamo.id_usuario_fk.nombre }} {{ prestamo.id_usuario_fk.apellido }}</p>
+                    <p class="prestamo-row__meta">
+                        {% if prestamo.id_usuario_fk.cc %}CC {{ prestamo.id_usuario_fk.cc }} · {% endif %}
+                        Pedido #{{ prestamo.id_pedido }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Área / ambiente -->
+            <div>
+                {% if prestamo.area_ubicacion %}
+                <span class="prestamo-row__area">{{ prestamo.area_ubicacion }}</span>
+                {% else %}
+                <span class="prestamo-row__area" style="color:#9aaa9c;">Sin área registrada</span>
+                {% endif %}
+            </div>
+
+            <!-- Tipo devolución -->
+            <div>
+                <span class="prestamo-row__tipo">
+                    {% if prestamo.tipo_devolucion == 'individual' %}
+                    <ion-icon name="list-outline"></ion-icon> Individual
+                    {% else %}
+                    <ion-icon name="layers-outline"></ion-icon> Global
+                    {% endif %}
+                </span>
+            </div>
+
+            <!-- Fecha devolución -->
+            <div class="prestamo-row__fecha">
+                {% if prestamo.estado == 'rechazado' %}
+                <strong style="color:#b43a3a;">—</strong>
+                <small style="color:#c47070;">Pedido cancelado</small>
+                {% elif prestamo.fecha_devolucion_display %}
+                <strong>{{ prestamo.fecha_devolucion_display|date:"d/m/Y" }}</strong>
+                <small>{{ prestamo.fecha_devolucion_display|date:"H:i" }} h</small>
+                <!-- Días restantes / vencido -->
+                {% if prestamo.es_vencido %}
+                <span class="prestamo-dias prestamo-dias--vencido">
+                    <ion-icon name="time-outline"></ion-icon>
+                    Venció hace {{ prestamo.dias_vencido }} día{{ prestamo.dias_vencido|pluralize }}
+                </span>
+                {% elif prestamo.dias_restantes is not None %}
+                    {% if prestamo.dias_restantes == 0 %}
+                    <span class="prestamo-dias prestamo-dias--warn">Vence hoy</span>
+                    {% elif prestamo.dias_restantes == 1 %}
+                    <span class="prestamo-dias prestamo-dias--warn">Vence mañana</span>
+                    {% else %}
+                    <span class="prestamo-dias prestamo-dias--ok">{{ prestamo.dias_restantes }} días restantes</span>
+                    {% endif %}
+                {% endif %}
+                {% else %}
+                <strong style="color:#9aaa9c;">Sin fecha</strong>
+                {% endif %}
+            </div>
+
+            <!-- Estado badge -->
+            <div class="prestamo-row__estado">
+                {% if prestamo.estado == 'rechazado' %}
+                <span class="prestamo-badge prestamo-badge--cancelado">
+                    <ion-icon name="close-circle-outline"></ion-icon> Pedido cancelado
+                </span>
+                {% elif prestamo.es_vencido %}
+                <span class="prestamo-badge prestamo-badge--vencido">
+                    <ion-icon name="alert-circle-outline"></ion-icon> Vencido
+                </span>
+                {% elif prestamo.fecha_devolucion_display %}
+                <span class="prestamo-badge prestamo-badge--ok">
+                    <ion-icon name="checkmark-circle-outline"></ion-icon> Al día
+                </span>
+                {% else %}
+                <span class="prestamo-badge prestamo-badge--sin-fecha">
+                    <ion-icon name="help-circle-outline"></ion-icon> Sin fecha
+                </span>
+                {% endif %}
+
+                <!-- Productos (individual: detalles expandibles) -->
+                {% if prestamo.tipo_devolucion == 'individual' and prestamo.detalles_lista %}
+                <details class="prestamo-productos-toggle" style="margin-top:8px">
+                    <summary>
+                        <span>Productos</span>
+                        <strong>{{ prestamo.detalles_lista|length }}</strong>
+                    </summary>
+                    <div class="prestamo-productos-list">
+                        {% for det in prestamo.detalles_lista %}
+                        <div class="prestamo-producto-item">
+                            <div class="prestamo-producto-item__name">{{ det.nombre_producto }}</div>
+                            <div class="prestamo-producto-item__qty">x{{ det.cantidad_solicitada }}</div>
+                            {% if det.fecha_devolucion %}
+                            <div class="prestamo-producto-item__fecha {% if det.fecha_devolucion < ahora %}prestamo-producto-item__fecha--vencido{% else %}prestamo-producto-item__fecha--ok{% endif %}">
+                                {{ det.fecha_devolucion|date:"d/m/Y" }}
+                            </div>
+                            {% else %}
+                            <div class="prestamo-producto-item__fecha prestamo-producto-item__fecha--none">—</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </details>
+                {% endif %}
+            </div>
+
+            <!-- Acciones -->
+            <div class="prestamo-row__actions">
+                <a href="{% url 'pedido_detalle_panel' prestamo.id_pedido %}" class="prestamo-btn prestamo-btn--detail">
+                    <ion-icon name="eye-outline"></ion-icon> Ver detalle
+                </a>
+                {% if prestamo.es_vencido %}
+                <form method="post" action="{% url 'pedido_aviso_devolucion' prestamo.id_pedido %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="prestamo-btn prestamo-btn--aviso"
+                            title="Enviar notificación de devolución al usuario"
+                            onclick="return confirm('¿Enviar aviso de devolución al usuario?')">
+                        <ion-icon name="notifications-outline"></ion-icon> Enviar aviso
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <section class="prestamos-empty">
+        <div class="prestamos-empty__icon"><ion-icon name="cube-outline"></ion-icon></div>
+        <h2>No hay préstamos activos</h2>
+        <p>Cuando se confirme la entrega de un pedido, aparecerá aquí para hacer seguimiento de la devolución.</p>
+    </section>
+    {% endif %}
+
 </section>
 {% endblock %}

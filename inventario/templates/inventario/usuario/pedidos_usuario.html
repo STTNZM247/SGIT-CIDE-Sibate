@@ -1,0 +1,357 @@
+{% extends 'inventario/shared/base.html' %}
+{% load static %}
+
+{% block title %}Mis Pedidos{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventario/usuario/css/pedidos_usuario.css' %}" data-page-style="true">
+{% endblock %}
+
+{% block content %}
+<section class="pedidos-usuario-page">
+    <header class="pedidos-usuario-hero">
+        <div>
+            <p class="pedidos-usuario-eyebrow">Mis solicitudes</p>
+            <h1>Pedidos realizados</h1>
+            <p>Consulta el estado de tus pedidos y los productos incluidos en cada solicitud.</p>
+        </div>
+    </header>
+
+    <nav class="pedidos-usuario-filtros" aria-label="Filtrar pedidos por estado">
+        <a href="?estado=todos" class="pedidos-usuario-filtro {% if estado_activo == 'todos' %}is-active{% endif %}">
+            <span>Todos</span>
+            <strong>{{ conteos_estado.todos|default:0 }}</strong>
+        </a>
+        <a href="?estado=pendiente" class="pedidos-usuario-filtro {% if estado_activo == 'pendiente' %}is-active{% endif %}">
+            <span>Pendiente</span>
+            <strong>{{ conteos_estado.pendiente|default:0 }}</strong>
+        </a>
+        <a href="?estado=esperando-entrega" class="pedidos-usuario-filtro {% if estado_activo == 'esperando-entrega' %}is-active{% endif %}">
+            <span>En espera de entrega</span>
+            <strong>{{ conteos_estado.esperando_entrega|default:0 }}</strong>
+        </a>
+        <a href="?estado=entregado" class="pedidos-usuario-filtro {% if estado_activo == 'entregado' %}is-active{% endif %}">
+            <span>Entregado</span>
+            <strong>{{ conteos_estado.entregado|default:0 }}</strong>
+        </a>
+        <a href="?estado=rechazado" class="pedidos-usuario-filtro pedidos-usuario-filtro--rechazado {% if estado_activo == 'rechazado' %}is-active{% endif %}">
+            <span>Rechazado</span>
+            <strong>{{ conteos_estado.rechazado|default:0 }}</strong>
+        </a>
+        <a href="?estado=cancelado" class="pedidos-usuario-filtro pedidos-usuario-filtro--cancelado {% if estado_activo == 'cancelado' %}is-active{% endif %}">
+            <span>Cancelado</span>
+            <strong>{{ conteos_estado.cancelado|default:0 }}</strong>
+        </a>
+    </nav>
+
+    {% if pedidos %}
+    <div class="pedidos-usuario-list">
+        {% for pedido in pedidos %}
+        <article class="pedidos-usuario-card pedidos-usuario-card--{{ pedido.estado|slugify }}">
+            <div class="pedidos-usuario-card__head">
+                <div>
+                    <p class="pedidos-usuario-card__id">Pedido #{{ pedido.id_pedido }}</p>
+                    <p class="pedidos-usuario-card__date">{{ pedido.fch_registro|date:'d/m/Y H:i' }}</p>
+                </div>
+                <span class="pedidos-usuario-status pedidos-usuario-status--{{ pedido.estado|slugify }}">{{ pedido.estado|title }}</span>
+            </div>
+
+            {% if pedido.estado == 'rechazado' %}
+            <div class="pedidos-usuario-alert pedidos-usuario-alert--rechazado">
+                <ion-icon name="close-circle-outline"></ion-icon>
+                <div>
+                    <strong>Pedido rechazado</strong>
+                    <p>Tu solicitud fue rechazada por el almacenista. Si tienes dudas, comunícate con el personal del inventario.</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if pedido.estado == 'cancelado' %}
+            <div class="pedidos-usuario-alert pedidos-usuario-alert--cancelado">
+                <ion-icon name="close-circle-outline"></ion-icon>
+                <div>
+                    <strong>Pedido cancelado</strong>
+                    <p>Cancelaste este pedido. Si necesitas los materiales, crea un nuevo pedido.</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if pedido.estado == 'pendiente' and pedido.puede_cancelar %}
+            <div class="pedidos-usuario-cancelar-wrap"
+                 data-cancelar-pedido
+                 data-pedido-id="{{ pedido.id_pedido }}"
+                 data-segundos="{{ pedido.segundos_cancelacion }}">
+                <div class="pedidos-usuario-cancelar-info">
+                    <ion-icon name="timer-outline"></ion-icon>
+                    <span>Puedes cancelar este pedido durante los próximos
+                        <strong class="pedidos-cancelar-countdown"
+                                data-count="{{ pedido.segundos_cancelacion }}">—</strong>
+                    </span>
+                </div>
+                <form method="post" action="{% url 'pedido_cancelar_usuario' pedido.id_pedido %}"
+                      class="pedidos-usuario-cancelar-form"
+                      data-cancelar-form
+                      data-pedido-num="{{ pedido.id_pedido }}">
+                    {% csrf_token %}
+                    <button type="button" class="pedidos-usuario-btn-cancelar" data-trigger-cancelar>
+                        <ion-icon name="close-outline"></ion-icon>
+                        Cancelar pedido
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <div class="pedidos-usuario-card__stats">
+                <div>
+                    <span>Productos</span>
+                    <strong>{{ pedido.total_productos }}</strong>
+                </div>
+                <div>
+                    <span>Unidades</span>
+                    <strong>{{ pedido.total_unidades }}</strong>
+                </div>
+                {% if pedido.fecha_devolucion %}
+                <div>
+                    <span>Devolver el</span>
+                    <strong>{{ pedido.fecha_devolucion|date:'d/m/Y H:i' }}</strong>
+                </div>
+                {% endif %}
+                {% if pedido.area_ubicacion %}
+                <div>
+                    <span>Área de uso</span>
+                    <strong>{{ pedido.area_ubicacion }}</strong>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if pedido.estado == 'esperando entrega' %}
+            <div class="pedidos-usuario-codigo {% if pedido.codigo_vigente %}pedidos-usuario-codigo--ok{% else %}pedidos-usuario-codigo--expired{% endif %}">
+                <span>Codigo de entrega</span>
+                {% if pedido.codigo_vigente %}
+                <strong>{{ pedido.codigo_entrega }}</strong>
+                <small>Vence: {{ pedido.codigo_expira_en|date:'d/m/Y H:i' }}</small>
+                {% else %}
+                <strong>Vencido</strong>
+                <small>Solicita un nuevo codigo al almacenista.</small>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <details class="pedidos-usuario-products-toggle">
+                <summary>
+                    <span>Ver productos del pedido</span>
+                    <strong>{{ pedido.detalles.count }}</strong>
+                </summary>
+
+                    <div class="pedidos-usuario-products">
+                    {% for detalle in pedido.detalles.all %}
+                    <div class="pedidos-usuario-product-item {% if detalle.estado_detalle == 'no_disponible' or detalle.estado_detalle == 'rechazado' %}pedidos-usuario-product-item--no-disponible{% endif %}">
+                        <div class="pedidos-usuario-product-item__media">
+                            {% if detalle.id_prod_fk and detalle.id_prod_fk.fot_prod %}
+                            <img src="{{ detalle.id_prod_fk.fot_prod.url }}" alt="{{ detalle.nombre_producto }}">
+                            {% else %}
+                            <ion-icon name="cube-outline"></ion-icon>
+                            {% endif %}
+                        </div>
+                        <div class="pedidos-usuario-product-item__body">
+                            <h3>{{ detalle.nombre_producto }}</h3>
+                            <p>{{ detalle.nombre_catalogo|default:'Sin catálogo' }}</p>
+                            {% if detalle.estado_detalle == 'no_disponible' or detalle.estado_detalle == 'rechazado' %}
+                            <span class="pedidos-usuario-no-disp-badge"><ion-icon name="ban-outline"></ion-icon> No disponible para entrega</span>
+                            {% else %}
+                            <small>Cantidad: {{ detalle.cantidad_solicitada }} · Estado: {{ detalle.estado_detalle|title }}{% if detalle.fecha_devolucion %} · Devolver: {{ detalle.fecha_devolucion|date:'d/m/Y' }}{% endif %}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </details>
+
+            {% if pedido.estado == 'entregado' and pedido.evidencias.all %}
+            <details class="pedidos-usuario-products-toggle">
+                <summary>
+                    <span>Ver evidencia de entrega</span>
+                    <strong>{{ pedido.evidencias.count }}</strong>
+                </summary>
+
+                <div class="pedidos-usuario-evidencias-grid">
+                    {% for evidencia in pedido.evidencias.all %}
+                                        <button
+                                                type="button"
+                                                class="pedidos-usuario-evidencia-item"
+                                                data-evidencia-src="{{ evidencia.foto_evidencia.url }}"
+                                                data-evidencia-alt="Evidencia pedido #{{ pedido.id_pedido }}"
+                                        >
+                                                <img src="{{ evidencia.foto_evidencia.url }}" alt="Evidencia pedido #{{ pedido.id_pedido }}">
+                                        </button>
+                    {% endfor %}
+                </div>
+            </details>
+            {% endif %}
+        </article>
+        {% endfor %}
+    </div>
+
+        <div class="pedidos-usuario-lightbox" id="pedidosUsuarioLightbox" aria-hidden="true">
+                <button type="button" class="pedidos-usuario-lightbox__backdrop" data-close-evidencia aria-label="Cerrar vista de evidencia"></button>
+                <div class="pedidos-usuario-lightbox__dialog" role="dialog" aria-modal="true" aria-label="Vista de evidencia">
+                        <button type="button" class="pedidos-usuario-lightbox__close" data-close-evidencia aria-label="Cerrar">
+                                <ion-icon name="close-outline"></ion-icon>
+                        </button>
+                        <img src="" alt="Evidencia de entrega" id="pedidosUsuarioLightboxImg">
+                </div>
+        </div>
+    {% else %}
+    <section class="pedidos-usuario-empty">
+        <div class="pedidos-usuario-empty__icon"><ion-icon name="receipt-outline"></ion-icon></div>
+        <h2>No hay pedidos en este estado</h2>
+        <p>Cambia el filtro superior para revisar pedidos pendientes, en espera de entrega, entregados o rechazados.</p>
+    </section>
+    {% endif %}
+</section>
+
+<!-- ─── Modal de confirmación cancelar pedido ─────────────────────────── -->
+<div class="cancelar-modal-overlay" id="cancelar-confirm-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="cancelar-modal-title">
+    <div class="cancelar-modal">
+        <div class="cancelar-modal__icon">
+            <ion-icon name="warning-outline"></ion-icon>
+        </div>
+        <h2 class="cancelar-modal__title" id="cancelar-modal-title">¿Cancelar este pedido?</h2>
+        <p class="cancelar-modal__msg">Estás a punto de cancelar el <strong id="cancelar-modal-num"></strong>. Esta acción no se puede deshacer.</p>
+        <div class="cancelar-modal__actions">
+            <button type="button" class="cancelar-modal__btn cancelar-modal__btn--back" id="cancelar-modal-back">
+                <ion-icon name="arrow-back-outline"></ion-icon>
+                Volver
+            </button>
+            <button type="button" class="cancelar-modal__btn cancelar-modal__btn--confirm" id="cancelar-modal-confirm">
+                <ion-icon name="close-circle-outline"></ion-icon>
+                Sí, cancelar pedido
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script data-page-script="true">
+(() => {
+    const lightbox = document.getElementById('pedidosUsuarioLightbox');
+    const lightboxImg = document.getElementById('pedidosUsuarioLightboxImg');
+    if (!lightbox || !lightboxImg) {
+        return;
+    }
+
+    const abrirEvidencia = (src, alt) => {
+        lightboxImg.src = src;
+        lightboxImg.alt = alt || 'Evidencia de entrega';
+        lightbox.classList.add('is-open');
+        lightbox.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+    };
+
+    const cerrarEvidencia = () => {
+        lightbox.classList.remove('is-open');
+        lightbox.setAttribute('aria-hidden', 'true');
+        lightboxImg.src = '';
+        document.body.classList.remove('modal-open');
+    };
+
+    document.querySelectorAll('.pedidos-usuario-evidencia-item[data-evidencia-src]').forEach((item) => {
+        item.addEventListener('click', () => {
+            abrirEvidencia(item.dataset.evidenciaSrc, item.dataset.evidenciaAlt);
+        });
+    });
+
+    lightbox.querySelectorAll('[data-close-evidencia]').forEach((item) => {
+        item.addEventListener('click', cerrarEvidencia);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && lightbox.classList.contains('is-open')) {
+            cerrarEvidencia();
+        }
+    });
+})();
+</script>
+
+<script data-page-script="true">
+// ── Countdown + Modal custom de cancelación ───────────────────────────────
+(() => {
+    const fmtSeg = (s) => {
+        const m = Math.floor(s / 60);
+        const sc = String(s % 60).padStart(2, '0');
+        return `${m}:${sc}`;
+    };
+
+    // Countdown por cada tarjeta
+    document.querySelectorAll('[data-cancelar-pedido]').forEach((wrap) => {
+        const btn = wrap.querySelector('.pedidos-usuario-btn-cancelar');
+        const display = wrap.querySelector('.pedidos-cancelar-countdown');
+        if (!display) return;
+
+        let secs = parseInt(wrap.dataset.segundos || '0', 10);
+        display.textContent = fmtSeg(secs);
+
+        const timer = setInterval(() => {
+            secs -= 1;
+            if (secs <= 0) {
+                clearInterval(timer);
+                display.textContent = '0:00';
+                wrap.classList.add('pedidos-cancelar-expirado');
+                if (btn) btn.disabled = true;
+            } else {
+                display.textContent = fmtSeg(secs);
+                if (secs <= 60) wrap.classList.add('pedidos-cancelar-urgente');
+            }
+        }, 1000);
+    });
+
+    // Modal custom de confirmación
+    const overlay   = document.getElementById('cancelar-confirm-modal');
+    const numLabel  = document.getElementById('cancelar-modal-num');
+    const btnBack   = document.getElementById('cancelar-modal-back');
+    const btnConf   = document.getElementById('cancelar-modal-confirm');
+    if (!overlay) return;
+
+    let pendingForm = null;
+
+    const openModal = (form, numPedido) => {
+        pendingForm = form;
+        if (numLabel) numLabel.textContent = 'pedido #' + numPedido;
+        overlay.classList.add('is-open');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        if (btnBack) btnBack.focus();
+    };
+
+    const closeModal = () => {
+        overlay.classList.remove('is-open');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        pendingForm = null;
+    };
+
+    // Abrir al pulsar el botón de cancelar
+    document.querySelectorAll('[data-trigger-cancelar]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const form = btn.closest('[data-cancelar-form]');
+            if (!form) return;
+            openModal(form, form.dataset.pedidoNum);
+        });
+    });
+
+    // Confirmar → submit real del form
+    if (btnConf) {
+        btnConf.addEventListener('click', () => {
+            if (pendingForm) pendingForm.submit();
+        });
+    }
+
+    // Cerrar
+    if (btnBack) btnBack.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal();
+    });
+})();
+</script>
+{% endblock %}

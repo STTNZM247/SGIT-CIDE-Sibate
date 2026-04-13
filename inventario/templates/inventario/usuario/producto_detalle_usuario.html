@@ -1,0 +1,86 @@
+{% extends 'inventario/shared/base.html' %}
+{% load static %}
+
+{% block title %}Detalle de Producto | {{ producto.nombre_producto }}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventario/dashboard/css/dashboard.css' %}" data-page-style="true">
+<link rel="stylesheet" href="{% static 'inventario/usuario/css/panel_usuario.css' %}" data-page-style="true">
+{% endblock %}
+
+{% block content %}
+<div class="usuario-product-detail-page">
+    <a class="usuario-btn-volver" href="{% url 'panel_usuario' %}">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+        Volver a inventario
+    </a>
+    <div class="usuario-product-detail-flex">
+        <div class="usuario-product-modal__media">
+            {% if producto.fot_prod %}
+            <img src="{{ producto.fot_prod.url }}" alt="{{ producto.nombre_producto }}" class="usuario-product-modal__img">
+            {% else %}
+            <div class="usuario-product-modal__placeholder"><ion-icon name="image-outline"></ion-icon></div>
+            {% endif %}
+        </div>
+        <div class="usuario-product-detail-info">
+            <h1 class="usuario-product-modal__title">{{ producto.nombre_producto }}</h1>
+            <form method="post" action="{% url 'usuario_agregar_carrito' producto.id_prod %}" class="usuario-carrito-form" style="margin-top:12px;">
+                {% csrf_token %}
+                <label for="cantidad-{{ producto.id_prod }}">Cantidad:</label>
+                <input type="number" min="1" max="{{ producto.stock_actual|default:'1' }}" name="cantidad" id="cantidad-{{ producto.id_prod }}" value="1" required>
+                <button type="submit" class="usuario-btn-carrito-temu" title="Agregar al carrito">
+                    <ion-icon name="cart-outline"></ion-icon>
+                    Agregar al carrito
+                </button>
+                <span style="font-size:0.98em;color:#888;margin-top:4px;display:block;">Selecciona la cantidad y agrégalo a tu carrito de compras.</span>
+            </form>
+            <div class="usuario-product-detail-stock" style="margin-top:10px;">
+                <span class="usuario-product-detail-label">Cantidad disponible:</span>
+                <span class="usuario-product-detail-value">{{ producto.stock_actual|default:'0' }}</span>
+            </div>
+            <div class="usuario-product-detail-cat" style="margin-top:10px;">
+                <span class="usuario-product-detail-label">Catálogo:</span>
+                <span class="usuario-product-detail-value">{{ producto.id_cat_fk.nombre_catalogo }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="usuario-product-detail-block">
+        <p class="usuario-product-detail-label">Descripción del producto</p>
+        <p class="usuario-product-detail-value usuario-product-detail-value--preserve">{% if producto.descripcion %}{{ producto.descripcion }}{% else %}Sin descripción.{% endif %}</p>
+    </div>
+
+{% if sugerencias %}
+<div class="usuario-sugerencias-panel">
+    <h2 class="usuario-sugerencias-title">Explora productos similares</h2>
+    <div class="usuario-inventario-grid usuario-sugerencias-grid">
+        {% for prod in sugerencias %}
+        <form method="post" action="{% url 'usuario_agregar_carrito' prod.id_prod %}" class="usuario-card usuario-card-sugerido" style="cursor:pointer;" onclick="if(event.target.tagName!=='BUTTON'&&event.target.type!=='number'){window.location='{% url 'producto_detalle_usuario' prod.id_prod %}';return false;}">
+            {% csrf_token %}
+            <div class="usuario-card__media">
+                {% if prod.fot_prod %}
+                    <img src="{{ prod.fot_prod.url }}" alt="{{ prod.nombre_producto }}">
+                {% else %}
+                    <span class="usuario-card__placeholder">
+                        <ion-icon name="image-outline"></ion-icon>
+                    </span>
+                {% endif %}
+            </div>
+            <div class="usuario-card__body">
+                <h3 class="usuario-card__name" style="font-weight:900;color:#222;">
+                    {{ prod.nombre_producto }}
+                </h3>
+                <p class="usuario-card__cat">{{ prod.id_cat_fk.nombre_catalogo }}</p>
+                <p class="usuario-card__desc">{{ prod.descripcion|truncatechars:45 }}</p>
+                <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
+                    <label for="cantidad-sug-{{ prod.id_prod }}" style="font-size:0.97em;">Cantidad:</label>
+                    <input type="number" min="1" max="99" name="cantidad" id="cantidad-sug-{{ prod.id_prod }}" value="1" required style="width:48px;">
+                    <button type="submit" class="usuario-btn-carrito" title="Agregar al carrito" onclick="event.stopPropagation();">
+                        <ion-icon name="cart-outline"></ion-icon>
+                    </button>
+                </div>
+            </div>
+        </form>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

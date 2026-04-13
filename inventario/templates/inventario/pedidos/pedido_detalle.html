@@ -1,0 +1,271 @@
+﻿{% extends 'inventario/shared/base.html' %}
+{% load static %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/shared/css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/pedidos/css/panel_pedidos.css' %}" data-page-style="true">
+{% endblock %}
+{% block title %}Detalle Pedido #{{ pedido.id_pedido }} | Inventario SENA{% endblock %}
+{% block content %}
+<section class="pedidos-page">
+
+    {% if messages %}
+    <div class="pedidos-flashes" role="alert">
+        {% for msg in messages %}
+        <div class="pedidos-flash pedidos-flash--{{ msg.tags|default:'info' }}">
+            <ion-icon name="{% if 'error' in msg.tags %}alert-circle-outline{% else %}checkmark-circle-outline{% endif %}"></ion-icon>
+            <span>{{ msg }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- HERO -->
+    <header class="pedidos-page__hero">
+        <div>
+            <p class="pedidos-page__eyebrow">Detalle del pedido</p>
+            <h1>Pedido #{{ pedido.id_pedido }}</h1>
+            <p>{{ pedido.id_usuario_fk.nombre }} {{ pedido.id_usuario_fk.apellido }}{% if pedido.id_usuario_fk.cc %} · CC {{ pedido.id_usuario_fk.cc }}{% endif %} · {{ pedido.id_usuario_fk.correo }}</p>
+        </div>
+        <span class="pedidos-estado pedidos-estado--{{ pedido.estado|slugify }} pedidos-estado--lg">{{ pedido.estado|title }}</span>
+    </header>
+
+    <!-- LAYOUT DOS COLUMNAS: datos + carnet -->
+    <div class="detalle-top-grid">
+
+        <!-- Info general + préstamo -->
+        <div class="detalle-info-col">
+            <h2 class="detalle-section-title"><ion-icon name="information-circle-outline"></ion-icon> Información general</h2>
+            <div class="detalle-info-tiles">
+                <div class="detalle-tile">
+                    <span><ion-icon name="layers-outline"></ion-icon> Unidades solicitadas</span>
+                    <strong>{{ pedido.total_unidades }}</strong>
+                </div>
+                <div class="detalle-tile">
+                    <span><ion-icon name="calendar-outline"></ion-icon> Fecha de solicitud</span>
+                    <strong>{{ pedido.fch_registro|date:'d/m/Y H:i' }}</strong>
+                </div>
+                {% if pedido.fecha_devolucion %}
+                <div class="detalle-tile detalle-tile--devolucion">
+                    <span><ion-icon name="arrow-undo-outline"></ion-icon> Fecha de devolución</span>
+                    <strong>{{ pedido.fecha_devolucion|date:'d/m/Y H:i' }}</strong>
+                </div>
+                {% endif %}
+                {% if pedido.tipo_devolucion == 'individual' %}
+                <div class="detalle-tile detalle-tile--devolucion">
+                    <span><ion-icon name="arrow-undo-outline"></ion-icon> Tipo de devolución</span>
+                    <strong>Individual por producto</strong>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if pedido.area_ubicacion %}
+            <div class="detalle-area-box">
+                <span><ion-icon name="location-outline"></ion-icon> Área / Ambiente de uso</span>
+                <p>{{ pedido.area_ubicacion }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Carnet institucional -->
+        <div class="detalle-carnet-col">
+            <h2 class="detalle-section-title"><ion-icon name="card-outline"></ion-icon> Carnet institucional</h2>
+            {% if pedido.foto_carnet %}
+            <div class="detalle-carnet-card">
+                <div class="detalle-carnet-card__badge detalle-carnet-card__badge--ok">
+                    <ion-icon name="shield-checkmark-outline"></ion-icon>
+                    Verificación adjunta
+                </div>
+                <a href="{{ pedido.foto_carnet.url }}" target="_blank" rel="noopener" class="detalle-carnet-card__img-wrap">
+                    <img src="{{ pedido.foto_carnet.url }}" alt="Carnet de {{ pedido.id_usuario_fk.nombre }}">
+                    <span class="detalle-carnet-card__overlay">
+                        <ion-icon name="expand-outline"></ion-icon>
+                        Ver completo
+                    </span>
+                </a>
+                <p class="detalle-carnet-card__name">{{ pedido.id_usuario_fk.nombre }} {{ pedido.id_usuario_fk.apellido }}{% if pedido.id_usuario_fk.cc %} · CC {{ pedido.id_usuario_fk.cc }}{% endif %}</p>
+            </div>
+            {% else %}
+            <div class="detalle-carnet-card detalle-carnet-card--missing">
+                <ion-icon name="alert-circle-outline"></ion-icon>
+                <p>El usuario no adjuntó foto de carnet.</p>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- ACCIONES -->
+    <div class="detalle-actions-box">
+        {% if pedido.estado == 'pendiente' %}
+        <div class="detalle-actions-row">
+            <form method="post" action="{% url 'pedido_marcar_esperando_entrega' pedido.id_pedido %}">
+                {% csrf_token %}
+                <button type="submit" class="pedido-action-btn pedido-action-btn--approve">
+                    <ion-icon name="checkmark-done-outline"></ion-icon>
+                    Aprobar y marcar como esperando entrega
+                </button>
+            </form>
+            <form method="post" action="{% url 'pedido_rechazar' pedido.id_pedido %}" onsubmit="return confirm('¿Seguro que deseas rechazar el pedido #{{ pedido.id_pedido }}? Esta acción no se puede deshacer.')">
+                {% csrf_token %}
+                <button type="submit" class="pedido-action-btn pedido-action-btn--reject">
+                    <ion-icon name="close-circle-outline"></ion-icon>
+                    Rechazar pedido
+                </button>
+            </form>
+        </div>
+
+        {% elif pedido.estado == 'esperando entrega' %}
+        <div class="detalle-codigo-layout">
+            <div class="pedido-codigo-box">
+                <p><ion-icon name="key-outline"></ion-icon> Código de entrega activo</p>
+                <strong>{{ pedido.codigo_entrega|default:'------' }}</strong>
+                <small>Vence: {{ pedido.codigo_expira_en|date:'d/m/Y H:i' }}</small>
+            </div>
+
+            <form method="post" action="{% url 'pedido_confirmar_entrega_codigo' pedido.id_pedido %}" class="pedido-codigo-form" enctype="multipart/form-data">
+                {% csrf_token %}
+                <label for="codigo_entrega"><ion-icon name="keypad-outline"></ion-icon> Código entregado por el usuario</label>
+                <input id="codigo_entrega" name="codigo_entrega" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" minlength="6" placeholder="000000" required>
+                <label for="evidencias_entrega"><ion-icon name="camera-outline"></ion-icon> Fotos de evidencia <span>(opcional, máx. 8)</span></label>
+                <input id="evidencias_entrega" name="evidencias_entrega" type="file" accept="image/*" multiple>
+                <button type="submit" class="pedido-action-btn pedido-action-btn--deliver">
+                    <ion-icon name="bag-check-outline"></ion-icon>
+                    Confirmar entrega
+                </button>
+            </form>
+        </div>
+
+        {% else %}
+        <span class="pedido-action-info">
+            <ion-icon name="checkmark-circle-outline"></ion-icon>
+            Este pedido ya está en estado: <strong>{{ pedido.estado }}</strong>
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- PRODUCTOS -->
+    {% if pedido.detalles.all %}
+    <div class="detalle-section-header">
+        <h2 class="detalle-section-title"><ion-icon name="cube-outline"></ion-icon> Productos solicitados</h2>
+        <span class="detalle-section-count">{{ pedido.total_productos }} producto{{ pedido.total_productos|pluralize }}</span>
+    </div>
+
+    {% if pedido.estado == 'pendiente' %}
+    <form method="post" action="{% url 'pedido_marcar_no_disponibles' pedido.id_pedido %}" id="form-no-disponibles">
+        {% csrf_token %}
+        <div class="pedido-product-grid">
+            {% for detalle in pedido.detalles.all %}
+            <article class="pedido-product-card {% if detalle.estado_detalle == 'no_disponible' %}pedido-product-card--no-disponible{% endif %}">
+                <div class="pedido-product-card__media">
+                    {% if detalle.id_prod_fk and detalle.id_prod_fk.fot_prod %}
+                    <img src="{{ detalle.id_prod_fk.fot_prod.url }}" alt="{{ detalle.nombre_producto }}">
+                    {% else %}
+                    <span class="pedido-product-card__placeholder"><ion-icon name="cube-outline"></ion-icon></span>
+                    {% endif %}
+                </div>
+                <div class="pedido-product-card__body">
+                    <p class="pedido-product-card__catalogo">{{ detalle.nombre_catalogo|default:'Sin catálogo' }}</p>
+                    <h3>{{ detalle.nombre_producto }}</h3>
+                    <div class="pedido-product-card__meta">
+                        <div>
+                            <span>ID</span>
+                            <strong>{% if detalle.id_prod_fk %}#{{ detalle.id_prod_fk.id_prod }}{% else %}N/D{% endif %}</strong>
+                        </div>
+                        <div>
+                            <span>A entregar</span>
+                            <strong>{{ detalle.cantidad_solicitada }}</strong>
+                        </div>
+                        <div>
+                            <span>Disponible</span>
+                            <strong>{{ detalle.cantidad_disponible_actual|default:'0' }}</strong>
+                        </div>
+                        {% if detalle.fecha_devolucion %}
+                        <div class="pedido-product-card__meta-devolucion">
+                            <span><ion-icon name="arrow-undo-outline"></ion-icon> Devolver antes del</span>
+                            <strong>{{ detalle.fecha_devolucion|date:'d/m/Y H:i' }}</strong>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <label class="pedido-product-card__no-disp-label">
+                        <input type="checkbox" name="detalle_no_disponible" value="{{ detalle.id_det_pedido }}" class="pedido-product-card__no-disp-check" {% if detalle.estado_detalle == 'no_disponible' %}checked{% endif %}>
+                        <span><ion-icon name="ban-outline"></ion-icon> No disponible</span>
+                    </label>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        <div class="detalle-no-disp-submit">
+            <p><ion-icon name="information-circle-outline"></ion-icon> Marca los productos que no puedes entregar. Los marcados quedarán visibles para el usuario y serán excluidos al aprobar el pedido.</p>
+            <button type="submit" class="pedido-action-btn pedido-action-btn--no-disp">
+                <ion-icon name="warning-outline"></ion-icon>
+                Guardar productos no disponibles
+            </button>
+        </div>
+    </form>
+    {% else %}
+    <div class="pedido-product-grid">
+        {% for detalle in pedido.detalles.all %}
+        <article class="pedido-product-card {% if detalle.estado_detalle == 'no_disponible' %}pedido-product-card--no-disponible{% elif detalle.estado_detalle == 'rechazado' %}pedido-product-card--no-disponible{% endif %}">
+            <div class="pedido-product-card__media">
+                {% if detalle.id_prod_fk and detalle.id_prod_fk.fot_prod %}
+                <img src="{{ detalle.id_prod_fk.fot_prod.url }}" alt="{{ detalle.nombre_producto }}">
+                {% else %}
+                <span class="pedido-product-card__placeholder"><ion-icon name="cube-outline"></ion-icon></span>
+                {% endif %}
+            </div>
+            <div class="pedido-product-card__body">
+                <p class="pedido-product-card__catalogo">{{ detalle.nombre_catalogo|default:'Sin catálogo' }}</p>
+                <h3>{{ detalle.nombre_producto }}</h3>
+                {% if detalle.estado_detalle == 'no_disponible' %}
+                <span class="pedido-product-card__no-disp-badge"><ion-icon name="ban-outline"></ion-icon> No disponible</span>
+                {% endif %}
+                <div class="pedido-product-card__meta">
+                    <div>
+                        <span>ID</span>
+                        <strong>{% if detalle.id_prod_fk %}#{{ detalle.id_prod_fk.id_prod }}{% else %}N/D{% endif %}</strong>
+                    </div>
+                    <div>
+                        <span>A entregar</span>
+                        <strong>{{ detalle.cantidad_solicitada }}</strong>
+                    </div>
+                    <div>
+                        <span>Disponible</span>
+                        <strong>{{ detalle.cantidad_disponible_actual|default:'0' }}</strong>
+                    </div>
+                    {% if detalle.fecha_devolucion %}
+                    <div class="pedido-product-card__meta-devolucion">
+                        <span><ion-icon name="arrow-undo-outline"></ion-icon> Devolver antes del</span>
+                        <strong>{{ detalle.fecha_devolucion|date:'d/m/Y H:i' }}</strong>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <section class="pedidos-empty">
+        <div class="pedidos-empty__icon"><ion-icon name="file-tray-outline"></ion-icon></div>
+        <h2>Este pedido no tiene productos registrados</h2>
+    </section>
+    {% endif %}
+
+    <!-- EVIDENCIAS -->
+    {% if pedido.evidencias.all %}
+    <section class="pedido-evidencias">
+        <h2 class="detalle-section-title"><ion-icon name="images-outline"></ion-icon> Evidencias de entrega</h2>
+        <div class="pedido-evidencias-grid">
+            {% for evidencia in pedido.evidencias.all %}
+            <a href="{{ evidencia.foto_evidencia.url }}" target="_blank" rel="noopener" class="pedido-evidencia-item">
+                <img src="{{ evidencia.foto_evidencia.url }}" alt="Evidencia #{{ forloop.counter }}">
+                <span class="pedido-evidencia-item__num">{{ forloop.counter }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+</section>
+{% endblock %}

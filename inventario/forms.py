@@ -87,13 +87,14 @@ class ProductoForm(forms.ModelForm):
 class UsuarioPerfilForm(forms.ModelForm):
     class Meta:
         model = Usuario
-        fields = ['cc', 'nombre', 'apellido', 'correo', 'fot_usu']
+        fields = ['cc', 'nombre', 'apellido', 'correo', 'fot_usu', 'banner_usu']
         widgets = {
-            'cc': forms.TextInput(attrs={'class': 'form-control'}),
-            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
-            'apellido': forms.TextInput(attrs={'class': 'form-control'}),
-            'correo': forms.EmailInput(attrs={'class': 'form-control'}),
-            'fot_usu': forms.ClearableFileInput(attrs={'class': 'form-file', 'accept': 'image/*'}),
+            'cc': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_cc'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_nombre'}),
+            'apellido': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_apellido'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control', 'id': 'id_correo'}),
+            'fot_usu': forms.ClearableFileInput(attrs={'class': 'form-file', 'accept': 'image/*', 'id': 'id_fot_usu'}),
+            'banner_usu': forms.ClearableFileInput(attrs={'class': 'form-file', 'accept': 'image/*', 'id': 'id_banner_usu'}),
         }
         labels = {
             'cc': 'Cédula',
@@ -101,4 +102,5 @@ class UsuarioPerfilForm(forms.ModelForm):
             'apellido': 'Apellido',
             'correo': 'Correo',
             'fot_usu': 'Foto de perfil',
+            'banner_usu': 'Foto de portada',
         }

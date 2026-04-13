@@ -1,0 +1,54 @@
+<nav class="navigation" aria-label="Navegacion administrador">
+    <a class="nav-brand" href="{% url 'dashboard' %}" aria-label="Inicio SENA">
+        <span class="nav-brand__logo" aria-hidden="true"></span>
+    </a>
+    <ul>
+        <li class="list {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <a href="{% url 'dashboard' %}">
+                <span class="icon"><ion-icon name="file-tray-stacked-outline"></ion-icon></span>
+                <span class="text">Inventario</span>
+            </a>
+        </li>
+        <li class="list {% if request.resolver_match.url_name == 'catalogo' or request.resolver_match.url_name == 'productos_catalogo' or request.resolver_match.url_name == 'registrar_catalogo' or request.resolver_match.url_name == 'registrar_producto' or request.resolver_match.url_name == 'producto_detalle' or request.resolver_match.url_name == 'producto_editar' %}active{% endif %}">
+            <a href="{% url 'catalogo' %}">
+                <span class="icon"><ion-icon name="albums-outline"></ion-icon></span>
+                <span class="text">Catalogo</span>
+            </a>
+        </li>
+        <li class="list {% if request.resolver_match.url_name == 'gestion_usuarios_panel' %}active{% endif %}">
+            <a href="{% url 'gestion_usuarios_panel' %}">
+                <span class="icon"><ion-icon name="people-outline"></ion-icon></span>
+                <span class="text">Usuarios</span>
+            </a>
+        </li>
+        <li class="list {% if request.resolver_match.url_name == 'auditorias_panel' %}active{% endif %}">
+            <a href="{% url 'auditorias_panel' %}">
+                <span class="icon"><ion-icon name="reader-outline"></ion-icon></span>
+                <span class="text">Auditoria</span>
+            </a>
+        </li>
+        <li class="list {% if request.resolver_match.url_name == 'prestamos_panel' %}active{% endif %}">
+            <a href="{% url 'prestamos_panel' %}">
+                <span class="icon"><ion-icon name="git-compare-outline"></ion-icon></span>
+                <span class="text">Prestamos</span>
+            </a>
+        </li>
+        <li class="list {% if request.resolver_match.url_name == 'pedidos_panel' or request.resolver_match.url_name == 'pedido_detalle_panel' %}active{% endif %}">
+            <a href="{% url 'pedidos_panel' %}">
+                <span class="icon"><ion-icon name="cube-outline"></ion-icon></span>
+                <span class="text">Pedidos</span>
+            </a>
+        </li>
+        <li class="list {% if request.resolver_match.url_name == 'perfil_usuario' %}active{% endif %}">
+            <a href="{% url 'perfil_usuario' %}">
+                <span class="icon"><ion-icon name="person-outline"></ion-icon></span>
+                <span class="text">Perfil</span>
+            </a>
+        </li>
+        <div class="indicator"></div>
+    </ul>
+    <a href="{% url 'notificaciones_panel' %}" class="nav-notif-btn {% if notif_no_leidas %}has-notif{% endif %}" aria-label="Notificaciones" title="Notificaciones">
+        <ion-icon name="notifications-outline"></ion-icon>
+        <span class="nav-notif-dot" aria-hidden="true"></span>
+    </a>
+</nav>

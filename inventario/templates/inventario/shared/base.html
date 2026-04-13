@@ -6,75 +6,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Inventario SENA - Sibate{% endblock %}</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Delius&family=Fredoka:wght@300..700&family=Outfit:wght@100..900&family=Playpen+Sans+Thai:wght@100..800&display=swap" rel="stylesheet">
+
+        <style>
+            html, body, input, button, select, textarea {
+                font-family: "Fredoka", "Outfit", "Delius", "Playpen Sans Thai", Arial, sans-serif !important;
+                font-optical-sizing: auto;
+                font-variation-settings: "wdth" 100;
+            }
+        </style>
 
     <link rel="stylesheet" href="{% static 'inventario/shared/css/base.css' %}">
-</head>
     {% block extra_css %}{% endblock %}
-    <!-- Ionicons -->
-    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </head>
 <body>
-    <!-- Logo móvil eliminado, solo visible en PC -->
     <div class="app-shell">
-        <nav class="navigation" aria-label="Principal">
-            <a class="nav-brand" href="{% url 'dashboard' %}" aria-label="Inicio SENA">
-                <span class="nav-brand__logo" aria-hidden="true"></span>
-            </a>
-            <ul>
-                    {% if request.user.is_authenticated %}
-                        <li class="list {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                            <a href="{% url 'dashboard' %}">
-                                <span class="icon"><ion-icon name="file-tray-stacked-outline"></ion-icon></span>
-                                <span class="text">inventario</span>
-                            </a>
-                        </li>
-                        {% if request.user.id_rol_fk.nombre_rol == 'admin' %}
-                            <li class="list {% if request.resolver_match.url_name == 'catalogo' %}active{% endif %}">
-                                <a href="{% url 'catalogo' %}">
-                                    <span class="icon"><ion-icon name="albums-outline"></ion-icon></span>
-                                    <span class="text">catalogo</span>
-                                </a>
-                            </li>
-                            <li class="list {% if request.resolver_match.url_name == 'gestion_usuarios_panel' %}active{% endif %}">
-                                <a href="{% url 'gestion_usuarios_panel' %}">
-                                    <span class="icon"><ion-icon name="people-outline"></ion-icon></span>
-                                    <span class="text">gestion usuarios</span>
-                                </a>
-                            </li>
-                            <li class="list {% if request.resolver_match.url_name == 'auditorias_panel' %}active{% endif %}">
-                                <a href="{% url 'auditorias_panel' %}">
-                                    <span class="icon"><ion-icon name="reader-outline"></ion-icon></span>
-                                    <span class="text">auditoria</span>
-                                </a>
-                            </li>
-                            <li class="list {% if request.resolver_match.url_name == 'prestamos_panel' %}active{% endif %}">
-                                <a href="{% url 'prestamos_panel' %}">
-                                    <span class="icon"><ion-icon name="git-compare-outline"></ion-icon></span>
-                                    <span class="text">prestamos</span>
-                                </a>
-                            </li>
-                        {% elif request.user.id_rol_fk.nombre_rol == 'almacenista' %}
-                            <li class="list {% if request.resolver_match.url_name == 'prestamos_panel' %}active{% endif %}">
-                                <a href="{% url 'prestamos_panel' %}">
-                                    <span class="icon"><ion-icon name="git-compare-outline"></ion-icon></span>
-                                    <span class="text">prestamos</span>
-                                </a>
-                            </li>
-                        {% endif %}
-                        <li class="list {% if request.resolver_match.url_name == 'perfil_usuario' %}active{% endif %}">
-                            <a href="{% url 'perfil_usuario' %}">
-                                <span class="icon"><ion-icon name="person-outline"></ion-icon></span>
-                                <span class="text">perfil</span>
-                            </a>
-                        </li>
-                    {% endif %}
-                    <div class="indicator"></div>
-            </ul>
-        </nav>
+        {% if request.user.is_authenticated %}
+            {% with rol=request.user.id_rol_fk.nombre_rol %}
+                {% if rol == 'admin' %}
+                    {% include 'inventario/shared/navbars/navbar_admin.html' %}
+                {% elif rol == 'almacenista' %}
+                    {% include 'inventario/shared/navbars/navbar_almacenista.html' %}
+                {% elif rol == 'usuario' or rol == 'aprendiz' or rol == 'instructor' %}
+                    {% include 'inventario/shared/navbars/navbar_usuario.html' %}
+                {% endif %}
+            {% endwith %}
+        {% endif %}
 
         <div class="app-content">
             <main class="app-main">
@@ -99,7 +59,6 @@
     <script src="{% static 'inventario/shared/js/navigation.js' %}" defer></script>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-
     {% block extra_js %}{% endblock %}
 </body>
 </html>
