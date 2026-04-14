@@ -58,6 +58,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (path === "/") {
             return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/")?.closest(".list") || null;
         }
+        if (path === "/inventario/" || path.startsWith("/inventario/")) {
+            return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/inventario/")?.closest(".list") || null;
+        }
         if (path === "/usuarios/") {
             return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/usuarios/")?.closest(".list") || null;
         }

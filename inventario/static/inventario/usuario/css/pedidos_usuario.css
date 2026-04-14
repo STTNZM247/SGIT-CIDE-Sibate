@@ -94,6 +94,10 @@
   border-left: 5px solid #2e8f50;
 }
 
+.pedidos-usuario-card--devuelto {
+  border-left: 5px solid #1f7a43;
+}
+
 .pedidos-usuario-card__head {
   display: flex;
   justify-content: space-between;
@@ -153,6 +157,12 @@
   background: #e9f8ee;
   color: #1f7a43;
   border-color: #cdebd8;
+}
+
+.pedidos-usuario-status--devuelto {
+  background: #edf8f0;
+  color: #1b6a3a;
+  border-color: #cae8d2;
 }
 
 .pedidos-usuario-card__stats {
@@ -484,6 +494,106 @@
   color: #9a2020;
 }
 
+.pedidos-usuario-filtro--devuelto {
+  border-color: #cae8d2 !important;
+  color: #1b6a3a;
+}
+
+.pedidos-usuario-filtro--devuelto strong {
+  background: #e9f8ee !important;
+  color: #1f7a43 !important;
+}
+
+.pedidos-usuario-filtro--devuelto.is-active {
+  background: #edf8f0;
+  border-color: #b6dec2 !important;
+  color: #16562f;
+}
+
+.pedidos-usuario-alert--devuelto {
+  background: #f3fbf5;
+  border: 1px solid #cae8d2;
+  color: #1b6a3a;
+}
+
+.pedidos-usuario-devolucion-box {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #c9e8d3;
+  background: #f3fbf6;
+  border-radius: 16px;
+  padding: 12px 14px;
+}
+
+.pedidos-usuario-devolucion-box__head span {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #1f7a43;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pedidos-usuario-devolucion-box__head small {
+  display: block;
+  margin-top: 4px;
+  color: #536557;
+  font-size: 0.82rem;
+}
+
+.pedidos-usuario-devolucion-ring {
+  --progress: 1;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(#2e8f50 calc(var(--progress) * 1turn), #d6e5d9 0);
+  position: relative;
+}
+
+.pedidos-usuario-devolucion-ring::before {
+  content: '';
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #d7e6da;
+  position: absolute;
+}
+
+.pedidos-usuario-devolucion-ring strong {
+  position: relative;
+  z-index: 1;
+  font-size: 0.93rem;
+  letter-spacing: 0.08em;
+  color: #1f2a22;
+}
+
+.pedidos-usuario-devolucion-ring.is-warning {
+  background: conic-gradient(#d8711f calc(var(--progress) * 1turn), #ecdccf 0);
+}
+
+.pedidos-usuario-devolucion-box__timer {
+  min-width: 92px;
+  text-align: right;
+}
+
+.pedidos-usuario-devolucion-box__timer span {
+  display: block;
+  font-size: 0.77rem;
+  color: #5d6d61;
+}
+
+.pedidos-usuario-devolucion-box__timer strong {
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  color: #1f7a43;
+}
+
 /* -- Producto no disponible -- */
 .pedidos-usuario-product-item--no-disponible {
   opacity: 0.65;
@@ -752,6 +862,17 @@
 .cancelar-modal__btn--confirm:hover {
   background: #a31f1f;
   box-shadow: 0 6px 18px rgba(198,40,40,0.35);
+}
+
+@media (max-width: 700px) {
+  .pedidos-usuario-devolucion-box {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+
+  .pedidos-usuario-devolucion-box__timer {
+    text-align: left;
+  }
 }
 
 @media (max-width: 420px) {

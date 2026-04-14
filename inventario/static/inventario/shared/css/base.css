@@ -290,7 +290,7 @@ body {
     border: 1px solid var(--blanco);
 }
 
-/* Botón de notificaciones — oculto en mobile (nav es barra inferior flotante) */
+/* Botón de notificaciones */
 .nav-notif-btn {
     display: none;
     text-decoration: none;
@@ -336,6 +336,30 @@ body {
     display: inline-block;
     animation: bell-ring 2.4s ease-in-out 0.4s infinite;
     transform-origin: top center;
+}
+
+@media (max-width: 767px) {
+    .nav-notif-btn {
+        display: grid;
+        place-items: center;
+        position: fixed;
+        top: max(10px, env(safe-area-inset-top));
+        left: max(10px, env(safe-area-inset-left));
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(57, 169, 0, 0.95);
+        border: 1.5px solid rgba(255, 255, 255, 0.55);
+        color: #fff;
+        font-size: 1.35rem;
+        z-index: 1300;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        overflow: visible;
+    }
+
+    .nav-notif-btn:active {
+        transform: scale(0.98);
+    }
 }
 
 @media (min-width: 768px) {

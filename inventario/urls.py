@@ -5,6 +5,9 @@ from django.urls import path
 from .views import (
     catalogo,
     dashboard,
+    dashboard_tendencia_data,
+    dashboard_tendencia_detalle,
+    inventario_panel,
     eliminar_catalogo,
     eliminar_producto,
     productos_catalogo,
@@ -17,9 +20,13 @@ from .views import (
     pedido_detalle_panel,
     pedido_marcar_esperando_entrega,
     pedido_confirmar_entrega_codigo,
+    pedido_marcar_devuelto,
     pedido_rechazar,
     pedido_marcar_no_disponibles,
     pedido_aviso_devolucion,
+    reporte_prestamos_excel,
+    reporte_prestamos_pdf,
+    reporte_stock_bajo_pdf,
     auditorias_panel,
     gestion_usuarios_panel,
     panel_almacenista,
@@ -32,7 +39,7 @@ from .views import (
     notificaciones_marcar_todas_leidas,
 )
 
-from .views_usuario import carrito_usuario, panel_usuario, pedido_cancelar_usuario, pedidos_usuario, producto_detalle_usuario, usuario_agregar_carrito, usuario_eliminar_carrito, usuario_realizar_pedido
+from .views_usuario import carrito_usuario, panel_usuario, pedido_cancelar_usuario, pedido_codigo_devolucion, pedidos_usuario, producto_detalle_usuario, usuario_agregar_carrito, usuario_eliminar_carrito, usuario_realizar_pedido
 
 urlpatterns = [
     path(
@@ -49,6 +56,9 @@ urlpatterns = [
         name='logout',
     ),
     path('', dashboard, name='dashboard'),
+    path('dashboard/tendencia-data/', dashboard_tendencia_data, name='dashboard_tendencia_data'),
+    path('dashboard/tendencia-detalle/', dashboard_tendencia_detalle, name='dashboard_tendencia_detalle'),
+    path('inventario/', inventario_panel, name='inventario_panel'),
     path('almacenista/', panel_almacenista, name='panel_almacenista'),
     path('catalogo/', catalogo, name='catalogo'),
     path('catalogo/<int:cat_id>/eliminar/', eliminar_catalogo, name='eliminar_catalogo'),
@@ -65,9 +75,13 @@ urlpatterns = [
     path('pedidos/<int:pedido_id>/productos/', pedido_detalle_panel, name='pedido_detalle_panel'),
     path('pedidos/<int:pedido_id>/marcar-esperando-entrega/', pedido_marcar_esperando_entrega, name='pedido_marcar_esperando_entrega'),
     path('pedidos/<int:pedido_id>/confirmar-entrega/', pedido_confirmar_entrega_codigo, name='pedido_confirmar_entrega_codigo'),
+    path('prestamos/<int:pedido_id>/marcar-devuelto/', pedido_marcar_devuelto, name='pedido_marcar_devuelto'),
     path('pedidos/<int:pedido_id>/rechazar/', pedido_rechazar, name='pedido_rechazar'),
     path('pedidos/<int:pedido_id>/no-disponibles/', pedido_marcar_no_disponibles, name='pedido_marcar_no_disponibles'),
     path('pedidos/<int:pedido_id>/aviso-devolucion/', pedido_aviso_devolucion, name='pedido_aviso_devolucion'),
+    path('reportes/prestamos/excel/', reporte_prestamos_excel, name='reporte_prestamos_excel'),
+    path('reportes/prestamos/pdf/', reporte_prestamos_pdf, name='reporte_prestamos_pdf'),
+    path('reportes/stock-bajo/pdf/', reporte_stock_bajo_pdf, name='reporte_stock_bajo_pdf'),
     path('auditorias/', auditorias_panel, name='auditorias_panel'),
     path('usuarios/', gestion_usuarios_panel, name='gestion_usuarios_panel'),
     path('usuarios/crear/', crear_usuario, name='crear_usuario'),
@@ -82,6 +96,7 @@ urlpatterns = [
     path('usuario/carrito/eliminar/<int:prod_id>/', usuario_eliminar_carrito, name='usuario_eliminar_carrito'),
     path('usuario/carrito/realizar-pedido/', usuario_realizar_pedido, name='usuario_realizar_pedido'),
     path('usuario/pedidos/', pedidos_usuario, name='pedidos_usuario'),
+    path('usuario/pedidos/<int:pedido_id>/codigo-devolucion/', pedido_codigo_devolucion, name='pedido_codigo_devolucion'),
     path('usuario/pedidos/<int:pedido_id>/cancelar/', pedido_cancelar_usuario, name='pedido_cancelar_usuario'),
     path('usuario/notificaciones/', notificaciones_panel, name='notificaciones_panel'),
     path('usuario/notificaciones/<int:noti_id>/leer/', notificacion_marcar_leida, name='notificacion_marcar_leida'),

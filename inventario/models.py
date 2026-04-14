@@ -159,6 +159,32 @@ class Auditorio(models.Model):
         return self.nombre_auditorio or f'Auditorio {self.id_aud}'
 
 
+class AuditoriaLog(models.Model):
+    id_log = models.AutoField(primary_key=True)
+    accion = models.CharField(max_length=30)
+    entidad = models.CharField(max_length=80)
+    entidad_id = models.CharField(max_length=80, null=True, blank=True)
+    descripcion = models.TextField()
+    id_usuario_fk = models.ForeignKey(
+        Usuario,
+        on_delete=models.SET_NULL,
+        db_column='id_usuario_fk',
+        null=True,
+        blank=True,
+        related_name='auditorias',
+    )
+    rol_usuario = models.CharField(max_length=80, null=True, blank=True)
+    ip_origen = models.CharField(max_length=45, null=True, blank=True)
+    fch_registro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'auditoria_log'
+        ordering = ['-fch_registro', '-id_log']
+
+    def __str__(self):
+        return f'{self.accion} {self.entidad} ({self.entidad_id or "-"})'
+
+
 class Pedido(models.Model):
     id_pedido = models.AutoField(primary_key=True)
     id_usuario_fk = models.ForeignKey(

@@ -5,130 +5,596 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/dashboard/css/dashboard.css' %}" data-page-style="true">
-    <link rel="stylesheet" href="{% static 'inventario/catalogo/css/catalogo.css' %}" data-page-style="true">
-    <link rel="stylesheet" href="{% static 'inventario/dashboard/css/temu_inventory.css' %}" data-page-style="true">
-    <link rel="stylesheet" href="{% static 'inventario/dashboard/css/temu_searchbar.css' %}" data-page-style="true">
-    <link rel="stylesheet" href="{% static 'inventario/dashboard/css/product_detail_quick.css' %}" data-page-style="true">
-{% endblock %}
-
-{% block header_center %}
-<div class="busqueda-contenedor-centrado" style="margin-bottom: 2rem;">
-    <form class="temu-searchbar" method="get" action="{% url 'dashboard' %}">
-        <input type="search" name="q" value="{{ q }}" placeholder="Buscar producto" aria-label="Buscar en inventario">
-        <button type="submit" aria-label="Buscar">
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="10" cy="10" r="7" stroke="#fff" stroke-width="2"/>
-                <line x1="16.0607" y1="16.4749" x2="20" y2="20.4142" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-        </button>
-    </form>
-</div>
 {% endblock %}
 
 {% block content %}
 <section class="temu-inventory-grid" style="padding: 0 1.5rem;">
-    {% if productos %}
-    <div class="temu-grid">
-        {% for p in productos %}
-        <button type="button" class="temu-card temu-card-btn" data-open-modal="producto-{{ p.id_prod }}" title="Ver detalles de {{ p.nombre_producto }}">
-            <span class="temu-card__media">
-                {% if p.fot_prod %}
-                <img src="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}">
-                {% else %}
-                <span class="temu-card__placeholder">
-                    <ion-icon name="image-outline"></ion-icon>
-                </span>
-                {% endif %}
-            </span>
-            <span class="temu-card__body">
-                <h3 class="temu-card__name">{{ p.nombre_producto }}</h3>
-                <p class="temu-card__cat">{{ p.id_cat_fk.nombre_catalogo }}</p>
-                <p class="temu-card__desc">{% if p.descripcion %}{{ p.descripcion|truncatechars:70 }}{% else %}Sin descripción registrada.{% endif %}</p>
-                <span class="temu-card__meta">
-                    <span><ion-icon name="archive-outline"></ion-icon> Stock: {{ p.stock_actual|default:'0' }}</span>
-                    <span><ion-icon name="layers-outline"></ion-icon> Cantidad: {{ p.cantidad_actual|default:'0' }}</span>
-                </span>
-            </span>
-        </button>
-        <div class="product-modal-backdrop" id="producto-{{ p.id_prod }}" aria-hidden="true">
-            <div class="product-modal" role="dialog" aria-modal="true" aria-labelledby="producto-title-{{ p.id_prod }}">
-                <div class="product-modal__header">
-                    <h2 class="product-modal__title" id="producto-title-{{ p.id_prod }}">{{ p.nombre_producto }}</h2>
-                    <button class="product-modal__close" type="button" data-close-modal aria-label="Cerrar detalle">
-                        <ion-icon name="close-outline"></ion-icon>
-                    </button>
+    <section class="admin-resumen" aria-label="Dashboard administrativo">
+        <header class="admin-resumen__head">
+            <div>
+                <h1>Dashboard de administración</h1>
+                <p>Seguimiento operativo de pedidos, préstamos y estado de inventario en tiempo real.</p>
+            </div>
+            <form method="get" class="admin-report-toolbar" aria-label="Exportar reportes">
+                <input id="mes_reporte" type="month" name="mes" value="{{ mes_reporte }}" aria-label="Mes de reporte">
+                <button type="submit" formaction="{% url 'reporte_prestamos_excel' %}" class="btn-export btn-export--excel">
+                    <ion-icon name="document-text-outline"></ion-icon>
+                    Excel
+                </button>
+                <button type="submit" formaction="{% url 'reporte_prestamos_pdf' %}" class="btn-export btn-export--pdf">
+                    <ion-icon name="document-outline"></ion-icon>
+                    PDF
+                </button>
+            </form>
+        </header>
+
+        <div class="admin-resumen__stats">
+            <article class="admin-kpi admin-kpi--pie">
+                <span class="admin-kpi__label">Stock vs cantidad (global)</span>
+                <div class="admin-kpi-pie-wrap">
+                    <div class="admin-kpi-pie" style="background: {{ pie_stock_cantidad_conic }};">
+                        <div class="admin-kpi-pie__center">
+                            <strong>{{ total_stock_general }}</strong>
+                            <span>Stock</span>
+                        </div>
+                    </div>
+                    <div class="admin-kpi-pie-legend">
+                        {% for seg in pie_stock_cantidad_segmentos %}
+                        <div class="legend-row">
+                            <span class="dot" style="background: {{ seg.color }};"></span>
+                            <span>{{ seg.label }}</span>
+                            <strong>{{ seg.cantidad }}</strong>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
-                <div class="product-modal__media">
-                    {% if p.fot_prod %}
-                    <img src="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}" class="product-modal__img">
+                <button type="button" class="admin-kpi-link" id="openDeficitModalBtn">
+                    Ver productos con cantidad menor al stock ({{ total_productos_deficit }})
+                </button>
+            </article>
+            <article class="admin-kpi">
+                <span class="admin-kpi__label">Pedidos del mes</span>
+                <strong class="admin-kpi__value">{{ pedidos_mes_actual }}</strong>
+            </article>
+            <article class="admin-kpi">
+                <span class="admin-kpi__label">Préstamos realizados (mes)</span>
+                <strong class="admin-kpi__value">{{ prestamos_mes_actual }}</strong>
+            </article>
+            <article class="admin-kpi admin-kpi--warn">
+                <span class="admin-kpi__label">Productos en mora</span>
+                <strong class="admin-kpi__value">{{ productos_en_mora }}</strong>
+            </article>
+        </div>
+
+        <div id="deficitProductosModal" class="stock-gap-modal" aria-hidden="true">
+            <div class="stock-gap-modal__dialog" role="dialog" aria-modal="true" aria-label="Productos con cantidad menor al stock">
+                <div class="stock-gap-modal__head">
+                    <h2>Productos con cantidad menor al stock</h2>
+                    <button type="button" class="stock-gap-modal__close" id="closeDeficitModalBtn" aria-label="Cerrar">×</button>
+                </div>
+                <div class="stock-gap-modal__body">
+                    {% if productos_deficit %}
+                    <p class="stock-gap-modal__hint">
+                        Aquí ves los productos donde la cantidad registrada es menor al stock. Si la causa es préstamo o pedido activo,
+                        puedes abrir el pedido relacionado.
+                    </p>
+                    <div class="stock-gap-table-wrap">
+                        <table class="stock-gap-table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Catálogo</th>
+                                    <th>Stock</th>
+                                    <th>Cantidad</th>
+                                    <th>Faltante</th>
+                                    <th>Motivo</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in productos_deficit %}
+                                <tr>
+                                    <td>{{ item.nombre_producto }}</td>
+                                    <td>{{ item.catalogo }}</td>
+                                    <td>{{ item.stock_actual }}</td>
+                                    <td>{{ item.cantidad_actual }}</td>
+                                    <td>{{ item.faltante }}</td>
+                                    <td>{{ item.motivo }}</td>
+                                    <td>
+                                        {% if item.pedido_ref %}
+                                        <a class="stock-gap-link" href="{% url 'pedido_detalle_panel' item.pedido_ref %}">Ir al pedido #{{ item.pedido_ref }}</a>
+                                        {% else %}
+                                        <span class="stock-gap-muted">Sin pedido directo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                    <div class="product-modal__placeholder"><ion-icon name="image-outline"></ion-icon></div>
+                    <p class="admin-card__empty">No hay productos con cantidad menor al stock en este momento.</p>
                     {% endif %}
-                </div>
-                <div class="product-modal__content">
-                    <div class="product-detail-quick">
-                        <div class="product-detail-quick__item">
-                            <span class="product-detail-quick__label">Stock fijo</span>
-                            <span class="product-detail-quick__value">{{ p.stock_actual|default:'0' }}</span>
-                        </div>
-                        <div class="product-detail-quick__item">
-                            <span class="product-detail-quick__label">Cantidad actual</span>
-                            <span class="product-detail-quick__value">{{ p.cantidad_actual|default:'0' }}</span>
-                        </div>
-                        <div class="product-detail-quick__item">
-                            <span class="product-detail-quick__label">Catálogo</span>
-                            <span class="product-detail-quick__value">{{ p.id_cat_fk.nombre_catalogo }}</span>
-                        </div>
-                    </div>
-                    <div class="product-detail-block">
-                        <p class="product-detail-label">Descripción del producto</p>
-                        <p class="product-detail-value product-detail-value--preserve">{% if p.descripcion %}{{ p.descripcion }}{% else %}Sin descripción.{% endif %}</p>
-                    </div>
                 </div>
             </div>
         </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <p class="inventory-empty">No hay productos con los filtros actuales.</p>
-    {% endif %}
+
+        <article class="admin-card admin-card--pendientes">
+            <header class="admin-card__head">
+                <h2>Vista rápida de pedidos pendientes</h2>
+                <span>Total pendientes: {{ pedidos_pendientes_total }}</span>
+            </header>
+            {% if resumen_pendientes %}
+            <div class="admin-pending-table-wrap" role="region" aria-label="Resumen de pedidos pendientes">
+                <table class="admin-pending-table">
+                    <thead>
+                        <tr>
+                            <th>ID pedido</th>
+                            <th>Usuario</th>
+                            <th>Producto</th>
+                            <th>Fecha solicitud</th>
+                            <th>Fecha entrega</th>
+                            <th>Código confirmación</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in resumen_pendientes %}
+                        <tr class="pending-row" data-href="{% url 'pedido_detalle_panel' item.id_pedido %}">
+                            <td data-label="ID pedido">{{ item.id_pedido }}</td>
+                            <td data-label="Usuario">{{ item.usuario }}</td>
+                            <td data-label="Producto">{{ item.producto }}</td>
+                            <td data-label="Fecha solicitud">{{ item.fecha_solicitud|date:'d/m/Y H:i' }}</td>
+                            <td data-label="Fecha entrega">{% if item.fecha_entrega %}{{ item.fecha_entrega|date:'d/m/Y H:i' }}{% else %}-{% endif %}</td>
+                            <td data-label="Código">{{ item.codigo_confirmacion }}</td>
+                            <td data-label="Estado"><span class="pending-pill">{{ item.estado }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="admin-card__empty">No hay pedidos en estado pendiente en este momento.</p>
+            {% endif %}
+            <div class="admin-pending-actions">
+                <a href="{% url 'pedidos_panel' %}" class="admin-pending-more-btn">
+                    Ver más
+                    <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+                </a>
+            </div>
+        </article>
+
+        <div class="admin-chart-grid">
+            <article class="admin-card admin-card--chart">
+                <header class="admin-card__head">
+                    <h2>Pedidos por estado</h2>
+                    <span>{{ mes_actual_label }}</span>
+                </header>
+                <div class="admin-pie-wrap">
+                    <div class="admin-pie" style="background: {{ pie_conic }};">
+                        <div class="admin-pie__center">
+                            <strong>{{ total_pedidos_mes }}</strong>
+                            <span>Pedidos</span>
+                        </div>
+                    </div>
+                    <ul class="admin-legend">
+                        {% for seg in pie_segmentos %}
+                        <li>
+                            <span class="dot" style="background: {{ seg.color }};"></span>
+                            <span>{{ seg.label }}</span>
+                            <strong>{{ seg.cantidad }}</strong>
+                        </li>
+                        {% empty %}
+                        <li class="admin-card__empty">No hay pedidos registrados en este mes.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </article>
+
+            <article class="admin-card admin-card--chart">
+                <header class="admin-card__head">
+                    <h2>Tendencia mensual interactiva</h2>
+                    <span>Rueda del mouse: zoom de 12 a 1 mes. Se actualiza automáticamente.</span>
+                </header>
+                <div class="admin-line-chart" aria-label="Gráfica de torres mensual" data-source-url="{% url 'dashboard_tendencia_data' %}">
+                    <div class="admin-line-controls" role="group" aria-label="Filtros de líneas">
+                        <button type="button" class="line-filter is-active" data-series="pendientes">Pendientes</button>
+                        <button type="button" class="line-filter is-active" data-series="prestamos">Prestados</button>
+                        <button type="button" class="line-filter is-active" data-series="devueltos">Devueltos</button>
+                        <button type="button" class="line-filter is-active" data-series="cancelados">Cancelados</button>
+                        <span class="line-window" id="lineWindowLabel">Ventana: 6 meses</span>
+                    </div>
+                    <svg id="tendenciaSvg" viewBox="0 0 400 190" role="img" aria-label="Torres de pendientes, prestados, devueltos y cancelados">
+                        <line x1="20" y1="170" x2="380" y2="170" class="axis"></line>
+                        <g id="tendenciaBars"></g>
+                    </svg>
+                    <div id="towerTooltip" class="tower-tooltip" hidden></div>
+                    <div id="towerDetailModal" class="tower-modal" aria-hidden="true">
+                        <div class="tower-modal__dialog" role="dialog" aria-modal="true" aria-label="Detalle de la barra seleccionada">
+                            <div class="tower-modal__head">
+                                <h3 id="towerModalTitle">Detalle</h3>
+                                <button type="button" id="towerModalClose" class="tower-modal__close" aria-label="Cerrar detalle">×</button>
+                            </div>
+                            <div class="tower-modal__body" id="towerModalBody">
+                                <p class="admin-card__empty">Cargando información...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-line-labels" id="lineLabels"></div>
+                    <div class="admin-line-legend">
+                        <span><i class="dot dot--pendientes"></i> Pendientes</span>
+                        <span><i class="dot dot--prestamos"></i> Préstamos</span>
+                        <span><i class="dot dot--devueltos"></i> Devueltos</span>
+                        <span><i class="dot dot--cancelados"></i> Cancelados</span>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <article class="admin-card admin-card--stock">
+            <header class="admin-card__head">
+                <h2>Alertas de stock priorizadas</h2>
+                <div class="admin-stock-head-actions">
+                    <span>Productos por debajo del mínimo operativo (5)</span>
+                    <a href="{% url 'reporte_stock_bajo_pdf' %}" class="admin-stock-pdf-btn">
+                        <ion-icon name="download-outline"></ion-icon>
+                        Descargar recibo PDF
+                    </a>
+                </div>
+            </header>
+            <div class="admin-stock-columns">
+                <section class="admin-stock-block">
+                    <h3>Stock bajo (&lt; 5)</h3>
+                    {% if alertas_stock_bajo %}
+                    <ul class="admin-stock-list">
+                        {% for alerta in alertas_stock_bajo %}
+                        <li>
+                            <div>
+                                <strong class="stock-producto">{{ alerta.nombre_producto }}</strong>
+                                <small>{{ alerta.catalogo }} • {{ alerta.detalle }}</small>
+                            </div>
+                            <span class="stock-badge {% if alerta.nivel == 'Critico' %}stock-badge--critico{% endif %}">
+                                {{ alerta.nivel }} · {{ alerta.stock_actual }} und
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="admin-card__empty">Sin alertas de stock bajo.</p>
+                    {% endif %}
+                </section>
+
+                <section class="admin-stock-block">
+                    <h3>Cantidad baja (&lt; 5)</h3>
+                    {% if alertas_cantidad_baja %}
+                    <ul class="admin-stock-list">
+                        {% for alerta in alertas_cantidad_baja %}
+                        <li>
+                            <div>
+                                <strong class="stock-producto">{{ alerta.nombre_producto }}</strong>
+                                <small>{{ alerta.catalogo }} • {{ alerta.detalle }}</small>
+                            </div>
+                            <span class="stock-badge {% if alerta.nivel == 'Critico' %}stock-badge--critico{% endif %}">
+                                {{ alerta.nivel }} · {{ alerta.cantidad_actual }} und
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="admin-card__empty">Sin alertas de cantidad baja.</p>
+                    {% endif %}
+                </section>
+            </div>
+        </article>
+    </section>
 </section>
 {% endblock %}
 
 {% block extra_js %}
+    {{ tendencia|json_script:"tendencia-data" }}
     <script src="{% static 'inventario/dashboard/js/dashboard.js' %}" defer></script>
-    <script src="{% static 'inventario/dashboard/js/custom_select.js' %}" defer></script>
     <script data-page-script="true">
-    // Modal JS reutilizado del catálogo
     (() => {
-        const openButtons = document.querySelectorAll('[data-open-modal]');
-        const closeButtons = document.querySelectorAll('[data-close-modal]');
-        const closeAll = () => {
-            document.querySelectorAll('.product-modal-backdrop').forEach(m => {
-                m.setAttribute('aria-hidden', 'true');
-            });
+        const dataNode = document.getElementById('tendencia-data');
+        const svg = document.getElementById('tendenciaSvg');
+        const chartContainer = document.querySelector('.admin-line-chart[data-source-url]');
+        const detailModal = document.getElementById('towerDetailModal');
+        const detailBody = document.getElementById('towerModalBody');
+        const detailTitle = document.getElementById('towerModalTitle');
+        const detailClose = document.getElementById('towerModalClose');
+        const labelsWrap = document.getElementById('lineLabels');
+        const windowLabel = document.getElementById('lineWindowLabel');
+        const tooltip = document.getElementById('towerTooltip');
+        if (!dataNode || !svg || !labelsWrap || !windowLabel || !chartContainer || !tooltip || !detailModal || !detailBody || !detailTitle || !detailClose) return;
+
+        let dataset = JSON.parse(dataNode.textContent || '[]');
+        if (!Array.isArray(dataset) || dataset.length === 0) return;
+
+        const filters = document.querySelectorAll('.line-filter');
+        const seriesLabel = {
+            pendientes: 'Pendientes',
+            prestamos: 'Prestados',
+            devueltos: 'Devueltos',
+            cancelados: 'Cancelados',
+        };
+        const state = {
+            visibleMonths: Math.min(6, dataset.length),
+            enabled: {
+                pendientes: true,
+                prestamos: true,
+                devueltos: true,
+                cancelados: true,
+            }
+        };
+
+        const showTooltip = (event, text) => {
+            tooltip.textContent = text;
+            tooltip.hidden = false;
+            const rect = chartContainer.getBoundingClientRect();
+            const x = event.clientX - rect.left + 8;
+            const y = event.clientY - rect.top - 26;
+            tooltip.style.left = `${x}px`;
+            tooltip.style.top = `${y}px`;
+        };
+
+        const hideTooltip = () => {
+            tooltip.hidden = true;
+        };
+
+        const openDetailModal = () => {
+            detailModal.classList.add('is-open');
+            detailModal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+        };
+
+        const closeDetailModal = () => {
+            detailModal.classList.remove('is-open');
+            detailModal.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('modal-open');
         };
-        openButtons.forEach(btn => {
+
+        detailClose.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            closeDetailModal();
+        });
+        detailModal.addEventListener('click', (event) => {
+            if (event.target === detailModal) closeDetailModal();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && detailModal.classList.contains('is-open')) {
+                closeDetailModal();
+            }
+        });
+
+        const loadBarDetail = async (monthLabel, seriesKey, year, month) => {
+            const serieText = seriesLabel[seriesKey] || seriesKey;
+            detailTitle.textContent = `${serieText} · ${monthLabel}`;
+            detailBody.innerHTML = '<p class="admin-card__empty">Cargando información...</p>';
+            openDetailModal();
+
+            if (!Number.isInteger(Number(year)) || !Number.isInteger(Number(month))) {
+                detailBody.innerHTML = '<p class="admin-card__empty">No se pudo determinar el periodo del dato seleccionado.</p>';
+                return;
+            }
+
+            const detailUrlBase = '{% url "dashboard_tendencia_detalle" %}';
+            const detailUrl = `${detailUrlBase}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}&serie=${encodeURIComponent(seriesKey)}`;
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                const resp = await fetch(detailUrl, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    cache: 'no-store',
+                    signal: controller.signal,
+                });
+                clearTimeout(timeoutId);
+                if (!resp.ok) {
+                    detailBody.innerHTML = '<p class="admin-card__empty">No se pudo cargar el detalle.</p>';
+                    return;
+                }
+                const payload = await resp.json();
+                if (!payload || !payload.ok || !Array.isArray(payload.items) || payload.items.length === 0) {
+                    detailBody.innerHTML = '<p class="admin-card__empty">Sin registros para este estado y mes.</p>';
+                    return;
+                }
+
+                const rows = payload.items.map((item) => `
+                    <tr>
+                        <td>${item.pedido_id}</td>
+                        <td>${item.usuario || '-'}</td>
+                        <td>${item.rol || '-'}</td>
+                        <td>${item.hora || '-'}</td>
+                        <td>${item.descripcion || '-'}</td>
+                    </tr>
+                `).join('');
+
+                detailBody.innerHTML = `
+                    <div class="tower-modal-table-wrap">
+                        <table class="tower-modal-table">
+                            <thead>
+                                <tr>
+                                    <th>Pedido</th>
+                                    <th>Usuario</th>
+                                    <th>Rol</th>
+                                    <th>Hora</th>
+                                    <th>Descripción</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (e) {
+                if (e && e.name === 'AbortError') {
+                    detailBody.innerHTML = '<p class="admin-card__empty">La consulta tardó demasiado. Intenta nuevamente.</p>';
+                } else {
+                    detailBody.innerHTML = '<p class="admin-card__empty">Error de conexión al cargar el detalle.</p>';
+                }
+            }
+        };
+
+        const getSlice = () => dataset.slice(dataset.length - state.visibleMonths);
+
+        const chart = {
+            x: 20,
+            yTop: 20,
+            yBase: 170,
+            width: 360,
+            height: 150,
+        };
+
+        const render = () => {
+            const current = getSlice();
+            const series = ['pendientes', 'prestamos', 'devueltos', 'cancelados'];
+            const activeSeries = series.filter((k) => state.enabled[k]);
+            const barsLayer = document.getElementById('tendenciaBars');
+            if (barsLayer) barsLayer.innerHTML = '';
+            const maxValue = Math.max(
+                1,
+                ...current.flatMap((row) => activeSeries.map((key) => Number(row[key] || 0)))
+            );
+
+            if (barsLayer && current.length > 0 && activeSeries.length > 0) {
+                const groupWidth = chart.width / current.length;
+                const groupPadding = Math.min(10, groupWidth * 0.22);
+                const barGap = 3;
+                const available = Math.max(8, groupWidth - groupPadding * 2);
+                const barWidth = Math.max(4, (available - barGap * (activeSeries.length - 1)) / activeSeries.length);
+
+                current.forEach((row, monthIndex) => {
+                    const startX = chart.x + monthIndex * groupWidth + groupPadding;
+                    activeSeries.forEach((key, seriesIndex) => {
+                        const value = Number(row[key] || 0);
+                        const barHeight = Math.max(1.5, (value / maxValue) * chart.height);
+                        const x = startX + seriesIndex * (barWidth + barGap);
+                        const y = chart.yBase - barHeight;
+
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', x.toFixed(1));
+                        rect.setAttribute('y', y.toFixed(1));
+                        rect.setAttribute('width', barWidth.toFixed(1));
+                        rect.setAttribute('height', barHeight.toFixed(1));
+                        rect.setAttribute('rx', '2');
+                        rect.setAttribute('class', `tower tower--${key}`);
+                        rect.setAttribute('data-value', String(value));
+                        rect.setAttribute('data-series', key);
+                        rect.setAttribute('data-month', row.label);
+                        rect.setAttribute('aria-label', `${row.label} ${key}: ${value}`);
+
+                        const tooltipText = `${seriesLabel[key] || key}: ${value} · ${row.label}`;
+                        rect.addEventListener('mouseenter', (event) => showTooltip(event, tooltipText));
+                        rect.addEventListener('mousemove', (event) => showTooltip(event, tooltipText));
+                        rect.addEventListener('mouseleave', hideTooltip);
+                        rect.addEventListener('click', async (event) => {
+                            showTooltip(event, tooltipText);
+                            await loadBarDetail(row.label, key, row.year, row.month);
+                            setTimeout(hideTooltip, 300);
+                        });
+
+                        barsLayer.appendChild(rect);
+                    });
+                });
+            }
+
+            labelsWrap.innerHTML = current.map((row) => `<span>${row.label}</span>`).join('');
+            labelsWrap.style.setProperty('--line-points', String(Math.max(1, current.length)));
+            windowLabel.textContent = `Ventana: ${state.visibleMonths} mes${state.visibleMonths === 1 ? '' : 'es'}`;
+        };
+
+        filters.forEach((btn) => {
             btn.addEventListener('click', () => {
-                const id = btn.getAttribute('data-open-modal');
-                const modal = document.getElementById(id);
-                if (!modal) return;
-                closeAll();
-                modal.setAttribute('aria-hidden', 'false');
-                document.body.classList.add('modal-open');
+                const key = btn.dataset.series;
+                if (!key) return;
+                const totalActivos = Object.values(state.enabled).filter(Boolean).length;
+                if (state.enabled[key] && totalActivos === 1) return;
+                state.enabled[key] = !state.enabled[key];
+                btn.classList.toggle('is-active', state.enabled[key]);
+                render();
             });
         });
-        closeButtons.forEach(btn => {
-            btn.addEventListener('click', closeAll);
-        });
-        document.querySelectorAll('.product-modal-backdrop').forEach(bd => {
-            bd.addEventListener('click', (e) => {
-                if (e.target === bd) closeAll();
+
+        svg.addEventListener('wheel', (event) => {
+            event.preventDefault();
+            if (event.deltaY < 0) {
+                state.visibleMonths = Math.max(1, state.visibleMonths - 1);
+            } else {
+                state.visibleMonths = Math.min(dataset.length, state.visibleMonths + 1);
+            }
+            render();
+        }, { passive: false });
+
+        const sourceUrl = chartContainer ? chartContainer.getAttribute('data-source-url') : '';
+
+        const refreshData = async () => {
+            if (!sourceUrl) return;
+            try {
+                const resp = await fetch(sourceUrl, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    cache: 'no-store',
+                });
+                if (!resp.ok) return;
+                const payload = await resp.json();
+                if (!payload || !payload.ok || !Array.isArray(payload.tendencia)) return;
+                dataset = payload.tendencia;
+                state.visibleMonths = Math.min(state.visibleMonths, dataset.length || 1);
+                render();
+            } catch (e) {
+                // Ignorar errores de red para no interrumpir la UX del dashboard.
+            }
+        };
+
+        setInterval(refreshData, 20000);
+
+        render();
+    })();
+
+    (() => {
+        const rows = document.querySelectorAll('.pending-row[data-href]');
+        if (!rows.length) return;
+
+        rows.forEach((row) => {
+            row.addEventListener('click', () => {
+                const target = row.getAttribute('data-href');
+                if (target) window.location.href = target;
             });
+            row.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    const target = row.getAttribute('data-href');
+                    if (target) window.location.href = target;
+                }
+            });
+            row.setAttribute('tabindex', '0');
+            row.setAttribute('role', 'link');
         });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeAll();
+    })();
+
+    (() => {
+        const openBtn = document.getElementById('openDeficitModalBtn');
+        const modal = document.getElementById('deficitProductosModal');
+        const closeBtn = document.getElementById('closeDeficitModalBtn');
+        if (!openBtn || !modal || !closeBtn) return;
+
+        const openModal = () => {
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+        };
+
+        const closeModal = () => {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-open');
+        };
+
+        openBtn.addEventListener('click', openModal);
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) closeModal();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
         });
     })();
     </script>

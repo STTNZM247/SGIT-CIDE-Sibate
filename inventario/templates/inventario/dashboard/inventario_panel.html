@@ -1,0 +1,136 @@
+{% extends 'inventario/shared/base.html' %}
+{% load static %}
+
+{% block title %}Inventario — Panel de productos{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/dashboard/css/dashboard.css' %}" data-page-style="true">
+    <link rel="stylesheet" href="{% static 'inventario/catalogo/css/catalogo.css' %}" data-page-style="true">
+    <link rel="stylesheet" href="{% static 'inventario/dashboard/css/temu_inventory.css' %}" data-page-style="true">
+    <link rel="stylesheet" href="{% static 'inventario/dashboard/css/temu_searchbar.css' %}" data-page-style="true">
+    <link rel="stylesheet" href="{% static 'inventario/dashboard/css/product_detail_quick.css' %}" data-page-style="true">
+{% endblock %}
+
+{% block header_center %}
+<div class="busqueda-contenedor-centrado" style="margin-bottom: 2rem;">
+    <form class="temu-searchbar" method="get" action="{% url 'inventario_panel' %}">
+        <input type="search" name="q" value="{{ q }}" placeholder="Buscar producto" aria-label="Buscar en inventario">
+        <button type="submit" aria-label="Buscar">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="10" cy="10" r="7" stroke="#fff" stroke-width="2"/>
+                <line x1="16.0607" y1="16.4749" x2="20" y2="20.4142" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </form>
+</div>
+{% endblock %}
+
+{% block content %}
+<section class="temu-inventory-grid" style="padding: 0 1.5rem;">
+
+    {% if productos %}
+    <div class="temu-grid">
+        {% for p in productos %}
+        <button type="button" class="temu-card temu-card-btn" data-open-modal="producto-{{ p.id_prod }}" title="Ver detalles de {{ p.nombre_producto }}">
+            <span class="temu-card__media">
+                {% if p.fot_prod %}
+                <img src="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}">
+                {% else %}
+                <span class="temu-card__placeholder">
+                    <ion-icon name="image-outline"></ion-icon>
+                </span>
+                {% endif %}
+            </span>
+            <span class="temu-card__body">
+                <h3 class="temu-card__name">{{ p.nombre_producto }}</h3>
+                <p class="temu-card__cat">{{ p.id_cat_fk.nombre_catalogo }}</p>
+                <p class="temu-card__desc">{% if p.descripcion %}{{ p.descripcion|truncatechars:70 }}{% else %}Sin descripción registrada.{% endif %}</p>
+                <span class="temu-card__meta">
+                    <span><ion-icon name="archive-outline"></ion-icon> Stock: {{ p.stock_actual|default:'0' }}</span>
+                    <span><ion-icon name="layers-outline"></ion-icon> Cantidad: {{ p.cantidad_actual|default:'0' }}</span>
+                </span>
+            </span>
+        </button>
+        <div class="product-modal-backdrop" id="producto-{{ p.id_prod }}" aria-hidden="true">
+            <div class="product-modal" role="dialog" aria-modal="true" aria-labelledby="producto-title-{{ p.id_prod }}">
+                <div class="product-modal__header">
+                    <h2 class="product-modal__title" id="producto-title-{{ p.id_prod }}">{{ p.nombre_producto }}</h2>
+                    <button class="product-modal__close" type="button" data-close-modal aria-label="Cerrar detalle">
+                        <ion-icon name="close-outline"></ion-icon>
+                    </button>
+                </div>
+                <div class="product-modal__media">
+                    {% if p.fot_prod %}
+                    <img src="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}" class="product-modal__img">
+                    {% else %}
+                    <div class="product-modal__placeholder"><ion-icon name="image-outline"></ion-icon></div>
+                    {% endif %}
+                </div>
+                <div class="product-modal__content">
+                    <div class="product-detail-quick">
+                        <div class="product-detail-quick__item">
+                            <span class="product-detail-quick__label">Stock fijo</span>
+                            <span class="product-detail-quick__value">{{ p.stock_actual|default:'0' }}</span>
+                        </div>
+                        <div class="product-detail-quick__item">
+                            <span class="product-detail-quick__label">Cantidad actual</span>
+                            <span class="product-detail-quick__value">{{ p.cantidad_actual|default:'0' }}</span>
+                        </div>
+                        <div class="product-detail-quick__item">
+                            <span class="product-detail-quick__label">Catálogo</span>
+                            <span class="product-detail-quick__value">{{ p.id_cat_fk.nombre_catalogo }}</span>
+                        </div>
+                    </div>
+                    <div class="product-detail-block">
+                        <p class="product-detail-label">Descripción del producto</p>
+                        <p class="product-detail-value product-detail-value--preserve">{% if p.descripcion %}{{ p.descripcion }}{% else %}Sin descripción.{% endif %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="inventory-empty">No hay productos con los filtros actuales.</p>
+    {% endif %}
+
+</section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'inventario/dashboard/js/dashboard.js' %}" defer></script>
+    <script src="{% static 'inventario/dashboard/js/custom_select.js' %}" defer></script>
+    <script data-page-script="true">
+    (() => {
+        const openButtons = document.querySelectorAll('[data-open-modal]');
+        const closeButtons = document.querySelectorAll('[data-close-modal]');
+        const closeAll = () => {
+            document.querySelectorAll('.product-modal-backdrop').forEach(m => {
+                m.setAttribute('aria-hidden', 'true');
+            });
+            document.body.classList.remove('modal-open');
+        };
+        openButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-open-modal');
+                const modal = document.getElementById(id);
+                if (!modal) return;
+                closeAll();
+                modal.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('modal-open');
+            });
+        });
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', closeAll);
+        });
+        document.querySelectorAll('.product-modal-backdrop').forEach(bd => {
+            bd.addEventListener('click', (e) => {
+                if (e.target === bd) closeAll();
+            });
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeAll();
+        });
+    })();
+    </script>
+{% endblock %}

@@ -1,13 +1,22 @@
+import csv
+import io
+import os
 import secrets
-from datetime import timedelta
+import textwrap
+from collections import defaultdict
+from datetime import date, timedelta
 
-from django.http import Http404, JsonResponse
+from django.conf import settings
+from django.http import Http404, HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.contrib import messages
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Catalogo, DetallePedido, Disponibilidad, Notificacion, Pedido, PedidoEvidencia, Producto, Rol
+from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Notificacion, Pedido, PedidoEvidencia, Producto, Rol
 from .forms import ProductoForm
+
+
+DEVOLUCION_CODIGO_SEGUNDOS = 60
 
 
 def _crear_notificacion(usuario, tipo, titulo, mensaje, pedido_id=None):
@@ -44,6 +53,140 @@ def _notificar_staff(tipo, titulo, mensaje, pedido_id=None):
         ])
     except Exception:
         pass
+
+
+def _registrar_auditoria(request, accion, entidad, entidad_id=None, descripcion=''):
+    usuario = None
+    if request and getattr(request, 'user', None) and request.user.is_authenticated:
+        usuario = request.user
+    rol = None
+    if usuario and getattr(usuario, 'id_rol_fk', None):
+        rol = usuario.id_rol_fk.nombre_rol
+
+    actor = 'sistema'
+    if usuario and usuario.is_authenticated:
+        nombre = f'{getattr(usuario, "nombre", "") or ""} {getattr(usuario, "apellido", "") or ""}'.strip()
+        actor = nombre or getattr(usuario, 'correo', None) or f'usuario#{getattr(usuario, "pk", "")}'
+
+    descripcion_final = (descripcion or '').strip()
+    actor_tag = f'Actor: {actor}' + (f' ({rol})' if rol else '')
+    if descripcion_final:
+        descripcion_final = f'{descripcion_final} | {actor_tag}'
+    else:
+        descripcion_final = actor_tag
+
+    ip = ''
+    if request:
+        ip = request.META.get('HTTP_X_FORWARDED_FOR', '') or request.META.get('REMOTE_ADDR', '')
+    if ',' in ip:
+        ip = ip.split(',')[0].strip()
+
+    try:
+        AuditoriaLog.objects.create(
+            accion=accion,
+            entidad=entidad,
+            entidad_id=str(entidad_id) if entidad_id is not None else None,
+            descripcion=descripcion_final,
+            id_usuario_fk=usuario if usuario and usuario.is_authenticated else None,
+            rol_usuario=rol,
+            ip_origen=ip[:45] if ip else None,
+        )
+    except Exception:
+        # Evita romper el flujo principal si la tabla de auditoria aun no existe.
+        pass
+
+
+def _auto_cancelar_pedidos_pendientes_vencidos():
+    now = timezone.localtime()
+    with transaction.atomic():
+        pedidos = list(
+            Pedido.objects
+            .select_for_update()
+            .select_related('id_usuario_fk')
+            .filter(
+                estado='pendiente',
+                fecha_devolucion__isnull=False,
+                fecha_devolucion__lte=now,
+            )
+        )
+
+        if not pedidos:
+            return 0
+
+        pedido_ids = [p.id_pedido for p in pedidos]
+        Pedido.objects.filter(id_pedido__in=pedido_ids).update(
+            estado='cancelado',
+            fch_ult_act=now,
+        )
+        DetallePedido.objects.filter(id_pedido_fk_id__in=pedido_ids).update(
+            estado_detalle='cancelado',
+            fch_ult_act=now,
+        )
+
+    for pedido in pedidos:
+        _crear_notificacion(
+            usuario=pedido.id_usuario_fk,
+            tipo='rechazado',
+            titulo='Pedido cancelado automáticamente',
+            mensaje=(
+                f'Tu pedido #{pedido.id_pedido} fue cancelado automáticamente porque '
+                'la hora/fecha límite de entrega se venció antes de ser aprobado por almacén.'
+            ),
+            pedido_id=pedido.id_pedido,
+        )
+        _registrar_auditoria(
+            None,
+            accion='actualizar',
+            entidad='pedido',
+            entidad_id=pedido.id_pedido,
+            descripcion=f'Pedido #{pedido.id_pedido} cancelado automáticamente por vencimiento en estado pendiente.',
+        )
+
+    return len(pedidos)
+
+
+def _sumar_stock_disponibilidad(detalle, now):
+    if not detalle.id_prod_fk_id:
+        return
+
+    disp = (
+        Disponibilidad.objects
+        .select_for_update()
+        .filter(id_prod_fk_id=detalle.id_prod_fk_id)
+        .order_by('-id_disp')
+        .first()
+    )
+
+    if not disp:
+        Disponibilidad.objects.create(
+            id_prod_fk=detalle.id_prod_fk,
+            cantidad=detalle.cantidad_solicitada,
+            stock=detalle.cantidad_solicitada,
+            descr_dispo='Stock restaurado por devolución de préstamo.',
+            fch_registro=now,
+            fch_ult_act=now,
+        )
+        return
+
+    if disp.cantidad is not None:
+        disp.cantidad += detalle.cantidad_solicitada
+        update_fields = ['cantidad', 'fch_ult_act']
+    elif disp.stock is not None:
+        disp.stock += detalle.cantidad_solicitada
+        update_fields = ['stock', 'fch_ult_act']
+    else:
+        disp.cantidad = detalle.cantidad_solicitada
+        update_fields = ['cantidad', 'fch_ult_act']
+
+    disp.fch_ult_act = now
+    disp.save(update_fields=update_fields)
+
+
+def _renovar_codigo_devolucion(pedido, now):
+    pedido.codigo_entrega = f'{secrets.randbelow(1000000):06d}'
+    pedido.codigo_expira_en = now + timedelta(seconds=DEVOLUCION_CODIGO_SEGUNDOS)
+    pedido.fch_ult_act = now
+    pedido.save(update_fields=['codigo_entrega', 'codigo_expira_en', 'fch_ult_act'])
 
 
 @login_required
@@ -141,7 +284,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from .forms import CatalogoForm, ProductoForm, UsuarioPerfilForm
-from .models import Catalogo, DetallePedido, Disponibilidad, Pedido, PedidoEvidencia, Producto, Usuario, Rol
+from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Pedido, PedidoEvidencia, Producto, Usuario, Rol
 
 
 def _user_role(request):
@@ -195,6 +338,13 @@ def registrar_catalogo(request):
             obj.fch_registro = timezone.now()
             obj.fch_ult_act = timezone.now()
             obj.save()
+            _registrar_auditoria(
+                request,
+                accion='crear',
+                entidad='catalogo',
+                entidad_id=obj.id_cat,
+                descripcion=f'Se creó el catálogo "{obj.nombre_catalogo}".',
+            )
             messages.success(request, f'Catálogo "{obj.nombre_catalogo}" registrado correctamente.')
         else:
             messages.error(request, 'Error al registrar el catálogo. Revisa los campos.')
@@ -214,6 +364,13 @@ def registrar_producto(request):
             obj.fch_registro = timezone.now()
             obj.fch_ult_act = timezone.now()
             obj.save()
+            _registrar_auditoria(
+                request,
+                accion='crear',
+                entidad='producto',
+                entidad_id=obj.id_prod,
+                descripcion=f'Se creó el producto "{obj.nombre_producto}".',
+            )
 
             stock_inicial = form.cleaned_data.get('stock_inicial') or 0
             descr_dispo = form.cleaned_data.get('descr_dispo') or ''
@@ -248,7 +405,15 @@ def eliminar_catalogo(request, cat_id):
             )
         else:
             nombre = catalogo.nombre_catalogo
+            catalogo_id = catalogo.id_cat
             catalogo.delete()
+            _registrar_auditoria(
+                request,
+                accion='eliminar',
+                entidad='catalogo',
+                entidad_id=catalogo_id,
+                descripcion=f'Se eliminó el catálogo "{nombre}".',
+            )
             messages.success(request, f'Catálogo "{nombre}" eliminado correctamente.')
 
     return redirect('catalogo')
@@ -293,7 +458,15 @@ def eliminar_producto(request, cat_id, prod_id):
 
     if request.method == 'POST':
         nombre = producto.nombre_producto
+        producto_id = producto.id_prod
         producto.delete()
+        _registrar_auditoria(
+            request,
+            accion='eliminar',
+            entidad='producto',
+            entidad_id=producto_id,
+            descripcion=f'Se eliminó el producto "{nombre}".',
+        )
         messages.success(request, f'Producto "{nombre}" eliminado correctamente.')
 
     return redirect('productos_catalogo', cat_id=cat_id)
@@ -302,6 +475,464 @@ def eliminar_producto(request, cat_id, prod_id):
 
 @login_required
 def dashboard(request):
+    if not _is_admin_or_almacenista(request):
+        return redirect('panel_usuario')
+
+    _auto_cancelar_pedidos_pendientes_vencidos()
+
+    ahora = timezone.localtime()
+    anio_actual = ahora.year
+    mes_actual = ahora.month
+    disp_qs = Disponibilidad.objects.filter(id_prod_fk=OuterRef('pk')).order_by('-id_disp')
+
+    alertas_stock_bajo_raw = list(
+        Producto.objects
+        .select_related('id_cat_fk')
+        .annotate(stock_actual=Subquery(disp_qs.values('stock')[:1]))
+        .filter(stock_actual__isnull=False, stock_actual__lt=5)
+        .order_by('stock_actual', 'nombre_producto')[:8]
+    )
+
+    alertas_stock_bajo = []
+    for item in alertas_stock_bajo_raw:
+        stock = int(item.stock_actual or 0)
+        nivel = 'Critico' if stock <= 2 else 'Bajo'
+        detalle = 'Reposicion urgente' if stock <= 2 else 'Planificar reposicion'
+        alertas_stock_bajo.append({
+            'nombre_producto': item.nombre_producto,
+            'catalogo': item.id_cat_fk.nombre_catalogo if item.id_cat_fk else 'Sin catalogo',
+            'stock_actual': stock,
+            'nivel': nivel,
+            'detalle': detalle,
+        })
+
+    alertas_cantidad_baja_raw = list(
+        Producto.objects
+        .select_related('id_cat_fk')
+        .annotate(cantidad_actual=Subquery(disp_qs.values('cantidad')[:1]))
+        .filter(cantidad_actual__isnull=False, cantidad_actual__lt=5)
+        .order_by('cantidad_actual', 'nombre_producto')[:8]
+    )
+
+    alertas_cantidad_baja = []
+    for item in alertas_cantidad_baja_raw:
+        cantidad = int(item.cantidad_actual or 0)
+        nivel = 'Critico' if cantidad <= 2 else 'Bajo'
+        detalle = 'Revisar disponibilidad inmediata' if cantidad <= 2 else 'Programar abastecimiento'
+        alertas_cantidad_baja.append({
+            'nombre_producto': item.nombre_producto,
+            'catalogo': item.id_cat_fk.nombre_catalogo if item.id_cat_fk else 'Sin catalogo',
+            'cantidad_actual': cantidad,
+            'nivel': nivel,
+            'detalle': detalle,
+        })
+
+    productos_con_existencia = list(
+        Producto.objects
+        .select_related('id_cat_fk')
+        .annotate(
+            stock_actual=Subquery(disp_qs.values('stock')[:1]),
+            cantidad_actual=Subquery(disp_qs.values('cantidad')[:1]),
+        )
+        .order_by('nombre_producto')
+    )
+
+    total_stock_general = 0
+    total_cantidad_general = 0
+    productos_deficit_base = []
+    for item in productos_con_existencia:
+        stock = max(int(item.stock_actual or 0), 0)
+        cantidad = max(int(item.cantidad_actual or 0), 0)
+        total_stock_general += stock
+        total_cantidad_general += cantidad
+
+        if cantidad < stock:
+            productos_deficit_base.append({
+                'producto_id': item.id_prod,
+                'nombre_producto': item.nombre_producto or f'Producto {item.id_prod}',
+                'catalogo': item.id_cat_fk.nombre_catalogo if item.id_cat_fk else 'Sin catalogo',
+                'stock_actual': stock,
+                'cantidad_actual': cantidad,
+                'faltante': stock - cantidad,
+            })
+
+    deficit_producto_ids = [item['producto_id'] for item in productos_deficit_base]
+    detalle_por_producto = defaultdict(dict)
+    if deficit_producto_ids:
+        resumen_detalles = (
+            DetallePedido.objects
+            .filter(
+                id_prod_fk_id__in=deficit_producto_ids,
+                id_pedido_fk__estado__in=['entregado', 'pendiente', 'esperando entrega'],
+            )
+            .values('id_prod_fk_id', 'id_pedido_fk__estado')
+            .annotate(
+                total=models.Sum('cantidad_solicitada'),
+                pedido_ref=models.Max('id_pedido_fk_id'),
+            )
+        )
+        for item in resumen_detalles:
+            detalle_por_producto[item['id_prod_fk_id']][item['id_pedido_fk__estado']] = {
+                'total': int(item['total'] or 0),
+                'pedido_ref': item['pedido_ref'],
+            }
+
+    productos_deficit = []
+    for base in productos_deficit_base:
+        estados = detalle_por_producto.get(base['producto_id'], {})
+        entregado = estados.get('entregado', {})
+        pendiente = estados.get('pendiente', {})
+        esperando = estados.get('esperando entrega', {})
+
+        motivo = f'Diferencia inventario: faltan {base["faltante"]} und por ajuste de disponibilidad.'
+        pedido_ref = None
+
+        if int(entregado.get('total', 0)) > 0:
+            motivo = f'En prestamos activos: {entregado["total"]} und comprometidas.'
+            pedido_ref = entregado.get('pedido_ref')
+        elif int(pendiente.get('total', 0)) > 0 or int(esperando.get('total', 0)) > 0:
+            total_comprometido = int(pendiente.get('total', 0)) + int(esperando.get('total', 0))
+            motivo = f'Comprometido en pedidos por entregar: {total_comprometido} und.'
+            pedido_ref = esperando.get('pedido_ref') or pendiente.get('pedido_ref')
+
+        productos_deficit.append({
+            **base,
+            'motivo': motivo,
+            'pedido_ref': pedido_ref,
+        })
+
+    productos_deficit.sort(key=lambda item: (-item['faltante'], item['cantidad_actual'], item['nombre_producto']))
+
+    pie_stock_cantidad_segmentos = []
+    pie_stock_cantidad_tramos = []
+    total_stock_cantidad = total_stock_general + total_cantidad_general
+    tramo_acumulado = 0.0
+    if total_stock_cantidad > 0:
+        segmentos = [
+            ('Stock total', total_stock_general, '#2d6cdf'),
+            ('Cantidad total', total_cantidad_general, '#22a06b'),
+        ]
+        for etiqueta, cantidad, color in segmentos:
+            if cantidad <= 0:
+                continue
+            porcentaje = round((cantidad / total_stock_cantidad) * 100, 1)
+            inicio = tramo_acumulado
+            tramo_acumulado += porcentaje
+            pie_stock_cantidad_tramos.append(f'{color} {inicio:.2f}% {tramo_acumulado:.2f}%')
+            pie_stock_cantidad_segmentos.append({
+                'label': etiqueta,
+                'cantidad': cantidad,
+                'porcentaje': porcentaje,
+                'color': color,
+            })
+
+    pie_stock_cantidad_conic = (
+        'conic-gradient(' + (', '.join(pie_stock_cantidad_tramos) if pie_stock_cantidad_tramos else '#dce5de 0% 100%') + ')'
+    )
+
+    total_productos = Producto.objects.count()
+    prestamos_activos = Pedido.objects.filter(estado='entregado').count()
+    month_keys, resumen_mensual = _resumen_pedidos_mensual(ahora, meses=12)
+    key_actual = (anio_actual, mes_actual)
+    estado_conteos = resumen_mensual.get(key_actual, {
+        'pendiente': 0,
+        'esperando entrega': 0,
+        'entregado': 0,
+        'devuelto': 0,
+        'cancelado': 0,
+    })
+    pedidos_mes_actual = sum(estado_conteos.values())
+    pendientes_preview_limit = 6
+    pedidos_pendientes_total = Pedido.objects.filter(estado='pendiente').count()
+    pedidos_pendientes_qs = (
+        Pedido.objects
+        .filter(estado='pendiente')
+        .select_related('id_usuario_fk')
+        .prefetch_related('detalles')
+        .order_by('fch_registro', 'id_pedido')[:pendientes_preview_limit]
+    )
+
+    resumen_pendientes = []
+    for pedido in pedidos_pendientes_qs:
+        detalles = list(pedido.detalles.all())
+        if detalles:
+            producto_label = detalles[0].nombre_producto or f'Producto {detalles[0].id_prod_fk_id}'
+            if len(detalles) > 1:
+                producto_label = f'{producto_label} +{len(detalles)-1}'
+        else:
+            producto_label = 'Sin productos'
+
+        usuario_label = (
+            f'{pedido.id_usuario_fk.nombre or ""} {pedido.id_usuario_fk.apellido or ""}'.strip()
+            if pedido.id_usuario_fk_id else ''
+        )
+        if not usuario_label:
+            usuario_label = pedido.id_usuario_fk.correo if pedido.id_usuario_fk_id else 'Sin usuario'
+
+        resumen_pendientes.append({
+            'id_pedido': pedido.id_pedido,
+            'usuario': usuario_label,
+            'producto': producto_label,
+            'fecha_solicitud': pedido.fch_registro,
+            'fecha_entrega': pedido.fecha_devolucion,
+            'codigo_confirmacion': pedido.codigo_entrega or '--',
+            'estado': 'Pendiente',
+        })
+    productos_en_mora = (
+        DetallePedido.objects
+        .filter(
+            id_pedido_fk__estado='entregado',
+            fecha_devolucion__isnull=False,
+            fecha_devolucion__lt=ahora,
+        )
+        .exclude(estado_detalle__in=['devuelto', 'cancelado', 'rechazado', 'no_disponible'])
+        .aggregate(total=models.Sum('cantidad_solicitada'))
+        .get('total') or 0
+    )
+
+    estados_pedido = [
+        ('pendiente', 'Pendientes', '#2d6cdf'),
+        ('esperando entrega', 'Esperando entrega', '#26a7c6'),
+        ('entregado', 'Entregados', '#57c271'),
+        ('devuelto', 'Devueltos', '#e88a2a'),
+        ('cancelado', 'Cancelados', '#cf3f5b'),
+    ]
+    prestamos_mes_actual = estado_conteos.get('entregado', 0)
+
+    total_pedidos_mes = sum(estado_conteos.values())
+    pie_segmentos = []
+    pie_tramos = []
+    acumulado = 0.0
+    if total_pedidos_mes > 0:
+        for clave, etiqueta, color in estados_pedido:
+            cantidad = estado_conteos.get(clave, 0)
+            if cantidad <= 0:
+                continue
+            porcentaje = round((cantidad / total_pedidos_mes) * 100, 1)
+            inicio = acumulado
+            acumulado += porcentaje
+            pie_tramos.append(f'{color} {inicio:.2f}% {acumulado:.2f}%')
+            pie_segmentos.append({
+                'label': etiqueta,
+                'cantidad': cantidad,
+                'porcentaje': porcentaje,
+                'color': color,
+            })
+
+    pie_conic = 'conic-gradient(' + (', '.join(pie_tramos) if pie_tramos else '#dce5de 0% 100%') + ')'
+
+    tendencia = _construir_tendencia_mensual(ahora, meses=12)
+    nombres_meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+
+    return render(
+        request,
+        'inventario/dashboard/index.html',
+        {
+            'total_productos': total_productos,
+            'total_stock_general': total_stock_general,
+            'total_cantidad_general': total_cantidad_general,
+            'pie_stock_cantidad_segmentos': pie_stock_cantidad_segmentos,
+            'pie_stock_cantidad_conic': pie_stock_cantidad_conic,
+            'productos_deficit': productos_deficit[:20],
+            'total_productos_deficit': len(productos_deficit),
+            'prestamos_activos': prestamos_activos,
+            'pedidos_mes_actual': pedidos_mes_actual,
+            'pedidos_pendientes_total': pedidos_pendientes_total,
+            'hay_mas_pendientes': pedidos_pendientes_total > pendientes_preview_limit,
+            'resumen_pendientes': resumen_pendientes,
+            'prestamos_mes_actual': prestamos_mes_actual,
+            'productos_en_mora': productos_en_mora,
+            'alertas_stock_bajo': alertas_stock_bajo,
+            'alertas_cantidad_baja': alertas_cantidad_baja,
+            'pie_segmentos': pie_segmentos,
+            'pie_conic': pie_conic,
+            'total_pedidos_mes': total_pedidos_mes,
+            'tendencia': tendencia,
+            'mes_reporte': ahora.strftime('%Y-%m'),
+            'mes_actual_label': f'{nombres_meses[mes_actual - 1]} {anio_actual}',
+        },
+    )
+
+
+def _construir_tendencia_mensual(ahora, meses=12):
+    month_keys, resumen_mensual = _resumen_pedidos_mensual(ahora, meses=meses)
+    nombres_meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+
+    tendencia = []
+    for y, m in month_keys:
+        data = resumen_mensual.get((y, m), {})
+        tendencia.append({
+            'year': y,
+            'month': m,
+            'label': f'{nombres_meses[m - 1]} {str(y)[2:]}',
+            'prestamos': data.get('entregado', 0),
+            'pendientes': data.get('pendiente', 0),
+            'devueltos': data.get('devuelto', 0),
+            'cancelados': data.get('cancelado', 0),
+        })
+    return tendencia
+
+
+def _resumen_pedidos_mensual(ahora, meses=12):
+    def _mes_menos(base_year, base_month, minus_steps):
+        total = base_year * 12 + (base_month - 1) - minus_steps
+        return total // 12, (total % 12) + 1
+
+    month_keys = [_mes_menos(ahora.year, ahora.month, offset) for offset in range(meses - 1, -1, -1)]
+    month_keys = [key for key in month_keys if key[0] >= 2026]
+    if not month_keys:
+        month_keys = [(ahora.year, ahora.month)]
+    month_set = set(month_keys)
+
+    base = {
+        'pendiente': 0,
+        'esperando entrega': 0,
+        'entregado': 0,
+        'devuelto': 0,
+        'cancelado': 0,
+    }
+    resumen = {key: dict(base) for key in month_keys}
+
+    pedidos = Pedido.objects.exclude(fch_registro__isnull=True).only('estado', 'fch_registro')
+    for pedido in pedidos:
+        dt = pedido.fch_registro
+        if not dt:
+            continue
+        if timezone.is_naive(dt):
+            dt = timezone.make_aware(dt, timezone.get_current_timezone())
+        dt_local = timezone.localtime(dt)
+        key = (dt_local.year, dt_local.month)
+        if key not in month_set:
+            continue
+        estado = (pedido.estado or '').strip().lower()
+        if estado == 'rechazado':
+            estado = 'cancelado'
+        if estado in resumen[key]:
+            resumen[key][estado] += 1
+
+    return month_keys, resumen
+
+
+@login_required
+def dashboard_tendencia_data(request):
+    if not _is_admin_or_almacenista(request):
+        return JsonResponse({'ok': False, 'error': 'No autorizado.'}, status=403)
+
+    _auto_cancelar_pedidos_pendientes_vencidos()
+
+    ahora = timezone.localtime()
+    tendencia = _construir_tendencia_mensual(ahora, meses=12)
+    return JsonResponse({
+        'ok': True,
+        'tendencia': tendencia,
+        'updated_at': ahora.strftime('%Y-%m-%d %H:%M:%S'),
+    })
+
+
+@login_required
+def dashboard_tendencia_detalle(request):
+    if not _is_admin_or_almacenista(request):
+        return JsonResponse({'ok': False, 'error': 'No autorizado.'}, status=403)
+
+    _auto_cancelar_pedidos_pendientes_vencidos()
+
+    try:
+        year = int(request.GET.get('year', '0'))
+        month = int(request.GET.get('month', '0'))
+    except (TypeError, ValueError):
+        return JsonResponse({'ok': False, 'error': 'Parámetros inválidos.'}, status=400)
+
+    serie = (request.GET.get('serie') or '').strip().lower()
+    if not (1900 <= year <= 2200 and 1 <= month <= 12):
+        return JsonResponse({'ok': False, 'error': 'Periodo inválido.'}, status=400)
+
+    if serie not in {'pendientes', 'prestamos', 'devueltos', 'cancelados'}:
+        return JsonResponse({'ok': False, 'error': 'Serie inválida.'}, status=400)
+
+    estado_target = {
+        'pendientes': {'pendiente'},
+        'prestamos': {'entregado'},
+        'devueltos': {'devuelto'},
+        'cancelados': {'cancelado', 'rechazado'},
+    }[serie]
+
+    pedidos = (
+        Pedido.objects
+        .exclude(fch_registro__isnull=True)
+        .select_related('id_usuario_fk__id_rol_fk')
+        .only('id_pedido', 'estado', 'fch_registro', 'id_usuario_fk__nombre', 'id_usuario_fk__apellido', 'id_usuario_fk__correo', 'id_usuario_fk__id_rol_fk__nombre_rol')
+    )
+
+    pedidos_filtrados = []
+    for pedido in pedidos:
+        dt = pedido.fch_registro
+        if not dt:
+            continue
+        if timezone.is_naive(dt):
+            dt = timezone.make_aware(dt, timezone.get_current_timezone())
+        dt_local = timezone.localtime(dt)
+        if dt_local.year != year or dt_local.month != month:
+            continue
+        if (pedido.estado or '').strip().lower() not in estado_target:
+            continue
+        pedidos_filtrados.append(pedido)
+
+    ids_pedido = [p.id_pedido for p in pedidos_filtrados]
+    logs = AuditoriaLog.objects.none()
+    if ids_pedido:
+        logs = (
+            AuditoriaLog.objects
+            .filter(entidad_id__in=[str(pid) for pid in ids_pedido], entidad__in=['pedido', 'prestamo'])
+            .select_related('id_usuario_fk__id_rol_fk')
+            .order_by('-fch_registro', '-id_log')
+        )
+
+    ultimo_log_por_pedido = {}
+    for log in logs:
+        try:
+            pid = int(log.entidad_id)
+        except (TypeError, ValueError):
+            continue
+        if pid not in ultimo_log_por_pedido:
+            ultimo_log_por_pedido[pid] = log
+
+    detalle = []
+    for pedido in pedidos_filtrados:
+        log = ultimo_log_por_pedido.get(pedido.id_pedido)
+        if log and log.id_usuario_fk:
+            nombre = f'{log.id_usuario_fk.nombre or ""} {log.id_usuario_fk.apellido or ""}'.strip()
+            actor = nombre or log.id_usuario_fk.correo or f'Usuario #{log.id_usuario_fk_id}'
+            rol = log.rol_usuario or (log.id_usuario_fk.id_rol_fk.nombre_rol if getattr(log.id_usuario_fk, 'id_rol_fk', None) else '-')
+            hora = timezone.localtime(log.fch_registro).strftime('%d/%m/%Y %H:%M') if log.fch_registro else '-'
+            descripcion = log.descripcion or '-'
+        else:
+            usuario = pedido.id_usuario_fk
+            nombre = f'{usuario.nombre or ""} {usuario.apellido or ""}'.strip() if usuario else ''
+            actor = nombre or (usuario.correo if usuario else '-')
+            rol = usuario.id_rol_fk.nombre_rol if usuario and getattr(usuario, 'id_rol_fk', None) else '-'
+            hora = timezone.localtime(pedido.fch_registro).strftime('%d/%m/%Y %H:%M') if pedido.fch_registro else '-'
+            descripcion = f'Pedido #{pedido.id_pedido} en estado {pedido.estado or "-"}.'
+
+        detalle.append({
+            'pedido_id': pedido.id_pedido,
+            'usuario': actor,
+            'rol': rol,
+            'hora': hora,
+            'descripcion': descripcion,
+            'estado': pedido.estado,
+        })
+
+    return JsonResponse({
+        'ok': True,
+        'serie': serie,
+        'year': year,
+        'month': month,
+        'total': len(detalle),
+        'items': detalle,
+    })
+
+
+def inventario_panel(request):
     if not _is_admin_or_almacenista(request):
         return redirect('panel_usuario')
 
@@ -329,13 +960,9 @@ def dashboard(request):
         )
 
     if bajo_stock:
-        ids_bajo = Disponibilidad.objects.filter(cantidad__lte=5).values_list('id_prod_fk_id', flat=True)
-        productos_qs = productos_qs.filter(id_prod__in=ids_bajo)
+        productos_qs = productos_qs.filter(stock_actual__lte=5)
 
     productos = list(productos_qs.order_by('-fch_registro', '-id_prod'))
-
-    total_productos = Producto.objects.count()
-    productos_bajo_stock = Disponibilidad.objects.filter(cantidad__lte=5).count()
 
     catalogos = (
         Catalogo.objects.annotate(
@@ -358,7 +985,7 @@ def dashboard(request):
 
     return render(
         request,
-        'inventario/dashboard/index.html',
+        'inventario/dashboard/inventario_panel.html',
         {
             'q': q,
             'categoria_activa': cat_id,
@@ -366,10 +993,828 @@ def dashboard(request):
             'catalogos': catalogos,
             'productos': productos,
             'secciones_catalogo': secciones_catalogo,
-            'total_productos': total_productos,
-            'productos_bajo_stock': productos_bajo_stock,
         },
     )
+
+
+def _mes_reporte_desde_request(request):
+    mes_param = (request.GET.get('mes') or '').strip()
+    ahora = timezone.localtime()
+    if len(mes_param) == 7 and mes_param[4] == '-':
+        try:
+            anio = int(mes_param[:4])
+            mes = int(mes_param[5:7])
+            if 1 <= mes <= 12:
+                return anio, mes
+        except (TypeError, ValueError):
+            pass
+    return ahora.year, ahora.month
+
+
+def _obtener_prestamos_mes(anio, mes):
+    pedidos_qs = (
+        Pedido.objects
+        .exclude(fch_registro__isnull=True)
+        .select_related('id_usuario_fk__id_rol_fk')
+        .prefetch_related('detalles')
+        .order_by('-fch_registro', '-id_pedido')
+    )
+
+    pedidos_filtrados = []
+    for pedido in pedidos_qs:
+        dt = pedido.fch_registro
+        if not dt:
+            continue
+        if timezone.is_naive(dt):
+            dt = timezone.make_aware(dt, timezone.get_current_timezone())
+        dt_local = timezone.localtime(dt)
+        if dt_local.year == anio and dt_local.month == mes:
+            pedidos_filtrados.append(pedido)
+
+    return pedidos_filtrados
+
+
+def _categoria_pedido_reporte(estado):
+    estado_limpio = (estado or '').strip().lower()
+    if estado_limpio in ['entregado', 'devuelto']:
+        return 'REALIZADO'
+    if estado_limpio in ['cancelado', 'rechazado']:
+        return 'CANCELADO'
+    return 'EN PROCESO'
+
+
+def _resumen_productos_pedido(pedido, max_items=None, multiline=False):
+    detalles = list(getattr(pedido, 'detalles', []).all()) if hasattr(getattr(pedido, 'detalles', None), 'all') else []
+    if not detalles:
+        return 'Sin detalle'
+
+    nombres = []
+    for idx, det in enumerate(detalles, start=1):
+        nombre = (det.nombre_producto or '').strip() or f'Producto {det.id_prod_fk_id or "-"}'
+        cantidad = int(det.cantidad_solicitada or 0)
+        estado = (det.estado_detalle or '').strip()
+        sufijo_estado = f' [{estado}]' if estado else ''
+        nombres.append(f'{idx}. {nombre} x{cantidad}{sufijo_estado}')
+
+    if max_items is not None and max_items >= 0:
+        nombres = nombres[:max_items]
+        if len(detalles) > max_items:
+            nombres.append(f'+{len(detalles) - max_items} más')
+
+    separador = '\n' if multiline else ' | '
+    return separador.join(nombres)
+
+
+def _build_pdf_text_report(lines):
+    def _escape(texto):
+        return (texto or '').replace('\\', '\\\\').replace('(', '\\(').replace(')', '\\)')
+
+    contenido = ['BT', '/F1 10 Tf', '14 TL', '40 800 Td']
+    for idx, linea in enumerate(lines[:55]):
+        if idx == 0:
+            contenido.append(f'({_escape(linea)}) Tj')
+        else:
+            contenido.append('T*')
+            contenido.append(f'({_escape(linea)}) Tj')
+    contenido.append('ET')
+
+    stream_data = '\n'.join(contenido).encode('latin-1', errors='replace')
+    obj1 = b'1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj\n'
+    obj2 = b'2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n'
+    obj3 = (
+        b'3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] '
+        b'/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>endobj\n'
+    )
+    obj4 = b'4 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj\n'
+    obj5 = b'5 0 obj<< /Length ' + str(len(stream_data)).encode('ascii') + b' >>stream\n' + stream_data + b'\nendstream endobj\n'
+
+    objects = [obj1, obj2, obj3, obj4, obj5]
+    pdf = b'%PDF-1.4\n'
+    offsets = []
+    for obj in objects:
+        offsets.append(len(pdf))
+        pdf += obj
+
+    xref_start = len(pdf)
+    pdf += b'xref\n0 6\n0000000000 65535 f \n'
+    for off in offsets:
+        pdf += f'{off:010d} 00000 n \n'.encode('ascii')
+    pdf += b'trailer<< /Size 6 /Root 1 0 R >>\nstartxref\n'
+    pdf += str(xref_start).encode('ascii') + b'\n%%EOF'
+    return pdf
+
+
+@login_required
+def reporte_prestamos_excel(request):
+    if not _is_admin_or_almacenista(request):
+        return redirect('panel_usuario')
+
+    anio, mes = _mes_reporte_desde_request(request)
+    prestamos = _obtener_prestamos_mes(anio, mes)
+    secciones = {
+        'REALIZADO': [],
+        'CANCELADO': [],
+        'EN PROCESO': [],
+    }
+    for pedido in prestamos:
+        secciones[_categoria_pedido_reporte(pedido.estado)].append(pedido)
+
+    try:
+        from openpyxl import Workbook
+        from openpyxl.drawing.image import Image as XLImage
+        from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+    except Exception:
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename="reporte_prestamos_{anio}_{mes:02d}.csv"'
+        response.write('\ufeff')
+
+        writer = csv.writer(response, delimiter=';', quoting=csv.QUOTE_MINIMAL)
+        writer.writerow([f'Reporte mensual de pedidos - {anio}-{mes:02d}'])
+        writer.writerow(['Generado', timezone.localtime().strftime('%d/%m/%Y %H:%M')])
+        writer.writerow([])
+        writer.writerow(['Resumen'])
+        writer.writerow(['Realizados', len(secciones['REALIZADO'])])
+        writer.writerow(['Cancelados', len(secciones['CANCELADO'])])
+        writer.writerow(['En proceso', len(secciones['EN PROCESO'])])
+        writer.writerow(['Total', len(prestamos)])
+        writer.writerow([])
+
+        encabezado = [
+            'Categoria', 'Pedido', 'Fecha registro', 'Estado pedido', 'Usuario', 'Rol',
+            'Total productos', 'Total unidades', 'Item', 'Producto', 'Cantidad solicitada',
+            'Estado detalle', 'Area', 'Fecha devolucion'
+        ]
+
+        for nombre_seccion in ['REALIZADO', 'CANCELADO', 'EN PROCESO']:
+            items = secciones[nombre_seccion]
+            writer.writerow([f'SECCION: {nombre_seccion} ({len(items)})'])
+            writer.writerow(encabezado)
+
+            for pedido in items:
+                usuario = pedido.id_usuario_fk
+                nombre_usuario = ((usuario.nombre or '') + ' ' + (usuario.apellido or '')).strip() or (usuario.correo or '')
+                rol = usuario.id_rol_fk.nombre_rol if usuario.id_rol_fk else 'sin rol'
+                fecha_registro = timezone.localtime(pedido.fch_registro).strftime('%d/%m/%Y %H:%M') if pedido.fch_registro else '-'
+                fecha_devolucion = timezone.localtime(pedido.fecha_devolucion).strftime('%d/%m/%Y %H:%M') if pedido.fecha_devolucion else '-'
+                area = (pedido.area_ubicacion or '').replace('\n', ' ').replace(';', ',')
+
+                detalles = list(pedido.detalles.all()) if hasattr(pedido, 'detalles') else []
+                if not detalles:
+                    writer.writerow([
+                        nombre_seccion,
+                        pedido.id_pedido,
+                        fecha_registro,
+                        pedido.estado,
+                        nombre_usuario,
+                        rol,
+                        pedido.total_productos,
+                        pedido.total_unidades,
+                        '-',
+                        'Sin detalle',
+                        0,
+                        '-',
+                        area,
+                        fecha_devolucion,
+                    ])
+                    continue
+
+                for idx, det in enumerate(detalles, start=1):
+                    producto = ((det.nombre_producto or '').strip() or f'Producto {det.id_prod_fk_id or "-"}').replace(';', ',')
+                    writer.writerow([
+                        nombre_seccion,
+                        pedido.id_pedido,
+                        fecha_registro,
+                        pedido.estado,
+                        nombre_usuario,
+                        rol,
+                        pedido.total_productos,
+                        pedido.total_unidades,
+                        idx,
+                        producto,
+                        int(det.cantidad_solicitada or 0),
+                        (det.estado_detalle or '-').replace(';', ','),
+                        area,
+                        fecha_devolucion,
+                    ])
+            writer.writerow([])
+        return response
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Reporte pedidos'
+
+    widths = [15, 10, 19, 16, 22, 12, 14, 14, 8, 34, 16, 16, 20, 19]
+    for idx, w in enumerate(widths, start=1):
+        ws.column_dimensions[chr(64 + idx)].width = w
+
+    thin = Side(style='thin', color='CFE4D2')
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    fill_title = PatternFill('solid', fgColor='DFF4E5')
+    fill_section = PatternFill('solid', fgColor='ECF8F0')
+    fill_head = PatternFill('solid', fgColor='E5F4E9')
+    fill_alt = PatternFill('solid', fgColor='F7FCF8')
+
+    font_title = Font(name='Calibri', size=16, bold=True, color='1D6B3A')
+    font_sub = Font(name='Calibri', size=11, bold=True, color='2A5E3F')
+    font_head = Font(name='Calibri', size=10, bold=True, color='235438')
+    font_cell = Font(name='Calibri', size=10, color='1F4330')
+
+    row = 1
+    ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=14)
+    ws.cell(row=row, column=1, value=f'Reporte mensual de pedidos - {anio}-{mes:02d}')
+    ws.cell(row=row, column=1).font = font_title
+    ws.cell(row=row, column=1).fill = fill_title
+    ws.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center')
+    ws.row_dimensions[row].height = 28
+
+    row += 1
+    ws.cell(row=row, column=1, value='Generado')
+    ws.cell(row=row, column=2, value=timezone.localtime().strftime('%d/%m/%Y %H:%M'))
+    ws.cell(row=row, column=1).font = font_sub
+    ws.cell(row=row, column=2).font = font_sub
+
+    logo_candidates = [
+        os.path.join(settings.BASE_DIR, 'logoSena.png'),
+        os.path.join(settings.BASE_DIR, 'inventario', 'static', 'inventario', 'img', 'logoSena.png'),
+    ]
+    for logo_path in logo_candidates:
+        if not os.path.exists(logo_path):
+            continue
+        try:
+            logo = XLImage(logo_path)
+            logo.width = 64
+            logo.height = 64
+            ws.add_image(logo, 'N1')
+            break
+        except Exception:
+            continue
+
+    row += 2
+    ws.cell(row=row, column=1, value='Resumen').font = font_sub
+    resumen_items = [
+        ('Realizados', len(secciones['REALIZADO'])),
+        ('Cancelados', len(secciones['CANCELADO'])),
+        ('En proceso', len(secciones['EN PROCESO'])),
+        ('Total', len(prestamos)),
+    ]
+    for nombre, cantidad in resumen_items:
+        row += 1
+        ws.cell(row=row, column=1, value=nombre).font = font_cell
+        ws.cell(row=row, column=2, value=cantidad).font = font_cell
+
+    row += 2
+    encabezado = [
+        'Categoria', 'Pedido', 'Fecha registro', 'Estado pedido', 'Usuario', 'Rol',
+        'Total productos', 'Total unidades', 'Item', 'Producto', 'Cantidad solicitada',
+        'Estado detalle', 'Area', 'Fecha devolucion'
+    ]
+
+    for nombre_seccion in ['REALIZADO', 'CANCELADO', 'EN PROCESO']:
+        items = secciones[nombre_seccion]
+
+        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=14)
+        ws.cell(row=row, column=1, value=f'SECCION: {nombre_seccion} ({len(items)})')
+        ws.cell(row=row, column=1).font = font_sub
+        ws.cell(row=row, column=1).fill = fill_section
+        ws.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center')
+        row += 1
+
+        for col, name in enumerate(encabezado, start=1):
+            c = ws.cell(row=row, column=col, value=name)
+            c.font = font_head
+            c.fill = fill_head
+            c.border = border
+            c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        row += 1
+
+        data_start = row
+        for pedido in items:
+            usuario = pedido.id_usuario_fk
+            nombre_usuario = ((usuario.nombre or '') + ' ' + (usuario.apellido or '')).strip() or (usuario.correo or '')
+            rol = usuario.id_rol_fk.nombre_rol if usuario.id_rol_fk else 'sin rol'
+            fecha_registro = timezone.localtime(pedido.fch_registro).strftime('%d/%m/%Y %H:%M') if pedido.fch_registro else '-'
+            fecha_devolucion = timezone.localtime(pedido.fecha_devolucion).strftime('%d/%m/%Y %H:%M') if pedido.fecha_devolucion else '-'
+            area = (pedido.area_ubicacion or '').replace('\n', ' ')
+            detalles = list(pedido.detalles.all()) if hasattr(pedido, 'detalles') else []
+
+            if not detalles:
+                detalles = [None]
+
+            for idx, det in enumerate(detalles, start=1):
+                producto = 'Sin detalle'
+                cantidad_det = 0
+                estado_det = '-'
+                if det is not None:
+                    producto = (det.nombre_producto or '').strip() or f'Producto {det.id_prod_fk_id or "-"}'
+                    cantidad_det = int(det.cantidad_solicitada or 0)
+                    estado_det = det.estado_detalle or '-'
+
+                row_values = [
+                    nombre_seccion,
+                    pedido.id_pedido,
+                    fecha_registro,
+                    pedido.estado,
+                    nombre_usuario,
+                    rol,
+                    pedido.total_productos,
+                    pedido.total_unidades,
+                    idx if det is not None else '-',
+                    producto,
+                    cantidad_det,
+                    estado_det,
+                    area,
+                    fecha_devolucion,
+                ]
+
+                for col, value in enumerate(row_values, start=1):
+                    c = ws.cell(row=row, column=col, value=value)
+                    c.font = font_cell
+                    c.border = border
+                    c.alignment = Alignment(vertical='top', wrap_text=True)
+                if (row - data_start) % 2 == 1:
+                    for col in range(1, 15):
+                        ws.cell(row=row, column=col).fill = fill_alt
+                row += 1
+
+        row += 1
+
+    ws.freeze_panes = 'A12'
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    response = HttpResponse(
+        output.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="reporte_prestamos_{anio}_{mes:02d}.xlsx"'
+    return response
+
+
+@login_required
+def reporte_prestamos_pdf(request):
+    if not _is_admin_or_almacenista(request):
+        return redirect('panel_usuario')
+
+    anio, mes = _mes_reporte_desde_request(request)
+    prestamos = list(_obtener_prestamos_mes(anio, mes))
+
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except Exception:
+        messages.error(request, 'No se pudo generar el PDF porque Pillow no está disponible en el servidor.')
+        return redirect('dashboard')
+
+    secciones = {
+        'REALIZADO': [],
+        'CANCELADO': [],
+        'EN PROCESO': [],
+    }
+    for pedido in prestamos:
+        secciones[_categoria_pedido_reporte(pedido.estado)].append(pedido)
+
+    page_w, page_h = 1754, 1240
+    margin_x = 36
+    header_h = 126
+    row_h = 70
+
+    col_pedido = 70
+    col_fecha = 150
+    col_estado = 120
+    col_usuario = 220
+    col_rol = 110
+    col_productos = 70
+    col_unidades = 80
+    col_detalle = 360
+    col_devolucion = 150
+    col_area = 352
+
+    x_pedido = margin_x
+    x_fecha = x_pedido + col_pedido
+    x_estado = x_fecha + col_fecha
+    x_usuario = x_estado + col_estado
+    x_rol = x_usuario + col_usuario
+    x_productos = x_rol + col_rol
+    x_unidades = x_productos + col_productos
+    x_detalle = x_unidades + col_unidades
+    x_devolucion = x_detalle + col_detalle
+    x_area = x_devolucion + col_devolucion
+    x_end = x_area + col_area
+
+    def _load_font(size, bold=False):
+        candidates = []
+        windir = os.environ.get('WINDIR', 'C:\\Windows')
+        if bold:
+            candidates.extend([
+                os.path.join(windir, 'Fonts', 'arialbd.ttf'),
+                os.path.join(windir, 'Fonts', 'segoeuib.ttf'),
+            ])
+        else:
+            candidates.extend([
+                os.path.join(windir, 'Fonts', 'arial.ttf'),
+                os.path.join(windir, 'Fonts', 'segoeui.ttf'),
+            ])
+        for path in candidates:
+            try:
+                return ImageFont.truetype(path, size)
+            except Exception:
+                continue
+        return ImageFont.load_default()
+
+    font_title = _load_font(32, bold=True)
+    font_sub = _load_font(19, bold=False)
+    font_head = _load_font(17, bold=True)
+    font_cell = _load_font(15, bold=False)
+
+    pages = []
+    page = None
+    draw = None
+    y = 0
+    page_number = 0
+
+    def _new_page():
+        nonlocal page, draw, y, page_number
+        page_number += 1
+        page = Image.new('RGB', (page_w, page_h), 'white')
+        draw = ImageDraw.Draw(page)
+
+        draw.rectangle((margin_x, 28, x_end, 28 + header_h), outline='#2d7a49', width=2)
+
+        logo_candidates = [
+            os.path.join(settings.BASE_DIR, 'logoSena.png'),
+            os.path.join(settings.BASE_DIR, 'inventario', 'static', 'inventario', 'img', 'logoSena.png'),
+        ]
+        logo_pasted = False
+        for logo_path in logo_candidates:
+            if not os.path.exists(logo_path):
+                continue
+            try:
+                with Image.open(logo_path) as logo_src:
+                    logo = logo_src.convert('RGBA')
+                    logo.thumbnail((86, 86), Image.Resampling.LANCZOS)
+                    page.paste(logo, (margin_x + 12, 46), logo)
+                logo_pasted = True
+                break
+            except Exception:
+                continue
+
+        title_x = margin_x + (118 if logo_pasted else 16)
+        draw.text((title_x, 48), f'REPORTE MENSUAL DE PEDIDOS - {anio}-{mes:02d}', fill='#1b6e3a', font=font_title)
+        draw.text(
+            (title_x, 94),
+            f'Generado: {timezone.localtime().strftime("%d/%m/%Y %H:%M")} | Página {page_number}',
+            fill='#4d7f62',
+            font=font_sub,
+        )
+
+        y = 28 + header_h + 16
+
+    def _draw_table_header(top_y):
+        draw.rectangle((margin_x, top_y, x_end, top_y + 30), outline='#8cb99a', width=1, fill='#ecf7ef')
+        draw.text((x_pedido + 6, top_y + 7), 'ID', fill='#205335', font=font_head)
+        draw.text((x_fecha + 6, top_y + 7), 'FECHA', fill='#205335', font=font_head)
+        draw.text((x_estado + 6, top_y + 7), 'ESTADO', fill='#205335', font=font_head)
+        draw.text((x_usuario + 6, top_y + 7), 'USUARIO', fill='#205335', font=font_head)
+        draw.text((x_rol + 6, top_y + 7), 'ROL', fill='#205335', font=font_head)
+        draw.text((x_productos + 6, top_y + 7), 'PROD', fill='#205335', font=font_head)
+        draw.text((x_unidades + 6, top_y + 7), 'UNDS', fill='#205335', font=font_head)
+        draw.text((x_detalle + 6, top_y + 7), 'DETALLE PRODUCTOS', fill='#205335', font=font_head)
+        draw.text((x_devolucion + 6, top_y + 7), 'DEVOLUCION', fill='#205335', font=font_head)
+        draw.text((x_area + 6, top_y + 7), 'AREA', fill='#205335', font=font_head)
+        return top_y + 30
+
+    def _wrap_lines(texto, width_chars):
+        bruto = (texto or '').strip() or '-'
+        bloques = bruto.splitlines() or ['-']
+        lines = []
+        for bloque in bloques:
+            limpio = (bloque or '').strip() or '-'
+            lines.extend(textwrap.wrap(limpio, width=width_chars) or ['-'])
+        return lines
+
+    def _draw_wrapped_text(texto, x, top_y, width_chars, max_lines=2):
+        lines = _wrap_lines(texto, width_chars)
+        if max_lines is not None:
+            lines = lines[:max_lines]
+        for idx, line in enumerate(lines):
+            draw.text((x, top_y + 7 + idx * 18), line, fill='#244f35', font=font_cell)
+
+    _new_page()
+    resumen_realizados = len(secciones['REALIZADO'])
+    resumen_cancelados = len(secciones['CANCELADO'])
+    resumen_proceso = len(secciones['EN PROCESO'])
+    draw.text(
+        (margin_x, y),
+        f'Resumen -> Realizados: {resumen_realizados}  |  Cancelados: {resumen_cancelados}  |  En proceso: {resumen_proceso}  |  Total: {len(prestamos)}',
+        fill='#2f6844',
+        font=font_sub,
+    )
+    y += 34
+
+    for sec_nombre in ['REALIZADO', 'CANCELADO', 'EN PROCESO']:
+        items = secciones[sec_nombre]
+        if y + 64 > page_h - 30:
+            pages.append(page)
+            _new_page()
+
+        draw.rectangle((margin_x, y, x_end, y + 34), outline='#b7d5bf', width=1, fill='#f3fbf5')
+        draw.text((margin_x + 10, y + 8), f'SECCION: {sec_nombre} ({len(items)})', fill='#245a39', font=font_head)
+        y += 34
+        y = _draw_table_header(y)
+
+        if not items:
+            if y + row_h > page_h - 30:
+                pages.append(page)
+                _new_page()
+                y = _draw_table_header(y)
+            draw.rectangle((margin_x, y, x_end, y + row_h), outline='#d2e2d6', width=1)
+            draw.text((margin_x + 12, y + 24), 'Sin pedidos en esta sección.', fill='#5f7d67', font=font_cell)
+            y += row_h
+            y += 10
+            continue
+
+        for idx, pedido in enumerate(items):
+            detalle_completo = _resumen_productos_pedido(pedido, multiline=True)
+            detalle_lines = _wrap_lines(detalle_completo, 45)
+            area_lines = _wrap_lines((pedido.area_ubicacion or '-').replace('\n', ' '), 41)
+            fecha_lines = _wrap_lines(
+                timezone.localtime(pedido.fch_registro).strftime('%Y-%m-%d %H:%M') if pedido.fch_registro else '-',
+                16,
+            )
+
+            lineas_necesarias = max(len(detalle_lines), len(area_lines), len(fecha_lines), 2)
+            row_h_actual = max(row_h, 12 + lineas_necesarias * 18)
+
+            if y + row_h_actual > page_h - 30:
+                pages.append(page)
+                _new_page()
+                y = _draw_table_header(y)
+
+            bg = '#ffffff' if idx % 2 == 0 else '#f8fcf9'
+            draw.rectangle((margin_x, y, x_end, y + row_h_actual), outline='#d2e2d6', width=1, fill=bg)
+            for x_line in [x_fecha, x_estado, x_usuario, x_rol, x_productos, x_unidades, x_detalle, x_devolucion, x_area]:
+                draw.line((x_line, y, x_line, y + row_h_actual), fill='#dcebdd', width=1)
+
+            usuario = pedido.id_usuario_fk
+            nombre_usuario = ((usuario.nombre or '') + ' ' + (usuario.apellido or '')).strip() or (usuario.correo or '-')
+            rol = usuario.id_rol_fk.nombre_rol if usuario and usuario.id_rol_fk else '-'
+            fecha_txt = timezone.localtime(pedido.fch_registro).strftime('%Y-%m-%d %H:%M') if pedido.fch_registro else '-'
+            devolucion_txt = timezone.localtime(pedido.fecha_devolucion).strftime('%Y-%m-%d %H:%M') if pedido.fecha_devolucion else '-'
+
+            draw.text((x_pedido + 6, y + 24), str(pedido.id_pedido), fill='#23543a', font=font_cell)
+            _draw_wrapped_text(fecha_txt, x_fecha + 6, y, width_chars=16, max_lines=2)
+            _draw_wrapped_text((pedido.estado or '-').title(), x_estado + 6, y, width_chars=14, max_lines=2)
+            _draw_wrapped_text(nombre_usuario, x_usuario + 6, y, width_chars=25, max_lines=2)
+            _draw_wrapped_text(rol, x_rol + 6, y, width_chars=11, max_lines=2)
+            draw.text((x_productos + 20, y + 24), str(pedido.total_productos or 0), fill='#23543a', font=font_cell)
+            draw.text((x_unidades + 20, y + 24), str(pedido.total_unidades or 0), fill='#23543a', font=font_cell)
+            _draw_wrapped_text(detalle_completo, x_detalle + 6, y, width_chars=45, max_lines=None)
+            _draw_wrapped_text(devolucion_txt, x_devolucion + 6, y, width_chars=15, max_lines=2)
+            _draw_wrapped_text((pedido.area_ubicacion or '-').replace('\n', ' '), x_area + 6, y, width_chars=41, max_lines=None)
+
+            y += row_h_actual
+
+        y += 10
+
+    if page is not None:
+        pages.append(page)
+
+    buffer = io.BytesIO()
+    pages[0].save(buffer, format='PDF', save_all=True, append_images=pages[1:])
+    pdf_bytes = buffer.getvalue()
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="reporte_prestamos_{anio}_{mes:02d}.pdf"'
+    return response
+
+
+@login_required
+def reporte_stock_bajo_pdf(request):
+    if not _is_admin_or_almacenista(request):
+        return redirect('panel_usuario')
+
+    from django.db.models.functions import Coalesce
+
+    try:
+        from PIL import Image, ImageDraw, ImageFont, ImageOps
+    except Exception:
+        messages.error(request, 'No se pudo generar el PDF porque Pillow no está disponible en el servidor.')
+        return redirect('dashboard')
+
+    disp_qs = Disponibilidad.objects.filter(id_prod_fk=OuterRef('pk')).order_by('-id_disp')
+    productos_qs = (
+        Producto.objects
+        .select_related('id_cat_fk')
+        .annotate(
+            stock_actual=Coalesce(Subquery(disp_qs.values('stock')[:1]), 0),
+            cantidad_actual=Coalesce(Subquery(disp_qs.values('cantidad')[:1]), 0),
+        )
+        .filter(
+            models.Q(stock_actual__lt=5)
+            | models.Q(cantidad_actual__lt=5)
+        )
+        .order_by('stock_actual', 'cantidad_actual', 'nombre_producto')
+    )
+
+    productos = list(productos_qs)
+    if not productos:
+        messages.info(request, 'No hay productos con stock o cantidad baja para exportar.')
+        return redirect('dashboard')
+
+    # A4 horizontal para que la tabla salga amplia y legible en impresión.
+    page_w, page_h = 1754, 1240
+    margin_x = 44
+    y_start = 200
+    row_h = 148
+
+    col_check = 58
+    col_img = 130
+    col_title = 300
+    col_desc = 560
+    col_cant = 120
+    col_stock = 120
+    col_estado = 220
+    col_compra = 158
+
+    x_check = margin_x
+    x_img = x_check + col_check
+    x_title = x_img + col_img
+    x_desc = x_title + col_title
+    x_cant = x_desc + col_desc
+    x_stock = x_cant + col_cant
+    x_estado = x_stock + col_stock
+    x_compra = x_estado + col_estado
+    x_end = x_compra + col_compra
+
+    def _load_font(size, bold=False):
+        candidates = []
+        windir = os.environ.get('WINDIR', 'C:\\Windows')
+        if bold:
+            candidates.extend([
+                os.path.join(windir, 'Fonts', 'arialbd.ttf'),
+                os.path.join(windir, 'Fonts', 'segoeuib.ttf'),
+            ])
+        else:
+            candidates.extend([
+                os.path.join(windir, 'Fonts', 'arial.ttf'),
+                os.path.join(windir, 'Fonts', 'segoeui.ttf'),
+            ])
+
+        for path in candidates:
+            try:
+                return ImageFont.truetype(path, size)
+            except Exception:
+                continue
+        return ImageFont.load_default()
+
+    font_title = _load_font(42, bold=True)
+    font_sub = _load_font(22, bold=False)
+    font_head = _load_font(20, bold=True)
+    font_cell = _load_font(18, bold=False)
+    font_small = _load_font(16, bold=False)
+
+    pages = []
+    page = None
+    draw = None
+    y = y_start
+    page_number = 0
+
+    def _new_page():
+        nonlocal page, draw, y, page_number
+        page_number += 1
+        page = Image.new('RGB', (page_w, page_h), 'white')
+        draw = ImageDraw.Draw(page)
+
+        header_top = 48
+        header_bottom = 170
+        draw.rectangle((margin_x, header_top, x_end, header_bottom), outline='#1f3f67', width=3)
+
+        logo_candidates = [
+            os.path.join(settings.BASE_DIR, 'logoSena.png'),
+            os.path.join(settings.BASE_DIR, 'inventario', 'static', 'inventario', 'img', 'logoSena.png'),
+        ]
+        logo_pasted = False
+        for logo_path in logo_candidates:
+            if not os.path.exists(logo_path):
+                continue
+            try:
+                with Image.open(logo_path) as logo_src:
+                    logo = logo_src.convert('RGBA')
+                    logo.thumbnail((98, 98), Image.Resampling.LANCZOS)
+                    logo_x = margin_x + 16
+                    logo_y = header_top + 12
+                    page.paste(logo, (logo_x, logo_y), logo)
+                logo_pasted = True
+                break
+            except Exception:
+                continue
+
+        title_x = margin_x + (132 if logo_pasted else 18)
+        draw.text(
+            (title_x, header_top + 28),
+            'RECIBO SENA DE PRODUCTOS EN ALERTA',
+            fill='#00843d',
+            font=font_title,
+        )
+        draw.text(
+            (title_x, header_top + 82),
+            f'Generado: {timezone.localtime().strftime("%d/%m/%Y %H:%M")}  |  Página {page_number}',
+            fill='#3e5f82',
+            font=font_sub,
+        )
+
+        draw.rectangle((margin_x, y_start - 38, x_end, y_start), outline='#7f96b2', width=1, fill='#f2f7fd')
+        draw.text((x_check + 18, y_start - 29), 'X', fill='#25496c', font=font_head)
+        draw.text((x_img + 20, y_start - 29), 'IMAGEN', fill='#25496c', font=font_head)
+        draw.text((x_title + 10, y_start - 29), 'TITULO', fill='#25496c', font=font_head)
+        draw.text((x_desc + 10, y_start - 29), 'DESCRIPCION', fill='#25496c', font=font_head)
+        draw.text((x_cant + 15, y_start - 29), 'CANTIDAD', fill='#25496c', font=font_head)
+        draw.text((x_stock + 24, y_start - 29), 'STOCK', fill='#25496c', font=font_head)
+        draw.text((x_estado + 12, y_start - 29), 'MOTIVO', fill='#25496c', font=font_head)
+        draw.text((x_compra + 12, y_start - 29), 'COMPRA', fill='#25496c', font=font_head)
+
+        y = y_start
+
+    def _draw_cell_box(top_y):
+        draw.rectangle((margin_x, top_y, x_end, top_y + row_h), outline='#c7d4e4', width=1)
+        draw.line((x_img, top_y, x_img, top_y + row_h), fill='#d2ddec', width=1)
+        draw.line((x_title, top_y, x_title, top_y + row_h), fill='#d2ddec', width=1)
+        draw.line((x_desc, top_y, x_desc, top_y + row_h), fill='#d2ddec', width=1)
+        draw.line((x_cant, top_y, x_cant, top_y + row_h), fill='#d2ddec', width=1)
+        draw.line((x_stock, top_y, x_stock, top_y + row_h), fill='#d2ddec', width=1)
+        draw.line((x_estado, top_y, x_estado, top_y + row_h), fill='#d2ddec', width=1)
+        draw.line((x_compra, top_y, x_compra, top_y + row_h), fill='#d2ddec', width=1)
+
+        # Cuadro de check para marcar con esfero.
+        draw.rectangle((x_check + 18, top_y + 54, x_check + 42, top_y + 78), outline='#2a4b6f', width=2)
+
+    def _draw_wrapped(texto, x, top_y, width_chars=42, max_lines=4, fill='#1f3856', font=None, line_h=22):
+        limpio = (texto or '').strip()
+        if not limpio:
+            limpio = '-'
+        lines = textwrap.wrap(limpio, width=width_chars)[:max_lines]
+        use_font = font or font_cell
+        for idx, line in enumerate(lines):
+            draw.text((x, top_y + 10 + idx * line_h), line, fill=fill, font=use_font)
+
+    _new_page()
+    for prod in productos:
+        if y + row_h > page_h - 80:
+            pages.append(page)
+            _new_page()
+
+        _draw_cell_box(y)
+
+        stock = int(prod.stock_actual or 0)
+        cantidad = int(prod.cantidad_actual or 0)
+        if cantidad < stock:
+            estado_txt = f'Faltan {stock - cantidad} und'
+        elif stock < 5 and cantidad < 5:
+            estado_txt = 'Stock y cantidad bajos'
+        elif stock < 5:
+            estado_txt = 'Stock bajo'
+        else:
+            estado_txt = 'Cantidad baja'
+
+        # Imagen del producto.
+        if getattr(prod, 'fot_prod', None):
+            try:
+                ruta_imagen = prod.fot_prod.path
+                if os.path.exists(ruta_imagen):
+                    with Image.open(ruta_imagen) as img_src:
+                        thumb = ImageOps.fit(img_src.convert('RGB'), (106, 106), method=Image.Resampling.LANCZOS)
+                        page.paste(thumb, (x_img + 12, y + 20))
+            except Exception:
+                draw.rectangle((x_img + 12, y + 20, x_img + 118, y + 126), outline='#c8d6e7', width=1)
+                draw.text((x_img + 28, y + 68), 'Sin img', fill='#6e839d', font=font_small)
+        else:
+            draw.rectangle((x_img + 12, y + 20, x_img + 118, y + 126), outline='#c8d6e7', width=1)
+            draw.text((x_img + 28, y + 68), 'Sin img', fill='#6e839d', font=font_small)
+
+        _draw_wrapped(prod.nombre_producto, x_title + 10, y, width_chars=30, max_lines=3, font=font_cell, line_h=24)
+        _draw_wrapped(prod.descripcion, x_desc + 10, y, width_chars=58, max_lines=5, font=font_small, line_h=20)
+        draw.text((x_cant + 44, y + 60), str(cantidad), fill='#1f3856', font=font_head)
+        draw.text((x_stock + 44, y + 60), str(stock), fill='#1f3856', font=font_head)
+        _draw_wrapped(estado_txt, x_estado + 10, y, width_chars=22, max_lines=4, font=font_small, line_h=20)
+
+        # Espacio para que escriban la cantidad comprada a mano.
+        draw.line((x_compra + 12, y + 70, x_end - 14, y + 70), fill='#355a82', width=1)
+        draw.text((x_compra + 12, y + 82), 'cantidad comprada', fill='#6f86a2', font=font_small)
+
+        y += row_h
+
+    if page is not None:
+        pages.append(page)
+
+    buffer = io.BytesIO()
+    pages[0].save(buffer, format='PDF', save_all=True, append_images=pages[1:])
+    pdf_bytes = buffer.getvalue()
+
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = (
+        f'attachment; filename="recibo_stock_bajo_{timezone.localtime().strftime("%Y%m%d_%H%M")}.pdf"'
+    )
+    return response
 
 
 @login_required
@@ -418,7 +1863,7 @@ def prestamos_panel(request):
     ahora = timezone.now()
     prestamos = list(
         Pedido.objects
-        .filter(estado__in=['entregado', 'rechazado'])
+        .filter(estado__in=['entregado', 'devuelto', 'rechazado'])
         .select_related('id_usuario_fk')
         .prefetch_related('detalles')
         .order_by('fecha_devolucion', '-fch_registro')
@@ -426,14 +1871,21 @@ def prestamos_panel(request):
 
     for prestamo in prestamos:
         detalles = list(prestamo.detalles.all())
+        prestamo.detalles_entregados = [
+            detalle for detalle in detalles
+            if detalle.estado_detalle not in ['no_disponible', 'rechazado', 'cancelado']
+        ]
+        prestamo.fecha_cierre_display = prestamo.fch_ult_act
+
         # Los cancelados nunca se entregaron: sin vencimiento
-        if prestamo.estado == 'rechazado':
+        if prestamo.estado in ['rechazado', 'devuelto']:
             prestamo.fecha_devolucion_display = None
             prestamo.es_vencido = False
             prestamo.dias_restantes = None
             prestamo.dias_vencido = 0
             prestamo.detalles_lista = detalles
             continue
+
         if prestamo.tipo_devolucion == 'individual':
             fechas = [d.fecha_devolucion for d in detalles if d.fecha_devolucion]
             if fechas:
@@ -461,25 +1913,29 @@ def prestamos_panel(request):
                 prestamo.dias_vencido = 0
         prestamo.detalles_lista = detalles
 
-    # Ordenar: vencidos primero, luego por fecha de devolución más próxima
+    # Ordenar: activos vencidos primero, luego activos al día, después devueltos y cancelados.
     prestamos.sort(key=lambda p: (
-        not p.es_vencido,
+        0 if p.estado == 'entregado' and p.es_vencido else 1 if p.estado == 'entregado' else 2 if p.estado == 'devuelto' else 3,
         p.fecha_devolucion_display or ahora.replace(year=9999),
+        -(p.fecha_cierre_display.timestamp()) if p.fecha_cierre_display else 0,
     ))
 
     total_cancelados = sum(1 for p in prestamos if p.estado == 'rechazado')
-    total_vencidos = sum(1 for p in prestamos if p.es_vencido)
-    total_activos = len(prestamos) - total_cancelados
+    total_devueltos = sum(1 for p in prestamos if p.estado == 'devuelto')
+    total_vencidos = sum(1 for p in prestamos if p.estado == 'entregado' and p.es_vencido)
+    total_activos = sum(1 for p in prestamos if p.estado == 'entregado')
     total_al_dia = total_activos - total_vencidos
 
     filtro = (request.GET.get('filtro') or 'todos').strip().lower()
-    if filtro not in {'todos', 'vencido', 'al-dia', 'cancelado'}:
+    if filtro not in {'todos', 'vencido', 'al-dia', 'devuelto', 'cancelado'}:
         filtro = 'todos'
 
     if filtro == 'vencido':
-        prestamos = [p for p in prestamos if p.es_vencido]
+        prestamos = [p for p in prestamos if p.estado == 'entregado' and p.es_vencido]
     elif filtro == 'al-dia':
-        prestamos = [p for p in prestamos if not p.es_vencido and p.estado != 'rechazado']
+        prestamos = [p for p in prestamos if p.estado == 'entregado' and not p.es_vencido]
+    elif filtro == 'devuelto':
+        prestamos = [p for p in prestamos if p.estado == 'devuelto']
     elif filtro == 'cancelado':
         prestamos = [p for p in prestamos if p.estado == 'rechazado']
 
@@ -489,6 +1945,7 @@ def prestamos_panel(request):
         'total_vencidos': total_vencidos,
         'total_al_dia': total_al_dia,
         'total_cancelados': total_cancelados,
+        'total_devueltos': total_devueltos,
         'total_activos': total_activos,
         'ahora': ahora,
     })
@@ -497,6 +1954,9 @@ def prestamos_panel(request):
 def pedidos_panel(request):
     if not request.user.id_rol_fk or request.user.id_rol_fk.nombre_rol not in ['admin', 'almacenista']:
         return redirect('dashboard')
+
+    _auto_cancelar_pedidos_pendientes_vencidos()
+
     pedidos = (
         Pedido.objects
         .filter(estado__in=['pendiente', 'esperando entrega'])
@@ -513,6 +1973,8 @@ def pedidos_panel(request):
 def pedido_detalle_panel(request, pedido_id):
     if not request.user.id_rol_fk or request.user.id_rol_fk.nombre_rol not in ['admin', 'almacenista']:
         return redirect('dashboard')
+
+    _auto_cancelar_pedidos_pendientes_vencidos()
 
     pedido = get_object_or_404(
         Pedido.objects.select_related('id_usuario_fk').prefetch_related('detalles__id_prod_fk', 'evidencias'),
@@ -625,6 +2087,13 @@ def pedido_marcar_esperando_entrega(request, pedido_id):
         pedido.fch_ult_act = now
         pedido.save(update_fields=['estado', 'codigo_entrega', 'codigo_expira_en', 'fch_ult_act'])
 
+    _registrar_auditoria(
+        request,
+        accion='actualizar',
+        entidad='pedido',
+        entidad_id=pedido.id_pedido,
+        descripcion=f'Pedido #{pedido.id_pedido} pasó a esperando entrega.',
+    )
     messages.success(request, f'Pedido #{pedido.id_pedido} procesado. Codigo de entrega generado por 2 horas.')
     _crear_notificacion(
         usuario=pedido.id_usuario_fk,
@@ -709,11 +2178,20 @@ def pedido_confirmar_entrega_codigo(request, pedido_id):
         pedido.fch_ult_act = now
         pedido.save(update_fields=['estado', 'codigo_entrega', 'codigo_expira_en', 'fch_ult_act'])
 
-        DetallePedido.objects.filter(id_pedido_fk=pedido).update(
+        DetallePedido.objects.filter(id_pedido_fk=pedido).exclude(
+            estado_detalle__in=['no_disponible', 'rechazado', 'cancelado']
+        ).update(
             estado_detalle='entregado',
             fch_ult_act=now,
         )
 
+    _registrar_auditoria(
+        request,
+        accion='actualizar',
+        entidad='pedido',
+        entidad_id=pedido.id_pedido,
+        descripcion=f'Pedido #{pedido.id_pedido} fue confirmado como entregado en almacén.',
+    )
     messages.success(request, f'Pedido #{pedido.id_pedido} marcado como entregado.')
     _crear_notificacion(
         usuario=pedido.id_usuario_fk,
@@ -730,6 +2208,80 @@ def pedido_confirmar_entrega_codigo(request, pedido_id):
         pedido_id=pedido.id_pedido,
     )
     return redirect('pedido_detalle_panel', pedido_id=pedido_id)
+
+
+@login_required
+def pedido_marcar_devuelto(request, pedido_id):
+    if not request.user.id_rol_fk or request.user.id_rol_fk.nombre_rol not in ['admin', 'almacenista']:
+        return redirect('dashboard')
+
+    if request.method != 'POST':
+        return redirect('prestamos_panel')
+
+    codigo_ingresado = (request.POST.get('codigo_devolucion') or '').strip()
+    if not (len(codigo_ingresado) == 6 and codigo_ingresado.isdigit()):
+        messages.error(request, 'Debes ingresar un código de devolución válido de 6 dígitos.')
+        return redirect('prestamos_panel')
+
+    with transaction.atomic():
+        pedido = get_object_or_404(
+            Pedido.objects.select_for_update().prefetch_related('detalles__id_prod_fk'),
+            pk=pedido_id,
+        )
+
+        if pedido.estado != 'entregado':
+            messages.error(request, 'Solo puedes marcar como devuelto un préstamo actualmente entregado.')
+            return redirect('prestamos_panel')
+
+        now = timezone.now()
+
+        if not pedido.codigo_entrega or not pedido.codigo_expira_en:
+            _renovar_codigo_devolucion(pedido, now)
+            messages.error(request, 'No había un código activo. Se generó uno nuevo para el usuario.')
+            return redirect('prestamos_panel')
+
+        if now > pedido.codigo_expira_en:
+            _renovar_codigo_devolucion(pedido, now)
+            messages.error(request, 'El código de devolución venció. Pide al usuario el nuevo código dinámico.')
+            return redirect('prestamos_panel')
+
+        if codigo_ingresado != pedido.codigo_entrega:
+            messages.error(request, 'Código de devolución incorrecto. Verifica la clave dinámica del usuario.')
+            return redirect('prestamos_panel')
+
+        detalles_entregados = list(
+            DetallePedido.objects
+            .select_for_update()
+            .select_related('id_prod_fk')
+            .filter(id_pedido_fk=pedido)
+            .exclude(estado_detalle__in=['no_disponible', 'rechazado', 'cancelado'])
+        )
+
+        for detalle in detalles_entregados:
+            _sumar_stock_disponibilidad(detalle, now)
+
+        pedido.estado = 'devuelto'
+        pedido.codigo_entrega = None
+        pedido.codigo_expira_en = None
+        pedido.fch_ult_act = now
+        pedido.save(update_fields=['estado', 'codigo_entrega', 'codigo_expira_en', 'fch_ult_act'])
+
+        DetallePedido.objects.filter(id_pedido_fk=pedido).exclude(
+            estado_detalle__in=['no_disponible', 'rechazado', 'cancelado']
+        ).update(
+            estado_detalle='devuelto',
+            fch_ult_act=now,
+        )
+
+    _registrar_auditoria(
+        request,
+        accion='actualizar',
+        entidad='prestamo',
+        entidad_id=pedido.id_pedido,
+        descripcion=f'Préstamo #{pedido.id_pedido} recibido en devolución y stock restaurado.',
+    )
+    messages.success(request, f'Préstamo #{pedido.id_pedido} marcado como devuelto y el stock fue restaurado.')
+    return redirect('prestamos_panel')
 
 
 @login_required
@@ -757,6 +2309,13 @@ def pedido_rechazar(request, pedido_id):
             fch_ult_act=now,
         )
 
+    _registrar_auditoria(
+        request,
+        accion='actualizar',
+        entidad='pedido',
+        entidad_id=pedido.id_pedido,
+        descripcion=f'Pedido #{pedido.id_pedido} fue cancelado/rechazado por personal de almacén.',
+    )
     messages.success(request, f'Pedido #{pedido_id} rechazado correctamente.')
     _crear_notificacion(
         usuario=pedido.id_usuario_fk,
@@ -813,6 +2372,13 @@ def pedido_marcar_no_disponibles(request, pedido_id):
 
     total = len(detalle_ids)
     if total:
+        _registrar_auditoria(
+            request,
+            accion='actualizar',
+            entidad='pedido',
+            entidad_id=pedido.id_pedido,
+            descripcion=f'Pedido #{pedido.id_pedido}: {total} producto(s) marcado(s) como no disponible.',
+        )
         messages.success(request, f'{total} producto{"s" if total != 1 else ""} marcado{"s" if total != 1 else ""} como no disponible.')
         _crear_notificacion(
             usuario=pedido.id_usuario_fk,
@@ -832,12 +2398,53 @@ def pedido_marcar_no_disponibles(request, pedido_id):
 
 @login_required
 def auditorias_panel(request):
-    return render(request, 'inventario/auditorias/panel_auditorias.html')
+    if not _is_admin_or_almacenista(request):
+        return redirect('dashboard')
+
+    q = (request.GET.get('q') or '').strip()
+    accion = (request.GET.get('accion') or '').strip().lower()
+    entidad = (request.GET.get('entidad') or '').strip().lower()
+    rol = (request.GET.get('rol') or '').strip().lower()
+
+    logs = AuditoriaLog.objects.select_related('id_usuario_fk__id_rol_fk')
+
+    if q:
+        logs = logs.filter(
+            models.Q(descripcion__icontains=q)
+            | models.Q(entidad_id__icontains=q)
+            | models.Q(id_usuario_fk__correo__icontains=q)
+            | models.Q(id_usuario_fk__nombre__icontains=q)
+            | models.Q(id_usuario_fk__apellido__icontains=q)
+        )
+
+    if accion:
+        logs = logs.filter(accion=accion)
+    if entidad:
+        logs = logs.filter(entidad=entidad)
+    if rol:
+        logs = logs.filter(rol_usuario=rol)
+
+    logs = list(logs.order_by('-fch_registro', '-id_log')[:300])
+    resumen_accion = {
+        'crear': sum(1 for item in logs if item.accion == 'crear'),
+        'actualizar': sum(1 for item in logs if item.accion == 'actualizar'),
+        'eliminar': sum(1 for item in logs if item.accion == 'eliminar'),
+    }
+
+    return render(request, 'inventario/auditorias/panel_auditorias.html', {
+        'logs': logs,
+        'q': q,
+        'accion_activa': accion,
+        'entidad_activa': entidad,
+        'rol_activo': rol,
+        'resumen_accion': resumen_accion,
+    })
 
 @login_required
 def gestion_usuarios_panel(request):
     query = request.GET.get('q', '').strip()
-    usuarios = Usuario.objects.all().select_related('id_rol_fk').order_by('nombre', 'apellido')
+    base_usuarios = Usuario.objects.all().select_related('id_rol_fk')
+    usuarios = base_usuarios.order_by('nombre', 'apellido')
     if query:
         usuarios = usuarios.filter(
             models.Q(nombre__icontains=query) |
@@ -846,10 +2453,17 @@ def gestion_usuarios_panel(request):
             models.Q(cc__icontains=query)
         )
     roles = Rol.objects.all().order_by('nombre_rol')
+    resumen = {
+        'total_usuarios': base_usuarios.count(),
+        'total_activos': base_usuarios.filter(is_active=True).count(),
+        'total_admins': base_usuarios.filter(id_rol_fk__nombre_rol='admin').count(),
+        'total_visibles': usuarios.count(),
+    }
     return render(request, 'inventario/usuarios/panel_usuarios.html', {
         'usuarios': usuarios,
         'query': query,
         'roles': roles,
+        'resumen': resumen,
     })
 
 
@@ -887,6 +2501,13 @@ def crear_usuario(request):
     )
     usuario.set_password(password)
     usuario.save()
+    _registrar_auditoria(
+        request,
+        accion='crear',
+        entidad='usuario',
+        entidad_id=usuario.id_usu,
+        descripcion=f'Se creó el usuario {usuario.correo} con rol {rol.nombre_rol}.',
+    )
     messages.success(request, 'Usuario creado correctamente.')
     return redirect('gestion_usuarios_panel')
 
@@ -909,6 +2530,13 @@ def editar_rol_usuario(request, usuario_id):
         return redirect('gestion_usuarios_panel')
     usuario.id_rol_fk = nuevo_rol
     usuario.save()
+    _registrar_auditoria(
+        request,
+        accion='actualizar',
+        entidad='usuario',
+        entidad_id=usuario.id_usu,
+        descripcion=f'Se actualizó el rol del usuario {usuario.correo} a {nuevo_rol.nombre_rol}.',
+    )
     messages.success(request, 'Rol actualizado correctamente.')
     return redirect('gestion_usuarios_panel')
 
@@ -956,6 +2584,13 @@ def pedido_aviso_devolucion(request, pedido_id):
         return redirect('dashboard')
 
     pedido = get_object_or_404(Pedido, pk=pedido_id, estado='entregado')
+    _registrar_auditoria(
+        request,
+        accion='actualizar',
+        entidad='prestamo',
+        entidad_id=pedido.id_pedido,
+        descripcion=f'Se envió aviso de devolución para el préstamo #{pedido.id_pedido}.',
+    )
     _crear_notificacion(
         usuario=pedido.id_usuario_fk,
         tipo='aviso_devolucion',

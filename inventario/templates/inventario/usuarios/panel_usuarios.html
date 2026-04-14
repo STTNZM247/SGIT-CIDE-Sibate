@@ -1,33 +1,143 @@
 {% extends 'inventario/shared/base.html' %}
 {% load static %}
+
 {% block title %}Gestión de Usuarios | Inventario SENA{% endblock %}
-    <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 20px;">
-        <form id="formGuardarRoles" method="post" action="{% url 'guardar_roles_masivo' %}" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-success">Guardar cambios de roles</button>
-        </form>
-    </div>
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'inventario/usuarios/css/panel_usuarios.css' %}" data-page-style="true">
 {% endblock %}
-{% block content %}
-<section class="panel-simple">
-    <h1>Gestión de Usuarios</h1>
-    <button class="btn btn-success" id="btnAbrirModalCrearUsuario" style="margin-bottom: 20px;">Crear usuario</button>
 
-    <!-- Modal Crear Usuario -->
-    <div id="modalCrearUsuario" class="modal">
+{% block content %}
+<section class="panel-simple panel-usuarios-admin">
+    <header class="usuarios-topbar">
+        <div>
+            <h1>Gestión de usuarios</h1>
+            <p>Administra cuentas, registra nuevos usuarios y actualiza roles con seguridad.</p>
+        </div>
+        <button class="usuarios-btn usuarios-btn--primary" id="btnAbrirModalCrearUsuario" type="button">
+            <ion-icon name="person-add-outline" aria-hidden="true"></ion-icon>
+            Nuevo usuario
+        </button>
+    </header>
+
+    <section class="usuarios-kpis" aria-label="Resumen de usuarios">
+        <article class="usuarios-kpi">
+            <span>Total usuarios</span>
+            <strong>{{ resumen.total_usuarios }}</strong>
+        </article>
+        <article class="usuarios-kpi">
+            <span>Usuarios activos</span>
+            <strong>{{ resumen.total_activos }}</strong>
+        </article>
+        <article class="usuarios-kpi usuarios-kpi--locked">
+            <span>Administradores</span>
+            <strong>{{ resumen.total_admins }}</strong>
+        </article>
+        <article class="usuarios-kpi">
+            <span>Resultado actual</span>
+            <strong>{{ resumen.total_visibles }}</strong>
+        </article>
+    </section>
+
+    <section class="usuarios-tools" aria-label="Filtros de búsqueda">
+        <form method="get" class="usuarios-search-form">
+            <label class="usuarios-search" for="q_usuarios">
+                <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+                <input id="q_usuarios" type="text" name="q" value="{{ query }}" placeholder="Buscar por nombre, correo o cédula">
+            </label>
+            <button class="usuarios-btn usuarios-btn--soft" type="submit">Buscar</button>
+        </form>
+    </section>
+
+    <div class="tabla-usuarios-wrapper" role="region" aria-label="Tabla de usuarios">
+        <table class="tabla-usuarios-admin">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Cédula</th>
+                    <th>Nombre completo</th>
+                    <th>Correo</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Gestión</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                <tr>
+                    <td data-label="ID">{{ usuario.id_usu }}</td>
+                    <td data-label="Cédula">{{ usuario.cc|default:'—' }}</td>
+                    <td data-label="Nombre completo">
+                        <strong>{{ usuario.nombre|default:'—' }}</strong>
+                        <span>{{ usuario.apellido|default:'—' }}</span>
+                    </td>
+                    <td data-label="Correo" class="correo-cell">{{ usuario.correo }}</td>
+                    <td data-label="Rol">
+                        {% if usuario.id_rol_fk and usuario.id_rol_fk.nombre_rol == 'admin' %}
+                            <span class="rol-badge rol-badge--admin">
+                                <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+                                Admin
+                            </span>
+                        {% elif usuario.id_rol_fk %}
+                            <span class="rol-badge">{{ usuario.id_rol_fk.nombre_rol }}</span>
+                        {% else %}
+                            <span class="rol-badge">Sin rol</span>
+                        {% endif %}
+                    </td>
+                    <td data-label="Estado">
+                        {% if usuario.is_active %}
+                            <span class="estado-badge estado-badge--activo">Activo</span>
+                        {% else %}
+                            <span class="estado-badge estado-badge--inactivo">Inactivo</span>
+                        {% endif %}
+                    </td>
+                    <td data-label="Gestión">
+                        {% if usuario.id_rol_fk and usuario.id_rol_fk.nombre_rol != 'admin' %}
+                        <form method="post" action="{% url 'editar_rol_usuario' usuario.id_usu %}" class="form-rol-personalizado">
+                            {% csrf_token %}
+                            <div class="custom-select-rol" tabindex="0">
+                                <div class="selected-rol">{{ usuario.id_rol_fk.nombre_rol }}</div>
+                                <div class="rol-options" style="display:none;">
+                                    {% for rol in roles %}
+                                        <div class="rol-option{% if usuario.id_rol_fk.id_rol == rol.id_rol %} selected{% endif %}" data-value="{{ rol.id_rol }}">{{ rol.nombre_rol }}</div>
+                                    {% endfor %}
+                                </div>
+                                <input type="hidden" name="id_rol_fk" value="{{ usuario.id_rol_fk.id_rol }}">
+                            </div>
+                            <button type="submit" class="usuarios-btn usuarios-btn--save">Guardar rol</button>
+                        </form>
+                        {% else %}
+                        <span class="admin-lock" title="El rol admin no se puede modificar">
+                            <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
+                            Rol protegido
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="tabla-vacia">
+                        No se encontraron usuarios con ese criterio.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div id="modalCrearUsuario" class="modal" aria-hidden="true">
         <div class="modal-content">
-            <h2>Crear nuevo usuario</h2>
-            <form method="post" action="{% url 'crear_usuario' %}" autocomplete="off">
+            <h2>Registrar nuevo usuario</h2>
+            <p class="modal-subtitle">Completa los datos básicos y asigna un rol inicial.</p>
+            <form method="post" action="{% url 'crear_usuario' %}" autocomplete="off" class="form-crear-usuario">
                 {% csrf_token %}
                 <input type="text" name="cc" class="form-input" placeholder="Cédula" required>
                 <input type="text" name="nombre" class="form-input" placeholder="Nombre" required>
                 <input type="text" name="apellido" class="form-input" placeholder="Apellido" required>
                 <input type="email" name="correo" class="form-input" placeholder="Correo" required>
-                <div class="form-group" style="margin-bottom: 6px;">
+                <div class="form-group">
                     <input type="password" name="password" id="inputPassword" class="form-input" placeholder="Contraseña" required>
-                    <button type="button" class="toggle-password" id="togglePassword" tabindex="-1" aria-label="Mostrar/Ocultar contraseña">
+                    <button type="button" class="toggle-password" id="togglePassword" tabindex="-1" aria-label="Mostrar u ocultar contraseña">
                         <span id="iconEye">
                             <ion-icon name="eye-outline"></ion-icon>
                         </span>
@@ -39,83 +149,16 @@
                         <option value="{{ rol.id_rol }}">{{ rol.nombre_rol }}</option>
                     {% endfor %}
                 </select>
-                <div style="display:flex; gap:10px; justify-content:flex-end;">
-                    <button type="button" id="btnCerrarModalCrearUsuario" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-success">Crear</button>
+                <div class="modal-actions">
+                    <button type="button" id="btnCerrarModalCrearUsuario" class="usuarios-btn usuarios-btn--ghost">Cancelar</button>
+                    <button type="submit" class="usuarios-btn usuarios-btn--primary">Crear usuario</button>
                 </div>
             </form>
         </div>
     </div>
-    <div class="busqueda-contenedor-centrado">
-        <form method="get" class="busqueda-form barra-busqueda-moderna">
-        <button type="submit" class="icono-busqueda" aria-label="Buscar">
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="10" cy="10" r="7" stroke="#888" stroke-width="2"/>
-                <line x1="16.0607" y1="16.4749" x2="20" y2="20.4142" stroke="#888" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-        </button>
-        <input type="text" name="q" value="{{ query }}" placeholder="Buscar por nombre, correo, cédula…" class="form-input input-busqueda-moderna">
-        </form>
-    </div>
-
-    <div class="tabla-usuarios-wrapper" style="overflow-x:auto;">
-        <table class="tabla-usuarios" style="width:100%; border-collapse:collapse;">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Cédula</th>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
-                    <th>Correo</th>
-                    <th>Rol</th>
-                    <th>Acciones</th>
-                    <th>Estado</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for usuario in usuarios %}
-                <tr>
-                    <td>{{ usuario.id_usu }}</td>
-                    <td>{{ usuario.cc|default:'—' }}</td>
-                    <td>{{ usuario.nombre|default:'—' }}</td>
-                    <td>{{ usuario.apellido|default:'—' }}</td>
-                    <td>{{ usuario.correo }}</td>
-                    <td>
-                        {% if usuario.id_rol_fk and usuario.id_rol_fk.nombre_rol != 'admin' %}
-                        <form method="post" action="{% url 'editar_rol_usuario' usuario.id_usu %}" class="form-rol-personalizado" style="display:inline;">
-                            {% csrf_token %}
-                            <div class="custom-select-rol" tabindex="0">
-                                <div class="selected-rol">{{ usuario.id_rol_fk.nombre_rol }}</div>
-                                <div class="rol-options" style="display:none;">
-                                    {% for rol in roles %}
-                                        <div class="rol-option{% if usuario.id_rol_fk.id_rol == rol.id_rol %} selected{% endif %}" data-value="{{ rol.id_rol }}">{{ rol.nombre_rol }}</div>
-                                    {% endfor %}
-                                </div>
-                                <input type="hidden" name="id_rol_fk" value="{{ usuario.id_rol_fk.id_rol }}">
-                            </div>
-                            <button type="submit" class="btn btn-primary" style="margin-left:5px;">Guardar</button>
-                        </form>
-                        {% elif usuario.id_rol_fk and usuario.id_rol_fk.nombre_rol == 'admin' %}
-                            <span style="color:#888;">No editable</span>
-                        {% else %}
-                            —
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if usuario.is_active %}
-                            <span style="color: #39A900; font-weight:600;">Activo</span>
-                        {% else %}
-                            <span style="color: #c00; font-weight:600;">Inactivo</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="7" style="text-align:center;">No se encontraron usuarios.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
 </section>
+{% endblock %}
+
 {% block extra_js %}
 <script data-page-script="true">
 // Modal crear usuario
@@ -168,6 +211,4 @@ document.addEventListener('click', function() {
     document.querySelectorAll('.rol-options').forEach(o => o.style.display = 'none');
 });
 </script>
-{% endblock %}
-</section>
 {% endblock %}

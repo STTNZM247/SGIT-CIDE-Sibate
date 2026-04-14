@@ -276,6 +276,23 @@
     }());
     if (fechaInput) fechaInput.min = mananaISO;   // Por días: solo fechas futuras
 
+    function minutosDesdeHora(valor) {
+        if (!valor || valor.indexOf(':') === -1) return null;
+        var partes = valor.split(':');
+        var hh = parseInt(partes[0], 10);
+        var mm = parseInt(partes[1], 10);
+        if (Number.isNaN(hh) || Number.isNaN(mm)) return null;
+        return (hh * 60) + mm;
+    }
+
+    function actualizarMinHoraActual() {
+        if (!horaInput) return;
+        var ahora = new Date();
+        var hh = pad(ahora.getHours());
+        var mm = pad(ahora.getMinutes());
+        horaInput.min = hh + ':' + mm;
+    }
+
     /* Mostrar fecha de hoy en el panel "Mismo día" */
     if (hoyDisplay) {
         var dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
@@ -301,6 +318,7 @@
         // Limpiar el otro campo para que no se envíe vacío de forma errónea
         if (tipo === 'mismo_dia' && fechaInput) fechaInput.value = '';
         if (tipo === 'por_dias'  && horaInput)  horaInput.value  = '';
+        if (tipo === 'mismo_dia') actualizarMinHoraActual();
         checkForm();
     }
 
@@ -315,7 +333,18 @@
         var carnetOk = carnetInput && carnetInput.files && carnetInput.files.length > 0;
 
         var fechaOk = false;
-        if (radioDia  && radioDia.checked  && horaInput  && horaInput.value)  fechaOk = true;
+        if (radioDia && radioDia.checked && horaInput && horaInput.value) {
+            actualizarMinHoraActual();
+            var ahora = new Date();
+            var minutosActuales = (ahora.getHours() * 60) + ahora.getMinutes();
+            var minutosSeleccionados = minutosDesdeHora(horaInput.value);
+            fechaOk = minutosSeleccionados !== null && minutosSeleccionados > minutosActuales;
+            horaInput.setCustomValidity(
+                fechaOk ? '' : 'La hora de devolución debe ser superior a la hora actual.'
+            );
+        } else if (horaInput) {
+            horaInput.setCustomValidity('');
+        }
         if (radioDias && radioDias.checked && fechaInput && fechaInput.value) fechaOk = true;
 
         if (submitBtn) {
@@ -325,6 +354,15 @@
 
     if (areaInput)   areaInput.addEventListener('input', checkForm);
     if (carnetInput) carnetInput.addEventListener('change', checkForm);
+    if (horaInput) {
+        horaInput.addEventListener('focus', actualizarMinHoraActual);
+    }
+    setInterval(function () {
+        if (radioDia && radioDia.checked) {
+            actualizarMinHoraActual();
+            checkForm();
+        }
+    }, 30000);
     checkForm();
 
     /* ── Vista previa del carnet ── */

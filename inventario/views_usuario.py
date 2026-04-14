@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import JsonResponse
 from django.db import transaction
 from django.db.models import OuterRef, Subquery
 from django.shortcuts import get_object_or_404, redirect, render
@@ -10,11 +11,31 @@ from datetime import timedelta
 import secrets
 
 from .models import CarritoItem, DetallePedido, Disponibilidad, Notificacion, Pedido, Producto
-from .views import _crear_notificacion, _notificar_staff
+from .views import _auto_cancelar_pedidos_pendientes_vencidos, _crear_notificacion, _notificar_staff, _registrar_auditoria
+
+
+DEVOLUCION_CODIGO_SEGUNDOS = 60
 
 
 def _usuario_cliente(request):
     return request.user.id_rol_fk and request.user.id_rol_fk.nombre_rol in ["usuario", "aprendiz", "instructor"]
+
+
+def _asegurar_codigo_devolucion(pedido, now):
+    if pedido.estado != 'entregado':
+        return False
+
+    vigente = bool(
+        pedido.codigo_entrega
+        and pedido.codigo_expira_en
+        and pedido.codigo_expira_en >= now
+    )
+    if not vigente:
+        pedido.codigo_entrega = f'{secrets.randbelow(1000000):06d}'
+        pedido.codigo_expira_en = now + timedelta(seconds=DEVOLUCION_CODIGO_SEGUNDOS)
+        pedido.fch_ult_act = now
+        pedido.save(update_fields=['codigo_entrega', 'codigo_expira_en', 'fch_ult_act'])
+    return True
 
 
 def _migrar_carrito_sesion_a_bd(request):
@@ -150,7 +171,7 @@ def usuario_realizar_pedido(request):
         return redirect('carrito_usuario')
 
     # Construir fecha_devolucion según el tipo elegido
-    now_tz = timezone.now()
+    now_tz = timezone.localtime()
     fecha_devolucion_global = None
 
     if tipo_devolucion == 'mismo_dia':
@@ -163,6 +184,10 @@ def usuario_realizar_pedido(request):
             fecha_devolucion_global = now_tz.replace(hour=h, minute=m, second=0, microsecond=0)
         except (ValueError, TypeError):
             messages.error(request, 'Hora de devolución inválida.')
+            return redirect('carrito_usuario')
+
+        if fecha_devolucion_global <= now_tz:
+            messages.error(request, 'La hora de devolución debe ser posterior a la hora actual.')
             return redirect('carrito_usuario')
 
     else:  # por_dias
@@ -220,6 +245,13 @@ def usuario_realizar_pedido(request):
         DetallePedido.objects.bulk_create(detalles)
 
     CarritoItem.objects.filter(id_usuario_fk=request.user).delete()
+    _registrar_auditoria(
+        request,
+        accion='crear',
+        entidad='pedido',
+        entidad_id=pedido.id_pedido,
+        descripcion=f'Usuario creó el pedido #{pedido.id_pedido}.',
+    )
     _crear_notificacion(
         usuario=request.user,
         tipo='pedido_creado',
@@ -248,6 +280,8 @@ def pedidos_usuario(request):
     if not _usuario_cliente(request):
         return redirect('dashboard')
 
+    _auto_cancelar_pedidos_pendientes_vencidos()
+
     pedidos = list(
         Pedido.objects
         .filter(id_usuario_fk=request.user)
@@ -272,8 +306,23 @@ def pedidos_usuario(request):
                 pedido.codigo_vigente = True
             else:
                 pedido.codigo_vigente = True
+            pedido.devolucion_codigo = None
+            pedido.devolucion_segundos = 0
+            pedido.devolucion_expira_en = None
+        elif pedido.estado == 'entregado':
+            _asegurar_codigo_devolucion(pedido, ahora)
+            pedido.codigo_vigente = False
+            pedido.devolucion_codigo = pedido.codigo_entrega
+            pedido.devolucion_expira_en = pedido.codigo_expira_en
+            if pedido.codigo_expira_en:
+                pedido.devolucion_segundos = max(int((pedido.codigo_expira_en - ahora).total_seconds()), 0)
+            else:
+                pedido.devolucion_segundos = 0
         else:
             pedido.codigo_vigente = False
+            pedido.devolucion_codigo = None
+            pedido.devolucion_segundos = 0
+            pedido.devolucion_expira_en = None
 
         # Ventana de 10 min para cancelar (solo pedidos pendientes con fch_registro válida)
         if pedido.estado == 'pendiente' and pedido.fch_registro:
@@ -286,7 +335,7 @@ def pedidos_usuario(request):
             pedido.segundos_cancelacion = 0
 
     estado_activo = (request.GET.get('estado') or 'todos').strip().lower()
-    estados_validos = {'todos', 'pendiente', 'esperando-entrega', 'entregado', 'rechazado', 'cancelado'}
+    estados_validos = {'todos', 'pendiente', 'esperando-entrega', 'entregado', 'devuelto', 'rechazado', 'cancelado'}
     if estado_activo not in estados_validos:
         estado_activo = 'todos'
 
@@ -294,6 +343,7 @@ def pedidos_usuario(request):
         'pendiente': 'pendiente',
         'esperando-entrega': 'esperando entrega',
         'entregado': 'entregado',
+        'devuelto': 'devuelto',
         'rechazado': 'rechazado',
         'cancelado': 'cancelado',
     }.get(estado_activo)
@@ -307,6 +357,7 @@ def pedidos_usuario(request):
         'pendiente': sum(1 for pedido in pedidos if pedido.estado == 'pendiente'),
         'esperando_entrega': sum(1 for pedido in pedidos if pedido.estado == 'esperando entrega'),
         'entregado': sum(1 for pedido in pedidos if pedido.estado == 'entregado'),
+        'devuelto': sum(1 for pedido in pedidos if pedido.estado == 'devuelto'),
         'rechazado': sum(1 for pedido in pedidos if pedido.estado == 'rechazado'),
         'cancelado': sum(1 for pedido in pedidos if pedido.estado == 'cancelado'),
     }
@@ -355,6 +406,13 @@ def pedido_cancelar_usuario(request, pedido_id):
             fch_ult_act=now,
         )
 
+    _registrar_auditoria(
+        request,
+        accion='actualizar',
+        entidad='pedido',
+        entidad_id=pedido.id_pedido,
+        descripcion=f'Pedido #{pedido.id_pedido} cancelado por el usuario en su panel.',
+    )
     _crear_notificacion(
         usuario=request.user,
         tipo='rechazado',
@@ -372,6 +430,36 @@ def pedido_cancelar_usuario(request, pedido_id):
     )
     messages.success(request, f'Pedido #{pedido.id_pedido} cancelado correctamente.')
     return redirect('pedidos_usuario')
+
+
+@login_required
+def pedido_codigo_devolucion(request, pedido_id):
+    if not _usuario_cliente(request):
+        return JsonResponse({'ok': False, 'error': 'No autorizado.'}, status=403)
+
+    if request.method != 'GET':
+        return JsonResponse({'ok': False, 'error': 'Método no permitido.'}, status=405)
+
+    with transaction.atomic():
+        pedido = get_object_or_404(
+            Pedido.objects.select_for_update(),
+            pk=pedido_id,
+            id_usuario_fk=request.user,
+        )
+
+        if pedido.estado != 'entregado':
+            return JsonResponse({'ok': False, 'error': 'Este pedido no está en estado entregado.'}, status=400)
+
+        now = timezone.now()
+        _asegurar_codigo_devolucion(pedido, now)
+        segundos = max(int((pedido.codigo_expira_en - now).total_seconds()), 0)
+
+    return JsonResponse({
+        'ok': True,
+        'codigo': pedido.codigo_entrega,
+        'segundos': segundos,
+        'expira_en': pedido.codigo_expira_en.isoformat() if pedido.codigo_expira_en else None,
+    })
 
 
 @login_required

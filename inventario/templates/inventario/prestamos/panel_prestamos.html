@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="{% static 'inventario/shared/css/base.css' %}">
 <link rel="stylesheet" href="{% static 'inventario/prestamos/css/panel_prestamos.css' %}" data-page-style="true">
 {% endblock %}
-{% block title %}Préstamos activos | Inventario SENA{% endblock %}
+{% block title %}Préstamos y devoluciones | Inventario SENA{% endblock %}
 {% block content %}
 <section class="prestamos-page">
 
@@ -22,8 +22,8 @@
     <header class="prestamos-hero">
         <div>
             <p class="prestamos-eyebrow">Control de préstamos</p>
-            <h1>Préstamos activos</h1>
-            <p>Lista de todos los equipos entregados actualmente a los aprendices. Se marca en rojo cuando la fecha de devolución ha vencido.</p>
+            <h1>Préstamos y devoluciones</h1>
+            <p>Controla los pedidos entregados, marca los que ya fueron devueltos y consulta qué productos salieron en cada préstamo.</p>
         </div>
         {% if total_vencidos > 0 %}
         <span class="prestamos-hero-badge prestamos-hero-badge--warn">
@@ -51,6 +51,10 @@
             <span>Al día</span>
             <strong>{{ total_al_dia }}</strong>
         </div>
+        <div class="prestamos-stat-tile prestamos-stat-tile--devuelto">
+            <span>Devueltos</span>
+            <strong>{{ total_devueltos }}</strong>
+        </div>
         {% if total_cancelados > 0 %}
         <div class="prestamos-stat-tile prestamos-stat-tile--cancelado">
             <span>Cancelados</span>
@@ -73,6 +77,10 @@
             <span>Vencidos</span>
             <strong>{{ total_vencidos }}</strong>
         </a>
+        <a href="?filtro=devuelto" class="prestamos-filtro prestamos-filtro--devuelto {% if filtro_activo == 'devuelto' %}is-active{% endif %}">
+            <span>Devueltos</span>
+            <strong>{{ total_devueltos }}</strong>
+        </a>
         <a href="?filtro=cancelado" class="prestamos-filtro prestamos-filtro--cancelado {% if filtro_activo == 'cancelado' %}is-active{% endif %}">
             <span>Cancelados</span>
             <strong>{{ total_cancelados }}</strong>
@@ -85,14 +93,14 @@
         <span>Usuario</span>
         <span>Área / Ambiente</span>
         <span>Tipo dev.</span>
-        <span>Fecha devolución</span>
+        <span>Seguimiento</span>
         <span>Estado</span>
         <span>Acciones</span>
     </div>
 
     <div class="prestamos-list">
         {% for prestamo in prestamos %}
-        <div class="prestamo-row {% if prestamo.estado == 'rechazado' %}prestamo-row--cancelado{% elif prestamo.es_vencido %}prestamo-row--vencido{% elif prestamo.fecha_devolucion_display %}prestamo-row--ok{% else %}prestamo-row--sin-fecha{% endif %}">
+        <div class="prestamo-row {% if prestamo.estado == 'rechazado' %}prestamo-row--cancelado{% elif prestamo.estado == 'devuelto' %}prestamo-row--devuelto{% elif prestamo.es_vencido %}prestamo-row--vencido{% elif prestamo.fecha_devolucion_display %}prestamo-row--ok{% else %}prestamo-row--sin-fecha{% endif %}">
 
             <!-- Usuario -->
             <div class="prestamo-row__usuario">
@@ -126,6 +134,10 @@
                 <span class="prestamo-row__tipo">
                     {% if prestamo.tipo_devolucion == 'individual' %}
                     <ion-icon name="list-outline"></ion-icon> Individual
+                    {% elif prestamo.tipo_devolucion == 'mismo_dia' %}
+                    <ion-icon name="today-outline"></ion-icon> Mismo día
+                    {% elif prestamo.tipo_devolucion == 'por_dias' %}
+                    <ion-icon name="calendar-outline"></ion-icon> Por días
                     {% else %}
                     <ion-icon name="layers-outline"></ion-icon> Global
                     {% endif %}
@@ -137,6 +149,9 @@
                 {% if prestamo.estado == 'rechazado' %}
                 <strong style="color:#b43a3a;">—</strong>
                 <small style="color:#c47070;">Pedido cancelado</small>
+                {% elif prestamo.estado == 'devuelto' %}
+                <strong>{{ prestamo.fecha_cierre_display|date:"d/m/Y"|default:"—" }}</strong>
+                <small>Devuelto {{ prestamo.fecha_cierre_display|date:"H:i" }} h</small>
                 {% elif prestamo.fecha_devolucion_display %}
                 <strong>{{ prestamo.fecha_devolucion_display|date:"d/m/Y" }}</strong>
                 <small>{{ prestamo.fecha_devolucion_display|date:"H:i" }} h</small>
@@ -158,6 +173,51 @@
                 {% else %}
                 <strong style="color:#9aaa9c;">Sin fecha</strong>
                 {% endif %}
+
+                {% if prestamo.detalles_entregados %}
+                <details class="prestamo-productos-toggle">
+                    <summary>
+                        <span>Productos entregados</span>
+                        <div class="prestamo-productos-summary-meta">
+                            <em>{{ prestamo.total_unidades }} und.</em>
+                            <strong>{{ prestamo.detalles_entregados|length }}</strong>
+                        </div>
+                    </summary>
+                    <div class="prestamo-productos-list">
+                        {% for det in prestamo.detalles_entregados %}
+                        <div class="prestamo-producto-item">
+                            <div class="prestamo-producto-item__main">
+                                <div class="prestamo-producto-item__name">{{ det.nombre_producto }}</div>
+                                <div class="prestamo-producto-item__meta">
+                                    {% if det.nombre_catalogo %}
+                                    <span>{{ det.nombre_catalogo }}</span>
+                                    {% endif %}
+                                    {% if prestamo.estado == 'devuelto' %}
+                                    <span>Devuelto al inventario</span>
+                                    {% elif det.fecha_devolucion %}
+                                    <span>Devolver: {{ det.fecha_devolucion|date:"d/m/Y" }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="prestamo-producto-item__side">
+                                <div class="prestamo-producto-item__qty">x{{ det.cantidad_solicitada }}</div>
+                                {% if prestamo.estado == 'devuelto' %}
+                                <div class="prestamo-producto-item__fecha prestamo-producto-item__fecha--devuelto">
+                                    Devuelto
+                                </div>
+                                {% elif det.fecha_devolucion %}
+                                <div class="prestamo-producto-item__fecha {% if det.fecha_devolucion < ahora %}prestamo-producto-item__fecha--vencido{% else %}prestamo-producto-item__fecha--ok{% endif %}">
+                                    {{ det.fecha_devolucion|date:"H:i" }} h
+                                </div>
+                                {% else %}
+                                <div class="prestamo-producto-item__fecha prestamo-producto-item__fecha--none">—</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </details>
+                {% endif %}
             </div>
 
             <!-- Estado badge -->
@@ -165,6 +225,10 @@
                 {% if prestamo.estado == 'rechazado' %}
                 <span class="prestamo-badge prestamo-badge--cancelado">
                     <ion-icon name="close-circle-outline"></ion-icon> Pedido cancelado
+                </span>
+                {% elif prestamo.estado == 'devuelto' %}
+                <span class="prestamo-badge prestamo-badge--devuelto">
+                    <ion-icon name="checkmark-done-circle-outline"></ion-icon> Devuelto
                 </span>
                 {% elif prestamo.es_vencido %}
                 <span class="prestamo-badge prestamo-badge--vencido">
@@ -180,29 +244,10 @@
                 </span>
                 {% endif %}
 
-                <!-- Productos (individual: detalles expandibles) -->
-                {% if prestamo.tipo_devolucion == 'individual' and prestamo.detalles_lista %}
-                <details class="prestamo-productos-toggle" style="margin-top:8px">
-                    <summary>
-                        <span>Productos</span>
-                        <strong>{{ prestamo.detalles_lista|length }}</strong>
-                    </summary>
-                    <div class="prestamo-productos-list">
-                        {% for det in prestamo.detalles_lista %}
-                        <div class="prestamo-producto-item">
-                            <div class="prestamo-producto-item__name">{{ det.nombre_producto }}</div>
-                            <div class="prestamo-producto-item__qty">x{{ det.cantidad_solicitada }}</div>
-                            {% if det.fecha_devolucion %}
-                            <div class="prestamo-producto-item__fecha {% if det.fecha_devolucion < ahora %}prestamo-producto-item__fecha--vencido{% else %}prestamo-producto-item__fecha--ok{% endif %}">
-                                {{ det.fecha_devolucion|date:"d/m/Y" }}
-                            </div>
-                            {% else %}
-                            <div class="prestamo-producto-item__fecha prestamo-producto-item__fecha--none">—</div>
-                            {% endif %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                </details>
+                {% if prestamo.estado == 'devuelto' and prestamo.fecha_cierre_display %}
+                <small class="prestamo-row__estado-meta">Cerrado el {{ prestamo.fecha_cierre_display|date:"d/m/Y H:i" }}</small>
+                {% elif prestamo.estado == 'entregado' %}
+                <small class="prestamo-row__estado-meta">{{ prestamo.total_unidades }} unidad{{ prestamo.total_unidades|pluralize }} actualmente fuera</small>
                 {% endif %}
             </div>
 
@@ -211,8 +256,19 @@
                 <a href="{% url 'pedido_detalle_panel' prestamo.id_pedido %}" class="prestamo-btn prestamo-btn--detail">
                     <ion-icon name="eye-outline"></ion-icon> Ver detalle
                 </a>
-                {% if prestamo.es_vencido %}
-                <form method="post" action="{% url 'pedido_aviso_devolucion' prestamo.id_pedido %}" style="display:inline;">
+                {% if prestamo.estado == 'entregado' %}
+                <form method="post" action="{% url 'pedido_marcar_devuelto' prestamo.id_pedido %}" class="prestamo-action-form">
+                    {% csrf_token %}
+                    <button type="submit" class="prestamo-btn prestamo-btn--return"
+                            title="Marcar préstamo como devuelto"
+                            data-trigger-devuelto
+                            data-pedido-id="{{ prestamo.id_pedido }}">
+                        <ion-icon name="arrow-undo-outline"></ion-icon> Marcar devuelto
+                    </button>
+                </form>
+                {% endif %}
+                {% if prestamo.estado == 'entregado' and prestamo.es_vencido %}
+                <form method="post" action="{% url 'pedido_aviso_devolucion' prestamo.id_pedido %}" class="prestamo-action-form">
                     {% csrf_token %}
                     <button type="submit" class="prestamo-btn prestamo-btn--aviso"
                             title="Enviar notificación de devolución al usuario"
@@ -230,10 +286,110 @@
     {% else %}
     <section class="prestamos-empty">
         <div class="prestamos-empty__icon"><ion-icon name="cube-outline"></ion-icon></div>
-        <h2>No hay préstamos activos</h2>
-        <p>Cuando se confirme la entrega de un pedido, aparecerá aquí para hacer seguimiento de la devolución.</p>
+        <h2>No hay préstamos para mostrar</h2>
+        <p>Cuando se confirme la entrega de un pedido, aparecerá aquí para hacer seguimiento o cerrar la devolución.</p>
     </section>
     {% endif %}
 
 </section>
+
+<div class="prestamo-modal-overlay" id="devuelto-confirm-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="devuelto-modal-title">
+    <div class="prestamo-modal-confirm">
+        <div class="prestamo-modal-confirm__icon">
+            <ion-icon name="arrow-undo-circle-outline"></ion-icon>
+        </div>
+        <h2 class="prestamo-modal-confirm__title" id="devuelto-modal-title">¿Marcar como devuelto?</h2>
+        <p class="prestamo-modal-confirm__text">
+            Vas a cerrar el préstamo <strong id="devuelto-modal-pedido">#—</strong>.
+            Esta acción restaurará el stock de los productos entregados.
+        </p>
+        <div class="prestamo-modal-confirm__field">
+            <label for="devuelto-modal-codigo">Código dinámico del usuario</label>
+            <input id="devuelto-modal-codigo" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="off">
+            <small id="devuelto-modal-error" class="prestamo-modal-confirm__error" hidden>Ingresa el código de 6 dígitos que tiene el usuario.</small>
+        </div>
+        <div class="prestamo-modal-confirm__actions">
+            <button type="button" class="prestamo-modal-confirm__btn prestamo-modal-confirm__btn--back" data-close-devuelto>
+                Cancelar
+            </button>
+            <button type="button" class="prestamo-modal-confirm__btn prestamo-modal-confirm__btn--confirm" id="devuelto-modal-confirm-btn">
+                Sí, marcar devuelto
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const modal = document.getElementById('devuelto-confirm-modal');
+    const pedidoLabel = document.getElementById('devuelto-modal-pedido');
+    const confirmBtn = document.getElementById('devuelto-modal-confirm-btn');
+    const inputCodigo = document.getElementById('devuelto-modal-codigo');
+    const errorCodigo = document.getElementById('devuelto-modal-error');
+    if (!modal || !confirmBtn) return;
+
+    let formToSubmit = null;
+
+    const openModal = (form, pedidoId) => {
+        formToSubmit = form;
+        if (pedidoLabel) pedidoLabel.textContent = '#' + (pedidoId || '—');
+        if (inputCodigo) inputCodigo.value = '';
+        if (errorCodigo) errorCodigo.hidden = true;
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        if (inputCodigo) inputCodigo.focus();
+    };
+
+    const closeModal = () => {
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+        formToSubmit = null;
+    };
+
+    document.querySelectorAll('button[data-trigger-devuelto]').forEach((btn) => {
+        btn.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            const form = btn.closest('form');
+            if (!form) return;
+            openModal(form, btn.dataset.pedidoId);
+        });
+    });
+
+    confirmBtn.addEventListener('click', () => {
+        if (!formToSubmit) return;
+        const codigo = (inputCodigo?.value || '').trim();
+        const valido = /^\d{6}$/.test(codigo);
+        if (!valido) {
+            if (errorCodigo) errorCodigo.hidden = false;
+            if (inputCodigo) inputCodigo.focus();
+            return;
+        }
+        if (errorCodigo) errorCodigo.hidden = true;
+
+        let hidden = formToSubmit.querySelector('input[name="codigo_devolucion"]');
+        if (!hidden) {
+            hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'codigo_devolucion';
+            formToSubmit.appendChild(hidden);
+        }
+        hidden.value = codigo;
+        formToSubmit.submit();
+    });
+
+    modal.querySelectorAll('[data-close-devuelto]').forEach((btn) => {
+        btn.addEventListener('click', closeModal);
+    });
+
+    modal.addEventListener('click', (ev) => {
+        if (ev.target === modal) closeModal();
+    });
+
+    document.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Escape' && modal.classList.contains('is-open')) {
+            closeModal();
+        }
+    });
+})();
+</script>
 {% endblock %}

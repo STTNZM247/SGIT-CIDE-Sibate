@@ -33,6 +33,10 @@
             <span>Entregado</span>
             <strong>{{ conteos_estado.entregado|default:0 }}</strong>
         </a>
+        <a href="?estado=devuelto" class="pedidos-usuario-filtro pedidos-usuario-filtro--devuelto {% if estado_activo == 'devuelto' %}is-active{% endif %}">
+            <span>Devuelto</span>
+            <strong>{{ conteos_estado.devuelto|default:0 }}</strong>
+        </a>
         <a href="?estado=rechazado" class="pedidos-usuario-filtro pedidos-usuario-filtro--rechazado {% if estado_activo == 'rechazado' %}is-active{% endif %}">
             <span>Rechazado</span>
             <strong>{{ conteos_estado.rechazado|default:0 }}</strong>
@@ -75,6 +79,16 @@
             </div>
             {% endif %}
 
+            {% if pedido.estado == 'devuelto' %}
+            <div class="pedidos-usuario-alert pedidos-usuario-alert--devuelto">
+                <ion-icon name="checkmark-done-circle-outline"></ion-icon>
+                <div>
+                    <strong>Préstamo cerrado</strong>
+                    <p>El almacenista marcó este pedido como devuelto y el inventario ya fue actualizado.</p>
+                </div>
+            </div>
+            {% endif %}
+
             {% if pedido.estado == 'pendiente' and pedido.puede_cancelar %}
             <div class="pedidos-usuario-cancelar-wrap"
                  data-cancelar-pedido
@@ -97,6 +111,25 @@
                         Cancelar pedido
                     </button>
                 </form>
+            </div>
+            {% endif %}
+
+            {% if pedido.estado == 'entregado' %}
+            <div class="pedidos-usuario-devolucion-box"
+                 data-devolucion-codigo
+                 data-pedido-id="{{ pedido.id_pedido }}"
+                 data-segundos="{{ pedido.devolucion_segundos|default:0 }}">
+                <div class="pedidos-usuario-devolucion-box__head">
+                    <span>Código dinámico de devolución</span>
+                    <small>Compártelo al almacenista para confirmar la devolución.</small>
+                </div>
+                <div class="pedidos-usuario-devolucion-ring" data-ring style="--progress: 1;">
+                    <strong data-codigo>{{ pedido.devolucion_codigo|default:'------' }}</strong>
+                </div>
+                <div class="pedidos-usuario-devolucion-box__timer">
+                    <span>Se renueva en</span>
+                    <strong data-countdown>--:--</strong>
+                </div>
             </div>
             {% endif %}
 
@@ -166,7 +199,8 @@
                 </div>
             </details>
 
-            {% if pedido.estado == 'entregado' and pedido.evidencias.all %}
+            {% if pedido.evidencias.all %}
+            {% if pedido.estado == 'entregado' or pedido.estado == 'devuelto' %}
             <details class="pedidos-usuario-products-toggle">
                 <summary>
                     <span>Ver evidencia de entrega</span>
@@ -187,6 +221,7 @@
                 </div>
             </details>
             {% endif %}
+            {% endif %}
         </article>
         {% endfor %}
     </div>
@@ -204,7 +239,7 @@
     <section class="pedidos-usuario-empty">
         <div class="pedidos-usuario-empty__icon"><ion-icon name="receipt-outline"></ion-icon></div>
         <h2>No hay pedidos en este estado</h2>
-        <p>Cambia el filtro superior para revisar pedidos pendientes, en espera de entrega, entregados o rechazados.</p>
+        <p>Cambia el filtro superior para revisar pedidos pendientes, en espera, entregados, devueltos o rechazados.</p>
     </section>
     {% endif %}
 </section>
@@ -351,6 +386,71 @@
     overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal();
+    });
+})();
+</script>
+
+<script data-page-script="true">
+// ── Código dinámico de devolución (renueva cada 60s) ──────────────────────
+(() => {
+    const formatSecs = (s) => {
+        const mm = Math.floor(s / 60);
+        const ss = String(s % 60).padStart(2, '0');
+        return `${mm}:${ss}`;
+    };
+
+    const refreshCodigo = async (box) => {
+        const pedidoId = box.dataset.pedidoId;
+        if (!pedidoId) return;
+        try {
+            const res = await fetch(`/usuario/pedidos/${pedidoId}/codigo-devolucion/`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await res.json();
+            if (!res.ok || !data.ok) return;
+
+            box.dataset.segundos = String(data.segundos || 0);
+            const codigoEl = box.querySelector('[data-codigo]');
+            if (codigoEl) codigoEl.textContent = data.codigo || '------';
+        } catch (_) {
+            // Sin bloqueo visual ante error temporal de red.
+        }
+    };
+
+    document.querySelectorAll('[data-devolucion-codigo]').forEach((box) => {
+        const ring = box.querySelector('[data-ring]');
+        const codeEl = box.querySelector('[data-codigo]');
+        const countEl = box.querySelector('[data-countdown]');
+        let secs = parseInt(box.dataset.segundos || '0', 10);
+
+        const paint = () => {
+            const safeSecs = Math.max(0, secs);
+            const progress = Math.max(0, Math.min(1, safeSecs / 60));
+            if (ring) ring.style.setProperty('--progress', String(progress));
+            if (countEl) countEl.textContent = formatSecs(safeSecs);
+            if (ring) ring.classList.toggle('is-warning', safeSecs <= 15);
+        };
+
+        const tick = async () => {
+            secs -= 1;
+            if (secs <= 0) {
+                await refreshCodigo(box);
+                secs = parseInt(box.dataset.segundos || '0', 10);
+                if (secs <= 0) secs = 60;
+            }
+            paint();
+        };
+
+        if (!codeEl || codeEl.textContent.trim() === '------' || secs <= 0) {
+            refreshCodigo(box).then(() => {
+                secs = parseInt(box.dataset.segundos || '60', 10);
+                paint();
+            });
+        } else {
+            paint();
+        }
+
+        setInterval(tick, 1000);
     });
 })();
 </script>

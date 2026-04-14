@@ -1,261 +1,488 @@
-/* Custom select para rol en tabla usuarios */
+.panel-usuarios-admin {
+    width: 100%;
+    border-radius: 24px;
+    background: linear-gradient(180deg, #f9fcf8 0%, #f2f7f1 100%);
+    border: 1px solid #e2ece0;
+    box-shadow: 0 22px 48px rgba(18, 45, 20, 0.08);
+    padding: 22px;
+}
+
+.usuarios-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.usuarios-topbar h1 {
+    margin: 0;
+    font-size: clamp(1.35rem, 2vw, 1.85rem);
+    color: #1f2d22;
+}
+
+.usuarios-topbar p {
+    margin: 5px 0 0;
+    color: #4e5f53;
+    font-size: 0.98rem;
+}
+
+.usuarios-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.usuarios-kpi {
+    background: #ffffff;
+    border: 1px solid #dde8da;
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+
+.usuarios-kpi span {
+    display: block;
+    font-size: 0.8rem;
+    color: #5a6c5e;
+    margin-bottom: 4px;
+}
+
+.usuarios-kpi strong {
+    font-size: 1.24rem;
+    color: #142519;
+}
+
+.usuarios-kpi--locked {
+    background: #f3f8f1;
+    border-color: #c9ddc2;
+}
+
+.usuarios-tools {
+    margin-bottom: 16px;
+}
+
+.usuarios-search-form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+}
+
+.usuarios-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid #d7e6d2;
+    border-radius: 999px;
+    min-height: 46px;
+    padding: 0 14px;
+}
+
+.usuarios-search ion-icon {
+    color: #4f7056;
+    font-size: 1.1rem;
+}
+
+.usuarios-search input {
+    border: 0;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 0.98rem;
+    color: #1d2e22;
+}
+
+.usuarios-search input::placeholder {
+    color: #8ca08f;
+}
+
+.usuarios-btn {
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 700;
+    font-size: 0.94rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.usuarios-btn--primary {
+    background: #267a12;
+    color: #fff;
+}
+
+.usuarios-btn--primary:hover {
+    background: #1f640f;
+}
+
+.usuarios-btn--soft {
+    background: #eaf5e7;
+    color: #1c4720;
+    border: 1px solid #d2e7cb;
+}
+
+.usuarios-btn--save {
+    background: #f0f8ed;
+    color: #1d6223;
+    border: 1px solid #cde3c6;
+    width: 100%;
+}
+
+.usuarios-btn--ghost {
+    background: #edf3eb;
+    color: #314437;
+}
+
+.tabla-usuarios-wrapper {
+    border: 1px solid #dce8d8;
+    border-radius: 14px;
+    background: #fff;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tabla-usuarios-admin {
+    width: 100%;
+    min-width: 980px;
+    border-collapse: collapse;
+}
+
+.tabla-usuarios-admin th,
+.tabla-usuarios-admin td {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid #e4eee0;
+    vertical-align: top;
+}
+
+.tabla-usuarios-admin thead th {
+    background: #f3f8f2;
+    font-size: 0.82rem;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
+    color: #46614a;
+}
+
+.tabla-usuarios-admin tbody tr:hover {
+    background: #f9fcf8;
+}
+
+.tabla-usuarios-admin td strong {
+    display: block;
+    color: #1a2f21;
+}
+
+.tabla-usuarios-admin td span {
+    color: #4f6452;
+    font-size: 0.92rem;
+}
+
+.correo-cell {
+    max-width: 240px;
+    word-break: break-word;
+}
+
+.rol-badge,
+.estado-badge,
+.admin-lock {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.83rem;
+    font-weight: 700;
+}
+
+.rol-badge {
+    background: #edf6ea;
+    color: #2b6d30;
+    border: 1px solid #d5e9ce;
+}
+
+.rol-badge--admin {
+    background: #f4f1e9;
+    color: #6a5713;
+    border: 1px solid #e7d9b2;
+}
+
+.estado-badge--activo {
+    background: #eaf5e7;
+    color: #26682d;
+    border: 1px solid #d0e4ca;
+}
+
+.estado-badge--inactivo {
+    background: #fdeeee;
+    color: #8f2d2d;
+    border: 1px solid #f4d0d0;
+}
+
+.admin-lock {
+    background: #f4f6f3;
+    color: #546458;
+    border: 1px solid #dde6da;
+}
+
+.form-rol-personalizado {
+    display: grid;
+    grid-template-columns: minmax(140px, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+}
+
 .custom-select-rol {
     position: relative;
     min-width: 120px;
-    display: inline-block;
-    font-size: 1rem;
     user-select: none;
     cursor: pointer;
 }
+
 .selected-rol {
-    background: #f6f9f6;
-    border: 1.5px solid #e0f2e0;
-    border-radius: 8px;
-    padding: 7px 32px 7px 12px;
-    color: #222;
-    min-width: 100px;
+    background: #f7fbf6;
+    border: 1px solid #d8e7d3;
+    border-radius: 9px;
+    padding: 8px 28px 8px 10px;
+    color: #203424;
     font-weight: 600;
-    transition: border 0.18s;
+    position: relative;
 }
-.custom-select-rol:focus .selected-rol,
-.custom-select-rol .selected-rol:focus {
-    border-color: #39A900;
+
+.selected-rol::after {
+    content: "▾";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.9rem;
+    color: #4f6954;
 }
+
 .rol-options {
     position: absolute;
     left: 0;
     top: 110%;
+    width: 100%;
+    border-radius: 9px;
+    border: 1px solid #cfe4c8;
     background: #fff;
-    border: 1.5px solid #e0f2e0;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px rgba(57,169,0,0.08);
-    z-index: 10;
-    min-width: 100%;
-    padding: 4px 0;
-    margin-top: 2px;
+    z-index: 30;
+    box-shadow: 0 12px 24px rgba(24, 54, 22, 0.11);
+    overflow: hidden;
 }
+
 .rol-option {
-    padding: 7px 16px;
-    cursor: pointer;
-    color: #222;
-    font-weight: 500;
-    transition: background 0.13s;
+    padding: 8px 10px;
+    font-size: 0.9rem;
 }
-.rol-option.selected,
-.rol-option:hover {
-    background: #e0f2e0;
-    color: #39A900;
+
+.rol-option:hover,
+.rol-option.selected {
+    background: #edf6ea;
+    color: #216026;
 }
+
 .custom-select-rol input[type="hidden"] {
     display: none;
 }
-/* Modal Crear Usuario */
-#modalCrearUsuario {
+
+.tabla-vacia {
+    text-align: center;
+    padding: 24px 10px;
+    color: #516253;
+}
+
+.modal {
     display: none;
     position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.3);
+    inset: 0;
+    z-index: 1300;
+    background: rgba(11, 20, 14, 0.45);
     align-items: center;
     justify-content: center;
+    padding: 16px;
 }
-#modalCrearUsuario .modal-content {
-    background: #fff;
+
+.modal-content {
+    width: min(640px, 100%);
     border-radius: 18px;
-    padding: 32px 32px 24px 32px;
-    min-width: 340px;
-    max-width: 95vw;
-    box-shadow: 0 4px 32px rgba(57,169,0,0.13);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    animation: modalFadeIn 0.2s;
+    background: #fff;
+    border: 1px solid #dbe8d7;
+    box-shadow: 0 26px 45px rgba(0, 0, 0, 0.19);
+    padding: 22px;
 }
-@keyframes modalFadeIn {
-    from { transform: translateY(-30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+
+.modal-content h2 {
+    margin: 0;
+    color: #18311f;
 }
-#modalCrearUsuario h2 {
-    font-size: 1.5rem;
-    font-weight: 800;
-    margin-bottom: 18px;
-    color: #222;
+
+.modal-subtitle {
+    margin: 6px 0 14px;
+    color: #59735e;
+    font-size: 0.92rem;
 }
-#modalCrearUsuario form input,
-#modalCrearUsuario form select {
+
+.form-crear-usuario {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.form-crear-usuario .form-input {
     width: 100%;
-    padding: 10px 12px;
-    border: 1.5px solid #e0f2e0;
-    border-radius: 8px;
-    font-size: 1.08rem;
-    margin-bottom: 6px;
-    background: #f6f9f6;
-    color: #222;
-    outline: none;
-    transition: border 0.18s;
-}
-#modalCrearUsuario form input:focus,
-#modalCrearUsuario form select:focus {
-    border-color: #39A900;
-}
-#modalCrearUsuario .btn {
-    font-size: 1.13rem;
-    font-weight: 700;
+    min-height: 42px;
     border-radius: 10px;
-    padding: 10px 28px;
-    border: none;
-    margin-top: 8px;
-    cursor: pointer;
-    transition: background 0.18s;
+    border: 1px solid #d5e4d0;
+    background: #f9fcf8;
+    padding: 10px 12px;
+    outline: none;
 }
-#modalCrearUsuario .btn-success {
-    background: #39A900;
-    color: #fff;
+
+.form-crear-usuario .form-input:focus {
+    border-color: #2f8a1b;
+    box-shadow: 0 0 0 3px rgba(57, 169, 0, 0.15);
 }
-#modalCrearUsuario .btn-success:hover {
-    background: #2e7d0b;
-}
-#modalCrearUsuario .btn-secondary {
-    background: #e0f2e0;
-    color: #222;
-}
-#modalCrearUsuario .btn-secondary:hover {
-    background: #b0e6b0;
-}
-#modalCrearUsuario .form-group {
+
+.form-group {
+    grid-column: 1 / -1;
     position: relative;
 }
-#modalCrearUsuario .toggle-password {
+
+.form-group .form-input {
+    padding-right: 44px;
+}
+
+.toggle-password {
     position: absolute;
-    right: 12px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.2em;
-    color: #888;
-    padding: 0 4px;
-}
-/* Centrar la barra de búsqueda en la parte superior */
-.busqueda-contenedor-centrado {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin-bottom: 24px;
-    margin-top: 8px;
-}
-/* Gestión de Usuarios - Estilos tabla y búsqueda */
-
-
-/* Barra de búsqueda moderna */
-.barra-busqueda-moderna {
-    margin-bottom: 18px;
-    display: flex;
-    align-items: center;
-    background: #fff;
-    border-radius: 40px;
-    box-shadow: 0 2px 16px 0 rgba(57,169,255,0.07);
-    padding: 0 8px 0 0;
-    max-width: 700px;
-    width: 100%;
-    border: none;
-    position: relative;
-}
-.icono-busqueda {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 18px;
-    margin-right: 8px;
-    background: none;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    padding: 0;
-    height: 40px;
-    width: 40px;
-    transition: background 0.18s;
-}
-.icono-busqueda:focus, .icono-busqueda:hover {
-    background: #f2fbe9;
-    border-radius: 50%;
-}
-.input-busqueda-moderna {
-    border: none;
-    outline: none;
+    border: 0;
     background: transparent;
-    font-size: 1.13rem;
-    flex: 1;
-    padding: 16px 0 16px 0;
-    border-radius: 40px;
-    color: #222;
-}
-.input-busqueda-moderna::placeholder {
-    color: #b0b8c9;
-    font-weight: 400;
-}
-.btn-busqueda-moderna {
-    background: #39A900;
-    color: #fff;
-    border: none;
-    border-radius: 40px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    padding: 10px 28px;
-    margin-left: 8px;
-    transition: background 0.2s;
-    box-shadow: 0 2px 8px 0 rgba(57,169,0,0.07);
-}
-.btn-busqueda-moderna:hover {
-    background: #2e7d0b;
+    color: #5c6f5f;
+    font-size: 1.15rem;
+    cursor: pointer;
 }
 
-.tabla-usuarios-wrapper {
-    overflow-x: auto;
+.form-crear-usuario select.form-input {
+    grid-column: 1 / -1;
 }
-.tabla-usuarios {
-    width: 100%;
-    border-collapse: collapse;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(57,169,0,0.06);
-    font-size: 1rem;
-    margin-bottom: 24px;
+
+.modal-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
 }
-.tabla-usuarios th, .tabla-usuarios td {
-    padding: 12px 10px;
-    text-align: left;
-}
-.tabla-usuarios th {
-    background: #f6f9f6;
-    color: #222;
-    font-weight: 800;
-    border-bottom: 2px solid #e0f2e0;
-}
-.tabla-usuarios td {
-    border-bottom: 1px solid #e0f2e0;
-}
-.tabla-usuarios tr:last-child td {
-    border-bottom: none;
-}
-.tabla-usuarios tr:hover {
-    background: #f2fbe9;
-}
-.tabla-usuarios td span {
-    font-weight: 600;
-}
-@media (max-width: 700px) {
-    .tabla-usuarios th, .tabla-usuarios td {
-        padding: 8px 6px;
-        font-size: 0.97em;
+
+@media (max-width: 960px) {
+    .usuarios-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    .busqueda-form .btn {
-        padding: 8px 12px;
-        font-size: 1em;
+
+    .form-rol-personalizado {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 700px) {
+    .panel-usuarios-admin {
+        padding: 14px;
+        border-radius: 16px;
+    }
+
+    .usuarios-topbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .usuarios-topbar p {
+        margin-bottom: 0;
+    }
+
+    .usuarios-kpis {
+        grid-template-columns: 1fr;
+    }
+
+    .usuarios-search-form {
+        grid-template-columns: 1fr;
+    }
+
+    .tabla-usuarios-wrapper {
+        overflow: visible;
+        border: 0;
+        background: transparent;
+    }
+
+    .tabla-usuarios-admin,
+    .tabla-usuarios-admin thead,
+    .tabla-usuarios-admin tbody,
+    .tabla-usuarios-admin tr,
+    .tabla-usuarios-admin th,
+    .tabla-usuarios-admin td {
+        display: block;
+        width: 100%;
+    }
+
+    .tabla-usuarios-admin {
+        min-width: 0;
+    }
+
+    .tabla-usuarios-admin thead {
+        display: none;
+    }
+
+    .tabla-usuarios-admin tr {
+        border: 1px solid #d9e8d4;
+        border-radius: 14px;
+        padding: 10px;
+        margin-bottom: 10px;
+        background: #fff;
+        box-shadow: 0 8px 18px rgba(22, 44, 24, 0.07);
+    }
+
+    .tabla-usuarios-admin td {
+        border-bottom: 1px dashed #e3ece0;
+        padding: 8px 2px;
+    }
+
+    .tabla-usuarios-admin td:last-child {
+        border-bottom: 0;
+    }
+
+    .tabla-usuarios-admin td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 0.74rem;
+        letter-spacing: 0.25px;
+        text-transform: uppercase;
+        color: #607562;
+        margin-bottom: 4px;
+        font-weight: 700;
+    }
+
+    .form-crear-usuario {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-content {
+        padding: 16px;
+        border-radius: 14px;
+    }
+
+    .modal-actions {
+        justify-content: stretch;
+        flex-direction: column;
+    }
+
+    .modal-actions .usuarios-btn {
+        width: 100%;
     }
 }
