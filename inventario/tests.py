@@ -4,10 +4,12 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.core import mail
+from django.http import HttpResponse
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from .middleware import ActiveUserRequiredMiddleware
 from .models import PasswordResetToken, Rol, Usuario
 from .views_login import RolRedirectLoginView
 from .views_usuario import panel_usuario
@@ -182,3 +184,26 @@ class GestionEstadoUsuarioTests(TestCase):
         expired_response = self.client.get(reverse('restablecer_password', args=[expirado.token]))
         self.assertEqual(expired_response.status_code, 302)
         self.assertEqual(expired_response.url, reverse('recuperar_acceso'))
+
+    def test_authenticated_pages_are_marked_no_store(self):
+        request = RequestFactory().get(reverse('dashboard'))
+        request.user = self.admin
+
+        middleware = ActiveUserRequiredMiddleware(lambda req: HttpResponse('ok'))
+        response = middleware(request)
+        cache_header = response.get('Cache-Control', '')
+
+        self.assertIn('no-store', cache_header)
+        self.assertIn('no-cache', cache_header)
+        self.assertEqual(response.get('Pragma'), 'no-cache')
+
+    def test_logout_invalidates_dashboard_access(self):
+        self.client.force_login(self.admin)
+
+        logout_response = self.client.post(reverse('logout'))
+        dashboard_response = self.client.get(reverse('dashboard'))
+
+        self.assertEqual(logout_response.status_code, 302)
+        self.assertIn('no-store', logout_response.get('Cache-Control', ''))
+        self.assertEqual(dashboard_response.status_code, 302)
+        self.assertIn(reverse('login'), dashboard_response.url)
