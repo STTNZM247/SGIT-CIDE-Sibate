@@ -239,7 +239,6 @@ body, html {
 .login-form input[type="password"] {
     width: 86%;
     border: 0;
-    border-bottom: 2px solid rgba(95, 255, 151, 0.85);
     background: transparent;
     outline: none;
     font-size: 1rem;
