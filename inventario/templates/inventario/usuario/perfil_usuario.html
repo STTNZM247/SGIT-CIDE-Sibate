@@ -25,16 +25,12 @@
     {% csrf_token %}
     {{ form.non_field_errors }}
 
-    <!-- Input files ocultos para subir fotos -->
     <div style="display:none">
       {{ form.fot_usu }}
       {{ form.banner_usu }}
     </div>
 
-    <!-- ====== TARJETA HERO (portada + avatar) ====== -->
     <div class="perfil-card">
-
-      <!-- Portada -->
       <div class="perfil-cover" id="perfil-cover-area">
         {% if usuario.banner_usu %}
           <img src="{{ usuario.banner_usu.url }}" alt="Portada" class="perfil-cover-img" id="perfil-cover-preview">
@@ -46,11 +42,8 @@
           <ion-icon name="camera-outline"></ion-icon>
           <span>Cambiar portada</span>
         </button>
-
-
       </div>
 
-      <!-- Avatar -->
       <div class="perfil-avatar-wrap">
         <div class="perfil-avatar-ring">
           {% if usuario.fot_usu %}
@@ -61,12 +54,15 @@
           <button type="button" class="perfil-avatar-btn" id="perfil-avatar-trigger" title="Cambiar foto">
             <ion-icon name="camera-outline"></ion-icon>
           </button>
+          <span class="perfil-status-dot"></span>
         </div>
       </div>
 
-      <!-- Nombre y rol -->
       <div class="perfil-identity">
-        <h1 class="perfil-nombre">{{ usuario.nombre }} {{ usuario.apellido }}</h1>
+        <span class="perfil-status-badge">Activo</span>
+        <h1 class="perfil-nombre">{{ usuario.nombre|default:'Usuario' }} {{ usuario.apellido|default:'' }}</h1>
+        <p class="perfil-subtitle">{{ usuario.programa_formacion|default:'Programa de formación SENA' }}</p>
+        <span class="perfil-center-text">{{ usuario.centro_desarrollo|default:'Centro de desarrollo / formación' }}</span>
         {% if usuario.id_rol_fk %}
           <span class="perfil-rol-badge perfil-rol-badge--{{ usuario.id_rol_fk.nombre_rol }}">
             <ion-icon name="{% if usuario.id_rol_fk.nombre_rol == 'admin' %}shield-checkmark-outline{% elif usuario.id_rol_fk.nombre_rol == 'almacenista' %}cube-outline{% else %}person-outline{% endif %}"></ion-icon>
@@ -75,45 +71,112 @@
         {% endif %}
       </div>
 
-      <!-- ====== DATOS PERSONALES ====== -->
-      <div class="perfil-section">
-        <h2 class="perfil-section-title">
-          <ion-icon name="person-circle-outline"></ion-icon>
-          Datos personales
-        </h2>
-        <div class="perfil-grid">
-          <div class="perfil-field">
-            <label for="id_cc">
-              <ion-icon name="card-outline"></ion-icon>
-              Cédula
-            </label>
-            {{ form.cc }}
-          </div>
-          <div class="perfil-field">
-            <label for="id_nombre">
-              <ion-icon name="person-outline"></ion-icon>
-              Nombre
-            </label>
-            {{ form.nombre }}
-          </div>
-          <div class="perfil-field">
-            <label for="id_apellido">
-              <ion-icon name="person-outline"></ion-icon>
-              Apellido
-            </label>
-            {{ form.apellido }}
-          </div>
-          <div class="perfil-field perfil-field--full">
-            <label for="id_correo">
-              <ion-icon name="mail-outline"></ion-icon>
-              Correo electrónico
-            </label>
-            {{ form.correo }}
-          </div>
-        </div>
+      <div class="perfil-stats-strip">
+        <article class="perfil-stat-box">
+          <strong>{{ pedido_stats.total }}</strong>
+          <span>Pedidos totales</span>
+        </article>
+        <article class="perfil-stat-box">
+          <strong>{{ pedido_stats.pendientes }}</strong>
+          <span>Pendientes</span>
+        </article>
+        <article class="perfil-stat-box">
+          <strong>{{ pedido_stats.entregados }}</strong>
+          <span>Entregados / devueltos</span>
+        </article>
+        <article class="perfil-stat-box">
+          <strong>{{ pedido_stats.cancelados }}</strong>
+          <span>Cancelados</span>
+        </article>
       </div>
 
-      <!-- ====== BOTONES DE ACCIÓN ====== -->
+      <div class="perfil-dashboard-grid">
+        <section class="perfil-panel">
+          <h2 class="perfil-section-title">
+            <ion-icon name="person-circle-outline"></ion-icon>
+            Datos personales
+          </h2>
+          <div class="perfil-grid">
+            <div class="perfil-field">
+              <label for="id_cc"><ion-icon name="card-outline"></ion-icon>Cédula</label>
+              {{ form.cc }}
+            </div>
+            <div class="perfil-field">
+              <label for="id_nombre"><ion-icon name="person-outline"></ion-icon>Nombre</label>
+              {{ form.nombre }}
+            </div>
+            <div class="perfil-field">
+              <label for="id_apellido"><ion-icon name="person-outline"></ion-icon>Apellido</label>
+              {{ form.apellido }}
+            </div>
+            <div class="perfil-field">
+              <label for="id_telefono"><ion-icon name="call-outline"></ion-icon>Teléfono</label>
+              {{ form.telefono }}
+            </div>
+            <div class="perfil-field perfil-field--full">
+              <label for="id_correo"><ion-icon name="mail-outline"></ion-icon>Correo electrónico</label>
+              {{ form.correo }}
+            </div>
+            <div class="perfil-field perfil-field--full">
+              <label for="id_programa_formacion"><ion-icon name="school-outline"></ion-icon>Programa de formación</label>
+              {{ form.programa_formacion }}
+            </div>
+            <div class="perfil-field perfil-field--full">
+              <label for="id_centro_desarrollo"><ion-icon name="business-outline"></ion-icon>Centro de desarrollo</label>
+              {{ form.centro_desarrollo }}
+            </div>
+          </div>
+        </section>
+
+        <aside class="perfil-panel perfil-panel--side">
+          <h2 class="perfil-section-title">
+            <ion-icon name="grid-outline"></ion-icon>
+            Sub-menú rápido
+          </h2>
+          <div class="perfil-quick-menu">
+            <button type="button" class="perfil-quick-item"><ion-icon name="lock-closed-outline"></ion-icon><span>Cambiar contraseña</span></button>
+            <button type="button" class="perfil-quick-item"><ion-icon name="notifications-outline"></ion-icon><span>Configurar notificaciones</span></button>
+            <button type="button" class="perfil-quick-item"><ion-icon name="document-text-outline"></ion-icon><span>Manual de usuario</span></button>
+            <button type="button" class="perfil-quick-item"><ion-icon name="headset-outline"></ion-icon><span>Soporte técnico</span></button>
+          </div>
+        </aside>
+      </div>
+
+      <div class="perfil-dashboard-grid perfil-dashboard-grid--bottom">
+        <section class="perfil-panel perfil-panel--wide">
+          <div class="perfil-section-head">
+            <h2 class="perfil-section-title">
+              <ion-icon name="time-outline"></ion-icon>
+              Historial rápido de pedidos
+            </h2>
+            <span class="perfil-mini-badge">{{ pedido_stats.total }} registros</span>
+          </div>
+
+          {% if pedidos_recientes %}
+            <div class="perfil-history-list">
+              {% for pedido in pedidos_recientes %}
+                <article class="perfil-history-item">
+                  <div class="perfil-history-main">
+                    <strong>Pedido #{{ pedido.id_pedido }}</strong>
+                    <small>{{ pedido.fch_registro|date:'d/m/Y H:i' }}</small>
+                    <p>
+                      {{ pedido.total_productos }} producto{{ pedido.total_productos|pluralize:'s' }} ·
+                      {{ pedido.total_unidades }} unidade{{ pedido.total_unidades|pluralize:'s' }}
+                      {% if pedido.area_ubicacion %} · {{ pedido.area_ubicacion }}{% endif %}
+                    </p>
+                  </div>
+                  <span class="perfil-history-badge {% if pedido.estado == 'pendiente' or pedido.estado == 'esperando entrega' %}perfil-history-badge--warn{% elif pedido.estado == 'entregado' or pedido.estado == 'devuelto' %}perfil-history-badge--ok{% else %}perfil-history-badge--cancel{% endif %}">
+                    {{ pedido.estado|capfirst }}
+                  </span>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="perfil-empty">Aún no tienes historial de pedidos registrado.</p>
+          {% endif %}
+        </section>
+      </div>
+
       <div class="perfil-actions">
         <button type="submit" class="perfil-btn perfil-btn--save">
           <ion-icon name="save-outline"></ion-icon>
@@ -124,11 +187,9 @@
           Cerrar sesión
         </a>
       </div>
-
     </div>
   </form>
 
-  <!-- Picker de portada (fuera de contenedores overflow:hidden) -->
   <div class="perfil-cover-picker" id="perfil-cover-picker">
     <p class="perfil-cover-picker-title">Elige un color</p>
     <div class="perfil-cover-picker-colors">

@@ -14,10 +14,14 @@ body {
     background: #f3f6f3;
     color: var(--negro);
     font-family: "Work Sans", Calibri, Arial, sans-serif;
+    overflow-x: hidden;
 }
 
 .app-shell {
     min-height: 100vh;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
 }
 
 .navigation {
@@ -67,6 +71,33 @@ body {
     }
     .navigation ul {
         width: 100vw;
+    }
+    .navigation ul li {
+        min-width: 0;
+    }
+    .navigation ul li a .icon {
+        min-width: 0;
+        font-size: 1.25rem;
+        line-height: 60px;
+    }
+    .navigation ul li a .text {
+        max-width: 78px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.62rem;
+        padding: 2px 6px;
+    }
+    .app-main {
+        padding: 12px 10px 96px;
+    }
+    .app-container,
+    .page-toolbar {
+        width: 100%;
+        max-width: 100%;
+    }
+    .app-footer {
+        padding-bottom: 84px;
     }
 }
 
@@ -145,6 +176,27 @@ body {
     color: #ffffff;
 }
 
+.nav-cart-badge {
+    position: absolute;
+    top: 11px;
+    right: 2px;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 3px;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #2f8f00;
+    border: 1.5px solid #39A900;
+    font-size: 0.5em;
+    font-weight: 800;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    z-index: 6;
+}
+
 .navigation ul li.active a .icon {
     transform: translateY(-32px);
     color: #ffffff;
@@ -210,10 +262,13 @@ body {
     min-height: 100vh;
     display: grid;
     grid-template-rows: 1fr auto;
+    width: 100%;
+    min-width: 0;
 }
 
 .page-toolbar {
     width: min(1200px, 100%);
+    max-width: 100%;
     margin: 0 auto 12px;
 }
 
@@ -254,10 +309,14 @@ body {
     justify-items: center;
     align-content: start;
     padding: 20px 16px 88px;
+    width: 100%;
+    min-width: 0;
 }
 
 .app-container {
     width: min(1200px, 100%);
+    max-width: 100%;
+    min-width: 0;
 }
 
 .btn {

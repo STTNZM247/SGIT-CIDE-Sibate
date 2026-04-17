@@ -9,94 +9,112 @@
 {% block title %}Auditoría del sistema{% endblock %}
 
 {% block content %}
-<section class="admin-resumen" style="margin: 0 1.5rem;">
-    <div class="admin-resumen__top">
-        <h1>Auditoría del sistema</h1>
-        <p>Registro organizado de creaciones, actualizaciones y eliminaciones con responsable, rol y hora.</p>
-    </div>
-
-    <div class="admin-resumen__stats">
-        <article class="admin-kpi">
-            <span class="admin-kpi__label">Creaciones</span>
-            <strong class="admin-kpi__value">{{ resumen_accion.crear }}</strong>
-        </article>
-        <article class="admin-kpi">
-            <span class="admin-kpi__label">Actualizaciones</span>
-            <strong class="admin-kpi__value">{{ resumen_accion.actualizar }}</strong>
-        </article>
-        <article class="admin-kpi admin-kpi--warn">
-            <span class="admin-kpi__label">Eliminaciones</span>
-            <strong class="admin-kpi__value">{{ resumen_accion.eliminar }}</strong>
-        </article>
-    </div>
-
-    <form method="get" class="admin-report-form" style="margin-top:.8rem;">
-        <label for="q">Buscar en historial</label>
-        <input id="q" type="search" name="q" value="{{ q }}" placeholder="Pedido, usuario, descripción...">
-
-        <div class="admin-report-actions" style="grid-template-columns: repeat(4, minmax(0, 1fr));">
-            <select name="accion">
-                <option value="">Todas las acciones</option>
-                <option value="crear" {% if accion_activa == 'crear' %}selected{% endif %}>Crear</option>
-                <option value="actualizar" {% if accion_activa == 'actualizar' %}selected{% endif %}>Actualizar</option>
-                <option value="eliminar" {% if accion_activa == 'eliminar' %}selected{% endif %}>Eliminar</option>
-            </select>
-            <input type="text" name="entidad" value="{{ entidad_activa }}" placeholder="Entidad (pedido, producto...)">
-            <input type="text" name="rol" value="{{ rol_activo }}" placeholder="Rol (admin, almacenista...)">
-            <button type="submit">
-                <ion-icon name="funnel-outline"></ion-icon>
-                Filtrar
-            </button>
+<section class="audit-page-shell">
+    <section class="admin-resumen audit-hero">
+        <div class="admin-resumen__top audit-hero__top">
+            <div>
+                <span class="audit-eyebrow">Panel administrativo</span>
+                <h1>Auditoría del sistema</h1>
+                <p>Registro organizado de creaciones, actualizaciones y eliminaciones con responsable, rol y hora.</p>
+            </div>
+            <div class="audit-status-chip">
+                <ion-icon name="shield-checkmark-outline"></ion-icon>
+                <span>{{ logs|length }} eventos visibles</span>
+            </div>
         </div>
-    </form>
-</section>
 
-<section class="market-section" style="margin: 1rem 1.5rem;">
-    <div class="section-head">
-        <h2>Historial de cambios</h2>
-        <span>Últimos {{ logs|length }} registros</span>
-    </div>
+        <div class="admin-resumen__stats audit-stats-grid">
+            <article class="admin-kpi audit-kpi audit-kpi--create">
+                <span class="admin-kpi__label">Creaciones</span>
+                <strong class="admin-kpi__value">{{ resumen_accion.crear }}</strong>
+            </article>
+            <article class="admin-kpi audit-kpi audit-kpi--update">
+                <span class="admin-kpi__label">Actualizaciones</span>
+                <strong class="admin-kpi__value">{{ resumen_accion.actualizar }}</strong>
+            </article>
+            <article class="admin-kpi admin-kpi--warn audit-kpi audit-kpi--delete">
+                <span class="admin-kpi__label">Eliminaciones</span>
+                <strong class="admin-kpi__value">{{ resumen_accion.eliminar }}</strong>
+            </article>
+        </div>
 
-    {% if logs %}
-    <div style="margin-top:.8rem; overflow:auto;">
-        <table style="width:100%; border-collapse: collapse; min-width: 980px;">
-            <thead>
-                <tr style="text-align:left; border-bottom:1px solid #e2e8ee;">
-                    <th style="padding:.55rem;">Hora</th>
-                    <th style="padding:.55rem;">Acción</th>
-                    <th style="padding:.55rem;">Entidad</th>
-                    <th style="padding:.55rem;">ID referencia</th>
-                    <th style="padding:.55rem;">Descripción</th>
-                    <th style="padding:.55rem;">Usuario</th>
-                    <th style="padding:.55rem;">Rol</th>
-                    <th style="padding:.55rem;">IP</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for log in logs %}
-                <tr style="border-bottom:1px solid #eef3f8;">
-                    <td style="padding:.55rem; white-space: nowrap;">{{ log.fch_registro|date:'Y-m-d H:i:s' }}</td>
-                    <td style="padding:.55rem; text-transform:capitalize;">{{ log.accion }}</td>
-                    <td style="padding:.55rem;">{{ log.entidad }}</td>
-                    <td style="padding:.55rem;">{{ log.entidad_id|default:'-' }}</td>
-                    <td style="padding:.55rem;">{{ log.descripcion }}</td>
-                    <td style="padding:.55rem;">
-                        {% if log.id_usuario_fk %}
-                            {{ log.id_usuario_fk.nombre|default:'' }} {{ log.id_usuario_fk.apellido|default:'' }}
-                            <small style="display:block; color:#60738c;">{{ log.id_usuario_fk.correo }}</small>
-                        {% else %}
-                            Sistema
-                        {% endif %}
-                    </td>
-                    <td style="padding:.55rem;">{{ log.rol_usuario|default:'-' }}</td>
-                    <td style="padding:.55rem;">{{ log.ip_origen|default:'-' }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <p class="inventory-empty">No hay registros de auditoría con los filtros actuales.</p>
-    {% endif %}
+        <form method="get" class="audit-filter-form">
+            <label class="audit-filter-form__label" for="q">Buscar en historial</label>
+            <input id="q" type="search" name="q" value="{{ q }}" placeholder="Pedido, usuario, descripción...">
+
+            <div class="audit-filter-grid">
+                <select name="accion">
+                    <option value="">Todas las acciones</option>
+                    <option value="crear" {% if accion_activa == 'crear' %}selected{% endif %}>Crear</option>
+                    <option value="actualizar" {% if accion_activa == 'actualizar' %}selected{% endif %}>Actualizar</option>
+                    <option value="eliminar" {% if accion_activa == 'eliminar' %}selected{% endif %}>Eliminar</option>
+                </select>
+                <input type="text" name="entidad" value="{{ entidad_activa }}" placeholder="Entidad (pedido, producto...)">
+                <input type="text" name="rol" value="{{ rol_activo }}" placeholder="Rol (admin, almacenista...)">
+                <button type="submit" class="audit-filter-btn">
+                    <ion-icon name="funnel-outline"></ion-icon>
+                    Filtrar
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section class="market-section audit-table-card">
+        <div class="section-head audit-table-card__head">
+            <div>
+                <h2>Historial de cambios</h2>
+                <p>Consulta rápida y clara de los movimientos del sistema.</p>
+            </div>
+            <span>Últimos {{ logs|length }} registros</span>
+        </div>
+
+        {% if logs %}
+        <div class="audit-table-wrap">
+            <table class="audit-table">
+                <thead>
+                    <tr>
+                        <th>Hora</th>
+                        <th>Acción</th>
+                        <th>Entidad</th>
+                        <th>ID referencia</th>
+                        <th>Descripción</th>
+                        <th>Usuario</th>
+                        <th>Rol</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td data-label="Hora" class="audit-cell--time">{{ log.fch_registro|date:'Y-m-d H:i:s' }}</td>
+                        <td data-label="Acción">
+                            <span class="audit-pill audit-pill--{{ log.accion|lower }}">{{ log.accion }}</span>
+                        </td>
+                        <td data-label="Entidad">
+                            <span class="audit-entity">{{ log.entidad }}</span>
+                        </td>
+                        <td data-label="ID referencia">{{ log.entidad_id|default:'-' }}</td>
+                        <td data-label="Descripción" class="audit-cell--desc">{{ log.descripcion }}</td>
+                        <td data-label="Usuario">
+                            <div class="audit-user-block">
+                                {% if log.id_usuario_fk %}
+                                    <strong>{{ log.id_usuario_fk.nombre|default:'' }} {{ log.id_usuario_fk.apellido|default:'' }}</strong>
+                                    <small>{{ log.id_usuario_fk.correo }}</small>
+                                {% else %}
+                                    <strong>Sistema</strong>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td data-label="Rol">{{ log.rol_usuario|default:'-' }}</td>
+                        <td data-label="IP">{{ log.ip_origen|default:'-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="inventory-empty audit-empty">No hay registros de auditoría con los filtros actuales.</p>
+        {% endif %}
+    </section>
 </section>
 {% endblock %}

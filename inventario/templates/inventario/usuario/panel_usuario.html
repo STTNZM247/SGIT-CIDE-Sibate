@@ -9,11 +9,11 @@
 
 {% block content %}
 <section class="panel-simple">
-    <form method="get" action="" class="usuario-busqueda-form" style="margin: 0 0 32px 0; display: flex; justify-content: center;">
-        <div class="usuario-busqueda-bar" style="display: flex; align-items: center; width: 100%; max-width: 480px; background: #f5f5f5; border-radius: 2em; border: 1.5px solid #ccc; padding: 2px 8px 2px 16px;">
-            <input type="text" name="q" class="usuario-busqueda-input" placeholder="busca tus elementos o productos" value="{{ request.GET.q|default:'' }}" style="flex:1; border:none; background:transparent; outline:none; font-size:1.1em; padding:8px 0; border-radius:2em;">
-            <button type="submit" class="usuario-busqueda-btn" style="background:#222; border:none; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; margin-left:8px; cursor:pointer;">
-                <ion-icon name="search-outline" style="color:#fff; font-size:1.3em;"></ion-icon>
+    <form method="get" action="" class="usuario-busqueda-form">
+        <div class="usuario-busqueda-bar">
+            <input type="text" name="q" class="usuario-busqueda-input" placeholder="Busca tus elementos o productos" value="{{ request.GET.q|default:'' }}">
+            <button type="submit" class="usuario-busqueda-btn" aria-label="Buscar productos">
+                <ion-icon name="search-outline"></ion-icon>
             </button>
         </div>
     </form>

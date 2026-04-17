@@ -10,45 +10,69 @@
 {% block content %}
     <section class="login-split" aria-label="Acceso">
         <aside class="login-visual" aria-hidden="true">
+            <span class="login-ring login-ring--one"></span>
+            <span class="login-ring login-ring--two"></span>
+            <span class="login-sena-watermark"></span>
             <div class="login-visual-inner">
                 <p class="visual-kicker">SENA · Inventario</p>
-                <h2 class="visual-title">Accede para continuar</h2>
-                <p class="visual-subtitle">Gestiona productos, categorías y alertas de stock desde un solo lugar.</p>
+                <h2 class="visual-title">Sibate</h2>
             </div>
         </aside>
 
         <div class="login-panel">
             <section class="login-card" aria-labelledby="login-title">
-                <h1 id="login-title" class="login-title">Iniciar sesión</h1>
-                <p class="login-subtitle">Accede al software de inventario.</p>
+                <div class="login-card__top">
+                    <h1 id="login-title" class="login-title">Iniciar sesión</h1>
+                    <p class="login-subtitle">Accede al software de inventario.</p>
+                </div>
 
-                <form method="post" class="login-form">
+                {% if form.non_field_errors or messages %}
+                <div class="login-alerts" aria-live="polite">
+                    {% for error in form.non_field_errors %}
+                    <div class="login-alert login-alert--error">
+                        <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+                        <span>{{ error }}</span>
+                    </div>
+                    {% endfor %}
+                    {% for message in messages %}
+                    <div class="login-alert login-alert--{{ message.tags|default:'info' }}">
+                        <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+                        <span>{{ message }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="post" class="login-form" novalidate>
                     {% csrf_token %}
                     {% if next %}
                         <input type="hidden" name="next" value="{{ next }}">
                     {% endif %}
 
-                    {% if form.non_field_errors %}
-                        <div class="nonfield-errors">{{ form.non_field_errors }}</div>
-                    {% endif %}
-
                     <div class="field">
-                        <label for="{{ form.username.id_for_label }}">Usuario</label>
-                        {{ form.username }}
+                        <label class="login-label" for="{{ form.username.id_for_label }}">Correo</label>
+                        <div class="login-input-shell">
+                            <span class="login-input-icon" aria-hidden="true">
+                                <ion-icon name="person-outline"></ion-icon>
+                            </span>
+                            {{ form.username }}
+                        </div>
                         {{ form.username.errors }}
                     </div>
 
-                    <div class="field" style="position:relative;">
-                        <label for="{{ form.password.id_for_label }}">Contraseña</label>
-                        {{ form.password }}
-                        <button type="button" class="password-toggle" id="togglePwdBtn" aria-label="Mostrar/ocultar contraseña" tabindex="0">
-                            <ion-icon name="eye-outline" id="eyeIcon"></ion-icon>
-                        </button>
+                    <div class="field">
+                        <label class="login-label" for="{{ form.password.id_for_label }}">Contraseña</label>
+                        <div class="login-input-shell login-input-shell--password">
+                            {{ form.password }}
+                            <button type="button" class="password-toggle" id="togglePwdBtn" aria-label="Mostrar u ocultar contraseña">
+                                <ion-icon name="eye-outline" id="eyeIcon"></ion-icon>
+                            </button>
+                        </div>
                         {{ form.password.errors }}
                     </div>
 
                     <div class="login-actions">
-                        <button type="submit" class="btn btn--block">Entrar</button>
+                        <button type="submit" class="btn btn--block login-submit">Entrar</button>
                     </div>
                 </form>
             </section>

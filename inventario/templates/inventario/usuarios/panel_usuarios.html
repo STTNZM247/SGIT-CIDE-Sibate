@@ -9,6 +9,19 @@
 
 {% block content %}
 <section class="panel-simple panel-usuarios-admin">
+    {% if messages %}
+    <div class="usuarios-alerts" aria-live="polite">
+        {% for msg in messages %}
+            {% if 'error' in msg.tags %}
+            <div class="usuarios-alert usuarios-alert--error">
+                <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+                <span>{{ msg }}</span>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <header class="usuarios-topbar">
         <div>
             <h1>Gestión de usuarios</h1>
@@ -92,26 +105,45 @@
                         {% endif %}
                     </td>
                     <td data-label="Gestión">
-                        {% if usuario.id_rol_fk and usuario.id_rol_fk.nombre_rol != 'admin' %}
-                        <form method="post" action="{% url 'editar_rol_usuario' usuario.id_usu %}" class="form-rol-personalizado">
-                            {% csrf_token %}
-                            <div class="custom-select-rol" tabindex="0">
-                                <div class="selected-rol">{{ usuario.id_rol_fk.nombre_rol }}</div>
-                                <div class="rol-options" style="display:none;">
-                                    {% for rol in roles %}
-                                        <div class="rol-option{% if usuario.id_rol_fk.id_rol == rol.id_rol %} selected{% endif %}" data-value="{{ rol.id_rol }}">{{ rol.nombre_rol }}</div>
-                                    {% endfor %}
+                        <div class="gestion-usuario-stack">
+                            {% if usuario.id_rol_fk and usuario.id_rol_fk.nombre_rol != 'admin' %}
+                            <form method="post" action="{% url 'editar_rol_usuario' usuario.id_usu %}" class="form-rol-personalizado">
+                                {% csrf_token %}
+                                <div class="custom-select-rol" tabindex="0">
+                                    <div class="selected-rol">{{ usuario.id_rol_fk.nombre_rol }}</div>
+                                    <div class="rol-options" style="display:none;">
+                                        {% for rol in roles %}
+                                            <div class="rol-option{% if usuario.id_rol_fk.id_rol == rol.id_rol %} selected{% endif %}" data-value="{{ rol.id_rol }}">{{ rol.nombre_rol }}</div>
+                                        {% endfor %}
+                                    </div>
+                                    <input type="hidden" name="id_rol_fk" value="{{ usuario.id_rol_fk.id_rol }}">
                                 </div>
-                                <input type="hidden" name="id_rol_fk" value="{{ usuario.id_rol_fk.id_rol }}">
-                            </div>
-                            <button type="submit" class="usuarios-btn usuarios-btn--save">Guardar rol</button>
-                        </form>
-                        {% else %}
-                        <span class="admin-lock" title="El rol admin no se puede modificar">
-                            <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
-                            Rol protegido
-                        </span>
-                        {% endif %}
+                                <button type="submit" class="usuarios-btn usuarios-btn--save">Guardar rol</button>
+                            </form>
+                            {% else %}
+                            <span class="admin-lock" title="El rol admin no se puede modificar">
+                                <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
+                                Rol protegido
+                            </span>
+                            {% endif %}
+
+                            {% if request.user.id_usu != usuario.id_usu %}
+                            <form method="post" action="{% url 'toggle_estado_usuario' usuario.id_usu %}" class="form-estado-usuario">
+                                {% csrf_token %}
+                                <button type="submit" class="estado-toggle {% if usuario.is_active %}is-active{% else %}is-inactive{% endif %}" title="{% if usuario.is_active %}Desactivar usuario{% else %}Activar usuario{% endif %}">
+                                    <span class="estado-toggle__track" aria-hidden="true">
+                                        <span class="estado-toggle__thumb"></span>
+                                    </span>
+                                    <span class="estado-toggle__text">{% if usuario.is_active %}Desactivar{% else %}Activar{% endif %}</span>
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="admin-lock" title="No puedes cambiar el estado de tu propia sesión">
+                                <ion-icon name="shield-outline" aria-hidden="true"></ion-icon>
+                                Sesión actual
+                            </span>
+                            {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% empty %}

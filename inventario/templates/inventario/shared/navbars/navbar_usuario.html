@@ -11,7 +11,12 @@
         </li>
         <li class="list {% if request.resolver_match.url_name == 'carrito_usuario' %}active{% endif %}">
             <a href="{% url 'carrito_usuario' %}">
-                <span class="icon"><ion-icon name="cart-outline"></ion-icon></span>
+                <span class="icon icon--cart">
+                    <ion-icon name="cart-outline"></ion-icon>
+                    {% if carrito_cantidad_nav > 0 %}
+                    <span class="nav-cart-badge">{% if carrito_cantidad_nav > 99 %}99+{% else %}{{ carrito_cantidad_nav }}{% endif %}</span>
+                    {% endif %}
+                </span>
                 <span class="text">Carrito</span>
             </a>
         </li>

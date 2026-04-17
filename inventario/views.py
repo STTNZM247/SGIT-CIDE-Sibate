@@ -1830,7 +1830,22 @@ def perfil_usuario(request):
             messages.error(request, 'Corrige los errores en el formulario.')
     else:
         form = UsuarioPerfilForm(instance=usuario)
-    return render(request, 'inventario/usuario/perfil_usuario.html', {'form': form, 'usuario': usuario})
+
+    pedidos_qs = Pedido.objects.filter(id_usuario_fk=usuario).order_by('-fch_registro', '-id_pedido')
+    pedido_stats = {
+        'total': pedidos_qs.count(),
+        'pendientes': pedidos_qs.filter(estado='pendiente').count(),
+        'entregados': pedidos_qs.filter(estado__in=['entregado', 'devuelto']).count(),
+        'cancelados': pedidos_qs.filter(estado__in=['cancelado', 'rechazado']).count(),
+    }
+    pedidos_recientes = list(pedidos_qs[:5])
+
+    return render(request, 'inventario/usuario/perfil_usuario.html', {
+        'form': form,
+        'usuario': usuario,
+        'pedido_stats': pedido_stats,
+        'pedidos_recientes': pedidos_recientes,
+    })
 
 
 @login_required
@@ -2442,6 +2457,10 @@ def auditorias_panel(request):
 
 @login_required
 def gestion_usuarios_panel(request):
+    if not (request.user.id_rol_fk and request.user.id_rol_fk.nombre_rol == 'admin'):
+        messages.error(request, 'Solo el administrador puede gestionar usuarios.')
+        return redirect('dashboard')
+
     query = request.GET.get('q', '').strip()
     base_usuarios = Usuario.objects.all().select_related('id_rol_fk')
     usuarios = base_usuarios.order_by('nombre', 'apellido')
@@ -2471,6 +2490,10 @@ from django.views.decorators.http import require_POST
 @login_required
 @require_POST
 def crear_usuario(request):
+    if not (request.user.id_rol_fk and request.user.id_rol_fk.nombre_rol == 'admin'):
+        messages.error(request, 'Solo el administrador puede crear usuarios.')
+        return redirect('gestion_usuarios_panel')
+
     cc = request.POST.get('cc', '').strip()
     nombre = request.POST.get('nombre', '').strip()
     apellido = request.POST.get('apellido', '').strip()
@@ -2508,12 +2531,15 @@ def crear_usuario(request):
         entidad_id=usuario.id_usu,
         descripcion=f'Se creó el usuario {usuario.correo} con rol {rol.nombre_rol}.',
     )
-    messages.success(request, 'Usuario creado correctamente.')
     return redirect('gestion_usuarios_panel')
 
 @login_required
 @require_POST
 def editar_rol_usuario(request, usuario_id):
+    if not (request.user.id_rol_fk and request.user.id_rol_fk.nombre_rol == 'admin'):
+        messages.error(request, 'Solo el administrador puede editar roles.')
+        return redirect('gestion_usuarios_panel')
+
     usuario = Usuario.objects.get(pk=usuario_id)
     nuevo_rol_id = request.POST.get('id_rol_fk')
     if not nuevo_rol_id:
@@ -2537,7 +2563,33 @@ def editar_rol_usuario(request, usuario_id):
         entidad_id=usuario.id_usu,
         descripcion=f'Se actualizó el rol del usuario {usuario.correo} a {nuevo_rol.nombre_rol}.',
     )
-    messages.success(request, 'Rol actualizado correctamente.')
+    return redirect('gestion_usuarios_panel')
+
+
+@login_required
+@require_POST
+def toggle_estado_usuario(request, usuario_id):
+    if not (request.user.id_rol_fk and request.user.id_rol_fk.nombre_rol == 'admin'):
+        messages.error(request, 'No tienes permisos para cambiar el estado de usuarios.')
+        return redirect('gestion_usuarios_panel')
+
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
+
+    if usuario.id_usu == request.user.id_usu:
+        messages.error(request, 'No puedes desactivar tu propia cuenta desde esta sesión.')
+        return redirect('gestion_usuarios_panel')
+
+    usuario.is_active = not usuario.is_active
+    usuario.save(update_fields=['is_active'])
+
+    accion = 'activado' if usuario.is_active else 'desactivado'
+    _registrar_auditoria(
+        request,
+        accion='actualizar',
+        entidad='usuario',
+        entidad_id=usuario.id_usu,
+        descripcion=f'Se dejó {accion} el acceso del usuario {usuario.correo}.',
+    )
     return redirect('gestion_usuarios_panel')
 
 

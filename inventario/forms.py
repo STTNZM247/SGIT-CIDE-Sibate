@@ -1,6 +1,48 @@
 from django import forms
+from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import AuthenticationForm
 
 from .models import Catalogo, Producto, Usuario
+
+
+class CorreoAuthenticationForm(AuthenticationForm):
+    username = forms.EmailField(
+        label='Correo',
+        widget=forms.EmailInput(attrs={
+            'placeholder': 'Correo institucional',
+            'autocomplete': 'username',
+            'spellcheck': 'false',
+        }),
+    )
+    password = forms.CharField(
+        label='Contraseña',
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'placeholder': 'Contraseña',
+            'autocomplete': 'current-password',
+        }),
+    )
+
+    error_messages = {
+        'invalid_login': 'Correo o contraseña incorrectos.',
+        'inactive': 'Usuario inactivo. Por favor comunícate con un administrador.',
+    }
+
+    def __init__(self, request=None, *args, **kwargs):
+        super().__init__(request=request, *args, **kwargs)
+        self.fields['username'].widget.attrs.update({'class': 'login-control'})
+        self.fields['password'].widget.attrs.update({'class': 'login-control', 'id': 'id_password'})
+
+    def clean(self):
+        username = (self.data.get('username') or '').strip()
+        password = self.data.get('password') or ''
+
+        if username and password:
+            usuario = get_user_model().objects.filter(correo__iexact=username).first()
+            if usuario and usuario.check_password(password) and not usuario.is_active:
+                raise forms.ValidationError(self.error_messages['inactive'], code='inactive')
+
+        return super().clean()
 
 
 class CatalogoForm(forms.ModelForm):
@@ -87,12 +129,18 @@ class ProductoForm(forms.ModelForm):
 class UsuarioPerfilForm(forms.ModelForm):
     class Meta:
         model = Usuario
-        fields = ['cc', 'nombre', 'apellido', 'correo', 'fot_usu', 'banner_usu']
+        fields = [
+            'cc', 'nombre', 'apellido', 'correo', 'telefono',
+            'programa_formacion', 'centro_desarrollo', 'fot_usu', 'banner_usu'
+        ]
         widgets = {
-            'cc': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_cc'}),
-            'nombre': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_nombre'}),
-            'apellido': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_apellido'}),
-            'correo': forms.EmailInput(attrs={'class': 'form-control', 'id': 'id_correo'}),
+            'cc': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_cc', 'placeholder': 'Número de documento'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_nombre', 'placeholder': 'Nombre'}),
+            'apellido': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_apellido', 'placeholder': 'Apellido'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control', 'id': 'id_correo', 'placeholder': 'Correo institucional'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_telefono', 'placeholder': '+57 300 000 0000'}),
+            'programa_formacion': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_programa_formacion', 'placeholder': 'Ej: ADSO / Análisis y desarrollo de software'}),
+            'centro_desarrollo': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_centro_desarrollo', 'placeholder': 'Ej: Centro de formación de ...'}),
             'fot_usu': forms.ClearableFileInput(attrs={'class': 'form-file', 'accept': 'image/*', 'id': 'id_fot_usu'}),
             'banner_usu': forms.ClearableFileInput(attrs={'class': 'form-file', 'accept': 'image/*', 'id': 'id_banner_usu'}),
         }
@@ -101,6 +149,9 @@ class UsuarioPerfilForm(forms.ModelForm):
             'nombre': 'Nombre',
             'apellido': 'Apellido',
             'correo': 'Correo',
+            'telefono': 'Teléfono',
+            'programa_formacion': 'Programa de formación',
+            'centro_desarrollo': 'Centro de desarrollo',
             'fot_usu': 'Foto de perfil',
             'banner_usu': 'Foto de portada',
         }

@@ -1,3 +1,69 @@
+/* Barra de búsqueda sticky para panel de usuario */
+.panel-simple {
+  position: relative;
+}
+
+.usuario-busqueda-form {
+  position: sticky;
+  top: 14px;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  margin: 0 0 26px;
+  padding: 4px 0 14px;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.usuario-busqueda-bar {
+  display: flex;
+  align-items: center;
+  width: min(100%, 620px);
+  background: #ffffff;
+  border-radius: 999px;
+  border: 1.5px solid #d6e3d7;
+  padding: 4px 8px 4px 16px;
+  box-shadow: 0 10px 28px rgba(57,169,0,.08);
+}
+
+.usuario-busqueda-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 1rem;
+  color: #1f2f25;
+  padding: 10px 0;
+  border-radius: 999px;
+}
+
+.usuario-busqueda-input::placeholder {
+  color: #7a8a7e;
+}
+
+.usuario-busqueda-btn {
+  background: #39A900;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(57,169,0,.18);
+}
+
+.usuario-busqueda-btn ion-icon {
+  color: #fff;
+  font-size: 1.2em;
+}
+
+.usuario-busqueda-btn:hover {
+  background: #2e8700;
+}
+
 /* Placeholder para imagen ausente en cards y detalle */
 .usuario-product-modal__placeholder {
   width: 100%;
