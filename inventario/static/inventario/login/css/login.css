@@ -310,22 +310,50 @@ body, html {
     width: 92%;
     max-width: 312px;
     margin: 14px auto 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: center;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
 }
 
-.login-mini-link {
-    color: #0b4737;
-    text-decoration: none;
+.login-quick-links .login-mini-link {
+    display: block;
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 999px;
+    text-align: center;
+    text-decoration: none !important;
     font-weight: 800;
-    font-size: 0.92rem;
+    font-size: 0.94rem;
+    border: 1px solid transparent;
+    transition: transform .15s ease, box-shadow .2s ease, background .2s ease, color .2s ease;
+    box-sizing: border-box;
 }
 
-.login-mini-link:hover {
-    color: #39A900;
-    text-decoration: underline;
+.login-quick-links .login-mini-link:hover {
+    transform: translateY(-1px);
+    text-decoration: none !important;
+}
+
+.login-mini-link--recover {
+    background: rgba(11, 71, 55, 0.08);
+    color: #0b4737 !important;
+    border-color: rgba(11, 71, 55, 0.18);
+}
+
+.login-mini-link--recover:hover {
+    background: rgba(11, 71, 55, 0.14);
+    box-shadow: 0 10px 20px rgba(11, 71, 55, 0.08);
+}
+
+.login-mini-link--register {
+    background: rgba(57, 169, 0, 0.12);
+    color: #267300 !important;
+    border-color: rgba(57, 169, 0, 0.26);
+}
+
+.login-mini-link--register:hover {
+    background: rgba(57, 169, 0, 0.2);
+    box-shadow: 0 10px 20px rgba(57, 169, 0, 0.12);
 }
 
 .login-card--wide {
