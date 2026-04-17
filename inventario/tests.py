@@ -127,3 +127,36 @@ class GestionEstadoUsuarioTests(TestCase):
         response = panel_usuario(request)
 
         self.assertEqual(response.status_code, 200)
+
+    def test_public_registration_creates_usuario_role_account(self):
+        response = self.client.post(reverse('registro_publico'), {
+            'cc': '10203040',
+            'nombre': 'Nuevo',
+            'apellido': 'Usuario',
+            'correo': 'nuevo@sena.edu.co',
+            'password1': 'NuevaClave123!',
+            'password2': 'NuevaClave123!',
+        })
+
+        nuevo = Usuario.objects.get(correo='nuevo@sena.edu.co')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('login'))
+        self.assertTrue(nuevo.check_password('NuevaClave123!'))
+        self.assertEqual(nuevo.id_rol_fk.nombre_rol, 'usuario')
+        self.assertTrue(nuevo.is_active)
+
+    def test_recovery_allows_password_reset_by_cc(self):
+        self.usuario.cc = '99887766'
+        self.usuario.save(update_fields=['cc'])
+
+        response = self.client.post(reverse('recuperar_acceso'), {
+            'cc': '99887766',
+            'correo': '',
+            'password1': 'Recuperada123!',
+            'password2': 'Recuperada123!',
+        })
+
+        self.usuario.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('login'))
+        self.assertTrue(self.usuario.check_password('Recuperada123!'))

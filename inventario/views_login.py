@@ -1,7 +1,9 @@
+from django.contrib import messages
 from django.contrib.auth.views import LoginView
+from django.shortcuts import redirect, render
 from django.urls import reverse
 
-from .forms import CorreoAuthenticationForm
+from .forms import CorreoAuthenticationForm, RecuperarAccesoForm, RegistroPublicoForm
 from .models import Rol
 
 
@@ -31,3 +33,29 @@ class RolRedirectLoginView(LoginView):
         if rol in {'almacenista', 'almacen'}:
             return reverse('panel_almacenista')
         return reverse('panel_usuario')
+
+
+def registro_publico(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    form = RegistroPublicoForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Tu cuenta fue creada correctamente. Ya puedes iniciar sesión.')
+        return redirect('login')
+
+    return render(request, 'inventario/login/registro.html', {'form': form})
+
+
+def recuperar_acceso(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    form = RecuperarAccesoForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Tu contraseña fue actualizada. Ahora puedes iniciar sesión.')
+        return redirect('login')
+
+    return render(request, 'inventario/login/recuperar_acceso.html', {'form': form})

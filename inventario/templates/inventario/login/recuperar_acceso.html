@@ -1,0 +1,87 @@
+{% extends 'inventario/shared/base_login.html' %}
+{% load static %}
+
+{% block title %}Recuperar acceso | Inventario SENA - Sibate{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'inventario/login/css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="login-split" aria-label="Recuperar acceso">
+    <aside class="login-visual" aria-hidden="true">
+        <span class="login-ring login-ring--one"></span>
+        <span class="login-ring login-ring--two"></span>
+        <span class="login-sena-watermark"></span>
+        <div class="login-visual-inner">
+            <p class="visual-kicker">SENA · Inventario</p>
+            <h2 class="visual-title">Recuperar acceso</h2>
+        </div>
+    </aside>
+
+    <div class="login-panel">
+        <section class="login-card login-card--wide" aria-labelledby="recuperar-title">
+            <div class="login-card__top">
+                <h1 id="recuperar-title" class="login-title">Olvidé mi contraseña o correo</h1>
+                <p class="login-subtitle">Usa tu documento, tu correo o ambos para restaurar el acceso.</p>
+            </div>
+
+            <p class="login-hint">Si no recuerdas el correo institucional, puedes usar tu documento para recuperar la cuenta.</p>
+
+            {% if form.non_field_errors or messages %}
+            <div class="login-alerts" aria-live="polite">
+                {% for error in form.non_field_errors %}
+                <div class="login-alert login-alert--error">
+                    <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+                    <span>{{ error }}</span>
+                </div>
+                {% endfor %}
+                {% for message in messages %}
+                <div class="login-alert login-alert--{{ message.tags|default:'info' }}">
+                    <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" class="login-form" novalidate>
+                {% csrf_token %}
+
+                <div class="field">
+                    <label class="login-label" for="{{ form.cc.id_for_label }}">Documento</label>
+                    <div class="login-input-shell">{{ form.cc }}</div>
+                    {{ form.cc.errors }}
+                </div>
+
+                <div class="field">
+                    <label class="login-label" for="{{ form.correo.id_for_label }}">Correo</label>
+                    <div class="login-input-shell">{{ form.correo }}</div>
+                    {{ form.correo.errors }}
+                </div>
+
+                <div class="field">
+                    <label class="login-label" for="{{ form.password1.id_for_label }}">Nueva contraseña</label>
+                    <div class="login-input-shell">{{ form.password1 }}</div>
+                    {{ form.password1.errors }}
+                </div>
+
+                <div class="field">
+                    <label class="login-label" for="{{ form.password2.id_for_label }}">Confirmar contraseña</label>
+                    <div class="login-input-shell">{{ form.password2 }}</div>
+                    {{ form.password2.errors }}
+                </div>
+
+                <div class="login-actions">
+                    <button type="submit" class="btn btn--block login-submit">Actualizar acceso</button>
+                </div>
+
+                <div class="login-quick-links">
+                    <a href="{% url 'login' %}" class="login-mini-link">Volver a iniciar sesión</a>
+                    <a href="{% url 'registro_publico' %}" class="login-mini-link">Registrarme</a>
+                </div>
+            </form>
+        </section>
+    </div>
+</section>
+{% endblock %}

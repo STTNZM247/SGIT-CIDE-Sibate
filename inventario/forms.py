@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 
-from .models import Catalogo, Producto, Usuario
+from .models import Catalogo, Producto, Rol, Usuario
 
 
 class CorreoAuthenticationForm(AuthenticationForm):
@@ -43,6 +43,142 @@ class CorreoAuthenticationForm(AuthenticationForm):
                 raise forms.ValidationError(self.error_messages['inactive'], code='inactive')
 
         return super().clean()
+
+
+class RegistroPublicoForm(forms.ModelForm):
+    password1 = forms.CharField(
+        label='Contraseña',
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'class': 'login-control',
+            'placeholder': 'Crea una contraseña segura',
+            'autocomplete': 'new-password',
+        }),
+    )
+    password2 = forms.CharField(
+        label='Confirmar contraseña',
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'class': 'login-control',
+            'placeholder': 'Confirma la contraseña',
+            'autocomplete': 'new-password',
+        }),
+    )
+
+    class Meta:
+        model = Usuario
+        fields = ['cc', 'nombre', 'apellido', 'correo']
+        widgets = {
+            'cc': forms.TextInput(attrs={'class': 'login-control', 'placeholder': 'Documento'}),
+            'nombre': forms.TextInput(attrs={'class': 'login-control', 'placeholder': 'Nombre'}),
+            'apellido': forms.TextInput(attrs={'class': 'login-control', 'placeholder': 'Apellido'}),
+            'correo': forms.EmailInput(attrs={'class': 'login-control', 'placeholder': 'Correo institucional'}),
+        }
+
+    def clean_correo(self):
+        correo = (self.cleaned_data.get('correo') or '').strip().lower()
+        if Usuario.objects.filter(correo__iexact=correo).exists():
+            raise forms.ValidationError('Ya existe una cuenta con este correo.')
+        return correo
+
+    def clean_cc(self):
+        cc = (self.cleaned_data.get('cc') or '').strip()
+        if cc and Usuario.objects.filter(cc=cc).exists():
+            raise forms.ValidationError('Ya existe una cuenta con este documento.')
+        return cc
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get('password1')
+        password2 = cleaned_data.get('password2')
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError('Las contraseñas no coinciden.')
+        return cleaned_data
+
+    def save(self, commit=True):
+        usuario = super().save(commit=False)
+        rol_usuario, _ = Rol.objects.get_or_create(nombre_rol='usuario')
+        usuario.id_rol_fk = rol_usuario
+        usuario.is_active = True
+        usuario.is_staff = False
+        usuario.set_password(self.cleaned_data['password1'])
+        if commit:
+            usuario.save()
+        return usuario
+
+
+class RecuperarAccesoForm(forms.Form):
+    cc = forms.CharField(
+        required=False,
+        label='Documento',
+        widget=forms.TextInput(attrs={
+            'class': 'login-control',
+            'placeholder': 'Número de documento',
+            'autocomplete': 'off',
+        }),
+    )
+    correo = forms.EmailField(
+        required=False,
+        label='Correo',
+        widget=forms.EmailInput(attrs={
+            'class': 'login-control',
+            'placeholder': 'Correo institucional',
+            'autocomplete': 'email',
+        }),
+    )
+    password1 = forms.CharField(
+        label='Nueva contraseña',
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'class': 'login-control',
+            'placeholder': 'Nueva contraseña',
+            'autocomplete': 'new-password',
+        }),
+    )
+    password2 = forms.CharField(
+        label='Confirmar contraseña',
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'class': 'login-control',
+            'placeholder': 'Confirma la contraseña',
+            'autocomplete': 'new-password',
+        }),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.usuario = None
+
+    def clean(self):
+        cleaned_data = super().clean()
+        cc = (cleaned_data.get('cc') or '').strip()
+        correo = (cleaned_data.get('correo') or '').strip().lower()
+        password1 = cleaned_data.get('password1')
+        password2 = cleaned_data.get('password2')
+
+        if not cc and not correo:
+            raise forms.ValidationError('Ingresa tu documento, tu correo o ambos para recuperar el acceso.')
+
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError('Las contraseñas no coinciden.')
+
+        usuarios = Usuario.objects.all()
+        if cc:
+            usuarios = usuarios.filter(cc=cc)
+        if correo:
+            usuarios = usuarios.filter(correo__iexact=correo)
+
+        self.usuario = usuarios.first()
+        if not self.usuario:
+            raise forms.ValidationError('No encontramos una cuenta con los datos suministrados.')
+
+        return cleaned_data
+
+    def save(self):
+        self.usuario.set_password(self.cleaned_data['password1'])
+        self.usuario.is_active = True
+        self.usuario.save(update_fields=['password', 'is_active'])
+        return self.usuario
 
 
 class CatalogoForm(forms.ModelForm):

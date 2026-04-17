@@ -1,5 +1,5 @@
 from django.contrib.auth.views import LogoutView
-from .views_login import RolRedirectLoginView
+from .views_login import RolRedirectLoginView, recuperar_acceso, registro_publico
 from django.urls import path
 
 from .views import (
@@ -56,6 +56,8 @@ urlpatterns = [
         LogoutView.as_view(next_page='login'),
         name='logout',
     ),
+    path('login/recuperar/', recuperar_acceso, name='recuperar_acceso'),
+    path('login/registro/', registro_publico, name='registro_publico'),
     path('', dashboard, name='dashboard'),
     path('dashboard/tendencia-data/', dashboard_tendencia_data, name='dashboard_tendencia_data'),
     path('dashboard/tendencia-detalle/', dashboard_tendencia_detalle, name='dashboard_tendencia_detalle'),
