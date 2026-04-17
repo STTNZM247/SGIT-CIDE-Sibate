@@ -53,8 +53,10 @@
         </li>
         <div class="indicator"></div>
     </ul>
+    {% if request.resolver_match.url_name != 'notificaciones_panel' %}
     <a href="{% url 'notificaciones_panel' %}" class="nav-notif-btn {% if notif_no_leidas %}has-notif{% endif %}" aria-label="Notificaciones" title="Notificaciones">
         <ion-icon name="notifications-outline"></ion-icon>
         <span class="nav-notif-dot" aria-hidden="true"></span>
     </a>
+    {% endif %}
 </nav>
