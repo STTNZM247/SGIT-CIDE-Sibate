@@ -1,10 +1,13 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.views import LoginView
+from django.core.mail import send_mail
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 
-from .forms import CorreoAuthenticationForm, RecuperarAccesoForm, RegistroPublicoForm
-from .models import Rol
+from .forms import CorreoAuthenticationForm, RecuperarAccesoForm, RegistroPublicoForm, RestablecerPasswordForm
+from .models import PasswordResetToken, Rol
 
 
 class RolRedirectLoginView(LoginView):
@@ -54,8 +57,55 @@ def recuperar_acceso(request):
 
     form = RecuperarAccesoForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
-        form.save()
-        messages.success(request, 'Tu contraseña fue actualizada. Ahora puedes iniciar sesión.')
+        usuario = form.usuario
+        reset_token = PasswordResetToken.create_for_user(usuario)
+        reset_url = request.build_absolute_uri(reverse('restablecer_password', args=[reset_token.token]))
+
+        send_mail(
+            subject='Restablecimiento de contraseña - Inventario SENA',
+            message=(
+                f'Hola {usuario.nombre or usuario.correo},\n\n'
+                'Recibimos una solicitud para restablecer tu contraseña.\n'
+                f'Usa este enlace único para continuar:\n{reset_url}\n\n'
+                'Este enlace expirará en 30 minutos y solo podrá usarse una vez.\n'
+                'Si no solicitaste este cambio, puedes ignorar este correo.'
+            ),
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+            recipient_list=[usuario.correo],
+            fail_silently=False,
+        )
+
+        messages.success(request, 'Te enviamos un enlace de restablecimiento a tu correo registrado.')
         return redirect('login')
 
     return render(request, 'inventario/login/recuperar_acceso.html', {'form': form})
+
+
+def restablecer_password(request, token):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    reset_token = (
+        PasswordResetToken.objects
+        .select_related('usuario')
+        .filter(token=token, usado_en__isnull=True)
+        .first()
+    )
+
+    if not reset_token or reset_token.expira_en < timezone.now():
+        messages.error(request, 'El enlace de restablecimiento ya no es válido o expiró.')
+        return redirect('recuperar_acceso')
+
+    form = RestablecerPasswordForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save(reset_token.usuario)
+        reset_token.usado_en = timezone.now()
+        reset_token.save(update_fields=['usado_en'])
+        messages.success(request, 'Tu contraseña fue actualizada correctamente. Ya puedes iniciar sesión.')
+        return redirect('login')
+
+    return render(
+        request,
+        'inventario/login/restablecer_password.html',
+        {'form': form, 'reset_token': reset_token},
+    )

@@ -1,10 +1,14 @@
+from datetime import timedelta
+
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.core import mail
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
+from django.utils import timezone
 
-from .models import Rol, Usuario
+from .models import PasswordResetToken, Rol, Usuario
 from .views_login import RolRedirectLoginView
 from .views_usuario import panel_usuario
 
@@ -145,18 +149,36 @@ class GestionEstadoUsuarioTests(TestCase):
         self.assertEqual(nuevo.id_rol_fk.nombre_rol, 'usuario')
         self.assertTrue(nuevo.is_active)
 
-    def test_recovery_allows_password_reset_by_cc(self):
-        self.usuario.cc = '99887766'
-        self.usuario.save(update_fields=['cc'])
-
+    def test_recovery_sends_email_with_reset_link(self):
         response = self.client.post(reverse('recuperar_acceso'), {
-            'cc': '99887766',
-            'correo': '',
+            'correo': self.usuario.correo,
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn(self.usuario.correo, mail.outbox[0].to)
+        self.assertIn('/login/restablecer/', mail.outbox[0].body)
+        self.assertEqual(PasswordResetToken.objects.filter(usuario=self.usuario, usado_en__isnull=True).count(), 1)
+
+    def test_reset_link_updates_password_and_expires(self):
+        token = PasswordResetToken.create_for_user(self.usuario)
+
+        response = self.client.post(reverse('restablecer_password', args=[token.token]), {
             'password1': 'Recuperada123!',
             'password2': 'Recuperada123!',
         })
 
         self.usuario.refresh_from_db()
+        token.refresh_from_db()
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('login'))
         self.assertTrue(self.usuario.check_password('Recuperada123!'))
+        self.assertIsNotNone(token.usado_en)
+
+        expirado = PasswordResetToken.create_for_user(self.usuario)
+        expirado.expira_en = timezone.now() - timedelta(minutes=1)
+        expirado.save(update_fields=['expira_en'])
+
+        expired_response = self.client.get(reverse('restablecer_password', args=[expirado.token]))
+        self.assertEqual(expired_response.status_code, 302)
+        self.assertEqual(expired_response.url, reverse('recuperar_acceso'))

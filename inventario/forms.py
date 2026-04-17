@@ -108,24 +108,29 @@ class RegistroPublicoForm(forms.ModelForm):
 
 
 class RecuperarAccesoForm(forms.Form):
-    cc = forms.CharField(
-        required=False,
-        label='Documento',
-        widget=forms.TextInput(attrs={
-            'class': 'login-control',
-            'placeholder': 'Número de documento',
-            'autocomplete': 'off',
-        }),
-    )
     correo = forms.EmailField(
-        required=False,
+        required=True,
         label='Correo',
         widget=forms.EmailInput(attrs={
             'class': 'login-control',
-            'placeholder': 'Correo institucional',
+            'placeholder': 'Correo institucional registrado',
             'autocomplete': 'email',
         }),
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.usuario = None
+
+    def clean_correo(self):
+        correo = (self.cleaned_data.get('correo') or '').strip().lower()
+        self.usuario = Usuario.objects.filter(correo__iexact=correo, is_active=True).first()
+        if not self.usuario:
+            raise forms.ValidationError('No encontramos una cuenta activa con ese correo.')
+        return correo
+
+
+class RestablecerPasswordForm(forms.Form):
     password1 = forms.CharField(
         label='Nueva contraseña',
         strip=False,
@@ -145,40 +150,19 @@ class RecuperarAccesoForm(forms.Form):
         }),
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.usuario = None
-
     def clean(self):
         cleaned_data = super().clean()
-        cc = (cleaned_data.get('cc') or '').strip()
-        correo = (cleaned_data.get('correo') or '').strip().lower()
         password1 = cleaned_data.get('password1')
         password2 = cleaned_data.get('password2')
-
-        if not cc and not correo:
-            raise forms.ValidationError('Ingresa tu documento, tu correo o ambos para recuperar el acceso.')
-
         if password1 and password2 and password1 != password2:
             raise forms.ValidationError('Las contraseñas no coinciden.')
-
-        usuarios = Usuario.objects.all()
-        if cc:
-            usuarios = usuarios.filter(cc=cc)
-        if correo:
-            usuarios = usuarios.filter(correo__iexact=correo)
-
-        self.usuario = usuarios.first()
-        if not self.usuario:
-            raise forms.ValidationError('No encontramos una cuenta con los datos suministrados.')
-
         return cleaned_data
 
-    def save(self):
-        self.usuario.set_password(self.cleaned_data['password1'])
-        self.usuario.is_active = True
-        self.usuario.save(update_fields=['password', 'is_active'])
-        return self.usuario
+    def save(self, usuario):
+        usuario.set_password(self.cleaned_data['password1'])
+        usuario.is_active = True
+        usuario.save(update_fields=['password', 'is_active'])
+        return usuario
 
 
 class CatalogoForm(forms.ModelForm):

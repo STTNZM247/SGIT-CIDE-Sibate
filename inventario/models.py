@@ -1,5 +1,9 @@
+import secrets
+from datetime import timedelta
+
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from django.utils import timezone
 
 
 class Rol(models.Model):
@@ -58,6 +62,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     objects = UsuarioManager()
 
     USERNAME_FIELD = 'correo'
+    EMAIL_FIELD = 'correo'
     REQUIRED_FIELDS = ['nombre']
 
     class Meta:
@@ -65,6 +70,40 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f'{self.nombre} {self.apellido}'
+
+
+class PasswordResetToken(models.Model):
+    id_reset = models.AutoField(primary_key=True)
+    usuario = models.ForeignKey(
+        Usuario,
+        on_delete=models.CASCADE,
+        related_name='password_reset_tokens',
+    )
+    token = models.CharField(max_length=128, unique=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    expira_en = models.DateTimeField()
+    usado_en = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'password_reset_token'
+        ordering = ['-creado_en', '-id_reset']
+
+    def __str__(self):
+        return f'Reset token {self.usuario_id} ({self.token[:8]})'
+
+    @property
+    def esta_vigente(self):
+        return self.usado_en is None and self.expira_en >= timezone.now()
+
+    @classmethod
+    def create_for_user(cls, usuario):
+        ahora = timezone.now()
+        cls.objects.filter(usuario=usuario, usado_en__isnull=True).update(usado_en=ahora)
+        return cls.objects.create(
+            usuario=usuario,
+            token=secrets.token_urlsafe(32),
+            expira_en=ahora + timedelta(minutes=30),
+        )
 
 
 class Catalogo(models.Model):
