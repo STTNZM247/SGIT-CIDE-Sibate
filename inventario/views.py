@@ -288,7 +288,11 @@ from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Pedid
 
 
 def _user_role(request):
-    if not request.user.is_authenticated or not request.user.id_rol_fk:
+    if not request.user.is_authenticated:
+        return None
+    if getattr(request.user, 'is_superuser', False) or getattr(request.user, 'is_staff', False):
+        return 'admin'
+    if not request.user.id_rol_fk:
         return None
     return request.user.id_rol_fk.nombre_rol
 

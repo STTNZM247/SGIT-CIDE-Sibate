@@ -89,3 +89,23 @@ class GestionEstadoUsuarioTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn('Correo o contraseña incorrectos.', form.non_field_errors())
+
+    def test_superuser_without_role_redirects_to_dashboard(self):
+        superuser = Usuario.objects.create(
+            correo='root@sena.edu.co',
+            nombre='Root',
+            apellido='Admin',
+            is_active=True,
+            is_staff=True,
+            is_superuser=True,
+        )
+        superuser.set_password('SuperAdmin123!')
+        superuser.save()
+
+        request = RequestFactory().get(reverse('login'))
+        request.user = superuser
+
+        view = RolRedirectLoginView()
+        view.request = request
+
+        self.assertEqual(view.get_success_url(), reverse('dashboard'))
