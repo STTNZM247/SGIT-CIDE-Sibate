@@ -80,7 +80,7 @@ AUTH_USER_MODEL = 'inventario.Usuario'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'almacensedelacolol$sibate_db', 
+        'NAME': 'almacensedelacol$default', 
         'USER': 'almacensedelacolol',  # <--- Cambié 'almacensedelacolonia' por 'almacensedelacolol'
         'PASSWORD': 'CIDE#Desarrollo.2026', 
         'HOST': 'almacensedelacolonia.mysql.pythonanywhere-services.com',
