@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-grw0385sfjhp4js71+%rw@1f@yn$^aq9206up)fk-lk)lgo6m_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['almacensedelacolonia.pythonanywhere.com']
 
 
 # Application definition
@@ -80,11 +80,11 @@ AUTH_USER_MODEL = 'inventario.Usuario'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'invsena',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': '127.0.0.1',
-        'PORT': '3307',
+        'NAME': 'almacensedelacolol$sibate_db', # Confirma que este sea el nombre que creaste
+        'USER': 'almacensedelacolol',
+        'PASSWORD': 'LaContraseñaQueElegiste', 
+        'HOST': 'almacensedelacolonia.mysql.pythonanywhere-services.com',
+        'PORT': '3306',
         'OPTIONS': {
             'charset': 'utf8mb4',
         },
@@ -134,3 +134,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Auth
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
+
+import os
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
