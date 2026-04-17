@@ -82,7 +82,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'almacensedelacolol$sibate_db', 
         'USER': 'almacensedelacolol',  # <--- Cambié 'almacensedelacolonia' por 'almacensedelacolol'
-        'PASSWORD': 'LaContraseñaQueElegiste', 
+        'PASSWORD': 'CIDE#Desarrollo.2026', 
         'HOST': 'almacensedelacolonia.mysql.pythonanywhere-services.com',
         'PORT': '3306',
         'OPTIONS': {
