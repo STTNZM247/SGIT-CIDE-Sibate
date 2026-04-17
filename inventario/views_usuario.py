@@ -18,7 +18,13 @@ DEVOLUCION_CODIGO_SEGUNDOS = 60
 
 
 def _usuario_cliente(request):
-    return request.user.id_rol_fk and request.user.id_rol_fk.nombre_rol in ["usuario", "aprendiz", "instructor"]
+    if not request.user.is_authenticated:
+        return False
+    if getattr(request.user, 'is_superuser', False) or getattr(request.user, 'is_staff', False):
+        return False
+
+    rol = (getattr(getattr(request.user, 'id_rol_fk', None), 'nombre_rol', '') or '').strip().lower()
+    return rol in ['', 'usuario', 'aprendiz', 'instructor']
 
 
 def _asegurar_codigo_devolucion(pedido, now):

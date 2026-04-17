@@ -292,9 +292,15 @@ def _user_role(request):
         return None
     if getattr(request.user, 'is_superuser', False) or getattr(request.user, 'is_staff', False):
         return 'admin'
-    if not request.user.id_rol_fk:
-        return None
-    return request.user.id_rol_fk.nombre_rol
+
+    rol = (getattr(getattr(request.user, 'id_rol_fk', None), 'nombre_rol', '') or '').strip().lower()
+    if rol in {'admin', 'administrador'}:
+        return 'admin'
+    if rol in {'almacenista', 'almacen'}:
+        return 'almacenista'
+    if rol in {'', 'usuario', 'aprendiz', 'instructor'}:
+        return 'usuario'
+    return rol
 
 
 def _is_admin(request):

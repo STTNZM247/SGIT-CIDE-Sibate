@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from .models import Rol, Usuario
 from .views_login import RolRedirectLoginView
+from .views_usuario import panel_usuario
 
 
 class GestionEstadoUsuarioTests(TestCase):
@@ -109,3 +110,20 @@ class GestionEstadoUsuarioTests(TestCase):
         view.request = request
 
         self.assertEqual(view.get_success_url(), reverse('dashboard'))
+
+    def test_user_without_role_can_access_panel_usuario(self):
+        usuario_sin_rol = Usuario.objects.create(
+            correo='sinrol@sena.edu.co',
+            nombre='Sin',
+            apellido='Rol',
+            is_active=True,
+        )
+        usuario_sin_rol.set_password('Usuario123!')
+        usuario_sin_rol.save()
+
+        request = RequestFactory().get(reverse('panel_usuario'))
+        request.user = usuario_sin_rol
+
+        response = panel_usuario(request)
+
+        self.assertEqual(response.status_code, 200)
