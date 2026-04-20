@@ -2723,18 +2723,39 @@ def pedido_aviso_devolucion(request, pedido_id):
             # Productos a devolver (solo los activos, no rechazados/cancelados)
             detalles = list(pedido.detalles.exclude(
                 estado_detalle__in=['no_disponible', 'rechazado', 'cancelado']
-            ))
+            ).select_related('id_prod_fk'))
+
+            # URL base para imágenes (usar dominio absoluto para que funcione en correos)
+            base_url = 'https://almacensedelacolonia.pythonanywhere.com'
 
             # Construir filas de productos para el correo
             filas_html = ''
             lista_texto = ''
             for d in detalles:
+                prod = d.id_prod_fk
+                img_url = (
+                    f'{base_url}{settings.MEDIA_URL}{prod.fot_prod}'
+                    if prod and prod.fot_prod else ''
+                )
+                img_tag = (
+                    f'<img src="{img_url}" alt="{d.nombre_producto}" '
+                    f'width="48" height="48" '
+                    f'style="border-radius:6px;object-fit:cover;display:block;">'
+                    if img_url else
+                    '<div style="width:48px;height:48px;background:#e8f5e9;'
+                    'border-radius:6px;display:flex;align-items:center;'
+                    'justify-content:center;font-size:20px;">📦</div>'
+                )
                 filas_html += f"""
                 <tr>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;width:68px;">
+                    {img_tag}
+                  </td>
                   <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;
                               font-size:14px;color:#333;">{d.nombre_producto}</td>
                   <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;
-                              font-size:14px;color:#555;text-align:center;">{d.cantidad_solicitada}</td>
+                              font-size:14px;color:#555;text-align:center;
+                              white-space:nowrap;">x{d.cantidad_solicitada}</td>
                 </tr>"""
                 lista_texto += f'  - {d.nombre_producto} x{d.cantidad_solicitada}\n'
 
@@ -2747,9 +2768,11 @@ def pedido_aviso_devolucion(request, pedido_id):
               <thead>
                 <tr style="background:#f5f5f5;">
                   <th style="padding:10px 12px;text-align:left;font-size:13px;
+                              color:#666;font-weight:600;width:68px;">Foto</th>
+                  <th style="padding:10px 12px;text-align:left;font-size:13px;
                               color:#666;font-weight:600;">Producto</th>
                   <th style="padding:10px 12px;text-align:center;font-size:13px;
-                              color:#666;font-weight:600;">Cantidad</th>
+                              color:#666;font-weight:600;">Cant.</th>
                 </tr>
               </thead>
               <tbody>{filas_html}</tbody>
