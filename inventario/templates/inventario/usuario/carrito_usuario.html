@@ -194,7 +194,7 @@
                     <input type="file" id="foto_carnet" name="foto_carnet" accept="image/*" required>
                 </label>
                 <!-- Botones para móvil: cámara o galería -->
-                <div class="carnet-mobile-btns" id="carnet-mobile-btns" style="display:none">
+                <div class="carnet-mobile-btns" id="carnet-mobile-btns" style="display:none !important">
                     <label for="foto_carnet_camara" class="carnet-mobile-btn carnet-mobile-btn--cam">
                         <ion-icon name="camera-outline"></ion-icon> Tomar foto
                         <input type="file" id="foto_carnet_camara" accept="image/*" capture="environment" style="display:none"
@@ -207,7 +207,7 @@
                     </label>
                 </div>
                 <!-- Vista previa con botón X para quitar -->
-                <div id="carnet-preview-wrap" style="display:none; position:relative; margin-top:10px; display:none;">
+                <div id="carnet-preview-wrap" style="display:none; position:relative; margin-top:10px;">
                     <img id="carnet-preview" src="" alt="Vista previa carnet"
                          style="width:100%; max-height:220px; object-fit:contain; border-radius:12px; border:1.5px solid #e0f2e0; display:block;">
                     <button type="button" id="carnet-clear-btn" onclick="limpiarCarnet()"
@@ -218,7 +218,7 @@
                     </button>
                 </div>
                 <style>
-                .carnet-mobile-btns { display: flex; gap: 10px; margin-top: 10px; }
+                .carnet-mobile-btns { gap: 10px; margin-top: 10px; }
                 .carnet-mobile-btn {
                     flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
                     padding: 12px 8px; border-radius: 14px; font-size: 1em; font-weight: 700;
@@ -232,8 +232,8 @@
                     if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
                         var mobileBtns = document.getElementById('carnet-mobile-btns');
                         var dropArea   = document.getElementById('carnet-drop');
-                        if (mobileBtns) mobileBtns.style.display = 'flex';
-                        if (dropArea)   dropArea.style.display = 'none';
+                        if (mobileBtns) { mobileBtns.style.cssText = 'display:flex !important; gap:10px; margin-top:10px;'; }
+                        if (dropArea)   { dropArea.style.display = 'none'; }
                     }
                 })();
                 function transferirArchivoCarnet(src) {
@@ -277,7 +277,7 @@
                     if (label) label.textContent = 'Arrastra o haz clic para subir la foto';
                     // Mostrar botones de nuevo
                     var esTactil = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-                    if (btns) btns.style.display = esTactil ? 'flex' : 'none';
+                    if (btns) btns.style.cssText = esTactil ? 'display:flex !important; gap:10px; margin-top:10px;' : 'display:none !important;';
                     var dropArea = document.getElementById('carnet-drop');
                     if (dropArea) dropArea.style.display = esTactil ? 'none' : '';
                 }
