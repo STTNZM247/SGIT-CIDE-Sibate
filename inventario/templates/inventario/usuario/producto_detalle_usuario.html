@@ -5,6 +5,67 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'inventario/dashboard/css/dashboard.css' %}" data-page-style="true">
 <link rel="stylesheet" href="{% static 'inventario/usuario/css/panel_usuario.css' %}" data-page-style="true">
+<style>
+@media (max-width: 700px) {
+  .usuario-product-detail-page {
+    min-width: 0 !important;
+    border-radius: 0 !important;
+    padding: 80px 14px 110px 14px !important;
+    box-shadow: none !important;
+  }
+  .usuario-btn-volver {
+    left: 14px !important;
+    top: 16px !important;
+    font-size: 0.93em !important;
+    padding: 10px 16px !important;
+  }
+  .usuario-product-detail-flex {
+    flex-direction: column !important;
+    gap: 16px !important;
+    align-items: stretch !important;
+  }
+  .usuario-product-modal__media {
+    flex: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 240px !important;
+  }
+  .usuario-product-modal__img {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 240px !important;
+    object-fit: contain !important;
+  }
+  .usuario-product-detail-info {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    align-items: stretch !important;
+  }
+  .usuario-product-modal__title {
+    font-size: 1.3rem !important;
+    word-break: break-word !important;
+  }
+  .usuario-product-detail-info .usuario-carrito-form {
+    width: 100% !important;
+  }
+  .usuario-product-detail-info .usuario-carrito-form input[type="number"] {
+    width: 64px !important;
+  }
+  .usuario-btn-carrito-temu {
+    max-width: 100% !important;
+    width: 100% !important;
+    font-size: 1.05em !important;
+    padding: 14px 12px !important;
+  }
+  .usuario-product-detail-block {
+    padding: 14px 0 0 0 !important;
+    margin-top: 16px !important;
+  }
+}
+</style>
 {% endblock %}
 
 {% block content %}
