@@ -214,47 +214,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-/* ── Dark mode toggle ───────────────────────────────────────── */
-(function () {
-    const STORAGE_KEY = 'sgit-theme';
-    const ICON_DARK  = '🌙';
-    const ICON_LIGHT = '☀️';
-
-    function applyTheme(dark) {
-        if (dark) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        } else {
-            document.documentElement.removeAttribute('data-theme');
-        }
-        const btn = document.getElementById('darkToggleBtn');
-        if (btn) btn.textContent = dark ? ICON_LIGHT : ICON_DARK;
-    }
-
-    function isDark() {
-        return document.documentElement.getAttribute('data-theme') === 'dark';
-    }
-
-    function toggleTheme() {
-        const next = !isDark();
-        try { localStorage.setItem(STORAGE_KEY, next ? 'dark' : 'light'); } catch(e) {}
-        applyTheme(next);
-    }
-
-    // Inicializar icono del botón al cargar
-    document.addEventListener('DOMContentLoaded', function () {
-        applyTheme(isDark());
-
-        document.addEventListener('click', function (e) {
-            const btn = e.target.closest('#darkToggleBtn');
-            if (btn) toggleTheme();
-        });
-    });
-
-    // Mantener el tema tras navegación PJAX (el botón se recrea en el DOM)
-    // El atributo data-theme permanece en <html> y no se toca, solo re-sync el icono
-    const _observer = new MutationObserver(function () {
-        const btn = document.getElementById('darkToggleBtn');
-        if (btn) btn.textContent = isDark() ? ICON_LIGHT : ICON_DARK;
-    });
-    _observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-})();
+/* ── Sincronización de tema tras navegación PJAX ────────────── */
+/* El atributo data-theme vive en <html> y nunca se reemplaza con PJAX,
+   por lo que el tema persiste sin necesidad de lógica adicional aquí. */

@@ -1919,6 +1919,19 @@ def perfil_actualizar_banner(request):
 
 
 @login_required
+def perfil_actualizar_tema(request):
+    """Endpoint AJAX para guardar la preferencia de tema del usuario en la BD."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'Método no permitido.'}, status=405)
+    tema = (request.POST.get('tema') or '').strip().lower()
+    if tema not in ('claro', 'oscuro'):
+        return JsonResponse({'ok': False, 'error': 'Valor de tema inválido.'}, status=400)
+    request.user.tema = tema
+    request.user.save(update_fields=['tema'])
+    return JsonResponse({'ok': True, 'tema': tema})
+
+
+@login_required
 def prestamos_panel(request):
     if not request.user.id_rol_fk or request.user.id_rol_fk.nombre_rol not in ['admin', 'almacenista']:
         return redirect('dashboard')

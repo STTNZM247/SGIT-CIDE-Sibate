@@ -54,6 +54,11 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     fot_usu = models.ImageField(upload_to='usuarios/', null=True, blank=True)
     banner_usu = models.ImageField(upload_to='usuarios/banners/', null=True, blank=True)
     telefono = models.CharField(max_length=30, null=True, blank=True)
+    tema = models.CharField(
+        max_length=10,
+        choices=[('claro', 'Claro'), ('oscuro', 'Oscuro')],
+        default='claro',
+    )
     programa_formacion = models.CharField(max_length=255, null=True, blank=True)
     centro_desarrollo = models.CharField(max_length=255, null=True, blank=True)
     is_active = models.BooleanField(default=True)

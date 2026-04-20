@@ -5,6 +5,83 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'inventario/usuario/css/perfil.css' %}" data-page-style="true">
+<style>
+/* ── Preferencias de aspecto ──────────────────────────── */
+.perfil-aspecto-card {
+  background: var(--bg-surface-2, #f8faf8);
+  border: 1.5px solid var(--bg-border, #e4ebe4);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-top: 12px;
+}
+.perfil-aspecto-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.perfil-aspecto-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.perfil-aspecto-icon {
+  font-size: 1.7rem;
+  line-height: 1;
+}
+.perfil-aspecto-label {
+  display: block;
+  font-size: 14px;
+  color: var(--text-primary, #1a1f1a);
+}
+.perfil-aspecto-desc {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted, #9ca3af);
+  margin-top: 2px;
+}
+.perfil-aspecto-saved {
+  font-size: 12px;
+  color: #42a5f5;
+  margin: 8px 0 0;
+  text-align: right;
+}
+/* Toggle switch */
+.perfil-theme-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.perfil-theme-switch input { opacity: 0; width: 0; height: 0; }
+.perfil-theme-slider {
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  background: #ccc;
+  transition: background 0.3s;
+}
+.perfil-theme-slider::before {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  left: 3px;
+  top: 3px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.3s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.perfil-theme-switch input:checked + .perfil-theme-slider {
+  background: #1565c0;
+}
+.perfil-theme-switch input:checked + .perfil-theme-slider::before {
+  transform: translateX(24px);
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -138,6 +215,28 @@
             <button type="button" class="perfil-quick-item"><ion-icon name="notifications-outline"></ion-icon><span>Configurar notificaciones</span></button>
             <button type="button" class="perfil-quick-item"><ion-icon name="document-text-outline"></ion-icon><span>Manual de usuario</span></button>
             <button type="button" class="perfil-quick-item"><ion-icon name="headset-outline"></ion-icon><span>Soporte técnico</span></button>
+          </div>
+
+          {# ── Preferencias de aspecto ───────────────────────── #}
+          <h2 class="perfil-section-title" style="margin-top:28px;">
+            <ion-icon name="color-palette-outline"></ion-icon>
+            Preferencias de aspecto
+          </h2>
+          <div class="perfil-aspecto-card" id="aspecto-card">
+            <div class="perfil-aspecto-row">
+              <div class="perfil-aspecto-info">
+                <span class="perfil-aspecto-icon" id="aspecto-icon">{% if usuario.tema == 'oscuro' %}🌙{% else %}☀️{% endif %}</span>
+                <div>
+                  <strong class="perfil-aspecto-label" id="aspecto-label">{% if usuario.tema == 'oscuro' %}Modo oscuro{% else %}Modo claro{% endif %}</strong>
+                  <small class="perfil-aspecto-desc" id="aspecto-desc">{% if usuario.tema == 'oscuro' %}Fondo negro, acentos azul claro{% else %}Fondo blanco, acentos verdes{% endif %}</small>
+                </div>
+              </div>
+              <label class="perfil-theme-switch" title="Activar / desactivar modo oscuro">
+                <input type="checkbox" id="tema-toggle" {% if usuario.tema == 'oscuro' %}checked{% endif %} autocomplete="off">
+                <span class="perfil-theme-slider"></span>
+              </label>
+            </div>
+            <p class="perfil-aspecto-saved" id="aspecto-saved" style="display:none;">✓ Guardado</p>
           </div>
         </aside>
       </div>
@@ -343,6 +442,55 @@
       document.querySelectorAll('.perfil-cover-color').forEach(function (b) { b.classList.remove('is-selected'); });
       saveBanner(file, file.name);
     }
+  });
+})();
+</script>
+
+<script data-page-script="true">
+/* ── Toggle de tema oscuro / claro ──────────────────── */
+(function () {
+  var toggle    = document.getElementById('tema-toggle');
+  var icon      = document.getElementById('aspecto-icon');
+  var label     = document.getElementById('aspecto-label');
+  var desc      = document.getElementById('aspecto-desc');
+  var savedMsg  = document.getElementById('aspecto-saved');
+  var TEMA_URL  = '{% url "perfil_actualizar_tema" %}';
+  var CSRF      = document.querySelector('[name=csrfmiddlewaretoken]');
+
+  if (!toggle) return;
+
+  var savedTimer = null;
+
+  function applyTheme(dark) {
+    if (dark) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    if (icon)  icon.textContent  = dark ? '🌙' : '☀️';
+    if (label) label.textContent = dark ? 'Modo oscuro' : 'Modo claro';
+    if (desc)  desc.textContent  = dark ? 'Fondo negro, acentos azul claro' : 'Fondo blanco, acentos verdes';
+    try { localStorage.setItem('sgit-theme', dark ? 'dark' : 'light'); } catch(e) {}
+  }
+
+  toggle.addEventListener('change', function () {
+    var dark = this.checked;
+    applyTheme(dark);
+
+    var fd = new FormData();
+    fd.append('csrfmiddlewaretoken', CSRF ? CSRF.value : '');
+    fd.append('tema', dark ? 'oscuro' : 'claro');
+
+    fetch(TEMA_URL, { method: 'POST', body: fd, credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok && savedMsg) {
+          savedMsg.style.display = 'block';
+          clearTimeout(savedTimer);
+          savedTimer = setTimeout(function () { savedMsg.style.display = 'none'; }, 2500);
+        }
+      })
+      .catch(function () {});
   });
 })();
 </script>
