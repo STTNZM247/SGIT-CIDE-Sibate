@@ -5,6 +5,23 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'inventario/dashboard/css/dashboard.css' %}" data-page-style="true">
 <link rel="stylesheet" href="{% static 'inventario/usuario/css/panel_usuario.css' %}" data-page-style="true">
+{% if request.user.tema == 'oscuro' %}
+<style>
+.usuario-busqueda-bar {
+  background: #111611 !important;
+  border: 1.5px solid #253025 !important;
+  box-shadow: 0 4px 18px rgba(0,0,0,.4) !important;
+  outline: none !important;
+}
+.usuario-busqueda-input {
+  color: #e2ede2 !important;
+  outline: none !important;
+}
+.usuario-busqueda-input::placeholder {
+  color: #5a6e5a !important;
+}
+</style>
+{% endif %}
 {% endblock %}
 
 {% block content %}
