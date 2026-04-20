@@ -4,6 +4,68 @@
 {% block title %}Mis Pedidos{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'inventario/usuario/css/pedidos_usuario.css' %}" data-page-style="true">
+<style>
+/* ── Bloque vencimiento inline ── */
+.pu-vencido-card {
+  display: flex; gap: 14px; align-items: flex-start;
+  margin-top: 14px;
+  background: linear-gradient(135deg, #fff8e1 60%, #fff3cd);
+  border: 2px solid #fbbf24;
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 14px rgba(251,191,36,0.15);
+}
+.pu-vencido-card__icon-wrap {
+  flex-shrink: 0; width: 46px; height: 46px;
+  background: #f59e0b; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(245,158,11,0.35);
+}
+.pu-vencido-card__icon-wrap ion-icon { font-size: 1.6em; color: #fff; }
+.pu-vencido-card__body { flex: 1; min-width: 0; }
+.pu-vencido-card__title {
+  font-size: 0.8em; font-weight: 900; color: #92400e;
+  text-transform: uppercase; letter-spacing: 0.07em; margin: 0 0 5px;
+}
+.pu-vencido-card__desc {
+  font-size: 0.93em; color: #78350f; margin: 0 0 12px; line-height: 1.5;
+}
+.pu-vencido-card__desc strong { color: #92400e; }
+.pu-vencido-card__extensiones {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 12px;
+}
+.pu-vencido-ext-dot {
+  width: 13px; height: 13px; border-radius: 50%;
+  background: #e5e7eb; border: 2px solid #d1d5db; display: inline-block;
+  transition: background 0.2s;
+}
+.pu-vencido-ext-dot--used { background: #f59e0b; border-color: #d97706; }
+.pu-vencido-ext-label { font-size: 0.84em; color: #92400e; font-weight: 600; }
+.pu-vencido-btn-extender {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #39A900; color: #fff; border: none; border-radius: 24px;
+  font-size: 0.97em; font-weight: 700; padding: 11px 22px;
+  cursor: pointer; transition: background 0.18s, transform 0.12s;
+  box-shadow: 0 3px 12px rgba(57,169,0,0.22);
+}
+.pu-vencido-btn-extender:hover { background: #2e7d0b; transform: translateY(-1px); }
+.pu-vencido-btn-extender ion-icon { font-size: 1.2em; }
+.pu-vencido-btn-dias {
+  background: rgba(255,255,255,0.22); border-radius: 10px;
+  padding: 2px 9px; font-size: 0.86em; font-weight: 800; letter-spacing: 0.02em;
+}
+.pu-vencido-card__limite {
+  display: flex; align-items: center; gap: 8px;
+  background: #fee2e2; border: 1.5px solid #fca5a5; border-radius: 12px;
+  padding: 10px 14px; color: #991b1b; font-size: 0.92em; font-weight: 600;
+}
+.pu-vencido-card__limite ion-icon { font-size: 1.15em; color: #dc2626; flex-shrink: 0; }
+@media (max-width: 600px) {
+  .pu-vencido-card { flex-direction: column; gap: 10px; }
+  .pu-vencido-card__icon-wrap { width: 38px; height: 38px; }
+  .pu-vencido-btn-extender { width: 100%; justify-content: center; }
+}
+</style>
 {% endblock %}
 
 {% block content %}
