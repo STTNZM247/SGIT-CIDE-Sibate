@@ -1002,3 +1002,191 @@
   }
 }
 
+/* ══════════════════════════════════════════════
+   DARK MODE – Pedidos usuario
+   ══════════════════════════════════════════════ */
+
+/* Página y hero */
+html[data-theme="dark"] .pedidos-usuario-page { background: transparent; }
+html[data-theme="dark"] .pedidos-usuario-eyebrow { color: #42a5f5 !important; }
+html[data-theme="dark"] .pedidos-usuario-hero h1 { color: #e2ede2 !important; }
+html[data-theme="dark"] .pedidos-usuario-hero p  { color: #7a9a7a !important; }
+
+/* Filtros (tabs) */
+html[data-theme="dark"] .pedidos-usuario-filtro {
+  background: #161e16 !important;
+  border-color: #253025 !important;
+  color: #c4d8c4 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-filtro strong {
+  background: #0d2538 !important;
+  color: #42a5f5 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-filtro.is-active {
+  background: #0d2538 !important;
+  border-color: #42a5f5 !important;
+  color: #90caf9 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-filtro--rechazado { color: #e57373 !important; }
+html[data-theme="dark"] .pedidos-usuario-filtro--rechazado strong { background: #2a1010 !important; color: #ef9a9a !important; }
+html[data-theme="dark"] .pedidos-usuario-filtro--rechazado.is-active { background: #2a1010 !important; border-color: #ef5350 !important; color: #ef9a9a !important; }
+html[data-theme="dark"] .pedidos-usuario-filtro--devuelto { color: #80cbc4 !important; }
+html[data-theme="dark"] .pedidos-usuario-filtro--devuelto strong { background: #0d2020 !important; color: #4db6ac !important; }
+html[data-theme="dark"] .pedidos-usuario-filtro--cancelado { color: #ce93d8 !important; }
+html[data-theme="dark"] .pedidos-usuario-filtro--cancelado strong { background: #1e0d24 !important; color: #ba68c8 !important; }
+
+/* Cards */
+html[data-theme="dark"] .pedidos-usuario-card {
+  background: #111611 !important;
+  border-color: #253025 !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+}
+html[data-theme="dark"] .pedidos-usuario-card__id   { color: #e2ede2 !important; }
+html[data-theme="dark"] .pedidos-usuario-card__date { color: #7a9a7a !important; }
+
+/* Stats grid dentro de card */
+html[data-theme="dark"] .pedidos-usuario-card__stats div {
+  background: #161e16 !important;
+  border-color: #253025 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-card__stats span  { color: #7a9a7a !important; }
+html[data-theme="dark"] .pedidos-usuario-card__stats strong { color: #e2ede2 !important; }
+
+/* Alertas dentro de card */
+html[data-theme="dark"] .pedidos-usuario-alert--rechazado {
+  background: #1c0909 !important;
+  border-color: #4a1010 !important;
+  color: #ef9a9a !important;
+}
+html[data-theme="dark"] .pedidos-usuario-alert--devuelto {
+  background: #0d1e16 !important;
+  border-color: #1a3a2a !important;
+  color: #80cbc4 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-alert--cancelado {
+  background: #1a0d24 !important;
+  border-color: #3a1a4a !important;
+  color: #ce93d8 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-alert strong { color: inherit !important; }
+
+/* Código de entrega */
+html[data-theme="dark"] .pedidos-usuario-codigo--ok {
+  background: #0d1e38 !important;
+  border-color: #1a3a5c !important;
+  color: #90caf9 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-codigo--expired {
+  background: #1e1000 !important;
+  border-color: #3a2000 !important;
+  color: #ffb74d !important;
+}
+html[data-theme="dark"] .pedidos-usuario-codigo span  { color: #7a9aaa !important; }
+html[data-theme="dark"] .pedidos-usuario-codigo small { color: #7a9aaa !important; }
+
+/* Toggle productos */
+html[data-theme="dark"] .pedidos-usuario-products-toggle {
+  background: #161e16 !important;
+  border-color: #253025 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-products-toggle[open] {
+  background: #111611 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-products-toggle summary {
+  color: #c4d8c4 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-products-toggle summary strong {
+  background: #0d2538 !important;
+  color: #42a5f5 !important;
+}
+
+/* Items de producto */
+html[data-theme="dark"] .pedidos-usuario-product-item {
+  background: #161e16 !important;
+  border-color: #253025 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-product-item__media {
+  background: #0d1a0d !important;
+  color: #4a6a4a !important;
+}
+html[data-theme="dark"] .pedidos-usuario-product-item__body h3  { color: #e2ede2 !important; }
+html[data-theme="dark"] .pedidos-usuario-product-item__body p   { color: #42a5f5 !important; }
+html[data-theme="dark"] .pedidos-usuario-product-item__body small { color: #7a9a7a !important; }
+
+/* Devolución ring */
+html[data-theme="dark"] .pedidos-usuario-devolucion-box {
+  background: #0d1e16 !important;
+  border-color: #1a3a2a !important;
+}
+html[data-theme="dark"] .pedidos-usuario-devolucion-box__head span  { color: #42a5f5 !important; }
+html[data-theme="dark"] .pedidos-usuario-devolucion-box__head small { color: #7a9a7a !important; }
+html[data-theme="dark"] .pedidos-usuario-devolucion-ring::before {
+  background: #111611 !important;
+  border-color: #253025 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-devolucion-ring strong { color: #e2ede2 !important; }
+html[data-theme="dark"] .pedidos-usuario-devolucion-box__timer span   { color: #7a9a7a !important; }
+html[data-theme="dark"] .pedidos-usuario-devolucion-box__timer strong { color: #42a5f5 !important; }
+
+/* Vencido card */
+html[data-theme="dark"] .pu-vencido-card {
+  background: linear-gradient(135deg, #1a1200 60%, #1f1600) !important;
+  border-color: #7c5c00 !important;
+}
+html[data-theme="dark"] .pu-vencido-card__title { color: #fbbf24 !important; }
+html[data-theme="dark"] .pu-vencido-card__desc  { color: #d4a017 !important; }
+html[data-theme="dark"] .pu-vencido-ext-label   { color: #fbbf24 !important; }
+html[data-theme="dark"] .pu-vencido-card__limite {
+  background: #1c0909 !important;
+  border-color: #7a1010 !important;
+  color: #ef9a9a !important;
+}
+
+/* Cancelar wrap */
+html[data-theme="dark"] .pedidos-usuario-cancelar-wrap {
+  background: #1a1200 !important;
+  border-color: #7c5c00 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-cancelar-wrap.pedidos-cancelar-urgente {
+  background: #1f1000 !important;
+  border-color: #b85c00 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-cancelar-info { color: #d4a017 !important; }
+html[data-theme="dark"] .pedidos-cancelar-countdown { color: #ffb74d !important; }
+html[data-theme="dark"] .pedidos-cancelar-urgente .pedidos-cancelar-countdown { color: #ff7043 !important; }
+
+html[data-theme="dark"] .pedidos-usuario-btn-cancelar {
+  background: #1c0909 !important;
+  border-color: #7a1010 !important;
+  color: #ef9a9a !important;
+}
+html[data-theme="dark"] .pedidos-usuario-btn-cancelar:hover {
+  background: #c62828 !important;
+  color: #fff !important;
+}
+
+/* Modal cancelar */
+html[data-theme="dark"] .cancelar-modal {
+  background: #111611 !important;
+}
+html[data-theme="dark"] .cancelar-modal__title    { color: #e2ede2 !important; }
+html[data-theme="dark"] .cancelar-modal__msg       { color: #7a9a7a !important; }
+html[data-theme="dark"] .cancelar-modal__msg strong { color: #e2ede2 !important; }
+html[data-theme="dark"] .cancelar-modal__btn--back {
+  background: #161e16 !important;
+  color: #c4d8c4 !important;
+}
+html[data-theme="dark"] .cancelar-modal__btn--back:hover { background: #1e2a1e !important; }
+
+/* Empty state */
+html[data-theme="dark"] .pedidos-usuario-empty {
+  background: #111611 !important;
+  border-color: #253025 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-empty__icon {
+  background: #0d2538 !important;
+  color: #42a5f5 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-empty h2 { color: #e2ede2 !important; }
+html[data-theme="dark"] .pedidos-usuario-empty p  { color: #7a9a7a !important; }
+
