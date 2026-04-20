@@ -949,3 +949,88 @@
     margin-top: 24px;
   }
 }
+
+/* ============================
+   DARK MODE — panel_usuario.css
+   ============================ */
+html[data-theme="dark"] .usuario-busqueda-bar {
+  background: #111611;
+  border-color: #253025;
+  box-shadow: 0 10px 28px rgba(0,0,0,.3);
+}
+html[data-theme="dark"] .usuario-busqueda-input {
+  color: #e2ede2;
+}
+html[data-theme="dark"] .usuario-busqueda-input::placeholder {
+  color: #5a6e5a;
+}
+
+/* -- Inventario grid cards -- */
+html[data-theme="dark"] .usuario-card {
+  background: #161e16;
+  border-color: #253025;
+  box-shadow: 0 2px 12px rgba(0,0,0,.3);
+}
+html[data-theme="dark"] .usuario-card__media,
+html[data-theme="dark"] .usuario-card__placeholder {
+  background: #1a241a;
+}
+html[data-theme="dark"] .usuario-card__name {
+  color: #e2ede2;
+}
+html[data-theme="dark"] .usuario-card__desc {
+  color: #8aac8a;
+}
+html[data-theme="dark"] .usuario-carrito-form label {
+  color: #c5dcc5;
+}
+html[data-theme="dark"] .usuario-carrito-form input[type="number"] {
+  background: #0d1e0d;
+  border-color: #253025;
+  color: #e2ede2;
+}
+
+/* -- Detalle producto -- */
+html[data-theme="dark"] .usuario-product-detail-page {
+  background: #111611;
+  box-shadow: 0 8px 40px rgba(0,0,0,.5);
+}
+html[data-theme="dark"] .usuario-product-modal__placeholder {
+  background: #1a241a;
+  color: #4a6a4a;
+}
+html[data-theme="dark"] .usuario-product-modal__title {
+  color: #e2ede2;
+}
+html[data-theme="dark"] .usuario-product-detail-info .usuario-carrito-form label {
+  color: #c5dcc5;
+}
+html[data-theme="dark"] .usuario-product-detail-info .usuario-carrito-form input[type="number"] {
+  background: #0d1e2e;
+  border-color: #1a3a5c;
+  color: #d0e8ff;
+}
+html[data-theme="dark"] .usuario-product-detail-stock,
+html[data-theme="dark"] .usuario-product-detail-cat {
+  color: #b0c8b0;
+}
+html[data-theme="dark"] .usuario-product-detail-stock .usuario-product-detail-value,
+html[data-theme="dark"] .usuario-product-detail-cat .usuario-product-detail-value {
+  color: #e2ede2;
+}
+html[data-theme="dark"] .usuario-product-detail-stock .usuario-product-detail-label,
+html[data-theme="dark"] .usuario-product-detail-cat .usuario-product-detail-label {
+  color: #6a8a6a;
+}
+html[data-theme="dark"] .usuario-product-detail-block {
+  border-top-color: #253025;
+}
+html[data-theme="dark"] .usuario-product-detail-label {
+  color: #6a8a6a;
+}
+html[data-theme="dark"] .usuario-product-detail-value {
+  color: #e2ede2;
+}
+html[data-theme="dark"] .usuario-product-detail-value--preserve {
+  color: #b0c8b0;
+}
