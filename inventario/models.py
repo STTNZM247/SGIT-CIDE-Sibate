@@ -247,6 +247,7 @@ class Pedido(models.Model):
     fch_registro = models.DateTimeField(null=True, blank=True)
     fch_ult_act = models.DateTimeField(null=True, blank=True)
     notif_vencimiento_enviada = models.BooleanField(default=False)
+    extensiones_plazo = models.PositiveSmallIntegerField(default=0)  # máximo 3
 
     class Meta:
         db_table = 'pedido'

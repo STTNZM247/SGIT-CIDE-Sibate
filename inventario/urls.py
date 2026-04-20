@@ -40,7 +40,7 @@ from .views import (
     notificaciones_marcar_todas_leidas,
 )
 
-from .views_usuario import carrito_usuario, panel_usuario, pedido_cancelar_usuario, pedido_codigo_devolucion, pedidos_usuario, producto_detalle_usuario, usuario_agregar_carrito, usuario_eliminar_carrito, usuario_realizar_pedido
+from .views_usuario import carrito_usuario, panel_usuario, pedido_cancelar_usuario, pedido_codigo_devolucion, pedido_extender_plazo, pedidos_usuario, producto_detalle_usuario, usuario_agregar_carrito, usuario_eliminar_carrito, usuario_realizar_pedido
 
 urlpatterns = [
     path(
@@ -103,6 +103,7 @@ urlpatterns = [
     path('usuario/pedidos/', pedidos_usuario, name='pedidos_usuario'),
     path('usuario/pedidos/<int:pedido_id>/codigo-devolucion/', pedido_codigo_devolucion, name='pedido_codigo_devolucion'),
     path('usuario/pedidos/<int:pedido_id>/cancelar/', pedido_cancelar_usuario, name='pedido_cancelar_usuario'),
+    path('usuario/pedidos/<int:pedido_id>/extender-plazo/', pedido_extender_plazo, name='pedido_extender_plazo'),
     path('usuario/notificaciones/', notificaciones_panel, name='notificaciones_panel'),
     path('usuario/notificaciones/<int:noti_id>/leer/', notificacion_marcar_leida, name='notificacion_marcar_leida'),
     path('usuario/notificaciones/leer-todas/', notificaciones_marcar_todas_leidas, name='notificaciones_marcar_todas_leidas'),

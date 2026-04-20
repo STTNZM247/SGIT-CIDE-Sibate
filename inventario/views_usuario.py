@@ -340,6 +340,13 @@ def pedidos_usuario(request):
             pedido.puede_cancelar = False
             pedido.segundos_cancelacion = 0
 
+        # ¿Está vencido? (entregado, con fecha de devolución pasada, no devuelto aún)
+        pedido.esta_vencido = (
+            pedido.estado == 'entregado'
+            and pedido.fecha_devolucion is not None
+            and pedido.fecha_devolucion < ahora
+        )
+
     estado_activo = (request.GET.get('estado') or 'todos').strip().lower()
     estados_validos = {'todos', 'pendiente', 'esperando-entrega', 'entregado', 'devuelto', 'rechazado', 'cancelado'}
     if estado_activo not in estados_validos:
@@ -507,6 +514,88 @@ def producto_detalle_usuario(request, prod_id):
         'producto': producto,
         'sugerencias': sugerencias,
     })
+
+
+MAX_EXTENSIONES = 3
+DIAS_EXTENSION = 3   # días que se agrega cada vez que el usuario extiende
+
+
+@login_required
+@require_POST
+def pedido_extender_plazo(request, pedido_id):
+    """El usuario solicita extender el plazo de devolución (máx. 3 veces, +3 días c/u)."""
+    if not _usuario_cliente(request):
+        return redirect('dashboard')
+
+    with transaction.atomic():
+        pedido = get_object_or_404(
+            Pedido.objects.select_for_update(),
+            pk=pedido_id,
+            id_usuario_fk=request.user,
+        )
+
+        if pedido.estado != 'entregado':
+            messages.error(request, 'Solo puedes extender el plazo de pedidos actualmente entregados.')
+            return redirect('pedidos_usuario')
+
+        if pedido.extensiones_plazo >= MAX_EXTENSIONES:
+            messages.error(
+                request,
+                f'Ya usaste los {MAX_EXTENSIONES} plazos disponibles. '
+                'Debes devolver los productos a la brevedad posible.'
+            )
+            return redirect('pedidos_usuario')
+
+        ahora = timezone.now()
+        # Si fecha_devolucion ya pasó, extendemos desde ahora; si aún no, desde la fecha original
+        base = pedido.fecha_devolucion if pedido.fecha_devolucion and pedido.fecha_devolucion > ahora else ahora
+        nueva_fecha = base + timedelta(days=DIAS_EXTENSION)
+
+        pedido.fecha_devolucion = nueva_fecha
+        pedido.extensiones_plazo += 1
+        pedido.notif_vencimiento_enviada = False   # permitir re-notificar si vuelve a vencer
+        pedido.fch_ult_act = ahora
+        pedido.save(update_fields=['fecha_devolucion', 'extensiones_plazo', 'notif_vencimiento_enviada', 'fch_ult_act'])
+
+    extensiones_restantes = MAX_EXTENSIONES - pedido.extensiones_plazo
+    _crear_notificacion(
+        usuario=request.user,
+        tipo='aviso_devolucion',
+        titulo='Plazo de devolución extendido',
+        mensaje=(
+            f'Extendiste el plazo del pedido #{pedido.id_pedido}. '
+            f'Nueva fecha límite: {nueva_fecha.strftime("%d/%m/%Y %H:%M")}. '
+            + (
+                f'Te queda{"n" if extensiones_restantes != 1 else ""} '
+                f'{extensiones_restantes} extensión{"es" if extensiones_restantes != 1 else ""} disponible{"s" if extensiones_restantes != 1 else ""}.'
+                if extensiones_restantes > 0
+                else 'No tienes más extensiones disponibles. Debes devolver los productos.'
+            )
+        ),
+        pedido_id=pedido.id_pedido,
+    )
+    _notificar_staff(
+        tipo='aviso_devolucion',
+        titulo=f'Pedido #{pedido.id_pedido} – plazo extendido',
+        mensaje=(
+            f'{request.user.nombre or ""} {request.user.apellido or ""}'.strip() or request.user.correo
+        ) + (
+            f' extendió el plazo del pedido #{pedido.id_pedido} '
+            f'(extensión {pedido.extensiones_plazo}/{MAX_EXTENSIONES}). '
+            f'Nueva fecha: {nueva_fecha.strftime("%d/%m/%Y %H:%M")}.'
+        ),
+        pedido_id=pedido.id_pedido,
+    )
+    messages.success(
+        request,
+        f'Plazo extendido hasta el {nueva_fecha.strftime("%d/%m/%Y")}. '
+        + (
+            f'Te quedan {extensiones_restantes} extensión{"es" if extensiones_restantes != 1 else ""} disponible{"s" if extensiones_restantes != 1 else ""}.'
+            if extensiones_restantes > 0
+            else 'Esta fue tu última extensión. Debes devolver los productos en la nueva fecha.'
+        )
+    )
+    return redirect('pedidos_usuario')
 
 @login_required
 def usuario_agregar_carrito(request, prod_id):

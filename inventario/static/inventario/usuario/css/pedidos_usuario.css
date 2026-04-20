@@ -516,6 +516,53 @@
   color: #1b6a3a;
 }
 
+.pedidos-usuario-alert--vencido {
+  background: #fff8e1;
+  border: 1.5px solid #fbbf24;
+  color: #92400e;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: 12px;
+}
+.pedidos-usuario-alert--vencido ion-icon {
+  font-size: 1.6em;
+  color: #f59e0b;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.pedidos-usuario-alert--vencido strong {
+  display: block;
+  font-size: 1em;
+  margin-bottom: 4px;
+}
+.pedidos-usuario-alert--vencido p {
+  margin: 0;
+  font-size: 0.95em;
+  line-height: 1.5;
+}
+
+.pedidos-usuario-btn-extender {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #39A900;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.97em;
+  font-weight: 700;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.18s;
+  margin-top: 4px;
+}
+.pedidos-usuario-btn-extender:hover {
+  background: #2e7d0b;
+}
+
 .pedidos-usuario-devolucion-box {
   margin-top: 12px;
   display: grid;

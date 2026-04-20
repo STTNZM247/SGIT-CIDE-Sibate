@@ -89,6 +89,36 @@
             </div>
             {% endif %}
 
+            {% if pedido.esta_vencido %}
+            <div class="pedidos-usuario-alert pedidos-usuario-alert--vencido">
+                <ion-icon name="warning-outline"></ion-icon>
+                <div>
+                    <strong>⚠️ Devolución pendiente</strong>
+                    <p>
+                        El plazo de este préstamo <strong>venció el {{ pedido.fecha_devolucion|date:'d/m/Y' }}</strong>.
+                        Por favor devuelve los productos o solicita más tiempo.
+                    </p>
+                    {% if pedido.extensiones_plazo < 3 %}
+                    <p style="margin-top:6px;font-size:0.93em;color:#b45309;">
+                        Extensiones usadas: <strong>{{ pedido.extensiones_plazo }}/3</strong>
+                    </p>
+                    <form method="post" action="{% url 'pedido_extender_plazo' pedido.id_pedido %}" style="margin-top:10px;">
+                        {% csrf_token %}
+                        <button type="submit" class="pedidos-usuario-btn-extender">
+                            <ion-icon name="time-outline"></ion-icon>
+                            Pedir más tiempo (+3 días)
+                        </button>
+                    </form>
+                    {% else %}
+                    <p style="margin-top:8px;font-size:0.93em;color:#dc2626;font-weight:700;">
+                        <ion-icon name="alert-circle-outline"></ion-icon>
+                        Ya usaste las 3 extensiones disponibles. <strong>Debes devolver los productos.</strong>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
             {% if pedido.estado == 'pendiente' and pedido.puede_cancelar %}
             <div class="pedidos-usuario-cancelar-wrap"
                  data-cancelar-pedido
