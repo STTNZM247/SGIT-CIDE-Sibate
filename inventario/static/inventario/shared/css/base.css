@@ -62,6 +62,25 @@ html[data-theme="dark"] body {
     color: var(--text-primary);
 }
 
+/* Forzar color de texto en todos los elementos principales */
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6,
+html[data-theme="dark"] p,
+html[data-theme="dark"] span:not([class*="badge"]):not([class*="status"]),
+html[data-theme="dark"] label,
+html[data-theme="dark"] td,
+html[data-theme="dark"] th,
+html[data-theme="dark"] li,
+html[data-theme="dark"] small,
+html[data-theme="dark"] strong,
+html[data-theme="dark"] em {
+    color: var(--text-primary) !important;
+}
+
 html[data-theme="dark"] .app-footer {
     background: var(--footer-bg);
     color: var(--footer-color);
@@ -80,13 +99,25 @@ html[data-theme="dark"] .navigation ul li a .text {
 html[data-theme="dark"] .nav-brand__logo {
     background-color: #42a5f5;
 }
+/* Indicator: círculo azul claro, bolitas laterales = fondo de la navbar */
 html[data-theme="dark"] .indicator {
     background: #42a5f5 !important;
     box-shadow: 0 0 0 4px #0d2745 !important;
 }
-html[data-theme="dark"] .indicator::before,
+html[data-theme="dark"] .indicator::before {
+    box-shadow: 15px 18px #0d2745 !important;
+}
 html[data-theme="dark"] .indicator::after {
-    background: #0d2745 !important;
+    box-shadow: -15px 18px #0d2745 !important;
+}
+/* Versión vertical (sidebar PC) */
+@media (min-width: 768px) {
+    html[data-theme="dark"] .indicator::before {
+        box-shadow: -15px 18px #0d2745 !important;
+    }
+    html[data-theme="dark"] .indicator::after {
+        box-shadow: -15px -18px #0d2745 !important;
+    }
 }
 html[data-theme="dark"] .nav-notif-btn {
     background: rgba(66,165,245,0.92) !important;
@@ -135,7 +166,7 @@ html[data-theme="dark"] td, html[data-theme="dark"] th {
 }
 
 /* Inputs, selects, textareas */
-html[data-theme="dark"] input:not([type="file"]),
+html[data-theme="dark"] input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
 html[data-theme="dark"] select,
 html[data-theme="dark"] textarea {
     background: var(--input-bg) !important;
@@ -145,6 +176,11 @@ html[data-theme="dark"] textarea {
 html[data-theme="dark"] input::placeholder,
 html[data-theme="dark"] textarea::placeholder {
     color: var(--text-muted) !important;
+}
+/* Opciones de select en dark */
+html[data-theme="dark"] option {
+    background: var(--input-bg);
+    color: var(--text-primary);
 }
 
 /* Botones con color verde → azul claro */
