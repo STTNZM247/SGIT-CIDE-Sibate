@@ -2176,6 +2176,61 @@ def pedido_marcar_esperando_entrega(request, pedido_id):
                 f'Dirígete al almacén con tu código de entrega.',
         pedido_id=pedido.id_pedido,
     )
+
+    # ── Correo: pedido listo para recoger ────────────────────────────────
+    try:
+        from django.core.mail import EmailMultiAlternatives
+        usuario = pedido.id_usuario_fk
+        correo_dest = getattr(usuario, 'correo', None) or getattr(usuario, 'email', None)
+        if correo_dest:
+            nombre = getattr(usuario, 'nombre', '') or str(usuario)
+            fecha_str = pedido.fecha_devolucion.strftime('%d/%m/%Y a las %H:%M') if pedido.fecha_devolucion else 'Sin fecha definida'
+            base_url = 'https://almacensedelacolonia.pythonanywhere.com'
+            detalles_list = list(pedido.detalles.exclude(estado_detalle__in=['no_disponible', 'rechazado', 'cancelado']).select_related('id_prod_fk'))
+            filas_html = ''
+            lista_txt = ''
+            for d in detalles_list:
+                prod = d.id_prod_fk
+                img_url = f'{base_url}{settings.MEDIA_URL}{prod.fot_prod}' if prod and prod.fot_prod else ''
+                img_tag = (f'<img src="{img_url}" width="44" height="44" style="border-radius:6px;object-fit:cover;">'
+                           if img_url else '<div style="width:44px;height:44px;background:#e8f5e9;border-radius:6px;display:inline-block;">📦</div>')
+                filas_html += f'<tr><td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;width:60px;">{img_tag}</td><td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#333;">{d.nombre_producto}</td><td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#555;text-align:center;">x{d.cantidad_solicitada}</td></tr>'
+                lista_txt += f'  - {d.nombre_producto} x{d.cantidad_solicitada}\n'
+            tabla = f'<p style="font-size:15px;font-weight:700;color:#1a2e1a;margin:20px 0 8px;">📦 Productos a recoger:</p><table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;"><thead><tr style="background:#f5f5f5;"><th style="padding:10px 12px;text-align:left;font-size:13px;color:#666;width:60px;">Foto</th><th style="padding:10px 12px;text-align:left;font-size:13px;color:#666;">Producto</th><th style="padding:10px 12px;text-align:center;font-size:13px;color:#666;">Cant.</th></tr></thead><tbody>{filas_html}</tbody></table>' if filas_html else ''
+            asunto = f'🎉 Tu pedido #{pedido.id_pedido} está listo para recoger | Almacén SENA Sibaté'
+            txt = f'Hola {nombre},\n\nTu pedido #{pedido.id_pedido} fue aprobado y está listo para ser retirado en el almacén.\n\nProductos a recoger:\n{lista_txt}\nFecha de devolución: {fecha_str}\n\nDirígete al almacén y muestra tu código de entrega.\n\n— Almacén SENA Sibaté'
+            html = f"""<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:32px 0;">
+<tr><td align="center"><table width="600" cellpadding="0" cellspacing="0"
+  style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);max-width:600px;width:100%;">
+<tr><td style="background:#2196F3;padding:28px 32px;text-align:center;">
+  <p style="margin:0;color:#fff;font-size:13px;opacity:0.85;">SENA — Almacén Sibaté</p>
+  <h1 style="margin:8px 0 0;color:#fff;font-size:24px;">🎉 ¡Tu pedido está listo!</h1>
+</td></tr>
+<tr><td style="padding:32px;">
+  <p style="font-size:16px;color:#333;">Hola <strong>{nombre}</strong>,</p>
+  <p style="font-size:15px;color:#444;line-height:1.6;">Tu pedido <strong>#{pedido.id_pedido}</strong> fue <strong>aprobado</strong> y ya está listo para ser retirado en el almacén.</p>
+  {tabla}
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;"><tr>
+    <td style="background:#e3f2fd;border-left:4px solid #2196F3;border-radius:6px;padding:14px 18px;">
+      <p style="margin:0 0 6px;font-size:14px;color:#333;">📅 Fecha de devolución: <strong>{fecha_str}</strong></p>
+      <p style="margin:0;font-size:14px;color:#333;">🏪 Dirígete al almacén y muestra tu <strong>código de entrega</strong>.</p>
+    </td>
+  </tr></table>
+  <p style="font-size:13px;color:#888;margin-top:28px;">— Almacén SENA Sibaté</p>
+</td></tr>
+<tr><td style="background:#f9f9f9;padding:14px 32px;text-align:center;border-top:1px solid #eee;">
+  <p style="margin:0;font-size:12px;color:#aaa;">Centro Industrial y de Desarrollo Empresarial – Sibaté, Cundinamarca</p>
+</td></tr>
+</table></td></tr></table>
+</body></html>"""
+            msg = EmailMultiAlternatives(asunto, txt, settings.DEFAULT_FROM_EMAIL, [correo_dest])
+            msg.attach_alternative(html, 'text/html')
+            msg.send()
+    except Exception:
+        pass  # No bloquear el flujo si el correo falla
+
     return redirect('pedido_detalle_panel', pedido_id=pedido_id)
 
 
