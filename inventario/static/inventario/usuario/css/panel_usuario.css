@@ -818,6 +818,24 @@
   line-height: 1.5;
 }
 
+@media (max-width: 768px) {
+  .usuario-product-modal__media {
+    flex: 0 0 200px;
+    max-width: 200px;
+    height: 200px;
+  }
+  .usuario-product-modal__img {
+    max-width: 200px;
+    max-height: 200px;
+  }
+  .usuario-product-modal__title {
+    font-size: 1.6rem;
+  }
+  .usuario-product-detail-page {
+    padding: 72px 20px 36px 20px;
+  }
+}
+
 @media (max-width: 1080px) {
   .usuario-carrito-layout {
     grid-template-columns: 1fr;
@@ -876,5 +894,58 @@
   }
   .usuario-card__body {
     padding: 8px 4px 0 4px;
+  }
+
+  /* ── Detalle de producto – responsivo móvil ── */
+  .usuario-product-detail-page {
+    min-width: 0;
+    border-radius: 0;
+    padding: 72px 16px 100px 16px;
+    box-shadow: none;
+  }
+  .usuario-btn-volver {
+    left: 16px;
+    top: 16px;
+    font-size: 0.95em;
+    padding: 10px 18px;
+  }
+  .usuario-product-detail-flex {
+    flex-direction: column;
+    gap: 18px;
+    align-items: center;
+  }
+  .usuario-product-modal__media {
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: 220px;
+  }
+  .usuario-product-modal__img {
+    max-width: 100%;
+    max-height: 220px;
+  }
+  .usuario-product-detail-info {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 0;
+    align-items: stretch;
+  }
+  .usuario-product-modal__title {
+    font-size: 1.35rem;
+    word-break: break-word;
+  }
+  .usuario-btn-carrito-temu {
+    max-width: 100%;
+    font-size: 1em;
+    padding: 13px 18px;
+  }
+  .usuario-product-detail-block {
+    padding: 16px 0 0 0;
+    margin-top: 18px;
+  }
+  .usuario-sugerencias-panel {
+    margin-top: 24px;
   }
 }
