@@ -2717,16 +2717,51 @@ def pedido_aviso_devolucion(request, pedido_id):
         try:
             from django.core.mail import EmailMultiAlternatives
             nombre = getattr(usuario, 'nombre', '') or str(usuario)
-            ahora = timezone.now()
             fecha_str = pedido.fecha_devolucion.strftime('%d/%m/%Y') if pedido.fecha_devolucion else '—'
             remitente = settings.DEFAULT_FROM_EMAIL
+
+            # Productos a devolver (solo los activos, no rechazados/cancelados)
+            detalles = list(pedido.detalles.exclude(
+                estado_detalle__in=['no_disponible', 'rechazado', 'cancelado']
+            ))
+
+            # Construir filas de productos para el correo
+            filas_html = ''
+            lista_texto = ''
+            for d in detalles:
+                filas_html += f"""
+                <tr>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;
+                              font-size:14px;color:#333;">{d.nombre_producto}</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;
+                              font-size:14px;color:#555;text-align:center;">{d.cantidad_solicitada}</td>
+                </tr>"""
+                lista_texto += f'  - {d.nombre_producto} x{d.cantidad_solicitada}\n'
+
+            tabla_productos = f"""
+            <p style="font-size:15px;font-weight:700;color:#1a2e1a;margin:24px 0 8px;">
+              📋 Productos a devolver:
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
+              <thead>
+                <tr style="background:#f5f5f5;">
+                  <th style="padding:10px 12px;text-align:left;font-size:13px;
+                              color:#666;font-weight:600;">Producto</th>
+                  <th style="padding:10px 12px;text-align:center;font-size:13px;
+                              color:#666;font-weight:600;">Cantidad</th>
+                </tr>
+              </thead>
+              <tbody>{filas_html}</tbody>
+            </table>""" if detalles else ''
 
             asunto = f'📦 Recordatorio de devolución – Pedido #{pedido.id_pedido} | Almacén SENA Sibaté'
             texto_plano = (
                 f'Hola {nombre},\n\n'
                 f'El almacenista te recuerda que debes devolver los materiales del '
-                f'pedido #{pedido.id_pedido} (fecha límite: {fecha_str}).\n'
-                'Por favor, acércate al almacén a la brevedad posible.\n\n'
+                f'pedido #{pedido.id_pedido} (fecha límite: {fecha_str}).\n\n'
+                + (f'Productos a devolver:\n{lista_texto}\n' if lista_texto else '')
+                + 'Por favor, acércate al almacén a la brevedad posible.\n\n'
                 '— Almacén SENA Sibaté'
             )
             html = f"""<!DOCTYPE html>
@@ -2752,6 +2787,7 @@ def pedido_aviso_devolucion(request, pedido_id):
               del préstamo <strong>#{pedido.id_pedido}</strong>
               {"(fecha límite: <strong>" + fecha_str + "</strong>)" if pedido.fecha_devolucion else ""}.
             </p>
+            {tabla_productos}
             <table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
               <tr>
                 <td style="background:#e8f5e9;border-left:4px solid #39A900;
