@@ -951,12 +951,12 @@
 }
 
 /* ============================
-   DARK MODE — panel_usuario.css
+   DARK MODE ï¿½ panel_usuario.css
    ============================ */
 html[data-theme="dark"] .usuario-busqueda-bar {
-  background: #111611;
-  border-color: #253025;
-  box-shadow: 0 10px 28px rgba(0,0,0,.3);
+  background: #111611 !important;
+  border: 1.5px solid #253025 !important;
+  box-shadow: 0 10px 28px rgba(0,0,0,.3) !important;
 }
 html[data-theme="dark"] .usuario-busqueda-input {
   color: #e2ede2;
