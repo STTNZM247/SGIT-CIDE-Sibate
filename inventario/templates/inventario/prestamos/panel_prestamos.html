@@ -327,9 +327,11 @@
                 {% if prestamo.estado == 'entregado' and prestamo.es_vencido %}
                 <form method="post" action="{% url 'pedido_aviso_devolucion' prestamo.id_pedido %}" class="prestamo-action-form">
                     {% csrf_token %}
-                    <button type="submit" class="prestamo-btn prestamo-btn--aviso"
+                    <button type="button" class="prestamo-btn prestamo-btn--aviso"
                             title="Enviar notificación de devolución al usuario"
-                            onclick="return confirm('¿Enviar aviso de devolución al usuario?')">
+                            data-trigger-aviso
+                            data-pedido-id="{{ prestamo.id_pedido }}"
+                            data-usuario-nombre="{{ prestamo.id_usuario_fk.nombre }} {{ prestamo.id_usuario_fk.apellido }}">
                         <ion-icon name="notifications-outline"></ion-icon> Enviar aviso
                     </button>
                 </form>
@@ -375,6 +377,69 @@
         </div>
     </div>
 </div>
+
+<div class="prestamo-modal-overlay" id="aviso-confirm-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="aviso-modal-title">
+    <div class="prestamo-modal-confirm">
+        <div class="prestamo-modal-confirm__icon" style="background:#fff8e1;color:#e65100;">
+            <ion-icon name="notifications-circle-outline"></ion-icon>
+        </div>
+        <h2 class="prestamo-modal-confirm__title" id="aviso-modal-title">¿Enviar aviso de devolución?</h2>
+        <p class="prestamo-modal-confirm__text">
+            Se enviará una <strong>notificación interna y un correo</strong> a
+            <strong id="aviso-modal-usuario">—</strong> recordándole que debe devolver
+            los materiales del préstamo <strong id="aviso-modal-pedido">#—</strong>.
+        </p>
+        <div class="prestamo-modal-confirm__actions">
+            <button type="button" class="prestamo-modal-confirm__btn prestamo-modal-confirm__btn--back" data-close-aviso>
+                Cancelar
+            </button>
+            <button type="button" class="prestamo-modal-confirm__btn" id="aviso-modal-confirm-btn"
+                    style="background:#e65100;color:#fff;">
+                <ion-icon name="send-outline"></ion-icon> Sí, enviar aviso
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    // ── Modal aviso devolución ────────────────────────────────────────────
+    const avisoModal = document.getElementById('aviso-confirm-modal');
+    const avisoUsuario = document.getElementById('aviso-modal-usuario');
+    const avisoPedido  = document.getElementById('aviso-modal-pedido');
+    const avisoConfirm = document.getElementById('aviso-modal-confirm-btn');
+    if (avisoModal && avisoConfirm) {
+        let avisoForm = null;
+        const openAviso = (form, pedidoId, nombreUsuario) => {
+            avisoForm = form;
+            if (avisoPedido)  avisoPedido.textContent  = '#' + (pedidoId || '—');
+            if (avisoUsuario) avisoUsuario.textContent = nombreUsuario || '—';
+            avisoModal.classList.add('is-open');
+            avisoModal.setAttribute('aria-hidden', 'false');
+        };
+        const closeAviso = () => {
+            avisoModal.classList.remove('is-open');
+            avisoModal.setAttribute('aria-hidden', 'true');
+            avisoForm = null;
+        };
+        document.querySelectorAll('button[data-trigger-aviso]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const form = btn.closest('form');
+                if (!form) return;
+                openAviso(form, btn.dataset.pedidoId, btn.dataset.usuarioNombre);
+            });
+        });
+        avisoConfirm.addEventListener('click', () => {
+            if (avisoForm) avisoForm.submit();
+        });
+        avisoModal.querySelectorAll('[data-close-aviso]').forEach((b) => b.addEventListener('click', closeAviso));
+        avisoModal.addEventListener('click', (ev) => { if (ev.target === avisoModal) closeAviso(); });
+        document.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Escape' && avisoModal.classList.contains('is-open')) closeAviso();
+        });
+    }
+})();
+</script>
 
 <script>
 (function () {
