@@ -90,30 +90,35 @@
             {% endif %}
 
             {% if pedido.esta_vencido %}
-            <div class="pedidos-usuario-alert pedidos-usuario-alert--vencido">
-                <ion-icon name="warning-outline"></ion-icon>
-                <div>
-                    <strong>⚠️ Devolución pendiente</strong>
-                    <p>
-                        El plazo de este préstamo <strong>venció el {{ pedido.fecha_devolucion|date:'d/m/Y' }}</strong>.
-                        Por favor devuelve los productos o solicita más tiempo.
+            <div class="pu-vencido-card">
+                <div class="pu-vencido-card__icon-wrap">
+                    <ion-icon name="warning"></ion-icon>
+                </div>
+                <div class="pu-vencido-card__body">
+                    <p class="pu-vencido-card__title">Devolución pendiente</p>
+                    <p class="pu-vencido-card__desc">
+                        El plazo venció el <strong>{{ pedido.fecha_devolucion|date:'d/m/Y' }}</strong>.
+                        Devuelve los productos o solicita más tiempo.
                     </p>
+                    <div class="pu-vencido-card__extensiones">
+                        {% for i in "123" %}
+                        <span class="pu-vencido-ext-dot {% if forloop.counter <= pedido.extensiones_plazo %}pu-vencido-ext-dot--used{% endif %}"></span>
+                        {% endfor %}
+                        <span class="pu-vencido-ext-label">{{ pedido.extensiones_plazo }}/3 extensiones usadas</span>
+                    </div>
                     {% if pedido.extensiones_plazo < 3 %}
-                    <p style="margin-top:6px;font-size:0.93em;color:#b45309;">
-                        Extensiones usadas: <strong>{{ pedido.extensiones_plazo }}/3</strong>
-                    </p>
-                    <form method="post" action="{% url 'pedido_extender_plazo' pedido.id_pedido %}" style="margin-top:10px;">
+                    <form method="post" action="{% url 'pedido_extender_plazo' pedido.id_pedido %}">
                         {% csrf_token %}
-                        <button type="submit" class="pedidos-usuario-btn-extender">
-                            <ion-icon name="time-outline"></ion-icon>
-                            Pedir más tiempo (+3 días)
+                        <button type="submit" class="pu-vencido-btn-extender">
+                            <ion-icon name="add-circle-outline"></ion-icon>
+                            Pedir más tiempo <span class="pu-vencido-btn-dias">+3 días</span>
                         </button>
                     </form>
                     {% else %}
-                    <p style="margin-top:8px;font-size:0.93em;color:#dc2626;font-weight:700;">
-                        <ion-icon name="alert-circle-outline"></ion-icon>
-                        Ya usaste las 3 extensiones disponibles. <strong>Debes devolver los productos.</strong>
-                    </p>
+                    <div class="pu-vencido-card__limite">
+                        <ion-icon name="alert-circle"></ion-icon>
+                        Sin extensiones disponibles — <strong>debes devolver los productos</strong>
+                    </div>
                     {% endif %}
                 </div>
             </div>
