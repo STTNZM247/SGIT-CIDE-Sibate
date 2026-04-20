@@ -246,6 +246,7 @@ class Pedido(models.Model):
     fecha_devolucion = models.DateTimeField(null=True, blank=True)
     fch_registro = models.DateTimeField(null=True, blank=True)
     fch_ult_act = models.DateTimeField(null=True, blank=True)
+    notif_vencimiento_enviada = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'pedido'
@@ -342,6 +343,7 @@ class Notificacion(models.Model):
         ('rechazado', 'Rechazado'),
         ('no_disponible', 'Producto no disponible'),
         ('aviso_devolucion', 'Aviso de devolución'),
+        ('prestamo_vencido', 'Préstamo vencido'),
         # Staff (admin / almacenista)
         ('staff_nuevo_pedido', 'Nuevo pedido recibido'),
         ('staff_pedido_cancelado', 'Pedido cancelado por usuario'),
