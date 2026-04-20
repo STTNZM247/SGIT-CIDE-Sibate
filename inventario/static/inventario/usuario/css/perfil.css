@@ -591,3 +591,137 @@
   }
 }
 
+/* ══════════════════════════════════════════════
+   DARK MODE – Perfil usuario
+   ══════════════════════════════════════════════ */
+html[data-theme="dark"] .perfil-page {
+  background: #0b0e0b !important;
+}
+
+html[data-theme="dark"] .perfil-card {
+  background: #111611 !important;
+  border-color: #1e2b1e !important;
+  color: #e2ede2 !important;
+}
+
+/* Paneles interiores */
+html[data-theme="dark"] .perfil-panel,
+html[data-theme="dark"] .perfil-stat-box {
+  background: #161e16 !important;
+  border-color: #253025 !important;
+  color: #e2ede2 !important;
+}
+
+/* Historial y quick-menu items */
+html[data-theme="dark"] .perfil-history-item,
+html[data-theme="dark"] .perfil-quick-item {
+  background: #161e16 !important;
+  border-color: #253025 !important;
+  color: #e2ede2 !important;
+}
+
+/* Inputs del perfil → azul oscuro tenue */
+html[data-theme="dark"] .perfil-field .form-control {
+  background: #0d1e2e !important;
+  border-color: #1a3a5c !important;
+  color: #d0e8ff !important;
+}
+
+html[data-theme="dark"] .perfil-field .form-control::placeholder {
+  color: #4a6a8a !important;
+}
+
+html[data-theme="dark"] .perfil-field .form-control:focus {
+  border-color: #42a5f5 !important;
+  box-shadow: 0 0 0 3px rgba(66,165,245,.22) !important;
+}
+
+/* Labels */
+html[data-theme="dark"] .perfil-field label {
+  color: #7aaecc !important;
+}
+
+html[data-theme="dark"] .perfil-field label ion-icon,
+html[data-theme="dark"] .perfil-section-title ion-icon,
+html[data-theme="dark"] .perfil-quick-item ion-icon {
+  color: #42a5f5 !important;
+}
+
+/* Textos de identidad */
+html[data-theme="dark"] .perfil-nombre {
+  color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .perfil-subtitle {
+  color: #42a5f5 !important;
+}
+
+html[data-theme="dark"] .perfil-center-text,
+html[data-theme="dark"] .perfil-stat-box span,
+html[data-theme="dark"] .perfil-history-main small,
+html[data-theme="dark"] .perfil-history-main p,
+html[data-theme="dark"] .perfil-empty {
+  color: #7a9a7a !important;
+}
+
+html[data-theme="dark"] .perfil-stat-box strong,
+html[data-theme="dark"] .perfil-history-main strong,
+html[data-theme="dark"] .perfil-quick-item span,
+html[data-theme="dark"] .perfil-section-title {
+  color: #e2ede2 !important;
+}
+
+/* Badges */
+html[data-theme="dark"] .perfil-status-badge,
+html[data-theme="dark"] .perfil-rol-badge {
+  background: #0d2538 !important;
+  color: #42a5f5 !important;
+  border-color: #1a3a5c !important;
+}
+
+html[data-theme="dark"] .perfil-mini-badge {
+  background: #0d2538 !important;
+  color: #42a5f5 !important;
+}
+
+/* Botón guardar → azul */
+html[data-theme="dark"] .perfil-btn--save {
+  background: linear-gradient(135deg, #1565c0, #0d47a1) !important;
+  box-shadow: 0 8px 18px rgba(21,101,192,.3) !important;
+}
+
+/* Botón cerrar sesión */
+html[data-theme="dark"] .perfil-btn--logout {
+  background: #161e16 !important;
+  color: #a8c4aa !important;
+  border-color: #253025 !important;
+}
+
+/* Color picker */
+html[data-theme="dark"] .perfil-cover-picker {
+  background: #161e16 !important;
+  border: 1px solid #253025 !important;
+}
+
+html[data-theme="dark"] .perfil-cover-picker-title {
+  color: #7a9a7a !important;
+}
+
+html[data-theme="dark"] .perfil-cover-picker-divider {
+  background: #253025 !important;
+}
+
+html[data-theme="dark"] .perfil-cover-picker-upload {
+  background: #0d2538 !important;
+  color: #d0e8ff !important;
+}
+
+/* Avatar border */
+html[data-theme="dark"] .perfil-avatar-img {
+  border-color: #1a3a5c !important;
+}
+
+html[data-theme="dark"] .perfil-status-dot {
+  border-color: #111611 !important;
+}
+
