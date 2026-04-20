@@ -99,25 +99,14 @@ html[data-theme="dark"] .navigation ul li a .text {
 html[data-theme="dark"] .nav-brand__logo {
     background-color: #42a5f5;
 }
-/* Indicator: círculo azul claro, bolitas laterales = fondo de la navbar */
+/* Indicator: círculo azul claro, bolitas laterales ocultas en dark */
 html[data-theme="dark"] .indicator {
     background: #42a5f5 !important;
     box-shadow: 0 0 0 4px #0d2745 !important;
 }
-html[data-theme="dark"] .indicator::before {
-    box-shadow: 15px 18px #0d2745 !important;
-}
+html[data-theme="dark"] .indicator::before,
 html[data-theme="dark"] .indicator::after {
-    box-shadow: -15px 18px #0d2745 !important;
-}
-/* Versión vertical (sidebar PC) */
-@media (min-width: 768px) {
-    html[data-theme="dark"] .indicator::before {
-        box-shadow: -15px 18px #0d2745 !important;
-    }
-    html[data-theme="dark"] .indicator::after {
-        box-shadow: -15px -18px #0d2745 !important;
-    }
+    display: none !important;
 }
 html[data-theme="dark"] .nav-notif-btn {
     background: rgba(66,165,245,0.92) !important;
