@@ -28,6 +28,7 @@
 .perfil-aspecto-icon {
   font-size: 1.7rem;
   line-height: 1;
+  color: #FDC300;
 }
 .perfil-aspecto-label {
   display: block;
@@ -225,7 +226,7 @@
           <div class="perfil-aspecto-card" id="aspecto-card">
             <div class="perfil-aspecto-row">
               <div class="perfil-aspecto-info">
-                <span class="perfil-aspecto-icon" id="aspecto-icon">{% if usuario.tema == 'oscuro' %}🌙{% else %}☀️{% endif %}</span>
+                <ion-icon id="aspecto-icon" name="{% if usuario.tema == 'oscuro' %}moon{% else %}sunny{% endif %}" class="perfil-aspecto-icon"></ion-icon>
                 <div>
                   <strong class="perfil-aspecto-label" id="aspecto-label">{% if usuario.tema == 'oscuro' %}Modo oscuro{% else %}Modo claro{% endif %}</strong>
                   <small class="perfil-aspecto-desc" id="aspecto-desc">{% if usuario.tema == 'oscuro' %}Fondo negro, acentos azul claro{% else %}Fondo blanco, acentos verdes{% endif %}</small>
@@ -467,7 +468,7 @@
     } else {
       document.documentElement.removeAttribute('data-theme');
     }
-    if (icon)  icon.textContent  = dark ? '🌙' : '☀️';
+    if (icon)  icon.setAttribute('name', dark ? 'moon' : 'sunny');
     if (label) label.textContent = dark ? 'Modo oscuro' : 'Modo claro';
     if (desc)  desc.textContent  = dark ? 'Fondo negro, acentos azul claro' : 'Fondo blanco, acentos verdes';
     try { localStorage.setItem('sgit-theme', dark ? 'dark' : 'light'); } catch(e) {}
