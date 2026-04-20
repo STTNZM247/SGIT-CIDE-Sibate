@@ -67,7 +67,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(226, 255, 230, .16), rgba(29, 115, 47, .32));
+  background: linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.18));
   pointer-events: none;
 }
 
@@ -596,6 +596,10 @@
    ══════════════════════════════════════════════ */
 html[data-theme="dark"] .perfil-page {
   background: #0b0e0b !important;
+}
+
+html[data-theme="dark"] .perfil-cover {
+  background: linear-gradient(135deg, #0d1e38 0%, #0d2745 46%, #1a3a5c 100%) !important;
 }
 
 html[data-theme="dark"] .perfil-card {
