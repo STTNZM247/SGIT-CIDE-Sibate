@@ -725,6 +725,17 @@ html[data-theme="dark"] .perfil-avatar-img {
   border-color: #1a3a5c !important;
 }
 
+/* Botón "Cambiar portada" — mantener texto oscuro visible sobre fondo blanco */
+html[data-theme="dark"] .perfil-cover-btn {
+  background: rgba(255,255,255,.96) !important;
+  color: #0d2745 !important;
+  border-color: rgba(13,39,69,.18) !important;
+}
+html[data-theme="dark"] .perfil-cover-btn span,
+html[data-theme="dark"] .perfil-cover-btn ion-icon {
+  color: #0d2745 !important;
+}
+
 html[data-theme="dark"] .perfil-status-dot {
   border-color: #111611 !important;
 }

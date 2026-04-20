@@ -172,12 +172,12 @@ html[data-theme="dark"] option {
     color: var(--text-primary);
 }
 
-/* Botones con color verde → azul claro */
+/* Botones con color verde → azul claro (excluye los swatches del picker de portada) */
 html[data-theme="dark"] .btn-primary,
 html[data-theme="dark"] [class*="btn--save"],
 html[data-theme="dark"] [class*="btn--primary"],
-html[data-theme="dark"] [style*="#39A900"],
-html[data-theme="dark"] [style*="#007832"] {
+html[data-theme="dark"] [style*="#39A900"]:not(.perfil-cover-color),
+html[data-theme="dark"] [style*="#007832"]:not(.perfil-cover-color) {
     background: #1565c0 !important;
     border-color: #42a5f5 !important;
     color: #fff !important;
