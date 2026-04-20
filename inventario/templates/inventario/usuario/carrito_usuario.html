@@ -206,7 +206,17 @@
                                onchange="transferirArchivoCarnet(this)">
                     </label>
                 </div>
-                <img id="carnet-preview" src="" alt="Vista previa carnet" style="display:none">
+                <!-- Vista previa con botón X para quitar -->
+                <div id="carnet-preview-wrap" style="display:none; position:relative; margin-top:10px; display:none;">
+                    <img id="carnet-preview" src="" alt="Vista previa carnet"
+                         style="width:100%; max-height:220px; object-fit:contain; border-radius:12px; border:1.5px solid #e0f2e0; display:block;">
+                    <button type="button" id="carnet-clear-btn" onclick="limpiarCarnet()"
+                            style="position:absolute; top:6px; right:6px; background:#e53935; color:#fff; border:none;
+                                   border-radius:50%; width:32px; height:32px; font-size:1.2em; cursor:pointer;
+                                   display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,0.18);">
+                        <ion-icon name="close-outline"></ion-icon>
+                    </button>
+                </div>
                 <style>
                 .carnet-mobile-btns { display: flex; gap: 10px; margin-top: 10px; }
                 .carnet-mobile-btn {
@@ -219,7 +229,6 @@
                 </style>
                 <script>
                 (function(){
-                    // Mostrar botones móvil solo en dispositivos táctiles
                     if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
                         var mobileBtns = document.getElementById('carnet-mobile-btns');
                         var dropArea   = document.getElementById('carnet-drop');
@@ -228,24 +237,49 @@
                     }
                 })();
                 function transferirArchivoCarnet(src) {
-                    var dest = document.getElementById('foto_carnet');
+                    var dest    = document.getElementById('foto_carnet');
+                    var wrap    = document.getElementById('carnet-preview-wrap');
                     var preview = document.getElementById('carnet-preview');
                     var label   = document.getElementById('carnet-label');
+                    var btns    = document.getElementById('carnet-mobile-btns');
                     if (src.files && src.files[0]) {
-                        // Copiar archivo al input principal mediante DataTransfer
                         var dt = new DataTransfer();
                         dt.items.add(src.files[0]);
                         dest.files = dt.files;
                         dest.dispatchEvent(new Event('change', {bubbles: true}));
-                        // Preview
                         var reader = new FileReader();
                         reader.onload = function(e) {
                             preview.src = e.target.result;
-                            preview.style.display = 'block';
+                            wrap.style.display = 'block';
                         };
                         reader.readAsDataURL(src.files[0]);
                         if (label) label.textContent = src.files[0].name;
+                        // Ocultar botones mientras hay foto
+                        if (btns) btns.style.display = 'none';
                     }
+                }
+                function limpiarCarnet() {
+                    var dest    = document.getElementById('foto_carnet');
+                    var wrap    = document.getElementById('carnet-preview-wrap');
+                    var preview = document.getElementById('carnet-preview');
+                    var label   = document.getElementById('carnet-label');
+                    var btns    = document.getElementById('carnet-mobile-btns');
+                    var camInput = document.getElementById('foto_carnet_camara');
+                    var galInput = document.getElementById('foto_carnet_galeria');
+                    // Limpiar todos los inputs
+                    dest.value = '';
+                    if (camInput) camInput.value = '';
+                    if (galInput) galInput.value = '';
+                    dest.dispatchEvent(new Event('change', {bubbles: true}));
+                    // Ocultar preview
+                    preview.src = '';
+                    wrap.style.display = 'none';
+                    if (label) label.textContent = 'Arrastra o haz clic para subir la foto';
+                    // Mostrar botones de nuevo
+                    var esTactil = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+                    if (btns) btns.style.display = esTactil ? 'flex' : 'none';
+                    var dropArea = document.getElementById('carnet-drop');
+                    if (dropArea) dropArea.style.display = esTactil ? 'none' : '';
                 }
                 </script>
             </div>
