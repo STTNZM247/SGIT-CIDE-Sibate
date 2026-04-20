@@ -21,6 +21,49 @@
         </style>
 
     <link rel="stylesheet" href="{% static 'inventario/shared/css/base.css' %}">
+    <style>
+        /* Garantiza que el botón de notificaciones siempre sea visible,
+           independiente de la versión de base.css en caché en el servidor */
+        .nav-notif-btn { display: none; text-decoration: none; }
+        @media (max-width: 767px) {
+            .nav-notif-btn {
+                display: grid !important;
+                place-items: center;
+                position: fixed;
+                top: max(10px, env(safe-area-inset-top));
+                left: max(10px, env(safe-area-inset-left));
+                width: 44px; height: 44px;
+                border-radius: 50%;
+                background: rgba(57,169,0,0.95);
+                border: 1.5px solid rgba(255,255,255,0.55);
+                color: #fff; font-size: 1.35rem; z-index: 1300;
+                box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+                overflow: visible;
+            }
+        }
+        @media (min-width: 768px) {
+            .nav-notif-btn {
+                display: grid !important;
+                place-items: center;
+                position: fixed;
+                bottom: 22px;
+                left: calc(73px / 2);
+                transform: translateX(-50%);
+                width: 42px; height: 42px;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.13);
+                border: 1.5px solid rgba(255,255,255,0.25);
+                color: #fff; font-size: 1.35rem; cursor: pointer;
+                z-index: 1100;
+                transition: background 0.2s, transform 0.15s;
+                overflow: visible;
+            }
+            .nav-notif-btn:hover {
+                background: rgba(255,255,255,0.24);
+                transform: translateX(-50%) scale(1.08);
+            }
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>

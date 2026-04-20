@@ -55,6 +55,44 @@ def _notificar_staff(tipo, titulo, mensaje, pedido_id=None):
         pass
 
 
+def _tiempo_vencido(fecha_devolucion, ahora):
+    """Devuelve texto humanizado de cuánto tiempo lleva vencido. Ej: 'hace 2 horas', 'hace 3 días'."""
+    diff = ahora - fecha_devolucion
+    total_seg = int(diff.total_seconds())
+    if total_seg < 60:
+        return 'hace unos segundos'
+    minutos = total_seg // 60
+    if minutos < 60:
+        return f'hace {minutos} min'
+    horas = minutos // 60
+    if horas < 24:
+        return f'hace {horas} h {minutos % 60} min' if minutos % 60 else f'hace {horas} h'
+    dias = horas // 24
+    horas_rest = horas % 24
+    if dias == 1:
+        return f'hace 1 día' + (f' y {horas_rest} h' if horas_rest else '')
+    return f'hace {dias} días' + (f' y {horas_rest} h' if horas_rest else '')
+
+
+def _tiempo_restante(fecha_devolucion, ahora):
+    """Devuelve texto humanizado del tiempo que queda. Ej: '2 h 30 min', '3 días'."""
+    diff = fecha_devolucion - ahora
+    total_seg = int(diff.total_seconds())
+    if total_seg <= 0:
+        return ''
+    minutos = total_seg // 60
+    if minutos < 60:
+        return f'{minutos} min'
+    horas = minutos // 60
+    if horas < 24:
+        return f'{horas} h {minutos % 60} min' if minutos % 60 else f'{horas} h'
+    dias = horas // 24
+    horas_rest = horas % 24
+    if dias == 1:
+        return '1 día' + (f' y {horas_rest} h' if horas_rest else '')
+    return f'{dias} días' + (f' y {horas_rest} h' if horas_rest else '')
+
+
 def _registrar_auditoria(request, accion, entidad, entidad_id=None, descripcion=''):
     usuario = None
     if request and getattr(request, 'user', None) and request.user.is_authenticated:
@@ -703,7 +741,7 @@ def dashboard(request):
     estados_pedido = [
         ('pendiente', 'Pendientes', '#2d6cdf'),
         ('esperando entrega', 'Esperando entrega', '#26a7c6'),
-        ('entregado', 'Entregados', '#57c271'),
+        ('entregado', 'Prestados', '#57c271'),
         ('devuelto', 'Devueltos', '#e88a2a'),
         ('cancelado', 'Cancelados', '#cf3f5b'),
     ]
@@ -1908,6 +1946,8 @@ def prestamos_panel(request):
             prestamo.es_vencido = False
             prestamo.dias_restantes = None
             prestamo.dias_vencido = 0
+            prestamo.tiempo_vencido_str = ''
+            prestamo.tiempo_restante_str = ''
             prestamo.detalles_lista = detalles
             continue
 
@@ -1920,11 +1960,15 @@ def prestamos_panel(request):
                 delta = fecha_ref - ahora
                 prestamo.dias_restantes = delta.days
                 prestamo.dias_vencido = abs(delta.days) if prestamo.es_vencido else 0
+                prestamo.tiempo_vencido_str = _tiempo_vencido(fecha_ref, ahora) if prestamo.es_vencido else ''
+                prestamo.tiempo_restante_str = _tiempo_restante(fecha_ref, ahora) if not prestamo.es_vencido else ''
             else:
                 prestamo.fecha_devolucion_display = None
                 prestamo.es_vencido = False
                 prestamo.dias_restantes = None
                 prestamo.dias_vencido = 0
+                prestamo.tiempo_vencido_str = ''
+                prestamo.tiempo_restante_str = ''
         else:
             prestamo.fecha_devolucion_display = prestamo.fecha_devolucion
             if prestamo.fecha_devolucion:
@@ -1932,10 +1976,14 @@ def prestamos_panel(request):
                 delta = prestamo.fecha_devolucion - ahora
                 prestamo.dias_restantes = delta.days
                 prestamo.dias_vencido = abs(delta.days) if prestamo.es_vencido else 0
+                prestamo.tiempo_vencido_str = _tiempo_vencido(prestamo.fecha_devolucion, ahora) if prestamo.es_vencido else ''
+                prestamo.tiempo_restante_str = _tiempo_restante(prestamo.fecha_devolucion, ahora) if not prestamo.es_vencido else ''
             else:
                 prestamo.es_vencido = False
                 prestamo.dias_restantes = None
                 prestamo.dias_vencido = 0
+                prestamo.tiempo_vencido_str = ''
+                prestamo.tiempo_restante_str = ''
         prestamo.detalles_lista = detalles
 
     # Ordenar: activos vencidos primero, luego activos al día, después devueltos y cancelados.

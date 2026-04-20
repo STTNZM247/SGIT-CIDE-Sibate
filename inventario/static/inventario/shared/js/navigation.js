@@ -148,6 +148,15 @@ document.addEventListener("DOMContentLoaded", () => {
         document.title = nextDoc.title || document.title;
         document.body.classList.remove("modal-open");
 
+        // Sincronizar el botón de notificaciones con el estado de la nueva página
+        const nextNotifBtn = nextDoc.querySelector(".nav-notif-btn");
+        const currentNotifBtn = document.querySelector(".nav-notif-btn");
+        if (nextNotifBtn && currentNotifBtn) {
+            currentNotifBtn.className = nextNotifBtn.className;
+            const nextTitle = nextNotifBtn.getAttribute("title");
+            if (nextTitle) currentNotifBtn.setAttribute("title", nextTitle);
+        }
+
         if (pushHistory) {
             history.pushState({ pjax: true }, "", url);
         }
