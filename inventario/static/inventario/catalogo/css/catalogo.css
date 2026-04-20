@@ -1477,3 +1477,77 @@ body.modal-open { overflow: hidden; }
     font-size: .95rem;
     margin: 0;
 }
+
+/* ----------------------------------------------
+   DARK MODE - Catalogo / Productos
+   ---------------------------------------------- */
+html[data-theme="dark"] .cat-header__title,
+html[data-theme="dark"] .catalogo-hero__title { color: #e2ede2 !important; }
+html[data-theme="dark"] .cat-header__sub,
+html[data-theme="dark"] .catalogo-hero__sub   { color: #7a9a7a !important; }
+html[data-theme="dark"] .stat-chip { background: #161e16 !important; border-color: #253025 !important; color: #c4d8c4 !important; }
+html[data-theme="dark"] .stat-chip ion-icon { color: #42a5f5 !important; }
+html[data-theme="dark"] .cat-btn--secondary { background: #0d2538 !important; color: #42a5f5 !important; border-color: #1a3a5c !important; }
+html[data-theme="dark"] .cat-btn--ghost { background: #161e16 !important; color: #c4d8c4 !important; border-color: #253025 !important; }
+html[data-theme="dark"] .cat-btn--danger { background: #1c0909 !important; color: #ef9a9a !important; border-color: #4a1010 !important; }
+html[data-theme="dark"] .cat-btn-mini { background: #0d2538 !important; color: #42a5f5 !important; border-color: #1a3a5c !important; }
+html[data-theme="dark"] .cat-btn-mini--view { background: #0d1e38 !important; color: #90caf9 !important; border-color: #1a3060 !important; }
+html[data-theme="dark"] .btn--outline { background: transparent !important; color: #42a5f5 !important; border-color: #42a5f5 !important; }
+html[data-theme="dark"] .cat-card, html[data-theme="dark"] .card { background: #111611 !important; border-color: #253025 !important; box-shadow: 0 2px 12px rgba(0,0,0,0.35) !important; }
+html[data-theme="dark"] .cat-card:hover, html[data-theme="dark"] .card:hover { box-shadow: 0 6px 24px rgba(66,165,245,0.14) !important; }
+html[data-theme="dark"] .cat-card__name, html[data-theme="dark"] .card__name { color: #e2ede2 !important; }
+html[data-theme="dark"] .cat-card__desc { color: #7a9a7a !important; }
+html[data-theme="dark"] .cat-card__footer { border-top-color: #253025 !important; }
+html[data-theme="dark"] .cat-card__count, html[data-theme="dark"] .card__count { color: #7a9a7a !important; }
+html[data-theme="dark"] .cat-card__count ion-icon, html[data-theme="dark"] .card__count ion-icon { color: #42a5f5 !important; }
+html[data-theme="dark"] .product-accordion { background: #111611 !important; border-color: #253025 !important; }
+html[data-theme="dark"] .product-accordion[open] { border-color: #1a3a5c !important; box-shadow: 0 6px 24px rgba(66,165,245,0.1) !important; }
+html[data-theme="dark"] .product-accordion__chips .cat-card__count { background: #0d2538 !important; border-color: #1a3a5c !important; }
+html[data-theme="dark"] .product-accordion__body { border-top-color: #253025 !important; }
+html[data-theme="dark"] .product-accordion__arrow { color: #7a9aaa !important; }
+html[data-theme="dark"] .product-detail-block { background: #161e16 !important; border-color: #253025 !important; }
+html[data-theme="dark"] .product-detail-label { color: #7a9aaa !important; }
+html[data-theme="dark"] .product-detail-value { color: #e2ede2 !important; }
+html[data-theme="dark"] .product-tile { background: #111611 !important; border-color: #253025 !important; }
+html[data-theme="dark"] .product-tile__chips .cat-card__count { background: #0d2538 !important; border-color: #1a3a5c !important; }
+html[data-theme="dark"] .product-tile__delete { background: #1c0909 !important; border-color: #4a1010 !important; color: #ef9a9a !important; }
+html[data-theme="dark"] .product-modal { background: #111611 !important; border-color: #253025 !important; }
+html[data-theme="dark"] .product-modal__header { background: #111611 !important; border-bottom-color: #253025 !important; }
+html[data-theme="dark"] .product-modal__title { color: #e2ede2 !important; }
+html[data-theme="dark"] .product-modal__close { background: #161e16 !important; color: #c4d8c4 !important; }
+html[data-theme="dark"] .product-modal__img, html[data-theme="dark"] .product-modal__placeholder { background: #161e16 !important; border-color: #253025 !important; }
+html[data-theme="dark"] .product-modal__danger { border-top-color: #253025 !important; }
+html[data-theme="dark"] .modal { background: #111611 !important; }
+html[data-theme="dark"] .modal__header { background: #111611 !important; border-bottom-color: #253025 !important; }
+html[data-theme="dark"] .modal__title { color: #e2ede2 !important; }
+html[data-theme="dark"] .modal__close { color: #7a9a7a !important; }
+html[data-theme="dark"] .modal__close:hover { background: #161e16 !important; color: #e2ede2 !important; }
+html[data-theme="dark"] .modal__actions { border-top-color: #253025 !important; }
+html[data-theme="dark"] .modal__icon { background: #0d2538 !important; color: #42a5f5 !important; }
+html[data-theme="dark"] .mf-label { color: #7aaecc !important; }
+html[data-theme="dark"] .mf-hint  { color: #4a6a7a !important; }
+html[data-theme="dark"] .modal__form input[type="text"],
+html[data-theme="dark"] .modal__form input[type="email"],
+html[data-theme="dark"] .modal__form textarea,
+html[data-theme="dark"] .modal__form select,
+html[data-theme="dark"] .form-input,
+html[data-theme="dark"] .form-textarea,
+html[data-theme="dark"] .form-select { background: #0d1e2e !important; border-color: #1a3a5c !important; color: #d0e8ff !important; }
+html[data-theme="dark"] .modal__form input:focus,
+html[data-theme="dark"] .modal__form textarea:focus,
+html[data-theme="dark"] .modal__form select:focus { border-color: #42a5f5 !important; box-shadow: 0 0 0 3px rgba(66,165,245,0.18) !important; }
+html[data-theme="dark"] .file-drop, html[data-theme="dark"] .file-upload-zone { background: #0d1e0d !important; border-color: #253025 !important; }
+html[data-theme="dark"] .file-drop:hover, html[data-theme="dark"] .file-upload-zone:hover { background: #0d2538 !important; border-color: #42a5f5 !important; }
+html[data-theme="dark"] .file-drop__text, html[data-theme="dark"] .file-upload-zone__text { color: #c4d8c4 !important; }
+html[data-theme="dark"] .file-drop__hint, html[data-theme="dark"] .file-upload-zone__hint { color: #4a6a4a !important; }
+html[data-theme="dark"] .registro-panel__inner { background: #111611 !important; box-shadow: 0 2px 16px rgba(0,0,0,0.4) !important; }
+html[data-theme="dark"] .registro-panel__title { color: #e2ede2 !important; }
+html[data-theme="dark"] .registro-panel__title ion-icon { color: #42a5f5 !important; }
+html[data-theme="dark"] .registro-panel__close { color: #7a9a7a !important; }
+html[data-theme="dark"] .form-label { color: #7aaecc !important; }
+html[data-theme="dark"] .carousel-section__label { color: #42a5f5 !important; }
+html[data-theme="dark"] .flash--success, html[data-theme="dark"] .alert--success { background: #0d1e0d !important; color: #80cbc4 !important; }
+html[data-theme="dark"] .flash--error, html[data-theme="dark"] .alert--error { background: #1c0909 !important; color: #ef9a9a !important; }
+html[data-theme="dark"] .cat-empty__inner { color: #4a6a4a !important; }
+html[data-theme="dark"] .cat-empty__inner h2 { color: #c4d8c4 !important; }
+html[data-theme="dark"] .catalogo-empty { color: #4a6a4a !important; }
