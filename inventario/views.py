@@ -2694,6 +2694,7 @@ def pedido_aviso_devolucion(request, pedido_id):
         return redirect('dashboard')
 
     pedido = get_object_or_404(Pedido, pk=pedido_id, estado='entregado')
+    usuario = pedido.id_usuario_fk
     _registrar_auditoria(
         request,
         accion='actualizar',
@@ -2702,14 +2703,94 @@ def pedido_aviso_devolucion(request, pedido_id):
         descripcion=f'Se envió aviso de devolución para el préstamo #{pedido.id_pedido}.',
     )
     _crear_notificacion(
-        usuario=pedido.id_usuario_fk,
+        usuario=usuario,
         tipo='aviso_devolucion',
         titulo='Aviso de devolución pendiente',
         mensaje=f'El almacenista solicita que devuelvas los materiales del pedido #{pedido.id_pedido}. '
                 f'Por favor, acércate al almacén a la brevedad posible.',
         pedido_id=pedido.id_pedido,
     )
-    messages.success(request, f'Aviso de devolución enviado al usuario del pedido #{pedido_id}.')
+
+    # ── Correo al usuario ─────────────────────────────────────────────────
+    correo = getattr(usuario, 'correo', None) or getattr(usuario, 'email', None)
+    if correo:
+        try:
+            from django.core.mail import EmailMultiAlternatives
+            nombre = getattr(usuario, 'nombre', '') or str(usuario)
+            ahora = timezone.now()
+            fecha_str = pedido.fecha_devolucion.strftime('%d/%m/%Y') if pedido.fecha_devolucion else '—'
+            remitente = settings.DEFAULT_FROM_EMAIL
+
+            asunto = f'📦 Recordatorio de devolución – Pedido #{pedido.id_pedido} | Almacén SENA Sibaté'
+            texto_plano = (
+                f'Hola {nombre},\n\n'
+                f'El almacenista te recuerda que debes devolver los materiales del '
+                f'pedido #{pedido.id_pedido} (fecha límite: {fecha_str}).\n'
+                'Por favor, acércate al almacén a la brevedad posible.\n\n'
+                '— Almacén SENA Sibaté'
+            )
+            html = f"""<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0"
+             style="background:#fff;border-radius:12px;overflow:hidden;
+                    box-shadow:0 2px 12px rgba(0,0,0,0.08);max-width:600px;width:100%;">
+        <tr>
+          <td style="background:#39A900;padding:28px 32px;text-align:center;">
+            <p style="margin:0;color:#fff;font-size:13px;opacity:0.85;">SENA — Almacén Sibaté</p>
+            <h1 style="margin:8px 0 0;color:#fff;font-size:24px;">📦 Recordatorio de devolución</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px;">
+            <p style="font-size:16px;color:#333;">Hola <strong>{nombre}</strong>,</p>
+            <p style="font-size:15px;color:#444;line-height:1.6;">
+              El almacenista te recuerda que tienes pendiente la devolución de los materiales
+              del préstamo <strong>#{pedido.id_pedido}</strong>
+              {"(fecha límite: <strong>" + fecha_str + "</strong>)" if pedido.fecha_devolucion else ""}.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+              <tr>
+                <td style="background:#e8f5e9;border-left:4px solid #39A900;
+                            border-radius:6px;padding:16px 20px;">
+                  <p style="margin:0;font-size:15px;color:#333;">
+                    Por favor <strong>acércate al almacén</strong> a la brevedad posible
+                    para hacer la devolución.
+                  </p>
+                </td>
+              </tr>
+            </table>
+            <p style="font-size:13px;color:#888;margin-top:32px;">
+              Si ya devolviste los materiales, ignora este mensaje.<br>
+              — Almacén SENA Sibaté
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9f9f9;padding:16px 32px;text-align:center;
+                      border-top:1px solid #eee;">
+            <p style="margin:0;font-size:12px;color:#aaa;">
+              Centro Industrial y de Desarrollo Empresarial – Sibaté, Cundinamarca
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+            msg = EmailMultiAlternatives(asunto, texto_plano, remitente, [correo])
+            msg.attach_alternative(html, 'text/html')
+            msg.send()
+            messages.success(request, f'Aviso enviado al usuario y correo enviado a {correo}.')
+        except Exception as e:
+            messages.warning(request, f'Aviso interno enviado, pero el correo falló: {e}')
+    else:
+        messages.success(request, f'Aviso de devolución enviado al usuario del pedido #{pedido_id}.')
+
     return redirect('prestamos_panel')
 
 
