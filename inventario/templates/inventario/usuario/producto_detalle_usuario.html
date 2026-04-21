@@ -5,6 +5,57 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'inventario/dashboard/css/dashboard.css' %}" data-page-style="true">
 <link rel="stylesheet" href="{% static 'inventario/usuario/css/panel_usuario.css' %}" data-page-style="true">
+{% if request.user.tema == 'oscuro' %}
+<style>
+.usuario-product-detail-page {
+  background: #111611 !important;
+  box-shadow: 0 8px 40px rgba(0,0,0,.5) !important;
+  border-color: #253025 !important;
+}
+.usuario-product-modal__placeholder {
+  background: #1a241a !important;
+  color: #4a6a4a !important;
+}
+.usuario-product-modal__media {
+  background: #1a241a !important;
+}
+.usuario-product-modal__title {
+  color: #e2ede2 !important;
+}
+.usuario-product-detail-info .usuario-carrito-form label {
+  color: #c5dcc5 !important;
+}
+.usuario-product-detail-info .usuario-carrito-form input[type="number"] {
+  background: #0d1e2e !important;
+  border-color: #1a3a5c !important;
+  color: #d0e8ff !important;
+}
+.usuario-product-detail-stock,
+.usuario-product-detail-cat {
+  color: #b0c8b0 !important;
+}
+.usuario-product-detail-stock .usuario-product-detail-value,
+.usuario-product-detail-cat .usuario-product-detail-value {
+  color: #e2ede2 !important;
+}
+.usuario-product-detail-stock .usuario-product-detail-label,
+.usuario-product-detail-cat .usuario-product-detail-label {
+  color: #6a8a6a !important;
+}
+.usuario-product-detail-block {
+  border-top-color: #253025 !important;
+}
+.usuario-product-detail-label {
+  color: #6a8a6a !important;
+}
+.usuario-product-detail-value {
+  color: #e2ede2 !important;
+}
+.usuario-product-detail-value--preserve {
+  color: #b0c8b0 !important;
+}
+</style>
+{% endif %}
 <style>
 @media (max-width: 700px) {
   .usuario-product-detail-page {
