@@ -88,19 +88,19 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const syncPageStyles = (nextDoc) => {
-        const currentStyles = Array.from(document.querySelectorAll("link[data-page-style='true']"));
-        const nextStyles = Array.from(nextDoc.querySelectorAll("link[data-page-style='true']"));
-        const nextHrefs = new Set(nextStyles.map((style) => style.getAttribute("href")));
+        // ── Sincronizar <link data-page-style> ──────────────────────────────
+        const currentLinks = Array.from(document.querySelectorAll("link[data-page-style='true']"));
+        const nextLinks = Array.from(nextDoc.querySelectorAll("link[data-page-style='true']"));
+        const nextHrefs = new Set(nextLinks.map((s) => s.getAttribute("href")));
 
-        currentStyles.forEach((style) => {
-            const href = style.getAttribute("href");
-            if (!nextHrefs.has(href)) {
-                style.remove();
+        currentLinks.forEach((link) => {
+            if (!nextHrefs.has(link.getAttribute("href"))) {
+                link.remove();
             }
         });
 
         const loadPromises = [];
-        nextStyles.forEach((style) => {
+        nextLinks.forEach((style) => {
             const href = style.getAttribute("href");
             const exists = document.querySelector(`link[data-page-style='true'][href='${href}']`);
             if (!exists) {
@@ -110,11 +110,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 newStyle.setAttribute("data-page-style", "true");
                 const p = new Promise((resolve) => {
                     newStyle.onload = resolve;
-                    newStyle.onerror = resolve; // no bloquear si falla
+                    newStyle.onerror = resolve;
                 });
                 loadPromises.push(p);
                 document.head.appendChild(newStyle);
             }
+        });
+
+        // ── Sincronizar <style data-page-style> (bloques inline) ───────────
+        document.querySelectorAll("style[data-page-style='true']").forEach((s) => s.remove());
+        nextDoc.querySelectorAll("style[data-page-style='true']").forEach((s) => {
+            const newStyle = document.createElement("style");
+            newStyle.setAttribute("data-page-style", "true");
+            newStyle.textContent = s.textContent;
+            document.head.appendChild(newStyle);
         });
 
         return Promise.all(loadPromises);
