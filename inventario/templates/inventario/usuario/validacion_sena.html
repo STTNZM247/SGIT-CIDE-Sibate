@@ -102,11 +102,12 @@
                     </div>
 
                     <div class="validacion-sena-camera-stage">
-                        <video id="validacion_sena_camera_video" autoplay playsinline muted></video>
+                        <video id="validacion_sena_camera_video" autoplay playsinline webkit-playsinline muted></video>
                         <div class="validacion-sena-camera-guide" aria-hidden="true">
                             <span class="validacion-sena-camera-guide__frame"></span>
                             <span class="validacion-sena-camera-guide__corners"><span></span><span></span><span></span><span></span></span>
                         </div>
+                        <div class="validacion-sena-camera-stage__status" id="validacion_sena_camera_status">Preparando cámara...</div>
                     </div>
 
                     <p class="validacion-sena-camera-modal__help">Mantén el celular en vertical, acerca el carnet hasta llenar la guía y evita tomar la foto acostada.</p>
@@ -201,6 +202,7 @@
     var cancelarCaptura = document.getElementById('cancelar_captura_guiada');
     var capturarFoto = document.getElementById('capturar_foto_guiada');
     var video = document.getElementById('validacion_sena_camera_video');
+    var cameraStatus = document.getElementById('validacion_sena_camera_status');
     var inlineAlert = document.getElementById('validacion_sena_inline_alert');
     var stream = null;
 
@@ -222,6 +224,45 @@
         return !!(modal && video && navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
     }
 
+    function setCameraStatus(message, visible) {
+        if (!cameraStatus) return;
+        cameraStatus.textContent = message || '';
+        cameraStatus.hidden = visible === false;
+    }
+
+    function waitForVideoReady() {
+        return new Promise(function (resolve, reject) {
+            if (!video) {
+                reject(new Error('missing-video'));
+                return;
+            }
+
+            var settled = false;
+
+            function cleanup() {
+                video.removeEventListener('loadedmetadata', onReady);
+                video.removeEventListener('canplay', onReady);
+            }
+
+            function onReady() {
+                if (settled) return;
+                settled = true;
+                cleanup();
+                resolve();
+            }
+
+            video.addEventListener('loadedmetadata', onReady, { once: true });
+            video.addEventListener('canplay', onReady, { once: true });
+
+            window.setTimeout(function () {
+                if (settled) return;
+                settled = true;
+                cleanup();
+                reject(new Error('video-timeout'));
+            }, 4000);
+        });
+    }
+
     function stopCamera() {
         if (stream) {
             stream.getTracks().forEach(function (track) { track.stop(); });
@@ -231,6 +272,7 @@
             video.pause();
             video.srcObject = null;
         }
+        setCameraStatus('Preparando cámara...', true);
         if (modal) {
             modal.hidden = true;
         }
@@ -299,6 +341,7 @@
 
     async function openGuidedCamera() {
         clearInlineAlert();
+        setCameraStatus('Preparando cámara...', true);
         try {
             stream = await navigator.mediaDevices.getUserMedia({
                 video: {
@@ -309,10 +352,17 @@
             });
             video.srcObject = stream;
             modal.hidden = false;
+            video.setAttribute('autoplay', 'autoplay');
+            video.setAttribute('muted', 'muted');
+            video.setAttribute('playsinline', 'playsinline');
+            video.setAttribute('webkit-playsinline', 'webkit-playsinline');
+            video.muted = true;
+            await waitForVideoReady();
             await video.play();
+            setCameraStatus('', false);
         } catch (error) {
             stopCamera();
-            showInlineAlert('No pudimos abrir la cámara guiada en este dispositivo. Usa la opción de galería/archivo como respaldo.');
+            showInlineAlert('No pudimos abrir la cámara guiada en este dispositivo. Verifica permisos de cámara o usa galería/archivo como respaldo.');
         }
     }
 
@@ -361,6 +411,10 @@
 
     if (capturarFoto && video) {
         capturarFoto.addEventListener('click', function () {
+            if (!stream) {
+                showInlineAlert('La cámara aún no está activa. Ábrela de nuevo y acepta el permiso del navegador.');
+                return;
+            }
             if (!video.videoWidth || !video.videoHeight) {
                 showInlineAlert('La cámara aún no está lista. Espera un momento y vuelve a capturar.');
                 return;

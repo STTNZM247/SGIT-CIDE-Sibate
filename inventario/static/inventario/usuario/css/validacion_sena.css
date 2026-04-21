@@ -363,6 +363,8 @@
 
 .validacion-sena-camera-modal__dialog {
   width: min(520px, 100%);
+  max-height: min(92vh, 820px);
+  overflow-y: auto;
   border-radius: 28px;
   background: #0f1712;
   color: #eef9f0;
@@ -387,11 +389,16 @@
 .validacion-sena-camera-modal__close {
   width: 40px;
   height: 40px;
+  flex: 0 0 40px;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.06);
   color: #fff;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
 }
 
 .validacion-sena-camera-stage {
@@ -409,6 +416,20 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  background: #040806;
+}
+
+.validacion-sena-camera-stage__status {
+  position: absolute;
+  inset: auto 16px 16px;
+  z-index: 3;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(4, 8, 6, 0.82);
+  color: #f2fff4;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.92rem;
 }
 
 .validacion-sena-camera-guide {
@@ -439,8 +460,13 @@
 .validacion-sena-camera-modal__actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 16px;
+}
+
+.validacion-sena-camera-modal__actions .validacion-sena-btn {
+  touch-action: manipulation;
 }
 
 .validacion-sena-form__actions {
@@ -609,8 +635,41 @@
     flex-direction: column;
   }
 
+  .validacion-sena-camera-modal {
+    padding: 10px;
+    align-items: end;
+  }
+
+  .validacion-sena-camera-modal__dialog {
+    width: 100%;
+    max-height: 94vh;
+    border-radius: 24px 24px 0 0;
+    padding: 16px 14px calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .validacion-sena-camera-modal__head h3 {
+    font-size: 1.08rem;
+  }
+
   .validacion-sena-camera-stage {
     width: min(100%, 300px);
+  }
+
+  .validacion-sena-camera-modal__help {
+    font-size: 0.94rem;
+  }
+
+  .validacion-sena-camera-modal__actions {
+    position: sticky;
+    bottom: 0;
+    justify-content: stretch;
+    background: linear-gradient(180deg, rgba(15, 23, 18, 0), #0f1712 22%);
+    padding-top: 10px;
+  }
+
+  .validacion-sena-camera-modal__actions .validacion-sena-btn {
+    flex: 1 1 140px;
+    min-height: 50px;
   }
 }
 
