@@ -48,9 +48,9 @@ def _detectar_logo_sena(image, texto_normalizado):
     return text_has_sena and green_ratio >= 0.04
 
 
-def intentar_validacion_automatica(archivo, usuario):
+def cargar_imagen_validacion(archivo, *, require_vertical=True):
     if not archivo:
-        return {
+        return None, {
             'ok': False,
             'message': 'Debes cargar una foto del carnet SENA para intentar la validación automática.',
             'error_code': 'missing_file',
@@ -62,11 +62,28 @@ def intentar_validacion_automatica(archivo, usuario):
         image.load()
         archivo.seek(0)
     except Exception:
-        return {
+        return None, {
             'ok': False,
             'message': 'No pudimos procesar la imagen enviada. Intenta con una foto más clara.',
             'error_code': 'invalid_image',
         }
+
+    width, height = image.size
+    if require_vertical and width > height:
+        return None, {
+            'ok': False,
+            'message': 'La foto del carnet debe tomarse o subirse en vertical. Gira el celular y vuelve a intentarlo.',
+            'error_code': 'invalid_orientation',
+            'details': ['La imagen fue detectada en formato horizontal. Usa el carnet en posición vertical dentro de la guía.'],
+        }
+
+    return image, None
+
+
+def intentar_validacion_automatica(archivo, usuario):
+    image, image_error = cargar_imagen_validacion(archivo, require_vertical=True)
+    if image_error:
+        return image_error
 
     texto_ocr, ocr_error = _extraer_texto_ocr(image)
     texto_normalizado = normalizar_texto(texto_ocr)

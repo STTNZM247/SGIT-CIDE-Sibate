@@ -193,26 +193,84 @@
     linear-gradient(180deg, #f3f8ef 0%, #eef5eb 100%);
   border: 1px solid #d3e2cf;
   overflow: hidden;
-  cursor: pointer;
+  cursor: default;
 }
 
 .validacion-sena-capture input[type="file"] {
   position: absolute;
-  inset: 0;
+  width: 1px;
+  height: 1px;
+  top: 0;
+  left: 0;
   opacity: 0;
-  cursor: pointer;
+  pointer-events: none;
 }
 
 .validacion-sena-capture__frame {
   position: absolute;
-  inset: 13% 10%;
+  inset: 9% 24%;
   border: 3px solid rgba(26, 124, 46, 0.76);
-  border-radius: 24px;
+  border-radius: 28px;
   box-shadow: 0 0 0 999px rgba(14, 28, 18, 0.16);
 }
 
+.validacion-sena-capture__frame-corners,
+.validacion-sena-camera-guide__corners {
+  position: absolute;
+  inset: 9% 24%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.validacion-sena-capture__frame-corners span,
+.validacion-sena-camera-guide__corners span {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border-color: #8df58a;
+  border-style: solid;
+  border-width: 0;
+}
+
+.validacion-sena-capture__frame-corners span:nth-child(1),
+.validacion-sena-camera-guide__corners span:nth-child(1) {
+  top: -3px;
+  left: -3px;
+  border-top-width: 5px;
+  border-left-width: 5px;
+  border-top-left-radius: 18px;
+}
+
+.validacion-sena-capture__frame-corners span:nth-child(2),
+.validacion-sena-camera-guide__corners span:nth-child(2) {
+  top: -3px;
+  right: -3px;
+  border-top-width: 5px;
+  border-right-width: 5px;
+  border-top-right-radius: 18px;
+}
+
+.validacion-sena-capture__frame-corners span:nth-child(3),
+.validacion-sena-camera-guide__corners span:nth-child(3) {
+  bottom: -3px;
+  left: -3px;
+  border-bottom-width: 5px;
+  border-left-width: 5px;
+  border-bottom-left-radius: 18px;
+}
+
+.validacion-sena-capture__frame-corners span:nth-child(4),
+.validacion-sena-camera-guide__corners span:nth-child(4) {
+  bottom: -3px;
+  right: -3px;
+  border-bottom-width: 5px;
+  border-right-width: 5px;
+  border-bottom-right-radius: 18px;
+}
+
 .validacion-sena-capture__guide,
-.validacion-sena-capture__cta {
+.validacion-sena-capture__cta,
+.validacion-sena-capture__hint {
   position: relative;
   z-index: 1;
   text-align: center;
@@ -225,27 +283,154 @@
   line-height: 1.55;
 }
 
+.validacion-sena-capture__hint {
+  max-width: 420px;
+  margin-top: 10px;
+  color: #67806d;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.validacion-sena-capture__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+  position: relative;
+  z-index: 1;
+}
+
 .validacion-sena-capture__cta {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-top: 18px;
   padding: 13px 18px;
   border-radius: 999px;
   background: #167b33;
   color: #fff;
   font-weight: 800;
+  border: 0;
+  cursor: pointer;
+}
+
+.validacion-sena-capture__cta--upload {
+  background: #eef6ea;
+  color: #204624;
+  border: 1px solid #cbdec8;
 }
 
 .validacion-sena-capture img {
   position: absolute;
-  inset: 13% 10%;
-  width: 80%;
-  height: 74%;
+  inset: 9% 24%;
+  width: 52%;
+  height: 82%;
   object-fit: contain;
-  border-radius: 24px;
+  border-radius: 28px;
   z-index: 2;
   background: rgba(255, 255, 255, 0.74);
+}
+
+.validacion-sena-inline-alert {
+  margin-top: -4px;
+  padding: 13px 16px;
+  border-radius: 16px;
+  border: 1px solid #ffd2c2;
+  background: #fff3ed;
+  color: #a04716;
+  font-weight: 700;
+}
+
+.validacion-sena-camera-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  background: rgba(10, 17, 12, 0.76);
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.validacion-sena-camera-modal__dialog {
+  width: min(520px, 100%);
+  border-radius: 28px;
+  background: #0f1712;
+  color: #eef9f0;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 26px 54px rgba(0, 0, 0, 0.42);
+}
+
+.validacion-sena-camera-modal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.validacion-sena-camera-modal__head h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.validacion-sena-camera-modal__close {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  cursor: pointer;
+}
+
+.validacion-sena-camera-stage {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  width: min(100%, 360px);
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 28px;
+  background: #040806;
+}
+
+.validacion-sena-camera-stage video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.validacion-sena-camera-guide {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.validacion-sena-camera-guide__frame {
+  position: absolute;
+  inset: 13% 21%;
+  border-radius: 28px;
+  border: 3px solid rgba(141, 245, 138, 0.92);
+  box-shadow: 0 0 0 999px rgba(7, 16, 10, 0.45);
+}
+
+.validacion-sena-camera-guide__corners {
+  inset: 13% 21%;
+}
+
+.validacion-sena-camera-modal__help {
+  margin: 14px 0 0;
+  color: #cbdfd0;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.validacion-sena-camera-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
 }
 
 .validacion-sena-form__actions {
@@ -399,13 +584,23 @@
   }
 
   .validacion-sena-capture__frame,
+  .validacion-sena-capture__frame-corners,
   .validacion-sena-capture img {
-    inset: 16% 8%;
+    inset: 13% 18%;
   }
 
   .validacion-sena-capture img {
-    width: 84%;
-    height: 68%;
+    width: 64%;
+    height: 74%;
+  }
+
+  .validacion-sena-capture__actions,
+  .validacion-sena-camera-modal__actions {
+    flex-direction: column;
+  }
+
+  .validacion-sena-camera-stage {
+    width: min(100%, 300px);
   }
 }
 
@@ -437,6 +632,16 @@ body.dark-mode .validacion-sena-status {
 body.dark-mode .validacion-sena-capture {
   background: radial-gradient(circle at top, rgba(57, 169, 0, 0.18) 0%, transparent 42%), linear-gradient(180deg, #1b2a20 0%, #17231b 100%);
   border-color: rgba(197, 230, 193, 0.12);
+}
+
+body.dark-mode .validacion-sena-capture__hint {
+  color: #b9cfbe;
+}
+
+body.dark-mode .validacion-sena-inline-alert {
+  background: #3a2318;
+  border-color: #85492a;
+  color: #ffd5bd;
 }
 
 body.dark-mode .validacion-sena-result,

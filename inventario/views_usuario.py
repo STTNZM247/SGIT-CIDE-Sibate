@@ -13,7 +13,7 @@ import secrets
 
 from .db_compat import get_safe_usuario_value, get_usuario_model_from_instance, usuario_supports_verificacion_sena
 from .models import CarritoItem, DetallePedido, Disponibilidad, Notificacion, Pedido, Producto, VerificacionSenaToken
-from .validacion_sena import intentar_validacion_automatica
+from .validacion_sena import cargar_imagen_validacion, intentar_validacion_automatica
 from .views import _auto_cancelar_pedidos_pendientes_vencidos, _crear_notificacion, _notificar_staff, _registrar_auditoria
 
 
@@ -265,6 +265,10 @@ def validacion_sena_carga_manual(request, token):
         elif not (getattr(soporte, 'content_type', '') or '').startswith('image/'):
             messages.error(request, 'El documento manual debe ser una imagen válida.')
         else:
+            _, image_error = cargar_imagen_validacion(soporte, require_vertical=True)
+            if image_error:
+                messages.error(request, image_error['message'])
+                return redirect(request.path)
             usuario.verificacion_sena_documento = soporte
             usuario.verificacion_sena_estado = 'documento_cargado'
             usuario.verificacion_sena_observacion = 'Documento manual cargado y pendiente de aprobación administrativa.'

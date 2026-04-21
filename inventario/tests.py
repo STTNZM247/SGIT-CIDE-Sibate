@@ -16,6 +16,7 @@ from PIL import Image
 from .auth_backends import CompatibleModelBackend
 from .middleware import ActiveUserRequiredMiddleware
 from .models import CarritoItem, Catalogo, Disponibilidad, Notificacion, PasswordResetToken, Producto, Rol, TipoDoc, Usuario, VerificacionSenaToken
+from .validacion_sena import intentar_validacion_automatica
 from .views_login import RolRedirectLoginView
 from .views_usuario import panel_usuario
 
@@ -237,8 +238,8 @@ class GestionEstadoUsuarioTests(TestCase):
         self.assertEqual(dashboard_response.status_code, 302)
         self.assertIn(reverse('login'), dashboard_response.url)
 
-    def _make_test_image(self, name='documento.png', color=(57, 169, 0)):
-        image = Image.new('RGB', (220, 140), color)
+    def _make_test_image(self, name='documento.png', color=(57, 169, 0), size=(140, 220)):
+        image = Image.new('RGB', size, color)
         buffer = BytesIO()
         image.save(buffer, format='PNG')
         return SimpleUploadedFile(name, buffer.getvalue(), content_type='image/png')
@@ -309,6 +310,27 @@ class GestionEstadoUsuarioTests(TestCase):
         self.assertEqual(approve_response.status_code, 302)
         self.assertEqual(self.usuario.verificacion_sena_estado, 'validado')
         self.assertIsNotNone(self.usuario.verificacion_sena_validada_en)
+
+    def test_automatic_validation_rejects_horizontal_image(self):
+        resultado = intentar_validacion_automatica(
+            self._make_test_image(name='horizontal.png', size=(220, 140)),
+            self.usuario,
+        )
+
+        self.assertFalse(resultado['ok'])
+        self.assertEqual(resultado['error_code'], 'invalid_orientation')
+
+    def test_manual_upload_rejects_horizontal_image(self):
+        token = VerificacionSenaToken.create_for_user(self.usuario)
+
+        response = self.client.post(
+            reverse('validacion_sena_carga_manual', args=[token.token]),
+            {'documento_soporte': self._make_test_image(name='horizontal.png', size=(220, 140))},
+        )
+
+        self.usuario.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertNotEqual(self.usuario.verificacion_sena_estado, 'documento_cargado')
 
     @patch('inventario.forms.usuario_missing_optional_fields', return_value=['id_tipo_doc_fk'])
     @patch('inventario.auth_backends.usuario_missing_optional_fields', return_value=['id_tipo_doc_fk'])

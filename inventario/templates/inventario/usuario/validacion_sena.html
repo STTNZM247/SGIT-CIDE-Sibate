@@ -56,16 +56,28 @@
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ redirect_to }}">
 
-                <label class="validacion-sena-capture" for="foto_validacion">
+                <div class="validacion-sena-capture" id="validacion-sena-capture-card">
                     <span class="validacion-sena-capture__frame"></span>
-                    <span class="validacion-sena-capture__guide">Alinea el carnet dentro del marco y procura que el logo quede visible.</span>
-                    <span class="validacion-sena-capture__cta">
-                        <ion-icon name="camera-outline"></ion-icon>
-                        Tomar o subir foto del carnet
+                    <span class="validacion-sena-capture__frame-corners" aria-hidden="true">
+                        <span></span><span></span><span></span><span></span>
                     </span>
-                    <input type="file" id="foto_validacion" name="foto_validacion" accept="image/*" capture="environment" required>
+                    <span class="validacion-sena-capture__guide">Alinea el carnet dentro del marco y procura que el logo quede visible.</span>
+                    <span class="validacion-sena-capture__hint">Usa el carnet en vertical, evita reflejos y llena la guía antes de capturar.</span>
+                    <div class="validacion-sena-capture__actions">
+                        <button type="button" class="validacion-sena-capture__cta validacion-sena-capture__cta--camera" id="abrir_camara_guiada">
+                            <ion-icon name="camera-outline"></ion-icon>
+                            Abrir cámara guiada
+                        </button>
+                        <button type="button" class="validacion-sena-capture__cta validacion-sena-capture__cta--upload" id="subir_foto_carnet">
+                            <ion-icon name="image-outline"></ion-icon>
+                            Subir foto vertical
+                        </button>
+                    </div>
+                    <input type="file" id="foto_validacion" name="foto_validacion" accept="image/*" required>
                     <img id="foto_validacion_preview" alt="Vista previa del carnet" hidden>
-                </label>
+                </div>
+
+                <div class="validacion-sena-inline-alert" id="validacion_sena_inline_alert" hidden></div>
 
                 <div class="validacion-sena-form__actions">
                     <button type="submit" class="validacion-sena-btn validacion-sena-btn--primary">
@@ -75,6 +87,38 @@
                     <a href="{{ redirect_to }}" class="validacion-sena-btn validacion-sena-btn--ghost">Volver</a>
                 </div>
             </form>
+
+            <div class="validacion-sena-camera-modal" id="validacion_sena_camera_modal" hidden>
+                <div class="validacion-sena-camera-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="validacion_sena_camera_title">
+                    <div class="validacion-sena-camera-modal__head">
+                        <div>
+                            <p class="validacion-sena-card__eyebrow">Cámara guiada</p>
+                            <h3 id="validacion_sena_camera_title">Centra el carnet dentro del marco</h3>
+                        </div>
+                        <button type="button" class="validacion-sena-camera-modal__close" id="cerrar_camara_guiada" aria-label="Cerrar cámara guiada">
+                            <ion-icon name="close-outline"></ion-icon>
+                        </button>
+                    </div>
+
+                    <div class="validacion-sena-camera-stage">
+                        <video id="validacion_sena_camera_video" autoplay playsinline muted></video>
+                        <div class="validacion-sena-camera-guide" aria-hidden="true">
+                            <span class="validacion-sena-camera-guide__frame"></span>
+                            <span class="validacion-sena-camera-guide__corners"><span></span><span></span><span></span><span></span></span>
+                        </div>
+                    </div>
+
+                    <p class="validacion-sena-camera-modal__help">Mantén el celular en vertical, acerca el carnet hasta llenar la guía y evita tomar la foto acostada.</p>
+
+                    <div class="validacion-sena-camera-modal__actions">
+                        <button type="button" class="validacion-sena-btn validacion-sena-btn--ghost" id="cancelar_captura_guiada">Cancelar</button>
+                        <button type="button" class="validacion-sena-btn validacion-sena-btn--primary" id="capturar_foto_guiada">
+                            <ion-icon name="radio-button-on-outline"></ion-icon>
+                            Capturar
+                        </button>
+                    </div>
+                </div>
+            </div>
             {% endif %}
 
             {% if resultado_ocr and resultado_ocr.details %}
@@ -148,23 +192,176 @@
 (function () {
     var input = document.getElementById('foto_validacion');
     var preview = document.getElementById('foto_validacion_preview');
+    var abrirCamara = document.getElementById('abrir_camara_guiada');
+    var subirFoto = document.getElementById('subir_foto_carnet');
+    var modal = document.getElementById('validacion_sena_camera_modal');
+    var cerrarCamara = document.getElementById('cerrar_camara_guiada');
+    var cancelarCaptura = document.getElementById('cancelar_captura_guiada');
+    var capturarFoto = document.getElementById('capturar_foto_guiada');
+    var video = document.getElementById('validacion_sena_camera_video');
+    var inlineAlert = document.getElementById('validacion_sena_inline_alert');
+    var stream = null;
+
     if (!input || !preview) return;
+
+    function showInlineAlert(message) {
+        if (!inlineAlert) return;
+        inlineAlert.textContent = message;
+        inlineAlert.hidden = false;
+    }
+
+    function clearInlineAlert() {
+        if (!inlineAlert) return;
+        inlineAlert.hidden = true;
+        inlineAlert.textContent = '';
+    }
+
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(function (track) { track.stop(); });
+            stream = null;
+        }
+        if (video) {
+            video.pause();
+            video.srcObject = null;
+        }
+        if (modal) {
+            modal.hidden = true;
+        }
+    }
+
+    function setFileToInput(file) {
+        var dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        input.files = dataTransfer.files;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function validateVerticalFile(file) {
+        return new Promise(function (resolve) {
+            if (!file) {
+                resolve({ ok: false });
+                return;
+            }
+            var objectUrl = URL.createObjectURL(file);
+            var image = new Image();
+            image.onload = function () {
+                URL.revokeObjectURL(objectUrl);
+                resolve({ ok: image.height >= image.width, width: image.width, height: image.height });
+            };
+            image.onerror = function () {
+                URL.revokeObjectURL(objectUrl);
+                resolve({ ok: false });
+            };
+            image.src = objectUrl;
+        });
+    }
 
     input.addEventListener('change', function () {
         var file = input.files && input.files[0];
         if (!file) {
             preview.hidden = true;
             preview.removeAttribute('src');
+            clearInlineAlert();
             return;
         }
 
-        var reader = new FileReader();
-        reader.onload = function (event) {
-            preview.src = event.target.result;
-            preview.hidden = false;
-        };
-        reader.readAsDataURL(file);
+        validateVerticalFile(file).then(function (result) {
+            if (!result.ok) {
+                input.value = '';
+                preview.hidden = true;
+                preview.removeAttribute('src');
+                showInlineAlert('La foto del carnet debe estar en vertical. Gira el celular y vuelve a intentarlo.');
+                return;
+            }
+
+            clearInlineAlert();
+            var reader = new FileReader();
+            reader.onload = function (event) {
+                preview.src = event.target.result;
+                preview.hidden = false;
+            };
+            reader.readAsDataURL(file);
+        });
     });
+
+    if (subirFoto) {
+        subirFoto.addEventListener('click', function () {
+            input.click();
+        });
+    }
+
+    if (abrirCamara && modal && video && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        abrirCamara.addEventListener('click', async function () {
+            clearInlineAlert();
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { ideal: 'environment' },
+                        aspectRatio: { ideal: 0.63 }
+                    },
+                    audio: false
+                });
+                video.srcObject = stream;
+                modal.hidden = false;
+                await video.play();
+            } catch (error) {
+                stopCamera();
+                showInlineAlert('No pudimos abrir la cámara guiada en este dispositivo. Usa la opción de subir foto vertical.');
+            }
+        });
+    } else if (abrirCamara) {
+        abrirCamara.addEventListener('click', function () {
+            showInlineAlert('Tu navegador no permite abrir la cámara guiada aquí. Usa la opción de subir foto vertical.');
+        });
+    }
+
+    function handleCloseCamera() {
+        stopCamera();
+    }
+
+    if (cerrarCamara) {
+        cerrarCamara.addEventListener('click', handleCloseCamera);
+    }
+    if (cancelarCaptura) {
+        cancelarCaptura.addEventListener('click', handleCloseCamera);
+    }
+    if (modal) {
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal) {
+                handleCloseCamera();
+            }
+        });
+    }
+
+    if (capturarFoto && video) {
+        capturarFoto.addEventListener('click', function () {
+            if (!video.videoWidth || !video.videoHeight) {
+                showInlineAlert('La cámara aún no está lista. Espera un momento y vuelve a capturar.');
+                return;
+            }
+
+            if (video.videoWidth > video.videoHeight) {
+                showInlineAlert('Pon el celular en vertical antes de capturar el carnet.');
+                return;
+            }
+
+            var canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            var context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(function (blob) {
+                if (!blob) {
+                    showInlineAlert('No pudimos capturar la foto. Inténtalo de nuevo.');
+                    return;
+                }
+                var file = new File([blob], 'carnet-sena-captura.png', { type: 'image/png' });
+                setFileToInput(file);
+                stopCamera();
+            }, 'image/png', 0.95);
+        });
+    }
 }());
 </script>
 {% endblock %}
