@@ -2725,6 +2725,8 @@ def toggle_estado_usuario(request, usuario_id):
 
 @login_required
 def notificaciones_panel(request):
+    # Auto-marcar todas como leídas al entrar al panel
+    Notificacion.objects.filter(id_usuario_fk=request.user, leida=False).update(leida=True)
     notificaciones = (
         Notificacion.objects
         .filter(id_usuario_fk=request.user)

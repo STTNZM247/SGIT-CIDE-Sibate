@@ -268,3 +268,97 @@
     font-size: 1rem;
     color: #39c0ba;
 }
+
+/* --- Notificaciones LEÍDAS — apagadas ------------------------------------ */
+.notif-card:not(.notif-unread) {
+    background: #f6f6f7;
+    border-color: #e0e0e3;
+    opacity: 0.82;
+}
+.notif-card:not(.notif-unread) .notif-titulo {
+    color: #7a7a88;
+}
+.notif-card:not(.notif-unread) .notif-mensaje {
+    color: #9a9aa8;
+}
+.notif-card:not(.notif-unread) .notif-fecha {
+    color: #bbbbc8;
+}
+.notif-card:not(.notif-unread) .notif-icon-wrap {
+    filter: grayscale(0.55) opacity(0.7);
+}
+
+/* --- Dark mode notificaciones ------------------------------------------ */
+html[data-theme="dark"] .notif-panel,
+html[data-theme="dark"] .page-title-row {
+    color: #e2ede2;
+}
+html[data-theme="dark"] .page-title {
+    color: #e2ede2 !important;
+}
+html[data-theme="dark"] .notif-card {
+    background: #161e16 !important;
+    border-color: #253025 !important;
+    box-shadow: 0 1px 6px rgba(0,0,0,.35);
+}
+html[data-theme="dark"] .notif-card.notif-unread {
+    background: #0d1e2e !important;
+    border-left-color: #39c0ba !important;
+}
+html[data-theme="dark"] .notif-card.notif-unread::before {
+    background: #39c0ba;
+}
+html[data-theme="dark"] .notif-titulo {
+    color: #e2ede2 !important;
+}
+html[data-theme="dark"] .notif-mensaje {
+    color: #93ab90 !important;
+}
+html[data-theme="dark"] .notif-fecha {
+    color: #5a6e5a !important;
+}
+html[data-theme="dark"] .notif-link-pedido {
+    background: #0d2538 !important;
+    border-color: #1a3a5c !important;
+    color: #42a5f5 !important;
+}
+html[data-theme="dark"] .notif-link-pedido:hover {
+    background: #42a5f5 !important;
+    color: #0b0e0b !important;
+}
+html[data-theme="dark"] .notif-leida-label {
+    color: #4a6a4a !important;
+}
+html[data-theme="dark"] .notif-leida-label ion-icon {
+    color: #39c0ba !important;
+}
+html[data-theme="dark"] .btn-marcar-todas {
+    background: #0d2538 !important;
+    border-color: #39c0ba !important;
+    color: #39c0ba !important;
+}
+html[data-theme="dark"] .btn-marcar-todas:hover {
+    background: #39c0ba !important;
+    color: #0b0e0b !important;
+}
+html[data-theme="dark"] .notif-empty {
+    color: #5a6e5a !important;
+}
+html[data-theme="dark"] .notif-empty ion-icon {
+    color: #3a4e3a !important;
+}
+/* Leídas en dark: más apagadas */
+html[data-theme="dark"] .notif-card:not(.notif-unread) {
+    background: #0f160f !important;
+    border-color: #1e2a1e !important;
+    opacity: 0.72;
+}
+html[data-theme="dark"] .notif-card:not(.notif-unread) .notif-titulo {
+    color: #4a6a4a !important;
+}
+html[data-theme="dark"] .notif-card:not(.notif-unread) .notif-mensaje {
+    color: #3a523a !important;
+}
+html[data-theme="dark"] .notif-card:not(.notif-unread) .notif-fecha {
+    color: #2e422e !important;
+}
