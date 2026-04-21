@@ -430,16 +430,23 @@ html[data-theme="dark"] #perfil-cover-trigger * {
       olaImg.crossOrigin = 'anonymous';
       olaImg.src = "{% static 'inventario/img/5623406.jpg' %}";
       olaImg.onload = function () {
-        /* 1. Fondo blanco */
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, 1200, 400);
-        /* 2. Imagen de olas */
-        ctx.drawImage(olaImg, 0, 0, 1200, 400);
-        /* 3. Capa de color con multiply */
-        ctx.globalCompositeOperation = 'multiply';
+        /* 1. Fondo del color elegido */
         ctx.fillStyle = color;
         ctx.fillRect(0, 0, 1200, 400);
+        /* 2. Invertir imagen en canvas temporal (difference con blanco = invert) */
+        var tmpC = document.createElement('canvas');
+        tmpC.width = 1200; tmpC.height = 400;
+        var tmpCtx = tmpC.getContext('2d');
+        tmpCtx.drawImage(olaImg, 0, 0, 1200, 400);
+        tmpCtx.globalCompositeOperation = 'difference';
+        tmpCtx.fillStyle = '#ffffff';
+        tmpCtx.fillRect(0, 0, 1200, 400);
+        /* 3. Aplicar imagen invertida con screen: negro=neutro, claro=ilumina */
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.85;
+        ctx.drawImage(tmpC, 0, 0, 1200, 400);
         ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = 1.0;
         canvas.toBlob(function (blob) {
           saveBanner(blob, 'portada-color.png');
           var dt = new DataTransfer();
