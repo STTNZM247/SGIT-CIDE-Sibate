@@ -215,7 +215,9 @@
             <div class="pedidos-usuario-devolucion-box"
                  data-devolucion-codigo
                  data-pedido-id="{{ pedido.id_pedido }}"
-                 data-segundos="{{ pedido.devolucion_segundos|default:0 }}">
+                  data-segundos="{{ pedido.devolucion_segundos|default:0 }}"
+                  data-expira-en="{% if pedido.devolucion_expira_en %}{{ pedido.devolucion_expira_en|date:'c' }}{% endif %}"
+                  data-server-ahora="{{ ahora|date:'c' }}">
                 <div class="pedidos-usuario-devolucion-box__head">
                     <span>Código dinámico de devolución</span>
                     <small>Compártelo al almacenista para confirmar la devolución.</small>
@@ -496,6 +498,12 @@
         return `${mm}:${ss}`;
     };
 
+    const parseIsoMillis = (value) => {
+        if (!value) return NaN;
+        const parsed = Date.parse(value);
+        return Number.isFinite(parsed) ? parsed : NaN;
+    };
+
     const refreshCodigo = async (box) => {
         const pedidoId = box.dataset.pedidoId;
         if (!pedidoId) return;
@@ -507,6 +515,8 @@
             if (!res.ok || !data.ok) return;
 
             box.dataset.segundos = String(data.segundos || 0);
+            box.dataset.expiraEn = data.expira_en || '';
+            box.dataset.serverAhora = data.server_now || '';
             const codigoEl = box.querySelector('[data-codigo]');
             if (codigoEl) codigoEl.textContent = data.codigo || '------';
         } catch (_) {
@@ -519,6 +529,34 @@
         const codeEl = box.querySelector('[data-codigo]');
         const countEl = box.querySelector('[data-countdown]');
         let secs = parseInt(box.dataset.segundos || '0', 10);
+        let serverOffsetMs = 0;
+        let expiresAtMs = NaN;
+        let refreshInFlight = false;
+
+        const syncClockFromDataset = () => {
+            const serverNowMs = parseIsoMillis(box.dataset.serverAhora || '');
+            if (Number.isFinite(serverNowMs)) {
+                serverOffsetMs = serverNowMs - Date.now();
+            }
+
+            expiresAtMs = parseIsoMillis(box.dataset.expiraEn || '');
+            if (Number.isFinite(expiresAtMs)) {
+                secs = Math.max(0, Math.ceil((expiresAtMs - (Date.now() + serverOffsetMs)) / 1000));
+            } else {
+                secs = Math.max(0, parseInt(box.dataset.segundos || '0', 10));
+            }
+        };
+
+        const refreshCodigoSync = async () => {
+            if (refreshInFlight) return;
+            refreshInFlight = true;
+            try {
+                await refreshCodigo(box);
+                syncClockFromDataset();
+            } finally {
+                refreshInFlight = false;
+            }
+        };
 
         const paint = () => {
             const safeSecs = Math.max(0, secs);
@@ -529,22 +567,26 @@
         };
 
         const tick = async () => {
-            secs -= 1;
+            if (Number.isFinite(expiresAtMs)) {
+                secs = Math.max(0, Math.ceil((expiresAtMs - (Date.now() + serverOffsetMs)) / 1000));
+            } else {
+                secs = Math.max(0, secs - 1);
+            }
+
             if (secs <= 0) {
-                await refreshCodigo(box);
-                secs = parseInt(box.dataset.segundos || '0', 10);
-                if (secs <= 0) secs = 60;
+                paint();
+                await refreshCodigoSync();
             }
             paint();
         };
 
-        if (!codeEl || codeEl.textContent.trim() === '------' || secs <= 0) {
-            refreshCodigo(box).then(() => {
-                secs = parseInt(box.dataset.segundos || '60', 10);
+        syncClockFromDataset();
+        paint();
+
+        if (!codeEl || codeEl.textContent.trim() === '------' || secs <= 0 || !Number.isFinite(expiresAtMs)) {
+            refreshCodigoSync().then(() => {
                 paint();
             });
-        } else {
-            paint();
         }
 
         setInterval(tick, 1000);

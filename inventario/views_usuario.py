@@ -432,6 +432,7 @@ def pedidos_usuario(request):
         'pedidos': pedidos_filtrados,
         'estado_activo': estado_activo,
         'conteos_estado': conteos_estado,
+        'ahora': ahora,
     })
 
 
@@ -524,6 +525,7 @@ def pedido_codigo_devolucion(request, pedido_id):
         'ok': True,
         'codigo': pedido.codigo_entrega,
         'segundos': segundos,
+        'server_now': now.isoformat(),
         'expira_en': pedido.codigo_expira_en.isoformat() if pedido.codigo_expira_en else None,
     })
 
