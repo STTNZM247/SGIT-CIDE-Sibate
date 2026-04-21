@@ -115,7 +115,7 @@
   position: absolute;
   right: 18px;
   bottom: 16px;
-  z-index: 4;
+  z-index: 6;
   display: inline-flex;
   align-items: center;
   gap: 6px;
