@@ -59,15 +59,33 @@
   position: relative;
   width: 100%;
   height: 240px;
-  background: linear-gradient(135deg, #1e7f34 0%, #39A900 46%, #a6e36f 100%);
+  background: #f5f7f5;
   overflow: hidden;
+}
+
+/* Patrón de puntos halftone — modo claro */
+.perfil-cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    radial-gradient(circle, #c8cec8 1.2px, transparent 1.2px);
+  background-size: 18px 18px;
+  background-position: 0 0;
+  opacity: 0.85;
+  pointer-events: none;
+  /* Viñeta: los puntos se desvanecen hacia el centro */
+  -webkit-mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, transparent 30%, black 100%);
+  mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, transparent 30%, black 100%);
 }
 
 .perfil-cover::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.18));
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(220,228,220,.18) 100%);
   pointer-events: none;
 }
 
@@ -76,11 +94,15 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  position: relative;
+  z-index: 2;
 }
 
 .perfil-cover-img--gradient {
   width: 100%;
   height: 100%;
+  position: relative;
+  z-index: 2;
 }
 
 .perfil-cover-btn {
@@ -599,7 +621,14 @@ html[data-theme="dark"] .perfil-page {
 }
 
 html[data-theme="dark"] .perfil-cover {
-  background: linear-gradient(135deg, #0d1e38 0%, #0d2745 46%, #1a3a5c 100%) !important;
+  background: #0d1117 !important;
+}
+
+/* Patrón de puntos halftone — modo oscuro */
+html[data-theme="dark"] .perfil-cover::before {
+  background-image:
+    radial-gradient(circle, #2e3d2e 1.2px, transparent 1.2px) !important;
+  opacity: 1 !important;
 }
 
 html[data-theme="dark"] .perfil-card {
