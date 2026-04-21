@@ -1811,12 +1811,20 @@ html[data-theme="dark"] .tower-modal-table td {
 html[data-theme="dark"] .admin-card--stock {
     background: #111611 !important;
 }
+html[data-theme="dark"] .admin-stock-columns {
+    background: transparent !important;
+}
+html[data-theme="dark"] .admin-stock-block {
+    background: #0f160f !important;
+    border-color: #253025 !important;
+}
 html[data-theme="dark"] .admin-stock-block h3 {
     color: #90b090 !important;
     border-color: #253025 !important;
 }
 html[data-theme="dark"] .admin-stock-list li {
-    border-color: #1e2b1e !important;
+    background: #141c14 !important;
+    border-color: #253025 !important;
     color: #c8dcc8 !important;
 }
 html[data-theme="dark"] .admin-stock-list small {
@@ -1824,6 +1832,16 @@ html[data-theme="dark"] .admin-stock-list small {
 }
 html[data-theme="dark"] .stock-producto {
     color: #e2ede2 !important;
+}
+html[data-theme="dark"] .stock-badge {
+    background: #2c2314 !important;
+    border-color: #6e5220 !important;
+    color: #ffd08a !important;
+}
+html[data-theme="dark"] .stock-badge--critico {
+    background: #2b1616 !important;
+    border-color: #6f2b2b !important;
+    color: #ffb0b0 !important;
 }
 html[data-theme="dark"] .admin-stock-pdf-btn {
     background: #182018 !important;
