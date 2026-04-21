@@ -270,7 +270,8 @@
 
 .validacion-sena-capture__guide,
 .validacion-sena-capture__cta,
-.validacion-sena-capture__hint {
+.validacion-sena-capture__hint,
+.validacion-sena-capture__subhint {
   position: relative;
   z-index: 1;
   text-align: center;
@@ -288,6 +289,15 @@
   margin-top: 10px;
   color: #67806d;
   font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.validacion-sena-capture__subhint {
+  max-width: 430px;
+  margin-top: 4px;
+  color: #4c6752;
+  font-size: 0.88rem;
+  font-weight: 700;
   line-height: 1.45;
 }
 
@@ -636,6 +646,10 @@ body.dark-mode .validacion-sena-capture {
 
 body.dark-mode .validacion-sena-capture__hint {
   color: #b9cfbe;
+}
+
+body.dark-mode .validacion-sena-capture__subhint {
+  color: #d7eadb;
 }
 
 body.dark-mode .validacion-sena-inline-alert {

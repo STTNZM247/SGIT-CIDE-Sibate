@@ -62,7 +62,7 @@
                         <span></span><span></span><span></span><span></span>
                     </span>
                     <span class="validacion-sena-capture__guide">Alinea el carnet dentro del marco y procura que el logo quede visible.</span>
-                    <span class="validacion-sena-capture__hint">Usa el carnet en vertical, evita reflejos y llena la guía antes de capturar.</span>
+                    <span class="validacion-sena-capture__hint">La guía solo aparece en la cámara dentro de esta página. Si eliges una foto desde el dispositivo, el celular abrirá su cámara o galería sin plantilla.</span>
                     <div class="validacion-sena-capture__actions">
                         <button type="button" class="validacion-sena-capture__cta validacion-sena-capture__cta--camera" id="abrir_camara_guiada">
                             <ion-icon name="camera-outline"></ion-icon>
@@ -70,9 +70,10 @@
                         </button>
                         <button type="button" class="validacion-sena-capture__cta validacion-sena-capture__cta--upload" id="subir_foto_carnet">
                             <ion-icon name="image-outline"></ion-icon>
-                            Subir foto vertical
+                            Elegir desde galería o archivo
                         </button>
                     </div>
+                    <span class="validacion-sena-capture__subhint">Recomendado: usa la cámara guiada. La opción de galería/archivo es solo respaldo y no muestra la plantilla.</span>
                     <input type="file" id="foto_validacion" name="foto_validacion" accept="image/*" required>
                     <img id="foto_validacion_preview" alt="Vista previa del carnet" hidden>
                 </div>
@@ -195,6 +196,7 @@
     var abrirCamara = document.getElementById('abrir_camara_guiada');
     var subirFoto = document.getElementById('subir_foto_carnet');
     var modal = document.getElementById('validacion_sena_camera_modal');
+    var captureCard = document.getElementById('validacion-sena-capture-card');
     var cerrarCamara = document.getElementById('cerrar_camara_guiada');
     var cancelarCaptura = document.getElementById('cancelar_captura_guiada');
     var capturarFoto = document.getElementById('capturar_foto_guiada');
@@ -214,6 +216,10 @@
         if (!inlineAlert) return;
         inlineAlert.hidden = true;
         inlineAlert.textContent = '';
+    }
+
+    function canUseGuidedCamera() {
+        return !!(modal && video && navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
     }
 
     function stopCamera() {
@@ -291,28 +297,47 @@
         });
     }
 
-    if (abrirCamara && modal && video && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    async function openGuidedCamera() {
+        clearInlineAlert();
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: { ideal: 'environment' },
+                    aspectRatio: { ideal: 0.63 }
+                },
+                audio: false
+            });
+            video.srcObject = stream;
+            modal.hidden = false;
+            await video.play();
+        } catch (error) {
+            stopCamera();
+            showInlineAlert('No pudimos abrir la cámara guiada en este dispositivo. Usa la opción de galería/archivo como respaldo.');
+        }
+    }
+
+    if (abrirCamara && canUseGuidedCamera()) {
         abrirCamara.addEventListener('click', async function () {
-            clearInlineAlert();
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: { ideal: 'environment' },
-                        aspectRatio: { ideal: 0.63 }
-                    },
-                    audio: false
-                });
-                video.srcObject = stream;
-                modal.hidden = false;
-                await video.play();
-            } catch (error) {
-                stopCamera();
-                showInlineAlert('No pudimos abrir la cámara guiada en este dispositivo. Usa la opción de subir foto vertical.');
-            }
+            await openGuidedCamera();
         });
     } else if (abrirCamara) {
         abrirCamara.addEventListener('click', function () {
-            showInlineAlert('Tu navegador no permite abrir la cámara guiada aquí. Usa la opción de subir foto vertical.');
+            clearInlineAlert();
+            showInlineAlert('Tu navegador no permite abrir la cámara guiada aquí. Usa la opción de galería/archivo como respaldo.');
+        });
+    }
+
+    if (captureCard) {
+        captureCard.addEventListener('click', function (event) {
+            if (preview && !preview.hidden) {
+                return;
+            }
+            if (event.target.closest('button')) {
+                return;
+            }
+            if (canUseGuidedCamera()) {
+                openGuidedCamera();
+            }
         });
     }
 
