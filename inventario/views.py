@@ -312,7 +312,9 @@ from django.contrib.auth.decorators import login_required
 
 @login_required
 def panel_almacenista(request):
-    return render(request, 'inventario/almacenista/panel_almacenista.html')
+    if not _is_admin_or_almacenista(request):
+        return redirect('panel_usuario')
+    return redirect('inventario_panel')
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import models
@@ -523,7 +525,9 @@ def eliminar_producto(request, cat_id, prod_id):
 
 @login_required
 def dashboard(request):
-    if not _is_admin_or_almacenista(request):
+    if not _is_admin(request):
+        if _user_role(request) == 'almacenista':
+            return redirect('inventario_panel')
         return redirect('panel_usuario')
 
     _auto_cancelar_pedidos_pendientes_vencidos()
@@ -863,7 +867,7 @@ def _resumen_pedidos_mensual(ahora, meses=12):
 
 @login_required
 def dashboard_tendencia_data(request):
-    if not _is_admin_or_almacenista(request):
+    if not _is_admin(request):
         return JsonResponse({'ok': False, 'error': 'No autorizado.'}, status=403)
 
     _auto_cancelar_pedidos_pendientes_vencidos()
@@ -879,7 +883,7 @@ def dashboard_tendencia_data(request):
 
 @login_required
 def dashboard_tendencia_detalle(request):
-    if not _is_admin_or_almacenista(request):
+    if not _is_admin(request):
         return JsonResponse({'ok': False, 'error': 'No autorizado.'}, status=403)
 
     _auto_cancelar_pedidos_pendientes_vencidos()

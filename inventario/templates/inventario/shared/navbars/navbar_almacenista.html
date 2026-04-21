@@ -3,8 +3,8 @@
         <span class="nav-brand__logo" aria-hidden="true"></span>
     </a>
     <ul>
-        <li class="list {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-            <a href="{% url 'dashboard' %}">
+        <li class="list {% if request.resolver_match.url_name == 'inventario_panel' %}active{% endif %}">
+            <a href="{% url 'inventario_panel' %}">
                 <span class="icon"><ion-icon name="file-tray-stacked-outline"></ion-icon></span>
                 <span class="text">Inventario</span>
             </a>

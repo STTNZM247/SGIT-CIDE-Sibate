@@ -34,7 +34,7 @@ class RolRedirectLoginView(LoginView):
         if rol in {'admin', 'administrador'}:
             return reverse('dashboard')
         if rol in {'almacenista', 'almacen'}:
-            return reverse('panel_almacenista')
+          return reverse('inventario_panel')
         return reverse('panel_usuario')
 
 
