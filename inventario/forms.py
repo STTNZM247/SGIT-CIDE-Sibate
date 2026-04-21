@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 
+from .db_compat import usuario_missing_optional_fields, usuario_supports_tipo_doc
 from .models import Catalogo, Producto, Rol, TipoDoc, Usuario
 
 
@@ -36,9 +37,14 @@ class CorreoAuthenticationForm(AuthenticationForm):
     def clean(self):
         username = (self.data.get('username') or '').strip()
         password = self.data.get('password') or ''
+        user_model = get_user_model()
+        queryset = user_model.objects.all()
+        missing_fields = usuario_missing_optional_fields(user_model)
+        if missing_fields:
+            queryset = queryset.defer(*missing_fields)
 
         if username and password:
-            usuario = get_user_model().objects.filter(correo__iexact=username).first()
+            usuario = queryset.filter(correo__iexact=username).first()
             if usuario and usuario.check_password(password) and not usuario.is_active:
                 raise forms.ValidationError(self.error_messages['inactive'], code='inactive')
 
@@ -95,8 +101,17 @@ class RegistroPublicoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['id_tipo_doc_fk'].queryset = TipoDoc.objects.order_by('id_tipo_doc')
-        for field_name in ['nombre', 'apellido', 'id_tipo_doc_fk', 'cc', 'correo', 'password1', 'password2']:
+        self.tipo_doc_habilitado = usuario_supports_tipo_doc(Usuario)
+        if self.tipo_doc_habilitado:
+            self.fields['id_tipo_doc_fk'].queryset = TipoDoc.objects.order_by('id_tipo_doc')
+        else:
+            self.fields['id_tipo_doc_fk'].required = False
+            self.fields['id_tipo_doc_fk'].queryset = TipoDoc.objects.none()
+            self.fields['id_tipo_doc_fk'].widget = forms.HiddenInput()
+        required_fields = ['nombre', 'apellido', 'cc', 'correo', 'password1', 'password2']
+        if self.tipo_doc_habilitado:
+            required_fields.append('id_tipo_doc_fk')
+        for field_name in required_fields:
             self.fields[field_name].required = True
 
     def clean_correo(self):
@@ -121,7 +136,7 @@ class RegistroPublicoForm(forms.ModelForm):
         cc = (cleaned_data.get('cc') or '').strip()
         password1 = cleaned_data.get('password1')
         password2 = cleaned_data.get('password2')
-        if not tipo_doc:
+        if self.tipo_doc_habilitado and not tipo_doc:
             self.add_error('id_tipo_doc_fk', 'Selecciona el tipo de documento.')
         if tipo_doc and not cc:
             self.add_error('cc', 'Ingresa el número de documento para continuar.')
@@ -281,6 +296,13 @@ class ProductoForm(forms.ModelForm):
 
 
 class UsuarioPerfilForm(forms.ModelForm):
+    id_tipo_doc_fk = forms.ModelChoiceField(
+        label='Tipo de documento',
+        queryset=TipoDoc.objects.none(),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_tipo_doc_fk'}),
+    )
+
     class Meta:
         model = Usuario
         fields = [
@@ -302,6 +324,7 @@ class UsuarioPerfilForm(forms.ModelForm):
             'cc': 'Cédula',
             'nombre': 'Nombre',
             'apellido': 'Apellido',
+            'id_tipo_doc_fk': 'Tipo de documento',
             'correo': 'Correo',
             'telefono': 'Teléfono',
             'programa_formacion': 'Programa de formación',
@@ -309,3 +332,21 @@ class UsuarioPerfilForm(forms.ModelForm):
             'fot_usu': 'Foto de perfil',
             'banner_usu': 'Foto de portada',
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tipo_doc_habilitado = usuario_supports_tipo_doc(Usuario)
+        if self.tipo_doc_habilitado:
+            self.fields['id_tipo_doc_fk'].queryset = TipoDoc.objects.order_by('id_tipo_doc')
+            if self.instance and getattr(self.instance, 'pk', None):
+                self.initial['id_tipo_doc_fk'] = getattr(self.instance, 'id_tipo_doc_fk_id', None)
+        else:
+            self.fields.pop('id_tipo_doc_fk', None)
+
+    def save(self, commit=True):
+        usuario = super().save(commit=False)
+        if self.tipo_doc_habilitado:
+            usuario.id_tipo_doc_fk = self.cleaned_data.get('id_tipo_doc_fk')
+        if commit:
+            usuario.save()
+        return usuario

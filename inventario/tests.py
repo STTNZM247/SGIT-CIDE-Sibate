@@ -1,5 +1,6 @@
 from datetime import timedelta
 from io import BytesIO
+from unittest.mock import patch
 
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.messages.middleware import MessageMiddleware
@@ -12,6 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 from PIL import Image
 
+from .auth_backends import CompatibleModelBackend
 from .middleware import ActiveUserRequiredMiddleware
 from .models import CarritoItem, Catalogo, Disponibilidad, Notificacion, PasswordResetToken, Producto, Rol, TipoDoc, Usuario, VerificacionSenaToken
 from .views_login import RolRedirectLoginView
@@ -287,3 +289,23 @@ class GestionEstadoUsuarioTests(TestCase):
         self.assertEqual(approve_response.status_code, 302)
         self.assertEqual(self.usuario.verificacion_sena_estado, 'validado')
         self.assertIsNotNone(self.usuario.verificacion_sena_validada_en)
+
+    @patch('inventario.forms.usuario_missing_optional_fields', return_value=['id_tipo_doc_fk'])
+    @patch('inventario.auth_backends.usuario_missing_optional_fields', return_value=['id_tipo_doc_fk'])
+    def test_compatible_backend_authenticates_when_optional_column_is_deferred(self, _backend_missing, _form_missing):
+        backend = CompatibleModelBackend()
+
+        user = backend.authenticate(None, username=self.usuario.correo, password='Usuario123!')
+
+        self.assertIsNotNone(user)
+        self.assertEqual(user.correo, self.usuario.correo)
+
+    @patch('inventario.views_login.usuario_supports_tipo_doc', return_value=True)
+    def test_login_creates_tipo_doc_reminder_notification_for_legacy_user(self, _supports_tipo_doc):
+        response = self.client.post(reverse('login'), {
+            'username': self.usuario.correo,
+            'password': 'Usuario123!',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Notificacion.objects.filter(id_usuario_fk=self.usuario, tipo='actualizar_tipo_doc').exists())

@@ -11,6 +11,7 @@ from django.views.decorators.http import require_POST
 from datetime import timedelta
 import secrets
 
+from .db_compat import get_safe_usuario_value, get_usuario_model_from_instance, usuario_supports_verificacion_sena
 from .models import CarritoItem, DetallePedido, Disponibilidad, Notificacion, Pedido, Producto, VerificacionSenaToken
 from .validacion_sena import intentar_validacion_automatica
 from .views import _auto_cancelar_pedidos_pendientes_vencidos, _crear_notificacion, _notificar_staff, _registrar_auditoria
@@ -47,7 +48,10 @@ def _asegurar_codigo_devolucion(pedido, now):
 
 
 def _usuario_tiene_validacion_sena(usuario):
-    return getattr(usuario, 'verificacion_sena_estado', 'pendiente') == 'validado'
+    usuario_model = get_usuario_model_from_instance(usuario)
+    if not usuario_model or not usuario_supports_verificacion_sena(usuario_model):
+        return True
+    return get_safe_usuario_value(usuario, 'verificacion_sena_estado', 'pendiente') == 'validado'
 
 
 def _redireccion_validacion_destino(request):

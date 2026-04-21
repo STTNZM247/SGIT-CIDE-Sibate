@@ -434,6 +434,7 @@ class Notificacion(models.Model):
         ('documento_validacion_sena', 'Documento cargado para validación SENA'),
         ('verificacion_sena_aprobada', 'Verificación SENA aprobada'),
         ('verificacion_sena_rechazada', 'Verificación SENA rechazada'),
+        ('actualizar_tipo_doc', 'Actualizar tipo de documento'),
         # Staff (admin / almacenista)
         ('staff_nuevo_pedido', 'Nuevo pedido recibido'),
         ('staff_pedido_cancelado', 'Pedido cancelado por usuario'),

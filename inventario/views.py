@@ -324,6 +324,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 
+from .db_compat import usuario_supports_tipo_doc
 from .forms import CatalogoForm, ProductoForm, UsuarioPerfilForm
 from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Pedido, PedidoEvidencia, Producto, Usuario, Rol, VerificacionSenaToken
 
@@ -1873,6 +1874,7 @@ def reporte_stock_bajo_pdf(request):
 @login_required
 def perfil_usuario(request):
     usuario = request.user
+    tipo_doc_habilitado = usuario_supports_tipo_doc(Usuario)
     if request.method == 'POST':
         form = UsuarioPerfilForm(request.POST, request.FILES, instance=usuario)
         if form.is_valid():
@@ -1896,6 +1898,7 @@ def perfil_usuario(request):
     return render(request, 'inventario/usuario/perfil_usuario.html', {
         'form': form,
         'usuario': usuario,
+        'tipo_doc_habilitado': tipo_doc_habilitado,
         'pedido_stats': pedido_stats,
         'pedidos_recientes': pedidos_recientes,
     })
