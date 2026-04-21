@@ -4,7 +4,33 @@
 {% block title %}Registro | Inventario SENA - Sibate{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventario/login/css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'inventario/login/css/login.css' %}?v=20260421-registro-fix">
+    <style>
+        .login-form--wizard .registro-step-panel {
+            display: none !important;
+        }
+
+        .login-form--wizard .registro-step-panel.is-active {
+            display: block !important;
+        }
+
+        .login-form--wizard .registro-doc-native {
+            position: absolute !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            width: 1px !important;
+            height: 1px !important;
+            overflow: hidden !important;
+        }
+
+        .login-form--wizard .registro-doc-select__menu {
+            display: none !important;
+        }
+
+        .login-form--wizard .registro-doc-select.is-open .registro-doc-select__menu {
+            display: grid !important;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
