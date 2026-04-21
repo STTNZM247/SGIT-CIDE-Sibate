@@ -32,7 +32,8 @@ document.addEventListener("DOMContentLoaded", () => {
                    navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/usuario/inventario/")?.closest(".list") || null;
         }
         if (path.startsWith("/usuario/producto/")) {
-            return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/panel_usuario/")?.closest(".list") || null;
+            return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/panel_usuario/")?.closest(".list") ||
+                   navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/usuario/inventario/")?.closest(".list") || null;
         }
         // Carrito usuario
         if (path === "/usuario/carrito/" || path === "/carrito_usuario/") {
