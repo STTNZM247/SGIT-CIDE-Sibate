@@ -153,40 +153,47 @@
 
 .perfil-avatar-ring {
   position: relative;
-  width: 150px;
-  height: 150px;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  padding: 3px;
+  background: linear-gradient(135deg, #39A900 0%, #006b25 100%);
+  box-shadow: 0 4px 20px rgba(57,169,0,.35), 0 0 0 3px #fff;
 }
 
 .perfil-avatar-img {
-  width: 150px;
-  height: 150px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid #dff7e5;
-  box-shadow: 0 6px 22px rgba(0,0,0,.3);
+  display: block;
   background: #dbe7db;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 .perfil-avatar-btn {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
-  width: 38px;
-  height: 38px;
+  bottom: 2px;
+  right: 2px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: 2px solid #fff;
+  border: 2.5px solid #fff;
   background: #39A900;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: .88rem;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(57,169,0,.35);
+  box-shadow: 0 2px 8px rgba(57,169,0,.45);
+  transition: background .18s, transform .15s;
 }
 
 .perfil-avatar-btn:hover {
   background: #2f8600;
+  transform: scale(1.08);
 }
 
 .perfil-status-dot {
@@ -749,8 +756,9 @@ html[data-theme="dark"] .perfil-cover-picker-upload {
 }
 
 /* Avatar border */
-html[data-theme="dark"] .perfil-avatar-img {
-  border-color: #1a3a5c !important;
+html[data-theme="dark"] .perfil-avatar-ring {
+  background: linear-gradient(135deg, #39A900 0%, #003d12 100%) !important;
+  box-shadow: 0 4px 20px rgba(57,169,0,.25), 0 0 0 3px #111611 !important;
 }
 
 /* Botón "Cambiar portada" — fondo blanco, texto azul oscuro bien visible */
