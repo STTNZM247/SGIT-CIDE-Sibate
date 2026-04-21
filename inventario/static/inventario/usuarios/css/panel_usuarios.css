@@ -827,6 +827,18 @@ html[data-theme="dark"] .form-crear-usuario select.form-input {
     color: #e2ede2 !important;
 }
 
+html[data-theme="dark"] .form-crear-usuario .form-input:-webkit-autofill,
+html[data-theme="dark"] .form-crear-usuario .form-input:-webkit-autofill:hover,
+html[data-theme="dark"] .form-crear-usuario .form-input:-webkit-autofill:focus,
+html[data-theme="dark"] .form-group .form-input:-webkit-autofill,
+html[data-theme="dark"] .form-group .form-input:-webkit-autofill:hover,
+html[data-theme="dark"] .form-group .form-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #e2ede2 !important;
+    box-shadow: 0 0 0 1000px #161e16 inset !important;
+    border-color: #253025 !important;
+    caret-color: #e2ede2 !important;
+}
+
 html[data-theme="dark"] .form-crear-usuario .form-input:focus {
     border-color: #42a5f5 !important;
     box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.18) !important;
@@ -834,6 +846,24 @@ html[data-theme="dark"] .form-crear-usuario .form-input:focus {
 
 html[data-theme="dark"] .toggle-password {
     color: #8ea88e !important;
+    background: #1a221a !important;
+    border: 1px solid #253025 !important;
+    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+html[data-theme="dark"] .toggle-password:hover {
+    color: #e2ede2 !important;
+    background: #223022 !important;
+}
+
+html[data-theme="dark"] #iconEye,
+html[data-theme="dark"] #iconEye ion-icon {
+    color: inherit !important;
 }
 
 @media (max-width: 700px) {
