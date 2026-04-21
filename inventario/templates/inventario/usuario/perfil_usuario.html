@@ -415,7 +415,8 @@ html[data-theme="dark"] #perfil-cover-trigger * {
   document.querySelectorAll('.perfil-cover-color').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var color = this.dataset.color;
-      coverArea.style.background = color;
+      coverArea.style.setProperty('--cover-color', color);
+      coverArea.style.background = '';
       if (coverPreview) coverPreview.style.display = 'none';
       if (coverFallback) coverFallback.style.display = 'none';
       document.querySelectorAll('.perfil-cover-color').forEach(function (b) { b.classList.remove('is-selected'); });

@@ -59,11 +59,12 @@
   position: relative;
   width: 100%;
   height: 240px;
-  background: #f5f7f5;
+  background: #ffffff;
+  --cover-color: #39A900;
   overflow: hidden;
 }
 
-/* Textura de olas — se tiñe con el color de portada elegido */
+/* Textura de olas — siempre visible, sin blend mode */
 .perfil-cover::before {
   content: '';
   position: absolute;
@@ -72,17 +73,18 @@
   background-image: url('../../img/5623406.jpg');
   background-size: cover;
   background-position: center;
-  mix-blend-mode: multiply;
-  opacity: 0.92;
+  opacity: 1;
   pointer-events: none;
 }
 
+/* Capa de color encima — multiply tiñe las olas con el color elegido */
 .perfil-cover::after {
   content: '';
   position: absolute;
   inset: 0;
-  z-index: 1;
-  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(220,228,220,.18) 100%);
+  z-index: 2;
+  background: var(--cover-color, #39A900);
+  mix-blend-mode: multiply;
   pointer-events: none;
 }
 
@@ -92,14 +94,14 @@
   object-fit: cover;
   display: block;
   position: relative;
-  z-index: 2;
+  z-index: 3;
 }
 
 .perfil-cover-img--gradient {
   width: 100%;
   height: 100%;
   position: relative;
-  z-index: 2;
+  z-index: 3;
 }
 
 .perfil-cover-btn {
@@ -618,14 +620,18 @@ html[data-theme="dark"] .perfil-page {
 }
 
 html[data-theme="dark"] .perfil-cover {
-  background: #0d1117 !important;
+  background: #ffffff;
+  --cover-color: #0d2010;
 }
 
-/* Textura olas — modo oscuro: invertida con screen para que se vea sobre fondo oscuro */
+/* Modo oscuro: invertir imagen para que las olas sean claras sobre dark */
 html[data-theme="dark"] .perfil-cover::before {
-  mix-blend-mode: screen !important;
-  filter: invert(1) brightness(0.6) !important;
-  opacity: 0.4 !important;
+  filter: invert(1) !important;
+}
+
+/* La capa de color también se adapta en oscuro via screen */
+html[data-theme="dark"] .perfil-cover::after {
+  mix-blend-mode: multiply !important;
 }
 
 html[data-theme="dark"] .perfil-card {
