@@ -600,3 +600,254 @@
         width: 100%;
     }
 }
+
+/* ----------------------------------------------
+   DARK MODE - Panel usuarios
+   ---------------------------------------------- */
+html[data-theme="dark"] .panel-usuarios-admin {
+    background: linear-gradient(180deg, #111611 0%, #0f140f 100%) !important;
+    border-color: #253025 !important;
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.28) !important;
+}
+
+html[data-theme="dark"] .usuarios-topbar h1 {
+    color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .usuarios-topbar p {
+    color: #91a891 !important;
+}
+
+html[data-theme="dark"] .usuarios-kpi {
+    background: #141b14 !important;
+    border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .usuarios-kpi span {
+    color: #8ea88e !important;
+}
+
+html[data-theme="dark"] .usuarios-kpi strong {
+    color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .usuarios-kpi--locked {
+    background: #182018 !important;
+    border-color: #2b382b !important;
+}
+
+html[data-theme="dark"] .usuarios-search {
+    background: #141b14 !important;
+    border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .usuarios-search ion-icon {
+    color: #7aa07f !important;
+}
+
+html[data-theme="dark"] .usuarios-search input {
+    color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .usuarios-search input::placeholder {
+    color: #738b73 !important;
+}
+
+html[data-theme="dark"] .usuarios-btn--primary {
+    background: #1f6fda !important;
+    color: #fff !important;
+}
+
+html[data-theme="dark"] .usuarios-btn--primary:hover {
+    background: #1758ae !important;
+}
+
+html[data-theme="dark"] .usuarios-btn--soft {
+    background: #182018 !important;
+    color: #7dd87d !important;
+    border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .usuarios-btn--save {
+    background: #1f6fda !important;
+    color: #fff !important;
+    border-color: #1758ae !important;
+}
+
+html[data-theme="dark"] .usuarios-btn--ghost {
+    background: #161e16 !important;
+    color: #c4d8c4 !important;
+    border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .tabla-usuarios-wrapper {
+    background: #111611 !important;
+    border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .tabla-usuarios-admin thead th {
+    background: #162016 !important;
+    color: #9ab69a !important;
+    border-bottom-color: #253025 !important;
+}
+
+html[data-theme="dark"] .tabla-usuarios-admin tbody tr {
+    background: #0f160f !important;
+}
+
+html[data-theme="dark"] .tabla-usuarios-admin tbody tr:nth-child(even) {
+    background: #131b13 !important;
+}
+
+html[data-theme="dark"] .tabla-usuarios-admin tbody tr:hover {
+    background: #1a241a !important;
+}
+
+html[data-theme="dark"] .tabla-usuarios-admin th,
+html[data-theme="dark"] .tabla-usuarios-admin td {
+    border-bottom-color: #1f2b1f !important;
+}
+
+html[data-theme="dark"] .tabla-usuarios-admin td {
+    color: #c8dcc8 !important;
+}
+
+html[data-theme="dark"] .tabla-usuarios-admin td strong {
+    color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .tabla-usuarios-admin td span,
+html[data-theme="dark"] .correo-cell,
+html[data-theme="dark"] .tabla-vacia {
+    color: #9ab09a !important;
+}
+
+html[data-theme="dark"] .rol-badge {
+    background: #182018 !important;
+    color: #7dd87d !important;
+    border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .rol-badge--admin {
+    background: #2b2413 !important;
+    color: #f1d38a !important;
+    border-color: #6d5b24 !important;
+}
+
+html[data-theme="dark"] .estado-badge--activo {
+    background: #182018 !important;
+    color: #7dd87d !important;
+    border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .estado-badge--inactivo {
+    background: #2a1515 !important;
+    color: #ffb0b0 !important;
+    border-color: #6d2c2c !important;
+}
+
+html[data-theme="dark"] .admin-lock {
+    background: #161e16 !important;
+    color: #8ea88e !important;
+    border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .selected-rol {
+    background: #161e16 !important;
+    border-color: #253025 !important;
+    color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .selected-rol::after {
+    color: #8ea88e !important;
+}
+
+html[data-theme="dark"] .rol-options {
+    background: #111611 !important;
+    border-color: #253025 !important;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+html[data-theme="dark"] .rol-option {
+    color: #c8dcc8 !important;
+}
+
+html[data-theme="dark"] .rol-option:hover,
+html[data-theme="dark"] .rol-option.selected {
+    background: #1a241a !important;
+    color: #7dd87d !important;
+}
+
+html[data-theme="dark"] .estado-toggle {
+    background: #161e16 !important;
+    border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .estado-toggle__text {
+    color: #c8dcc8 !important;
+}
+
+html[data-theme="dark"] .estado-toggle.is-active {
+    background: #182018 !important;
+    border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .estado-toggle.is-active .estado-toggle__track {
+    background: #27c71b !important;
+}
+
+html[data-theme="dark"] .estado-toggle.is-inactive {
+    background: #2a1515 !important;
+    border-color: #6d2c2c !important;
+}
+
+html[data-theme="dark"] .estado-toggle.is-inactive .estado-toggle__text {
+    color: #ffb0b0 !important;
+}
+
+html[data-theme="dark"] .modal-content {
+    background: #111611 !important;
+    border-color: #253025 !important;
+    box-shadow: 0 26px 45px rgba(0, 0, 0, 0.35) !important;
+}
+
+html[data-theme="dark"] .modal-content h2 {
+    color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .modal-subtitle {
+    color: #91a891 !important;
+}
+
+html[data-theme="dark"] .form-crear-usuario .form-input,
+html[data-theme="dark"] .form-group .form-input,
+html[data-theme="dark"] .form-crear-usuario select.form-input {
+    background: #161e16 !important;
+    border-color: #253025 !important;
+    color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .form-crear-usuario .form-input:focus {
+    border-color: #42a5f5 !important;
+    box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.18) !important;
+}
+
+html[data-theme="dark"] .toggle-password {
+    color: #8ea88e !important;
+}
+
+@media (max-width: 700px) {
+    html[data-theme="dark"] .tabla-usuarios-admin tr {
+        background: #111611 !important;
+        border-color: #253025 !important;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22) !important;
+    }
+
+    html[data-theme="dark"] .tabla-usuarios-admin td {
+        border-bottom-color: #253025 !important;
+    }
+
+    html[data-theme="dark"] .tabla-usuarios-admin td::before {
+        color: #8ea88e !important;
+    }
+}
