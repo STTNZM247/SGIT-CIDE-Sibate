@@ -182,6 +182,8 @@
 }
 
 .validacion-sena-capture {
+  --carnet-ratio: 5.5 / 8.5;
+  --carnet-frame-width: min(52%, 220px);
   position: relative;
   display: grid;
   place-items: center;
@@ -208,7 +210,11 @@
 
 .validacion-sena-capture__frame {
   position: absolute;
-  inset: 9% 24%;
+  top: 108px;
+  left: 50%;
+  width: var(--carnet-frame-width);
+  aspect-ratio: var(--carnet-ratio);
+  transform: translateX(-50%);
   border: 3px solid rgba(26, 124, 46, 0.76);
   border-radius: 28px;
   box-shadow: 0 0 0 999px rgba(14, 28, 18, 0.16);
@@ -217,7 +223,11 @@
 .validacion-sena-capture__frame-corners,
 .validacion-sena-camera-guide__corners {
   position: absolute;
-  inset: 9% 24%;
+  top: 108px;
+  left: 50%;
+  width: var(--carnet-frame-width);
+  aspect-ratio: var(--carnet-ratio);
+  transform: translateX(-50%);
   z-index: 1;
   pointer-events: none;
 }
@@ -332,10 +342,12 @@
 
 .validacion-sena-capture img {
   position: absolute;
-  inset: 9% 24%;
-  width: 52%;
-  height: 82%;
-  object-fit: contain;
+  top: 108px;
+  left: 50%;
+  width: var(--carnet-frame-width);
+  aspect-ratio: var(--carnet-ratio);
+  transform: translateX(-50%);
+  object-fit: cover;
   border-radius: 28px;
   z-index: 2;
   background: rgba(255, 255, 255, 0.74);
@@ -406,6 +418,8 @@
 }
 
 .validacion-sena-camera-stage {
+  --camera-guide-width: min(58%, 210px);
+  --camera-guide-ratio: 5.5 / 8.5;
   position: relative;
   aspect-ratio: 9 / 16;
   width: min(100%, 360px);
@@ -444,14 +458,22 @@
 
 .validacion-sena-camera-guide__frame {
   position: absolute;
-  inset: 13% 21%;
+  top: 50%;
+  left: 50%;
+  width: var(--camera-guide-width);
+  aspect-ratio: var(--camera-guide-ratio);
+  transform: translate(-50%, -50%);
   border-radius: 28px;
   border: 3px solid rgba(141, 245, 138, 0.92);
   box-shadow: 0 0 0 999px rgba(7, 16, 10, 0.45);
 }
 
 .validacion-sena-camera-guide__corners {
-  inset: 13% 21%;
+  top: 50%;
+  left: 50%;
+  width: var(--camera-guide-width);
+  aspect-ratio: var(--camera-guide-ratio);
+  transform: translate(-50%, -50%);
 }
 
 .validacion-sena-camera-modal__help {
@@ -619,6 +641,7 @@
   }
 
   .validacion-sena-capture {
+    --carnet-frame-width: min(60%, 210px);
     min-height: 340px;
     padding: 22px;
   }
@@ -626,12 +649,7 @@
   .validacion-sena-capture__frame,
   .validacion-sena-capture__frame-corners,
   .validacion-sena-capture img {
-    inset: 13% 18%;
-  }
-
-  .validacion-sena-capture img {
-    width: 64%;
-    height: 74%;
+    top: 118px;
   }
 
   .validacion-sena-capture__actions,
@@ -656,6 +674,7 @@
   }
 
   .validacion-sena-camera-stage {
+    --camera-guide-width: min(56%, 190px);
     width: min(100%, 300px);
   }
 

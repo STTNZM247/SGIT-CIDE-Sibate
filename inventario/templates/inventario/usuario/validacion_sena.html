@@ -285,6 +285,26 @@
         }
     }
 
+    function dataUrlToFile(dataUrl, fileName) {
+        if (!dataUrl || dataUrl.indexOf(',') === -1) {
+            return null;
+        }
+
+        var parts = dataUrl.split(',');
+        var header = parts[0] || '';
+        var mimeMatch = header.match(/data:(.*?);base64/);
+        var mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
+        var binary = atob(parts[1]);
+        var length = binary.length;
+        var bytes = new Uint8Array(length);
+
+        for (var index = 0; index < length; index += 1) {
+            bytes[index] = binary.charCodeAt(index);
+        }
+
+        return new File([bytes], fileName || 'carnet-sena-captura.png', { type: mimeType });
+    }
+
     function validateVerticalFile(file) {
         return new Promise(function (resolve) {
             if (!file) {
@@ -437,25 +457,28 @@
             canvas.height = video.videoHeight;
             var context = canvas.getContext('2d');
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            canvas.toBlob(function (blob) {
-                if (!blob) {
-                    showInlineAlert('No pudimos capturar la foto. Inténtalo de nuevo.');
-                    return;
-                }
-                var file = new File([blob], 'carnet-sena-captura.png', { type: 'image/png' });
-                var previewUrl = canvas.toDataURL('image/png', 0.95);
-                var assignedToInput = setFileToInput(file);
-                if (captureDataInput) {
-                    captureDataInput.value = previewUrl;
-                }
-                preview.src = previewUrl;
-                preview.hidden = false;
-                clearInlineAlert();
-                if (!assignedToInput) {
-                    showInlineAlert('La foto quedó capturada. Si no ves el archivo adjunto, igual puedes pulsar Validar ahora.');
-                }
-                stopCamera();
-            }, 'image/png', 0.95);
+            var previewUrl = canvas.toDataURL('image/png');
+            if (!previewUrl || previewUrl === 'data:,') {
+                showInlineAlert('No pudimos capturar la foto. Inténtalo de nuevo.');
+                return;
+            }
+
+            var file = dataUrlToFile(previewUrl, 'carnet-sena-captura.png');
+            var assignedToInput = file ? setFileToInput(file) : false;
+
+            if (captureDataInput) {
+                captureDataInput.value = previewUrl;
+            }
+            preview.src = previewUrl;
+            preview.hidden = false;
+            clearInlineAlert();
+
+            if (!assignedToInput && !captureDataInput) {
+                showInlineAlert('La foto quedó capturada, pero no pudimos adjuntarla. Inténtalo de nuevo.');
+                return;
+            }
+
+            stopCamera();
         });
     }
 }());
