@@ -99,6 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
+        const loadPromises = [];
         nextStyles.forEach((style) => {
             const href = style.getAttribute("href");
             const exists = document.querySelector(`link[data-page-style='true'][href='${href}']`);
@@ -107,9 +108,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 newStyle.rel = "stylesheet";
                 newStyle.href = href;
                 newStyle.setAttribute("data-page-style", "true");
+                const p = new Promise((resolve) => {
+                    newStyle.onload = resolve;
+                    newStyle.onerror = resolve; // no bloquear si falla
+                });
+                loadPromises.push(p);
                 document.head.appendChild(newStyle);
             }
         });
+
+        return Promise.all(loadPromises);
     };
 
     const runPageScripts = async (nextDoc) => {
@@ -154,7 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        syncPageStyles(nextDoc);
+        await syncPageStyles(nextDoc);
         currentContainer.replaceWith(nextContainer.cloneNode(true));
         document.title = nextDoc.title || document.title;
         document.body.classList.remove("modal-open");
