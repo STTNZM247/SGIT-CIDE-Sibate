@@ -106,7 +106,11 @@
 
                     <div class="field">
                         <label class="login-label" for="{{ form.id_tipo_doc_fk.id_for_label }}">Tipo de documento</label>
-                        <div class="registro-doc-native">{{ form.id_tipo_doc_fk }}</div>
+                        <div
+                            class="registro-doc-native"
+                            aria-hidden="true"
+                            style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;"
+                        >{{ form.id_tipo_doc_fk }}</div>
                         <div class="registro-doc-select" data-doc-select>
                             <button type="button" class="registro-doc-select__trigger" data-doc-trigger aria-haspopup="listbox" aria-expanded="false">
                                 <span data-doc-label>Selecciona una opción</span>
