@@ -17,6 +17,11 @@
                 <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
                 <span>{{ msg }}</span>
             </div>
+            {% elif 'success' in msg.tags %}
+            <div class="usuarios-alert usuarios-alert--success">
+                <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+                <span>{{ msg }}</span>
+            </div>
             {% endif %}
         {% endfor %}
     </div>
@@ -172,6 +177,16 @@
                                     <span class="estado-toggle__text">{% if usuario.is_active %}Desactivar{% else %}Activar{% endif %}</span>
                                 </button>
                             </form>
+                            <button
+                                type="button"
+                                class="usuarios-btn usuarios-btn--danger btn-eliminar-usuario"
+                                data-usuario-id="{{ usuario.id_usu }}"
+                                data-usuario-nombre="{{ usuario.nombre|default:'' }} {{ usuario.apellido|default:'' }}"
+                                data-usuario-correo="{{ usuario.correo }}"
+                            >
+                                <ion-icon name="trash-outline" aria-hidden="true"></ion-icon>
+                                Eliminar
+                            </button>
                             {% else %}
                             <span class="admin-lock" title="No puedes cambiar el estado de tu propia sesión">
                                 <ion-icon name="shield-outline" aria-hidden="true"></ion-icon>
@@ -223,6 +238,30 @@
             </form>
         </div>
     </div>
+
+    <div id="modalEliminarUsuario" class="modal" aria-hidden="true">
+        <div class="modal-content modal-content--danger">
+            <div class="modal-danger-icon" aria-hidden="true">
+                <ion-icon name="warning-outline"></ion-icon>
+            </div>
+            <h2>Eliminar usuario</h2>
+            <p class="modal-subtitle">Esta acción eliminará la cuenta seleccionada del sistema.</p>
+            <div class="usuarios-delete-alert">
+                <strong>Seguro que quieres eliminar este usuario?</strong>
+                <span id="deleteUserLabel"></span>
+            </div>
+            <form method="post" id="deleteUserForm" class="form-delete-user">
+                {% csrf_token %}
+                <div class="modal-actions modal-actions--danger">
+                    <button type="button" id="btnCerrarModalEliminarUsuario" class="usuarios-btn usuarios-btn--ghost">Cancelar</button>
+                    <button type="submit" class="usuarios-btn usuarios-btn--danger-solid">
+                        <ion-icon name="trash-outline" aria-hidden="true"></ion-icon>
+                        Sí, eliminar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </section>
 {% endblock %}
 
@@ -235,8 +274,35 @@ const btnCerrar = document.getElementById('btnCerrarModalCrearUsuario');
 if(btnAbrir && modal && btnCerrar){
     btnAbrir.onclick = () => { modal.style.display = 'flex'; };
     btnCerrar.onclick = () => { modal.style.display = 'none'; };
-    window.onclick = (e) => { if(e.target === modal) modal.style.display = 'none'; };
 }
+
+const deleteModal = document.getElementById('modalEliminarUsuario');
+const deleteForm = document.getElementById('deleteUserForm');
+const deleteUserLabel = document.getElementById('deleteUserLabel');
+const btnCerrarDelete = document.getElementById('btnCerrarModalEliminarUsuario');
+
+document.querySelectorAll('.btn-eliminar-usuario').forEach(function(button) {
+    button.addEventListener('click', function() {
+        if(!deleteModal || !deleteForm || !deleteUserLabel){
+            return;
+        }
+        const usuarioId = this.dataset.usuarioId;
+        const nombre = (this.dataset.usuarioNombre || '').replace(/\s+/g, ' ').trim() || 'Sin nombre';
+        const correo = (this.dataset.usuarioCorreo || '').trim();
+        deleteUserLabel.textContent = `${nombre} (${correo})`;
+        deleteForm.action = `/usuarios/${usuarioId}/eliminar/`;
+        deleteModal.style.display = 'flex';
+    });
+});
+
+if(btnCerrarDelete && deleteModal){
+    btnCerrarDelete.onclick = () => { deleteModal.style.display = 'none'; };
+}
+
+window.onclick = (e) => {
+    if(e.target === modal) modal.style.display = 'none';
+    if(e.target === deleteModal) deleteModal.style.display = 'none';
+};
 // Mostrar/ocultar contraseña con ion-icon
 const inputPassword = document.getElementById('inputPassword');
 const togglePassword = document.getElementById('togglePassword');

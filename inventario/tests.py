@@ -57,6 +57,26 @@ class GestionEstadoUsuarioTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertFalse(self.usuario.is_active)
 
+    def test_admin_can_delete_user(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.post(
+            reverse('eliminar_usuario', args=[self.usuario.id_usu]),
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Usuario.objects.filter(pk=self.usuario.id_usu).exists())
+
+    def test_admin_cannot_delete_current_session_user(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.post(
+            reverse('eliminar_usuario', args=[self.admin.id_usu]),
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Usuario.objects.filter(pk=self.admin.id_usu).exists())
+
     def test_inactive_user_sees_specific_login_message(self):
         self.usuario.is_active = False
         self.usuario.save(update_fields=['is_active'])

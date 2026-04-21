@@ -2729,6 +2729,40 @@ def toggle_estado_usuario(request, usuario_id):
 
 @login_required
 @require_POST
+def eliminar_usuario(request, usuario_id):
+    if not (request.user.id_rol_fk and request.user.id_rol_fk.nombre_rol == 'admin'):
+        messages.error(request, 'No tienes permisos para eliminar usuarios.')
+        return redirect('gestion_usuarios_panel')
+
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
+
+    if usuario.id_usu == request.user.id_usu:
+        messages.error(request, 'No puedes eliminar tu propia cuenta desde esta sesión.')
+        return redirect('gestion_usuarios_panel')
+
+    nombre_completo = ' '.join(filter(None, [usuario.nombre, usuario.apellido])).strip() or 'Sin nombre'
+    correo = usuario.correo
+    entidad_id = usuario.id_usu
+
+    try:
+        usuario.delete()
+    except Exception:
+        messages.error(request, 'No se pudo eliminar el usuario. Verifica si tiene información relacionada.')
+        return redirect('gestion_usuarios_panel')
+
+    _registrar_auditoria(
+        request,
+        accion='eliminar',
+        entidad='usuario',
+        entidad_id=entidad_id,
+        descripcion=f'Se eliminó el usuario {nombre_completo} ({correo}).',
+    )
+    messages.success(request, f'Usuario eliminado: {nombre_completo} ({correo}).')
+    return redirect('gestion_usuarios_panel')
+
+
+@login_required
+@require_POST
 def enviar_enlace_validacion_sena(request, usuario_id):
     if not (request.user.id_rol_fk and request.user.id_rol_fk.nombre_rol == 'admin'):
         messages.error(request, 'Solo el administrador puede enviar enlaces de validación SENA.')
