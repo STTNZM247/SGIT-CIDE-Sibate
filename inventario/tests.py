@@ -1,16 +1,19 @@
 from datetime import timedelta
+from io import BytesIO
 
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.core import mail
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponse
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
+from PIL import Image
 
 from .middleware import ActiveUserRequiredMiddleware
-from .models import PasswordResetToken, Rol, TipoDoc, Usuario
+from .models import CarritoItem, Catalogo, Disponibilidad, Notificacion, PasswordResetToken, Producto, Rol, TipoDoc, Usuario, VerificacionSenaToken
 from .views_login import RolRedirectLoginView
 from .views_usuario import panel_usuario
 
@@ -211,3 +214,76 @@ class GestionEstadoUsuarioTests(TestCase):
         self.assertIn('no-store', logout_response.get('Cache-Control', ''))
         self.assertEqual(dashboard_response.status_code, 302)
         self.assertIn(reverse('login'), dashboard_response.url)
+
+    def _make_test_image(self, name='documento.png', color=(57, 169, 0)):
+        image = Image.new('RGB', (220, 140), color)
+        buffer = BytesIO()
+        image.save(buffer, format='PNG')
+        return SimpleUploadedFile(name, buffer.getvalue(), content_type='image/png')
+
+    def test_user_without_validation_is_redirected_before_creating_order(self):
+        self.client.force_login(self.usuario)
+        catalogo = Catalogo.objects.create(nombre_catalogo='Tecnología')
+        producto = Producto.objects.create(nombre_producto='Mouse', id_cat_fk=catalogo)
+        Disponibilidad.objects.create(id_prod_fk=producto, cantidad=5, stock=5)
+        CarritoItem.objects.create(id_usuario_fk=self.usuario, id_prod_fk=producto, cantidad=1)
+
+        response = self.client.post(reverse('usuario_realizar_pedido'), {
+            'area_ubicacion': 'Aula 201',
+            'tipo_devolucion': 'mismo_dia',
+            'hora_devolucion': '23:30',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('validacion_sena'), response.url)
+
+    def test_manual_validation_request_creates_notifications(self):
+        self.client.force_login(self.usuario)
+
+        response = self.client.post(reverse('solicitar_validacion_manual'), {
+            'motivo_manual': 'No tengo el carnet físico en este momento.',
+        })
+
+        self.usuario.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.usuario.verificacion_sena_estado, 'solicitada')
+        self.assertTrue(Notificacion.objects.filter(id_usuario_fk=self.usuario, tipo='solicitud_validacion_sena').exists())
+        self.assertTrue(Notificacion.objects.filter(id_usuario_fk=self.admin, tipo='staff_solicitud_validacion_sena').exists())
+
+    def test_admin_sends_manual_link_email(self):
+        self.usuario.verificacion_sena_estado = 'solicitada'
+        self.usuario.save(update_fields=['verificacion_sena_estado'])
+        self.client.force_login(self.admin)
+
+        response = self.client.post(reverse('enviar_enlace_validacion_sena', args=[self.usuario.id_usu]))
+
+        self.usuario.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.usuario.verificacion_sena_estado, 'enlace_enviado')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('/validacion-sena/manual/', mail.outbox[0].body)
+        self.assertEqual(VerificacionSenaToken.objects.filter(usuario=self.usuario, usado_en__isnull=True).count(), 1)
+
+    def test_manual_upload_and_admin_approval_complete_verification(self):
+        token = VerificacionSenaToken.create_for_user(self.usuario)
+
+        upload_response = self.client.post(
+            reverse('validacion_sena_carga_manual', args=[token.token]),
+            {'documento_soporte': self._make_test_image()},
+        )
+
+        self.usuario.refresh_from_db()
+        token.refresh_from_db()
+        self.assertEqual(upload_response.status_code, 302)
+        self.assertEqual(upload_response.url, reverse('login'))
+        self.assertEqual(self.usuario.verificacion_sena_estado, 'documento_cargado')
+        self.assertTrue(self.usuario.verificacion_sena_documento)
+        self.assertIsNotNone(token.usado_en)
+
+        self.client.force_login(self.admin)
+        approve_response = self.client.post(reverse('aprobar_validacion_sena', args=[self.usuario.id_usu]))
+
+        self.usuario.refresh_from_db()
+        self.assertEqual(approve_response.status_code, 302)
+        self.assertEqual(self.usuario.verificacion_sena_estado, 'validado')
+        self.assertIsNotNone(self.usuario.verificacion_sena_validada_en)

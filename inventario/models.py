@@ -52,6 +52,15 @@ class UsuarioManager(BaseUserManager):
 
 
 class Usuario(AbstractBaseUser, PermissionsMixin):
+    VERIFICACION_SENA_ESTADOS = [
+        ('pendiente', 'Pendiente'),
+        ('solicitada', 'Solicitud enviada'),
+        ('enlace_enviado', 'Enlace enviado'),
+        ('documento_cargado', 'Documento cargado'),
+        ('validado', 'Validado'),
+        ('rechazada', 'Rechazada'),
+    ]
+
     id_usu = models.AutoField(primary_key=True)
     cc = models.CharField(max_length=20, unique=True, null=True, blank=True)
     nombre = models.CharField(max_length=255, null=True, blank=True)
@@ -83,6 +92,16 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     )
     programa_formacion = models.CharField(max_length=255, null=True, blank=True)
     centro_desarrollo = models.CharField(max_length=255, null=True, blank=True)
+    verificacion_sena_estado = models.CharField(
+        max_length=25,
+        choices=VERIFICACION_SENA_ESTADOS,
+        default='pendiente',
+    )
+    verificacion_sena_imagen = models.ImageField(upload_to='usuarios/validacion_sena/', null=True, blank=True)
+    verificacion_sena_documento = models.ImageField(upload_to='usuarios/validacion_manual/', null=True, blank=True)
+    verificacion_sena_observacion = models.TextField(null=True, blank=True)
+    verificacion_sena_solicitada_en = models.DateTimeField(null=True, blank=True)
+    verificacion_sena_validada_en = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
@@ -97,6 +116,10 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f'{self.nombre} {self.apellido}'
+
+    @property
+    def verificacion_sena_completa(self):
+        return self.verificacion_sena_estado == 'validado'
 
 
 class PasswordResetToken(models.Model):
@@ -130,6 +153,40 @@ class PasswordResetToken(models.Model):
             usuario=usuario,
             token=secrets.token_urlsafe(32),
             expira_en=ahora + timedelta(minutes=30),
+        )
+
+
+class VerificacionSenaToken(models.Model):
+    id_token = models.AutoField(primary_key=True)
+    usuario = models.ForeignKey(
+        Usuario,
+        on_delete=models.CASCADE,
+        related_name='verificacion_sena_tokens',
+    )
+    token = models.CharField(max_length=128, unique=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    expira_en = models.DateTimeField()
+    usado_en = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'verificacion_sena_token'
+        ordering = ['-creado_en', '-id_token']
+
+    def __str__(self):
+        return f'Verificación SENA {self.usuario_id} ({self.token[:8]})'
+
+    @property
+    def esta_vigente(self):
+        return self.usado_en is None and self.expira_en >= timezone.now()
+
+    @classmethod
+    def create_for_user(cls, usuario):
+        ahora = timezone.now()
+        cls.objects.filter(usuario=usuario, usado_en__isnull=True).update(usado_en=ahora)
+        return cls.objects.create(
+            usuario=usuario,
+            token=secrets.token_urlsafe(32),
+            expira_en=ahora + timedelta(hours=48),
         )
 
 
@@ -372,10 +429,17 @@ class Notificacion(models.Model):
         ('no_disponible', 'Producto no disponible'),
         ('aviso_devolucion', 'Aviso de devolución'),
         ('prestamo_vencido', 'Préstamo vencido'),
+        ('solicitud_validacion_sena', 'Solicitud de validación SENA'),
+        ('enlace_validacion_sena', 'Enlace de validación SENA'),
+        ('documento_validacion_sena', 'Documento cargado para validación SENA'),
+        ('verificacion_sena_aprobada', 'Verificación SENA aprobada'),
+        ('verificacion_sena_rechazada', 'Verificación SENA rechazada'),
         # Staff (admin / almacenista)
         ('staff_nuevo_pedido', 'Nuevo pedido recibido'),
         ('staff_pedido_cancelado', 'Pedido cancelado por usuario'),
         ('staff_pedido_entregado', 'Pedido entregado'),
+        ('staff_solicitud_validacion_sena', 'Solicitud manual de validación SENA'),
+        ('staff_documento_validacion_sena', 'Documento recibido para validación SENA'),
     ]
 
     id_noti = models.AutoField(primary_key=True)
@@ -385,7 +449,7 @@ class Notificacion(models.Model):
         db_column='id_usuario_fk',
         related_name='notificaciones',
     )
-    tipo = models.CharField(max_length=30, choices=TIPOS)
+    tipo = models.CharField(max_length=40, choices=TIPOS)
     titulo = models.CharField(max_length=120)
     mensaje = models.TextField()
     leida = models.BooleanField(default=False)

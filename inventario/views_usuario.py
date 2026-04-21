@@ -4,13 +4,15 @@ from django.http import JsonResponse
 from django.db import transaction
 from django.db.models import OuterRef, Subquery
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_POST
 from datetime import timedelta
 import secrets
 
-from .models import CarritoItem, DetallePedido, Disponibilidad, Notificacion, Pedido, Producto
+from .models import CarritoItem, DetallePedido, Disponibilidad, Notificacion, Pedido, Producto, VerificacionSenaToken
+from .validacion_sena import intentar_validacion_automatica
 from .views import _auto_cancelar_pedidos_pendientes_vencidos, _crear_notificacion, _notificar_staff, _registrar_auditoria
 
 
@@ -42,6 +44,16 @@ def _asegurar_codigo_devolucion(pedido, now):
         pedido.fch_ult_act = now
         pedido.save(update_fields=['codigo_entrega', 'codigo_expira_en', 'fch_ult_act'])
     return True
+
+
+def _usuario_tiene_validacion_sena(usuario):
+    return getattr(usuario, 'verificacion_sena_estado', 'pendiente') == 'validado'
+
+
+def _redireccion_validacion_destino(request):
+    destino = (request.GET.get('next') or request.POST.get('next') or '').strip()
+    permitidos = {reverse('carrito_usuario'), reverse('panel_usuario')}
+    return destino if destino in permitidos else reverse('carrito_usuario')
 
 
 def _migrar_carrito_sesion_a_bd(request):
@@ -125,6 +137,8 @@ def _build_carrito_context(request):
         'productos_disponibles': productos_disponibles,
         'productos_sin_stock': productos_sin_stock,
         'carrito_valido': carrito_valido,
+        'requiere_validacion_sena': not _usuario_tiene_validacion_sena(request.user),
+        'verificacion_sena_estado': getattr(request.user, 'verificacion_sena_estado', 'pendiente'),
     }
 
 
@@ -133,6 +147,149 @@ def carrito_usuario(request):
     if not _usuario_cliente(request):
         return redirect('dashboard')
     return render(request, 'inventario/usuario/carrito_usuario.html', _build_carrito_context(request))
+
+
+@login_required
+def validacion_sena(request):
+    if not _usuario_cliente(request):
+        return redirect('dashboard')
+
+    usuario = request.user
+    resultado_ocr = None
+    redirect_to = _redireccion_validacion_destino(request)
+
+    if request.method == 'POST':
+        foto_validacion = request.FILES.get('foto_validacion')
+        resultado_ocr = intentar_validacion_automatica(foto_validacion, usuario)
+        ahora = timezone.now()
+
+        if foto_validacion:
+            usuario.verificacion_sena_imagen = foto_validacion
+
+        if resultado_ocr['ok']:
+            usuario.verificacion_sena_estado = 'validado'
+            usuario.verificacion_sena_validada_en = ahora
+            usuario.verificacion_sena_observacion = 'Validación automática aprobada.'
+            usuario.save(update_fields=[
+                'verificacion_sena_estado',
+                'verificacion_sena_imagen',
+                'verificacion_sena_validada_en',
+                'verificacion_sena_observacion',
+            ])
+            _crear_notificacion(
+                usuario=usuario,
+                tipo='verificacion_sena_aprobada',
+                titulo='Validación SENA aprobada',
+                mensaje='Tu identidad fue validada automáticamente. Ya puedes realizar pedidos sin volver a cargar el carnet.',
+            )
+            messages.success(request, 'Tu carnet fue validado correctamente. Ya puedes continuar con tu pedido.')
+            return redirect(redirect_to)
+
+        usuario.verificacion_sena_estado = 'pendiente'
+        usuario.verificacion_sena_observacion = ' '.join(resultado_ocr.get('details') or []) or resultado_ocr['message']
+        campos = ['verificacion_sena_estado', 'verificacion_sena_observacion']
+        if foto_validacion:
+            campos.append('verificacion_sena_imagen')
+        usuario.save(update_fields=campos)
+        messages.error(request, resultado_ocr['message'])
+
+    return render(request, 'inventario/usuario/validacion_sena.html', {
+        'usuario': usuario,
+        'redirect_to': redirect_to,
+        'resultado_ocr': resultado_ocr,
+        'estado_validacion': usuario.verificacion_sena_estado,
+        'ya_validado': _usuario_tiene_validacion_sena(usuario),
+    })
+
+
+@login_required
+@require_POST
+def solicitar_validacion_manual(request):
+    if not _usuario_cliente(request):
+        return redirect('dashboard')
+
+    usuario = request.user
+    if _usuario_tiene_validacion_sena(usuario):
+        messages.success(request, 'Tu cuenta ya está validada para realizar pedidos.')
+        return redirect('validacion_sena')
+
+    if usuario.verificacion_sena_estado in {'solicitada', 'enlace_enviado', 'documento_cargado'}:
+        messages.success(request, 'Tu solicitud manual ya está en proceso. Revisa tus notificaciones o tu correo.')
+        return redirect('validacion_sena')
+
+    motivo = (request.POST.get('motivo_manual') or '').strip()
+    usuario.verificacion_sena_estado = 'solicitada'
+    usuario.verificacion_sena_solicitada_en = timezone.now()
+    usuario.verificacion_sena_observacion = motivo or 'El usuario solicitó validación manual porque no fue posible validar el carnet automáticamente.'
+    usuario.save(update_fields=[
+        'verificacion_sena_estado',
+        'verificacion_sena_solicitada_en',
+        'verificacion_sena_observacion',
+    ])
+
+    nombre_usuario = (f'{usuario.nombre or ""} {usuario.apellido or ""}'.strip() or usuario.correo)
+    _crear_notificacion(
+        usuario=usuario,
+        tipo='solicitud_validacion_sena',
+        titulo='Solicitud de validación SENA enviada',
+        mensaje='Tu solicitud fue enviada al administrador. Cuando apruebe la revisión, te llegará un correo con el enlace para cargar tu carnet o certificado.',
+    )
+    _notificar_staff(
+        tipo='staff_solicitud_validacion_sena',
+        titulo='Solicitud manual de validación SENA',
+        mensaje=f'{nombre_usuario} solicitó validación manual de carnet SENA. Documento registrado: {usuario.cc or "sin documento"}.',
+    )
+    messages.success(request, 'Tu solicitud manual fue enviada al administrador. Te avisaremos cuando liberen el enlace de carga.')
+    return redirect('validacion_sena')
+
+
+def validacion_sena_carga_manual(request, token):
+    token_obj = (
+        VerificacionSenaToken.objects
+        .select_related('usuario')
+        .filter(token=token, usado_en__isnull=True)
+        .first()
+    )
+    token_valido = bool(token_obj and token_obj.expira_en >= timezone.now())
+    usuario = token_obj.usuario if token_obj else None
+    carga_exitosa = False
+
+    if token_valido and request.method == 'POST':
+        soporte = request.FILES.get('documento_soporte')
+        if not soporte:
+            messages.error(request, 'Debes adjuntar una imagen del carnet o del certificado SENA.')
+        elif not (getattr(soporte, 'content_type', '') or '').startswith('image/'):
+            messages.error(request, 'El documento manual debe ser una imagen válida.')
+        else:
+            usuario.verificacion_sena_documento = soporte
+            usuario.verificacion_sena_estado = 'documento_cargado'
+            usuario.verificacion_sena_observacion = 'Documento manual cargado y pendiente de aprobación administrativa.'
+            usuario.save(update_fields=[
+                'verificacion_sena_documento',
+                'verificacion_sena_estado',
+                'verificacion_sena_observacion',
+            ])
+            token_obj.usado_en = timezone.now()
+            token_obj.save(update_fields=['usado_en'])
+            _crear_notificacion(
+                usuario=usuario,
+                tipo='documento_validacion_sena',
+                titulo='Documento recibido para validación SENA',
+                mensaje='Tu documento fue cargado correctamente. El administrador revisará la evidencia y aprobará tu cuenta si coincide.',
+            )
+            _notificar_staff(
+                tipo='staff_documento_validacion_sena',
+                titulo='Documento recibido para validación SENA',
+                mensaje=f'Se recibió un documento manual de {usuario.nombre or usuario.correo} para validación de identidad SENA.',
+            )
+            messages.success(request, 'Tu evidencia fue cargada correctamente. Ahora queda pendiente de revisión administrativa.')
+            return redirect('login')
+
+    return render(request, 'inventario/login/validacion_sena_manual.html', {
+        'token_valido': token_valido,
+        'usuario_objetivo': usuario,
+        'carga_exitosa': carga_exitosa,
+    })
 
 @login_required
 def usuario_eliminar_carrito(request, prod_id):
@@ -159,17 +316,16 @@ def usuario_realizar_pedido(request):
         messages.error(request, 'Revisa las cantidades del carrito antes de realizar el pedido.')
         return redirect('carrito_usuario')
 
+    if not _usuario_tiene_validacion_sena(request.user):
+        messages.error(request, 'Valida tu información de carnet SENA para continuar.')
+        return redirect(f"{reverse('validacion_sena')}?next={reverse('carrito_usuario')}")
+
     # --- Datos del préstamo ---
     area_ubicacion = request.POST.get('area_ubicacion', '').strip()
     tipo_devolucion = request.POST.get('tipo_devolucion', '').strip()
-    foto_carnet = request.FILES.get('foto_carnet')
 
     if not area_ubicacion:
         messages.error(request, 'Debes indicar el área o ambiente donde se usarán los productos.')
-        return redirect('carrito_usuario')
-
-    if not foto_carnet:
-        messages.error(request, 'Debes subir la foto de tu carnet institucional SENA.')
         return redirect('carrito_usuario')
 
     if tipo_devolucion not in ('mismo_dia', 'por_dias'):
@@ -224,7 +380,6 @@ def usuario_realizar_pedido(request):
             total_productos=context['total_productos'],
             total_unidades=context['total_unidades'],
             area_ubicacion=area_ubicacion,
-            foto_carnet=foto_carnet,
             tipo_devolucion=tipo_devolucion,
             fecha_devolucion=fecha_devolucion_global,
             fch_registro=now,

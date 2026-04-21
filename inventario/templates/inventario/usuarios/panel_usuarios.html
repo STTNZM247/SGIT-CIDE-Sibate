@@ -72,6 +72,7 @@
                     <th>Correo</th>
                     <th>Rol</th>
                     <th>Estado</th>
+                    <th>Validación SENA</th>
                     <th>Gestión</th>
                 </tr>
             </thead>
@@ -104,6 +105,17 @@
                             <span class="estado-badge estado-badge--inactivo">Inactivo</span>
                         {% endif %}
                     </td>
+                    <td data-label="Validación SENA">
+                        <div class="validacion-admin-stack">
+                            <span class="validacion-badge validacion-badge--{{ usuario.verificacion_sena_estado }}">{{ usuario.get_verificacion_sena_estado_display }}</span>
+                            {% if usuario.verificacion_sena_imagen %}
+                            <a href="{{ usuario.verificacion_sena_imagen.url }}" target="_blank" rel="noopener" class="validacion-link-doc">Ver intento OCR</a>
+                            {% endif %}
+                            {% if usuario.verificacion_sena_documento %}
+                            <a href="{{ usuario.verificacion_sena_documento.url }}" target="_blank" rel="noopener" class="validacion-link-doc">Ver documento manual</a>
+                            {% endif %}
+                        </div>
+                    </td>
                     <td data-label="Gestión">
                         <div class="gestion-usuario-stack">
                             {% if usuario.id_rol_fk and usuario.id_rol_fk.nombre_rol != 'admin' %}
@@ -124,6 +136,29 @@
                             <span class="admin-lock" title="El rol admin no se puede modificar">
                                 <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
                                 Rol protegido
+                            </span>
+                            {% endif %}
+
+                            {% if usuario.verificacion_sena_estado == 'solicitada' or usuario.verificacion_sena_estado == 'enlace_enviado' %}
+                            <form method="post" action="{% url 'enviar_enlace_validacion_sena' usuario.id_usu %}" class="form-estado-usuario">
+                                {% csrf_token %}
+                                <button type="submit" class="usuarios-btn usuarios-btn--manual">
+                                    <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+                                    {% if usuario.verificacion_sena_estado == 'enlace_enviado' %}Reenviar enlace{% else %}Enviar enlace{% endif %}
+                                </button>
+                            </form>
+                            {% elif usuario.verificacion_sena_estado == 'documento_cargado' %}
+                            <form method="post" action="{% url 'aprobar_validacion_sena' usuario.id_usu %}" class="form-estado-usuario">
+                                {% csrf_token %}
+                                <button type="submit" class="usuarios-btn usuarios-btn--approve">
+                                    <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+                                    Aprobar verificación
+                                </button>
+                            </form>
+                            {% elif usuario.verificacion_sena_estado == 'validado' %}
+                            <span class="admin-lock" title="La validación SENA ya está aprobada">
+                                <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+                                Verificado
                             </span>
                             {% endif %}
 
@@ -148,7 +183,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" class="tabla-vacia">
+                    <td colspan="8" class="tabla-vacia">
                         No se encontraron usuarios con ese criterio.
                     </td>
                 </tr>

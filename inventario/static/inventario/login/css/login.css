@@ -319,6 +319,95 @@ body, html {
     padding-right: 16px;
 }
 
+.registro-doc-native {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+.registro-doc-select {
+    width: 92%;
+    max-width: 312px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.registro-doc-select__trigger {
+    width: 100%;
+    min-height: 58px;
+    border-radius: 28px;
+    border: 1px solid rgba(8, 54, 40, 0.65);
+    background: #0b4737;
+    color: #ffffff;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+    text-align: left;
+}
+
+.registro-doc-select__trigger ion-icon {
+    font-size: 1.15rem;
+    transition: transform .18s ease;
+}
+
+.registro-doc-select.is-open .registro-doc-select__trigger ion-icon {
+    transform: rotate(180deg);
+}
+
+.registro-doc-select__menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    right: 0;
+    display: none;
+    padding: 8px;
+    border-radius: 22px;
+    border: 1px solid #dce8d9;
+    background: #ffffff;
+    box-shadow: 0 18px 38px rgba(20, 44, 24, 0.14);
+    z-index: 20;
+}
+
+.registro-doc-select.is-open .registro-doc-select__menu {
+    display: grid;
+    gap: 8px;
+}
+
+.registro-doc-select__option {
+    border: 0;
+    border-radius: 18px;
+    background: #f5faf4;
+    padding: 12px 14px;
+    text-align: left;
+    cursor: pointer;
+    display: grid;
+    gap: 3px;
+    color: #203124;
+}
+
+.registro-doc-select__option strong {
+    font-size: 0.96rem;
+}
+
+.registro-doc-select__option small {
+    font-size: 0.78rem;
+    color: #607260;
+}
+
+.registro-doc-select__option:hover,
+.registro-doc-select__option.is-selected {
+    background: #edf8e9;
+    outline: 1px solid rgba(57, 169, 0, 0.34);
+}
+
 .login-input-shell--disabled {
     opacity: 0.6;
 }
@@ -373,6 +462,22 @@ body, html {
 
 .login-control::placeholder {
     color: rgba(255,255,255,0.78);
+}
+
+.login-control::selection,
+.login-form input[type="text"]::selection,
+.login-form input[type="email"]::selection,
+.login-form input[type="password"]::selection {
+    background: rgba(57, 169, 0, 0.32);
+    color: #ffffff;
+}
+
+.login-control::-moz-selection,
+.login-form input[type="text"]::-moz-selection,
+.login-form input[type="email"]::-moz-selection,
+.login-form input[type="password"]::-moz-selection {
+    background: rgba(57, 169, 0, 0.32);
+    color: #ffffff;
 }
 
 .login-form input:-webkit-autofill,
@@ -431,8 +536,18 @@ body, html {
 
 .login-actions--split {
     width: 92%;
-    max-width: 360px;
+    max-width: 312px;
+    margin: 18px auto 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
     gap: 10px;
+}
+
+.login-actions--split .login-submit {
+    width: 100% !important;
+    max-width: none;
+    margin: 0;
 }
 
 .login-submit--secondary {

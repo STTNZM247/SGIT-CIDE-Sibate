@@ -321,10 +321,11 @@ from django.db import models
 from django.db import transaction
 from django.db.models import OuterRef, Subquery
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 
 from .forms import CatalogoForm, ProductoForm, UsuarioPerfilForm
-from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Pedido, PedidoEvidencia, Producto, Usuario, Rol
+from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Pedido, PedidoEvidencia, Producto, Usuario, Rol, VerificacionSenaToken
 
 
 def _user_role(request):
@@ -2720,6 +2721,135 @@ def toggle_estado_usuario(request, usuario_id):
         entidad_id=usuario.id_usu,
         descripcion=f'Se dejó {accion} el acceso del usuario {usuario.correo}.',
     )
+    return redirect('gestion_usuarios_panel')
+
+
+@login_required
+@require_POST
+def enviar_enlace_validacion_sena(request, usuario_id):
+    if not (request.user.id_rol_fk and request.user.id_rol_fk.nombre_rol == 'admin'):
+        messages.error(request, 'Solo el administrador puede enviar enlaces de validación SENA.')
+        return redirect('gestion_usuarios_panel')
+
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
+    if usuario.verificacion_sena_estado == 'validado':
+        messages.success(request, 'Ese usuario ya tiene la validación SENA aprobada.')
+        return redirect('gestion_usuarios_panel')
+
+    token = VerificacionSenaToken.create_for_user(usuario)
+    upload_url = request.build_absolute_uri(reverse('validacion_sena_carga_manual', args=[token.token]))
+    ahora = timezone.now()
+    usuario.verificacion_sena_estado = 'enlace_enviado'
+    usuario.verificacion_sena_solicitada_en = usuario.verificacion_sena_solicitada_en or ahora
+    usuario.verificacion_sena_observacion = 'Administración envió enlace manual para cargar carnet o certificado SENA.'
+    usuario.save(update_fields=[
+        'verificacion_sena_estado',
+        'verificacion_sena_solicitada_en',
+        'verificacion_sena_observacion',
+    ])
+
+    correo = getattr(usuario, 'correo', None)
+    if correo:
+        try:
+            from django.core.mail import EmailMultiAlternatives
+
+            subject = 'Enlace de validación manual SENA'
+            nombre_usuario = usuario.nombre or usuario.correo
+            text_content = (
+                f'Hola {nombre_usuario},\n\n'
+                'El administrador aprobó tu solicitud de validación manual.\n'
+                'Usa este enlace único para cargar la foto de tu carnet o un certificado vigente del SENA:\n'
+                f'{upload_url}\n\n'
+                'El enlace vencerá en 48 horas y solo podrá usarse una vez.'
+            )
+            html_content = f"""
+<!DOCTYPE html>
+<html lang=\"es\">
+<head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>
+<body style=\"margin:0;padding:0;background:#f3f7f2;font-family:Arial,Helvetica,sans-serif;color:#1f2937;\">
+  <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"padding:24px 12px;\">
+    <tr><td align=\"center\">
+      <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:640px;background:#ffffff;border-radius:22px;overflow:hidden;box-shadow:0 12px 30px rgba(11,71,55,.12);\">
+        <tr><td style=\"background:linear-gradient(135deg,#0b4737,#39A900);padding:28px 32px;color:#fff;\">
+          <p style=\"margin:0 0 8px;font-size:13px;letter-spacing:1.6px;font-weight:bold;text-transform:uppercase;opacity:.9;\">SENA · Inventario</p>
+          <h1 style=\"margin:0;font-size:28px;line-height:1.15;\">Carga tu evidencia manual</h1>
+        </td></tr>
+        <tr><td style=\"padding:32px;\">
+          <p style=\"margin:0 0 14px;font-size:16px;line-height:1.6;\">Hola <strong>{nombre_usuario}</strong>,</p>
+          <p style=\"margin:0 0 18px;font-size:15px;line-height:1.7;color:#475569;\">Ya puedes cargar la foto de tu carnet SENA o un certificado que confirme que estudias en el SENA. Esta revisión será manual.</p>
+          <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"margin:24px 0;\"><tr><td align=\"center\"><a href=\"{upload_url}\" style=\"display:inline-block;background:#39A900;color:#fff;text-decoration:none;font-weight:700;padding:14px 26px;border-radius:999px;font-size:15px;\">Cargar documento</a></td></tr></table>
+          <p style=\"margin:0 0 10px;font-size:14px;line-height:1.7;color:#64748b;\">Si el botón no funciona, usa este enlace:</p>
+          <p style=\"margin:0;font-size:13px;line-height:1.7;word-break:break-all;\"><a href=\"{upload_url}\" style=\"color:#0b4737;\">{upload_url}</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+"""
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                to=[correo],
+            )
+            email.attach_alternative(html_content, 'text/html')
+            email.send(fail_silently=False)
+        except Exception:
+            messages.error(request, 'No se pudo enviar el correo, pero el enlace quedó generado para reintentar.')
+
+    _crear_notificacion(
+        usuario=usuario,
+        tipo='enlace_validacion_sena',
+        titulo='Enlace de validación SENA enviado',
+        mensaje='Revisa tu correo. Te enviamos un enlace único para cargar la foto del carnet o un certificado vigente del SENA.',
+    )
+    _registrar_auditoria(
+        request,
+        accion='actualizar',
+        entidad='usuario',
+        entidad_id=usuario.id_usu,
+        descripcion=f'Se envió enlace manual de validación SENA al usuario {usuario.correo}.',
+    )
+    messages.success(request, f'Se envió el enlace manual de validación a {usuario.correo}.')
+    return redirect('gestion_usuarios_panel')
+
+
+@login_required
+@require_POST
+def aprobar_validacion_sena(request, usuario_id):
+    if not (request.user.id_rol_fk and request.user.id_rol_fk.nombre_rol == 'admin'):
+        messages.error(request, 'Solo el administrador puede aprobar validaciones SENA.')
+        return redirect('gestion_usuarios_panel')
+
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
+    if not usuario.verificacion_sena_documento and not usuario.verificacion_sena_imagen:
+        messages.error(request, 'Ese usuario todavía no ha cargado ninguna evidencia para revisar.')
+        return redirect('gestion_usuarios_panel')
+
+    usuario.verificacion_sena_estado = 'validado'
+    usuario.verificacion_sena_validada_en = timezone.now()
+    usuario.verificacion_sena_observacion = 'Validación manual aprobada por administración.'
+    usuario.save(update_fields=[
+        'verificacion_sena_estado',
+        'verificacion_sena_validada_en',
+        'verificacion_sena_observacion',
+    ])
+
+    _crear_notificacion(
+        usuario=usuario,
+        tipo='verificacion_sena_aprobada',
+        titulo='Validación SENA aprobada',
+        mensaje='El administrador aprobó tu verificación manual. Ya puedes realizar pedidos normalmente.',
+    )
+    _registrar_auditoria(
+        request,
+        accion='actualizar',
+        entidad='usuario',
+        entidad_id=usuario.id_usu,
+        descripcion=f'Se aprobó manualmente la validación SENA del usuario {usuario.correo}.',
+    )
+    messages.success(request, f'La validación SENA de {usuario.correo} fue aprobada.')
     return redirect('gestion_usuarios_panel')
 
 

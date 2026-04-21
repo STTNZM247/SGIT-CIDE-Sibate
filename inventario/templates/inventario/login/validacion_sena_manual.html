@@ -1,0 +1,108 @@
+{% extends 'inventario/shared/base_login.html' %}
+{% load static %}
+
+{% block title %}Carga manual SENA | Inventario{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventario/usuario/css/validacion_sena.css' %}" data-page-style="true">
+{% endblock %}
+
+{% block content %}
+<section class="validacion-sena-page validacion-sena-page--public">
+    <div class="validacion-sena-public-wrap">
+        <header class="validacion-sena-hero validacion-sena-hero--compact">
+            <div>
+                <p class="validacion-sena-eyebrow">Validación manual</p>
+                <h1>Sube tu carnet o certificado SENA</h1>
+                <p>Este enlace es único. La revisión final la hará un administrador del sistema.</p>
+            </div>
+        </header>
+
+        {% if messages %}
+        <div class="validacion-sena-flashes" role="alert">
+            {% for msg in messages %}
+            <div class="validacion-sena-flash validacion-sena-flash--{{ msg.tags|default:'info' }}">
+                <ion-icon name="{% if 'error' in msg.tags %}alert-circle-outline{% else %}checkmark-circle-outline{% endif %}"></ion-icon>
+                <span>{{ msg }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <article class="validacion-sena-card validacion-sena-card--primary">
+            {% if not token_valido %}
+            <div class="validacion-sena-successbox validacion-sena-successbox--warning">
+                <ion-icon name="alert-circle-outline"></ion-icon>
+                <div>
+                    <strong>Este enlace ya no es válido.</strong>
+                    <p>Solicita un nuevo enlace al administrador desde tu panel de validación SENA.</p>
+                </div>
+            </div>
+            {% elif carga_exitosa %}
+            <div class="validacion-sena-successbox">
+                <ion-icon name="document-text-outline"></ion-icon>
+                <div>
+                    <strong>Documento recibido.</strong>
+                    <p>La evidencia quedó cargada y ahora el administrador revisará si coincide con tu cuenta.</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="validacion-sena-card__head">
+                <div>
+                    <p class="validacion-sena-card__eyebrow">Cuenta objetivo</p>
+                    <h2>{{ usuario_objetivo.nombre }} {{ usuario_objetivo.apellido }}</h2>
+                </div>
+                <span class="validacion-sena-chip">Documento {{ usuario_objetivo.cc }}</span>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" class="validacion-sena-form">
+                {% csrf_token %}
+                <label class="validacion-sena-capture" for="documento_soporte">
+                    <span class="validacion-sena-capture__frame"></span>
+                    <span class="validacion-sena-capture__guide">Carga una imagen nítida del carnet o del certificado que demuestre que estudias en el SENA.</span>
+                    <span class="validacion-sena-capture__cta">
+                        <ion-icon name="cloud-upload-outline"></ion-icon>
+                        Seleccionar documento
+                    </span>
+                    <input type="file" id="documento_soporte" name="documento_soporte" accept="image/*" required>
+                    <img id="documento_soporte_preview" alt="Vista previa del documento" hidden>
+                </label>
+
+                <div class="validacion-sena-form__actions">
+                    <button type="submit" class="validacion-sena-btn validacion-sena-btn--primary">
+                        <ion-icon name="send-outline"></ion-icon>
+                        Enviar evidencia
+                    </button>
+                </div>
+            </form>
+            {% endif %}
+        </article>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script data-page-script="true">
+(function () {
+    var input = document.getElementById('documento_soporte');
+    var preview = document.getElementById('documento_soporte_preview');
+    if (!input || !preview) return;
+
+    input.addEventListener('change', function () {
+        var file = input.files && input.files[0];
+        if (!file) {
+            preview.hidden = true;
+            preview.removeAttribute('src');
+            return;
+        }
+
+        var reader = new FileReader();
+        reader.onload = function (event) {
+            preview.src = event.target.result;
+            preview.hidden = false;
+        };
+        reader.readAsDataURL(file);
+    });
+}());
+</script>
+{% endblock %}

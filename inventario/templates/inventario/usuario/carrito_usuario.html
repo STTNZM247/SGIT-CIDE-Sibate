@@ -124,10 +124,17 @@
                 </div>
 
                 {% if carrito_valido %}
+                {% if requiere_validacion_sena %}
+                <a href="{% url 'validacion_sena' %}?next={% url 'carrito_usuario' %}" class="usuario-carrito-resumen__action usuario-carrito-resumen__action--submit">
+                    <ion-icon name="shield-checkmark-outline"></ion-icon>
+                    Validar carnet SENA
+                </a>
+                {% else %}
                 <button type="button" class="usuario-carrito-resumen__action usuario-carrito-resumen__action--submit" id="prestamo-open-btn">
                     <ion-icon name="paper-plane-outline"></ion-icon>
                     Realizar pedido
                 </button>
+                {% endif %}
                 {% else %}
                 <div class="usuario-carrito-resumen__warning">
                     <ion-icon name="warning-outline"></ion-icon>
@@ -169,7 +176,7 @@
             </div>
         </div>
 
-        <form method="post" action="{% url 'usuario_realizar_pedido' %}" enctype="multipart/form-data" id="prestamo-form">
+        <form method="post" action="{% url 'usuario_realizar_pedido' %}" id="prestamo-form">
             {% csrf_token %}
 
             <!-- Área / Ambiente -->
@@ -180,108 +187,6 @@
                 </label>
                 <textarea id="area_ubicacion" name="area_ubicacion" rows="3" required
                     placeholder="Ej: Aula 301, Laboratorio de redes, Taller eléctrico..."></textarea>
-            </div>
-
-            <!-- Carnet institucional -->
-            <div class="prestamo-field">
-                <label>
-                    <ion-icon name="card-outline"></ion-icon>
-                    Foto del carnet institucional SENA <span class="prestamo-required">*</span>
-                </label>
-
-                <!-- Drag & drop para escritorio -->
-                <label class="prestamo-file-area carnet-desktop-area" id="carnet-drop" for="foto_carnet">
-                    <ion-icon name="cloud-upload-outline"></ion-icon>
-                    <span id="carnet-label">Arrastra o haz clic para subir la foto</span>
-                    <input type="file" id="foto_carnet" name="foto_carnet" accept="image/*" required style="display:none">
-                </label>
-
-                <!-- Botones para móvil: cámara o galería -->
-                <div class="carnet-mobile-btns" id="carnet-mobile-btns">
-                    <label class="carnet-mobile-btn carnet-mobile-btn--cam">
-                        <ion-icon name="camera-outline"></ion-icon> Tomar foto
-                        <input type="file" accept="image/*" capture="environment" style="display:none"
-                               onchange="transferirArchivoCarnet(this)">
-                    </label>
-                    <label class="carnet-mobile-btn carnet-mobile-btn--gal">
-                        <ion-icon name="images-outline"></ion-icon> Galería
-                        <input type="file" accept="image/*" style="display:none"
-                               onchange="transferirArchivoCarnet(this)">
-                    </label>
-                </div>
-
-                <!-- Vista previa con X -->
-                <div id="carnet-preview-wrap" style="display:none; position:relative; margin-top:10px;">
-                    <img id="carnet-preview" src="" alt="Vista previa carnet"
-                         style="width:100%; max-height:220px; object-fit:contain; border-radius:12px; border:1.5px solid #e0f2e0; display:block;">
-                    <button type="button" onclick="limpiarCarnet()"
-                            style="position:absolute; top:6px; right:6px; background:#e53935; color:#fff; border:none;
-                                   border-radius:50%; width:32px; height:32px; font-size:1.2em; cursor:pointer;
-                                   display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,0.18);">
-                        <ion-icon name="close-outline"></ion-icon>
-                    </button>
-                </div>
-
-                <style>
-                /* Escritorio: mostrar drag-drop, ocultar botones móvil */
-                .carnet-desktop-area { display: flex; }
-                .carnet-mobile-btns  { display: none; }
-                /* Móvil: ocultar drag-drop, mostrar botones */
-                @media (max-width: 700px) {
-                    .carnet-desktop-area { display: none !important; }
-                    .carnet-mobile-btns  { display: flex !important; gap: 10px; margin-top: 6px; }
-                }
-                .carnet-mobile-btn {
-                    flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
-                    padding: 13px 8px; border-radius: 14px; font-size: 1em; font-weight: 700;
-                    cursor: pointer; border: none; text-align: center;
-                }
-                .carnet-mobile-btn--cam { background: #39A900; color: #fff; }
-                .carnet-mobile-btn--gal { background: #f0f0f0; color: #333; border: 1.5px solid #ddd; }
-                </style>
-
-                <script>
-                /* Sincronizar input visible de drag-drop con el formulario */
-                document.getElementById('carnet-drop').querySelector('input[type=file]').addEventListener('change', function(){
-                    mostrarPreviewCarnet(this);
-                });
-                function transferirArchivoCarnet(src) {
-                    var dest = document.getElementById('foto_carnet');
-                    if (src.files && src.files[0]) {
-                        var dt = new DataTransfer();
-                        dt.items.add(src.files[0]);
-                        dest.files = dt.files;
-                        dest.dispatchEvent(new Event('change', {bubbles: true}));
-                        mostrarPreviewCarnet(src);
-                    }
-                }
-                function mostrarPreviewCarnet(input) {
-                    var wrap  = document.getElementById('carnet-preview-wrap');
-                    var img   = document.getElementById('carnet-preview');
-                    var btns  = document.getElementById('carnet-mobile-btns');
-                    var label = document.getElementById('carnet-label');
-                    if (input.files && input.files[0]) {
-                        var reader = new FileReader();
-                        reader.onload = function(e) { img.src = e.target.result; wrap.style.display = 'block'; };
-                        reader.readAsDataURL(input.files[0]);
-                        if (btns)  btns.style.display  = 'none';
-                        if (label) label.textContent = input.files[0].name;
-                    }
-                }
-                function limpiarCarnet() {
-                    var dest  = document.getElementById('foto_carnet');
-                    var wrap  = document.getElementById('carnet-preview-wrap');
-                    var img   = document.getElementById('carnet-preview');
-                    var btns  = document.getElementById('carnet-mobile-btns');
-                    var label = document.getElementById('carnet-label');
-                    dest.value = '';
-                    dest.dispatchEvent(new Event('change', {bubbles: true}));
-                    img.src = ''; wrap.style.display = 'none';
-                    if (label) label.textContent = 'Arrastra o haz clic para subir la foto';
-                    /* Restaurar visibilidad según tamaño de pantalla */
-                    if (btns) btns.style.display = '';   /* deja que el CSS media query decida */
-                }
-                </script>
             </div>
 
             <!-- Fecha de devolución -->
@@ -340,9 +245,6 @@
     var closeBtn   = document.getElementById('prestamo-modal-close');
     var submitBtn  = document.getElementById('prestamo-submit-btn');
     var areaInput  = document.getElementById('area_ubicacion');
-    var carnetInput = document.getElementById('foto_carnet');
-    var carnetPreview = document.getElementById('carnet-preview');
-    var carnetLabel   = document.getElementById('carnet-label');
 
     var radioDia  = document.getElementById('tipo-mismo-dia');
     var radioDias = document.getElementById('tipo-por-dias');
@@ -418,7 +320,6 @@
     /* ── Habilitar botón solo si todo está completo ── */
     function checkForm() {
         var areaOk   = areaInput  && areaInput.value.trim().length > 0;
-        var carnetOk = carnetInput && carnetInput.files && carnetInput.files.length > 0;
 
         var fechaOk = false;
         if (radioDia && radioDia.checked && horaInput && horaInput.value) {
@@ -436,12 +337,11 @@
         if (radioDias && radioDias.checked && fechaInput && fechaInput.value) fechaOk = true;
 
         if (submitBtn) {
-            submitBtn.disabled = !(areaOk && carnetOk && fechaOk);
+            submitBtn.disabled = !(areaOk && fechaOk);
         }
     }
 
     if (areaInput)   areaInput.addEventListener('input', checkForm);
-    if (carnetInput) carnetInput.addEventListener('change', checkForm);
     if (horaInput) {
         horaInput.addEventListener('focus', actualizarMinHoraActual);
     }
@@ -452,21 +352,6 @@
         }
     }, 30000);
     checkForm();
-
-    /* ── Vista previa del carnet ── */
-    if (carnetInput) {
-        carnetInput.addEventListener('change', function () {
-            var file = carnetInput.files[0];
-            if (!file) return;
-            if (carnetLabel) carnetLabel.textContent = file.name;
-            var reader = new FileReader();
-            reader.onload = function (e) {
-                carnetPreview.src = e.target.result;
-                carnetPreview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        });
-    }
 }());
 </script>
 {% endblock %}

@@ -32,7 +32,9 @@ from .views import (
     gestion_usuarios_panel,
     panel_almacenista,
     crear_usuario,
+    aprobar_validacion_sena,
     editar_rol_usuario,
+    enviar_enlace_validacion_sena,
     toggle_estado_usuario,
     producto_detalle,
     producto_editar,
@@ -41,7 +43,7 @@ from .views import (
     notificaciones_marcar_todas_leidas,
 )
 
-from .views_usuario import carrito_usuario, panel_usuario, pedido_cancelar_usuario, pedido_codigo_devolucion, pedido_extender_plazo, pedidos_usuario, producto_detalle_usuario, usuario_agregar_carrito, usuario_eliminar_carrito, usuario_realizar_pedido
+from .views_usuario import carrito_usuario, panel_usuario, pedido_cancelar_usuario, pedido_codigo_devolucion, pedido_extender_plazo, pedidos_usuario, producto_detalle_usuario, solicitar_validacion_manual, usuario_agregar_carrito, usuario_eliminar_carrito, usuario_realizar_pedido, validacion_sena, validacion_sena_carga_manual
 
 urlpatterns = [
     path(
@@ -91,6 +93,8 @@ urlpatterns = [
     path('auditorias/', auditorias_panel, name='auditorias_panel'),
     path('usuarios/', gestion_usuarios_panel, name='gestion_usuarios_panel'),
     path('usuarios/crear/', crear_usuario, name='crear_usuario'),
+    path('usuarios/<int:usuario_id>/validacion-sena/enviar-enlace/', enviar_enlace_validacion_sena, name='enviar_enlace_validacion_sena'),
+    path('usuarios/<int:usuario_id>/validacion-sena/aprobar/', aprobar_validacion_sena, name='aprobar_validacion_sena'),
     path('usuarios/<int:usuario_id>/editar-rol/', editar_rol_usuario, name='editar_rol_usuario'),
     path('usuarios/<int:usuario_id>/toggle-estado/', toggle_estado_usuario, name='toggle_estado_usuario'),
     path('panel_usuario/', panel_usuario, name='panel_usuario'),
@@ -102,6 +106,9 @@ urlpatterns = [
     path('usuario/carrito/', carrito_usuario, name='carrito_usuario'),
     path('usuario/carrito/eliminar/<int:prod_id>/', usuario_eliminar_carrito, name='usuario_eliminar_carrito'),
     path('usuario/carrito/realizar-pedido/', usuario_realizar_pedido, name='usuario_realizar_pedido'),
+    path('usuario/validacion-sena/', validacion_sena, name='validacion_sena'),
+    path('usuario/validacion-sena/solicitar-manual/', solicitar_validacion_manual, name='solicitar_validacion_manual'),
+    path('validacion-sena/manual/<str:token>/', validacion_sena_carga_manual, name='validacion_sena_carga_manual'),
     path('usuario/pedidos/', pedidos_usuario, name='pedidos_usuario'),
     path('usuario/pedidos/<int:pedido_id>/codigo-devolucion/', pedido_codigo_devolucion, name='pedido_codigo_devolucion'),
     path('usuario/pedidos/<int:pedido_id>/cancelar/', pedido_cancelar_usuario, name='pedido_cancelar_usuario'),

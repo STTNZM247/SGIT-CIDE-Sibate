@@ -1,0 +1,170 @@
+{% extends 'inventario/shared/base.html' %}
+{% load static %}
+
+{% block title %}Validación SENA | Inventario{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventario/usuario/css/validacion_sena.css' %}" data-page-style="true">
+{% endblock %}
+
+{% block content %}
+<section class="validacion-sena-page">
+    <header class="validacion-sena-hero">
+        <div>
+            <p class="validacion-sena-eyebrow">Identidad SENA</p>
+            <h1>Valida tu información para poder pedir</h1>
+            <p>Solo necesitas hacerlo una vez. Cuando tu cuenta quede validada no volveremos a pedirte este paso al realizar un pedido.</p>
+        </div>
+        <div class="validacion-sena-status validacion-sena-status--{{ estado_validacion }}">
+            <span>Estado actual</span>
+            <strong>{{ request.user.get_verificacion_sena_estado_display }}</strong>
+        </div>
+    </header>
+
+    {% if messages %}
+    <div class="validacion-sena-flashes" role="alert">
+        {% for msg in messages %}
+        <div class="validacion-sena-flash validacion-sena-flash--{{ msg.tags|default:'info' }}">
+            <ion-icon name="{% if 'error' in msg.tags %}alert-circle-outline{% else %}checkmark-circle-outline{% endif %}"></ion-icon>
+            <span>{{ msg }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="validacion-sena-layout">
+        <article class="validacion-sena-card validacion-sena-card--primary">
+            <div class="validacion-sena-card__head">
+                <div>
+                    <p class="validacion-sena-card__eyebrow">Paso 1</p>
+                    <h2>Validación automática con OCR</h2>
+                </div>
+                <span class="validacion-sena-chip">Nombre, documento y logo SENA</span>
+            </div>
+
+            {% if ya_validado %}
+            <div class="validacion-sena-successbox">
+                <ion-icon name="shield-checkmark-outline"></ion-icon>
+                <div>
+                    <strong>Tu identidad ya está validada.</strong>
+                    <p>Puedes volver al carrito y continuar con tu pedido sin repetir este proceso.</p>
+                    <a href="{{ redirect_to }}" class="validacion-sena-btn validacion-sena-btn--primary">Volver y continuar</a>
+                </div>
+            </div>
+            {% else %}
+            <form method="post" enctype="multipart/form-data" class="validacion-sena-form" id="validacion-sena-form">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ redirect_to }}">
+
+                <label class="validacion-sena-capture" for="foto_validacion">
+                    <span class="validacion-sena-capture__frame"></span>
+                    <span class="validacion-sena-capture__guide">Alinea el carnet dentro del marco y procura que el logo quede visible.</span>
+                    <span class="validacion-sena-capture__cta">
+                        <ion-icon name="camera-outline"></ion-icon>
+                        Tomar o subir foto del carnet
+                    </span>
+                    <input type="file" id="foto_validacion" name="foto_validacion" accept="image/*" capture="environment" required>
+                    <img id="foto_validacion_preview" alt="Vista previa del carnet" hidden>
+                </label>
+
+                <div class="validacion-sena-form__actions">
+                    <button type="submit" class="validacion-sena-btn validacion-sena-btn--primary">
+                        <ion-icon name="scan-outline"></ion-icon>
+                        Validar ahora
+                    </button>
+                    <a href="{{ redirect_to }}" class="validacion-sena-btn validacion-sena-btn--ghost">Volver</a>
+                </div>
+            </form>
+            {% endif %}
+
+            {% if resultado_ocr and resultado_ocr.details %}
+            <div class="validacion-sena-result">
+                <p>Resultado del intento automático</p>
+                <ul>
+                    {% for detail in resultado_ocr.details %}
+                    <li>{{ detail }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </article>
+
+        <aside class="validacion-sena-card validacion-sena-card--secondary">
+            <div class="validacion-sena-card__head">
+                <div>
+                    <p class="validacion-sena-card__eyebrow">Paso 2 y 3</p>
+                    <h2>Si el OCR falla o no tienes el carnet</h2>
+                </div>
+            </div>
+
+            <ol class="validacion-sena-steps">
+                <li>Envías la solicitud manual al administrador.</li>
+                <li>El administrador aprueba el envío y te llega un correo con un enlace único.</li>
+                <li>Subes tu carnet o certificado SENA y el administrador revisa la evidencia manualmente.</li>
+            </ol>
+
+            {% if estado_validacion == 'solicitada' %}
+            <div class="validacion-sena-pendingbox">
+                <ion-icon name="mail-open-outline"></ion-icon>
+                <div>
+                    <strong>Tu solicitud ya fue enviada.</strong>
+                    <p>Espera a que el administrador habilite el enlace de carga manual.</p>
+                </div>
+            </div>
+            {% elif estado_validacion == 'enlace_enviado' %}
+            <div class="validacion-sena-pendingbox">
+                <ion-icon name="send-outline"></ion-icon>
+                <div>
+                    <strong>Enlace manual enviado.</strong>
+                    <p>Revisa tu correo y carga el documento desde el enlace único.</p>
+                </div>
+            </div>
+            {% elif estado_validacion == 'documento_cargado' %}
+            <div class="validacion-sena-pendingbox">
+                <ion-icon name="document-attach-outline"></ion-icon>
+                <div>
+                    <strong>Documento recibido.</strong>
+                    <p>El administrador ya tiene tu evidencia y solo falta la aprobación final.</p>
+                </div>
+            </div>
+            {% elif not ya_validado %}
+            <form method="post" action="{% url 'solicitar_validacion_manual' %}" class="validacion-sena-manual-form">
+                {% csrf_token %}
+                <label for="motivo_manual">Cuéntanos qué pasó</label>
+                <textarea id="motivo_manual" name="motivo_manual" rows="4" placeholder="Ej: el OCR no leyó mi carnet, mi carnet está en trámite o solo tengo certificado."></textarea>
+                <button type="submit" class="validacion-sena-btn validacion-sena-btn--secondary">
+                    <ion-icon name="paper-plane-outline"></ion-icon>
+                    Solicitar validación manual
+                </button>
+            </form>
+            {% endif %}
+        </aside>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script data-page-script="true">
+(function () {
+    var input = document.getElementById('foto_validacion');
+    var preview = document.getElementById('foto_validacion_preview');
+    if (!input || !preview) return;
+
+    input.addEventListener('change', function () {
+        var file = input.files && input.files[0];
+        if (!file) {
+            preview.hidden = true;
+            preview.removeAttribute('src');
+            return;
+        }
+
+        var reader = new FileReader();
+        reader.onload = function (event) {
+            preview.src = event.target.result;
+            preview.hidden = false;
+        };
+        reader.readAsDataURL(file);
+    });
+}());
+</script>
+{% endblock %}

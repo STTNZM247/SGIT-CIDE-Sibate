@@ -64,7 +64,7 @@
                         <p>Selecciona el tipo de documento para habilitar el número.</p>
                     </div>
 
-                    <div class="registro-grid registro-grid--double">
+                    <div class="registro-grid">
                         <div class="field">
                             <label class="login-label" for="{{ form.nombre.id_for_label }}">Nombre(s)</label>
                             <div class="login-input-shell">{{ form.nombre }}</div>
@@ -80,7 +80,23 @@
 
                     <div class="field">
                         <label class="login-label" for="{{ form.id_tipo_doc_fk.id_for_label }}">Tipo de documento</label>
-                        <div class="login-input-shell login-input-shell--select">{{ form.id_tipo_doc_fk }}</div>
+                        <div class="registro-doc-native">{{ form.id_tipo_doc_fk }}</div>
+                        <div class="registro-doc-select" data-doc-select>
+                            <button type="button" class="registro-doc-select__trigger" data-doc-trigger aria-haspopup="listbox" aria-expanded="false">
+                                <span data-doc-label>Selecciona una opción</span>
+                                <ion-icon name="chevron-down-outline"></ion-icon>
+                            </button>
+                            <div class="registro-doc-select__menu" data-doc-menu role="listbox" aria-label="Tipo de documento">
+                                {% for value, label in form.id_tipo_doc_fk.field.choices %}
+                                    {% if value %}
+                                    <button type="button" class="registro-doc-select__option{% if form.id_tipo_doc_fk.value|stringformat:'s' == value|stringformat:'s' %} is-selected{% endif %}" data-doc-option data-value="{{ value }}" role="option" aria-selected="{% if form.id_tipo_doc_fk.value|stringformat:'s' == value|stringformat:'s' %}true{% else %}false{% endif %}">
+                                        <strong>{{ label }}</strong>
+                                        <small>{% if label == 'CC' %}Cédula de ciudadanía{% elif label == 'TI' %}Tarjeta de identidad{% endif %}</small>
+                                    </button>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
                         {{ form.id_tipo_doc_fk.errors }}
                     </div>
 
@@ -90,8 +106,8 @@
                         {{ form.cc.errors }}
                     </div>
 
-                    <div class="login-actions login-actions--split">
-                        <button type="button" class="btn btn--block login-submit login-submit--secondary" data-step-next>Continuar</button>
+                    <div class="login-actions">
+                        <button type="button" class="btn btn--block login-submit" data-step-next>Continuar</button>
                     </div>
                 </div>
 
@@ -103,20 +119,30 @@
                     </div>
 
                     <div class="field">
-                        <label class="login-label" for="{{ form.correo.id_for_label }}">Correo</label>
+                        <label class="login-label" for="{{ form.correo.id_for_label }}">Correo electrónico</label>
                         <div class="login-input-shell">{{ form.correo }}</div>
                         {{ form.correo.errors }}
                     </div>
 
                     <div class="field">
                         <label class="login-label" for="{{ form.password1.id_for_label }}">Contraseña</label>
-                        <div class="login-input-shell">{{ form.password1 }}</div>
+                        <div class="login-input-shell login-input-shell--password">
+                            {{ form.password1 }}
+                            <button type="button" class="password-toggle" data-password-toggle="{{ form.password1.id_for_label }}" aria-label="Mostrar u ocultar contraseña">
+                                <ion-icon name="eye-outline"></ion-icon>
+                            </button>
+                        </div>
                         {{ form.password1.errors }}
                     </div>
 
                     <div class="field">
                         <label class="login-label" for="{{ form.password2.id_for_label }}">Confirmar contraseña</label>
-                        <div class="login-input-shell">{{ form.password2 }}</div>
+                        <div class="login-input-shell login-input-shell--password">
+                            {{ form.password2 }}
+                            <button type="button" class="password-toggle" data-password-toggle="{{ form.password2.id_for_label }}" aria-label="Mostrar u ocultar contraseña">
+                                <ion-icon name="eye-outline"></ion-icon>
+                            </button>
+                        </div>
                         {{ form.password2.errors }}
                     </div>
 
@@ -151,6 +177,10 @@
     const tipoDoc = document.getElementById('id_tipo_doc_fk');
     const documentoInput = document.getElementById('id_cc');
     const docShell = wizard.querySelector('[data-doc-shell]');
+    const docSelect = wizard.querySelector('[data-doc-select]');
+    const docTrigger = wizard.querySelector('[data-doc-trigger]');
+    const docMenu = wizard.querySelector('[data-doc-menu]');
+    const docLabel = wizard.querySelector('[data-doc-label]');
     let currentStep = Number(wizard.dataset.initialStep || '1');
 
     const setStep = (step) => {
@@ -177,6 +207,21 @@
         }
         if (!enabled) {
             documentoInput.value = '';
+        }
+
+        const selectedOption = tipoDoc ? tipoDoc.options[tipoDoc.selectedIndex] : null;
+        if (docLabel) {
+            docLabel.textContent = enabled && selectedOption ? selectedOption.textContent : 'Selecciona una opción';
+        }
+        if (docSelect) {
+            docSelect.classList.toggle('has-value', enabled);
+        }
+        if (docMenu) {
+            docMenu.querySelectorAll('[data-doc-option]').forEach((option) => {
+                const isSelected = tipoDoc && option.dataset.value === tipoDoc.value;
+                option.classList.toggle('is-selected', Boolean(isSelected));
+                option.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+            });
         }
     };
 
@@ -205,6 +250,67 @@
     if (tipoDoc) {
         tipoDoc.addEventListener('change', syncDocumentoState);
     }
+
+    if (documentoInput) {
+        const sanitizeDocumento = () => {
+            documentoInput.value = (documentoInput.value || '').replace(/\D+/g, '').slice(0, 20);
+        };
+
+        documentoInput.addEventListener('input', sanitizeDocumento);
+        documentoInput.addEventListener('paste', () => {
+            requestAnimationFrame(sanitizeDocumento);
+        });
+        documentoInput.addEventListener('keydown', (event) => {
+            const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+            if (allowedKeys.includes(event.key) || event.ctrlKey || event.metaKey) {
+                return;
+            }
+            if (!/^[0-9]$/.test(event.key)) {
+                event.preventDefault();
+            }
+        });
+    }
+
+    if (docTrigger && docMenu && tipoDoc) {
+        const closeDocMenu = () => {
+            docSelect?.classList.remove('is-open');
+            docTrigger.setAttribute('aria-expanded', 'false');
+        };
+
+        docTrigger.addEventListener('click', () => {
+            const isOpen = docSelect?.classList.toggle('is-open');
+            docTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        docMenu.querySelectorAll('[data-doc-option]').forEach((option) => {
+            option.addEventListener('click', () => {
+                tipoDoc.value = option.dataset.value || '';
+                tipoDoc.dispatchEvent(new Event('change', { bubbles: true }));
+                closeDocMenu();
+            });
+        });
+
+        document.addEventListener('click', (event) => {
+            if (docSelect && !docSelect.contains(event.target)) {
+                closeDocMenu();
+            }
+        });
+    }
+
+    wizard.querySelectorAll('[data-password-toggle]').forEach((button) => {
+        const targetId = button.getAttribute('data-password-toggle');
+        const input = targetId ? document.getElementById(targetId) : null;
+        const icon = button.querySelector('ion-icon');
+        if (!input || !icon) {
+            return;
+        }
+
+        button.addEventListener('click', () => {
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            icon.name = isPassword ? 'eye-off-outline' : 'eye-outline';
+        });
+    });
 
     if (nextButton) {
         nextButton.addEventListener('click', () => {

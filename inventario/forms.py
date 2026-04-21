@@ -84,10 +84,13 @@ class RegistroPublicoForm(forms.ModelForm):
                 'id': 'id_cc',
                 'disabled': 'disabled',
                 'inputmode': 'numeric',
+                'maxlength': '20',
+                'pattern': '[0-9]*',
+                'autocomplete': 'off',
             }),
             'nombre': forms.TextInput(attrs={'class': 'login-control', 'placeholder': 'Nombre(s)', 'id': 'id_nombre'}),
             'apellido': forms.TextInput(attrs={'class': 'login-control', 'placeholder': 'Apellido(s)', 'id': 'id_apellido'}),
-            'correo': forms.EmailInput(attrs={'class': 'login-control', 'placeholder': 'Correo institucional', 'id': 'id_correo'}),
+            'correo': forms.EmailInput(attrs={'class': 'login-control', 'placeholder': 'Correo electrónico', 'id': 'id_correo'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -106,6 +109,8 @@ class RegistroPublicoForm(forms.ModelForm):
         cc = (self.cleaned_data.get('cc') or '').strip()
         if not cc:
             raise forms.ValidationError('Debes ingresar el número de documento.')
+        if not cc.isdigit():
+            raise forms.ValidationError('El número de documento solo puede contener números.')
         if cc and Usuario.objects.filter(cc=cc).exists():
             raise forms.ValidationError('Ya existe una cuenta con este documento.')
         return cc

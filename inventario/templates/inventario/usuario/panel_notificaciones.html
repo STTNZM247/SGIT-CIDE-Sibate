@@ -52,12 +52,26 @@
                     <ion-icon name="alert-circle-outline" class="notif-icon"></ion-icon>
                 {% elif noti.tipo == 'aviso_devolucion' %}
                     <ion-icon name="return-down-back-outline" class="notif-icon"></ion-icon>
+                {% elif noti.tipo == 'solicitud_validacion_sena' %}
+                    <ion-icon name="paper-plane-outline" class="notif-icon"></ion-icon>
+                {% elif noti.tipo == 'enlace_validacion_sena' %}
+                    <ion-icon name="mail-open-outline" class="notif-icon"></ion-icon>
+                {% elif noti.tipo == 'documento_validacion_sena' %}
+                    <ion-icon name="document-text-outline" class="notif-icon"></ion-icon>
+                {% elif noti.tipo == 'verificacion_sena_aprobada' %}
+                    <ion-icon name="shield-checkmark-outline" class="notif-icon"></ion-icon>
+                {% elif noti.tipo == 'verificacion_sena_rechazada' %}
+                    <ion-icon name="close-circle-outline" class="notif-icon"></ion-icon>
                 {% elif noti.tipo == 'staff_nuevo_pedido' %}
                     <ion-icon name="bag-add-outline" class="notif-icon"></ion-icon>
                 {% elif noti.tipo == 'staff_pedido_cancelado' %}
                     <ion-icon name="close-circle-outline" class="notif-icon"></ion-icon>
                 {% elif noti.tipo == 'staff_pedido_entregado' %}
                     <ion-icon name="checkmark-done-circle-outline" class="notif-icon"></ion-icon>
+                {% elif noti.tipo == 'staff_solicitud_validacion_sena' %}
+                    <ion-icon name="mail-unread-outline" class="notif-icon"></ion-icon>
+                {% elif noti.tipo == 'staff_documento_validacion_sena' %}
+                    <ion-icon name="document-attach-outline" class="notif-icon"></ion-icon>
                 {% else %}
                     <ion-icon name="information-circle-outline" class="notif-icon"></ion-icon>
                 {% endif %}
@@ -87,6 +101,11 @@
                         </a>
                         {% endif %}
                         {% endwith %}
+                    {% elif noti.tipo == 'solicitud_validacion_sena' or noti.tipo == 'enlace_validacion_sena' or noti.tipo == 'documento_validacion_sena' or noti.tipo == 'verificacion_sena_aprobada' or noti.tipo == 'verificacion_sena_rechazada' %}
+                        <a href="{% url 'validacion_sena' %}" class="notif-link-pedido">
+                            <ion-icon name="shield-checkmark-outline"></ion-icon>
+                            Ver validación SENA
+                        </a>
                     {% endif %}
                 </div>
             </div>
