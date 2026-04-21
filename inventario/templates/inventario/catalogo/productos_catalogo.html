@@ -75,9 +75,29 @@
             <div class="product-modal" role="dialog" aria-modal="true" aria-labelledby="producto-title-{{ p.id_prod }}">
                 <div class="product-modal__header">
                     <h2 class="product-modal__title" id="producto-title-{{ p.id_prod }}">{{ p.nombre_producto }}</h2>
-                    <button class="product-modal__close" type="button" data-close-modal aria-label="Cerrar detalle">
-                        <ion-icon name="close-outline"></ion-icon>
-                    </button>
+                    <div class="product-modal__header-actions">
+                        {% if request.user.is_authenticated and request.user.id_rol_fk.nombre_rol == 'admin' %}
+                        <a href="{% url 'producto_editar' p.id_prod %}" class="cat-btn cat-btn--primary cat-btn--modal-head">
+                            <ion-icon name="create-outline"></ion-icon>
+                            Editar
+                        </a>
+                        <form
+                            class="product-modal__danger product-modal__danger--head"
+                            method="post"
+                            action="{% url 'eliminar_producto' catalogo.id_cat p.id_prod %}"
+                            onsubmit="return confirm('¿Seguro que deseas eliminar este producto?');"
+                        >
+                            {% csrf_token %}
+                            <button class="cat-btn cat-btn--danger cat-btn--modal-head" type="submit">
+                                <ion-icon name="trash-outline"></ion-icon>
+                                Eliminar
+                            </button>
+                        </form>
+                        {% endif %}
+                        <button class="product-modal__close" type="button" data-close-modal aria-label="Cerrar detalle">
+                            <ion-icon name="close-outline"></ion-icon>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="product-modal__media">
@@ -111,25 +131,6 @@
                         <p class="product-detail-label">Disponibilidad</p>
                         <p class="product-detail-value product-detail-value--preserve">{% if p.descr_dispo_actual %}{{ p.descr_dispo_actual }}{% else %}Sin observaciones de disponibilidad.{% endif %}</p>
                     </div>
-                    {% if request.user.is_authenticated and request.user.id_rol_fk.nombre_rol == 'admin' %}
-                    <div style="display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:12px;">
-                        <a href="{% url 'producto_editar' p.id_prod %}" class="cat-btn cat-btn--primary">
-                            <ion-icon name="create-outline"></ion-icon> Editar
-                        </a>
-                        <form
-                            class="product-modal__danger"
-                            method="post"
-                            action="{% url 'eliminar_producto' catalogo.id_cat p.id_prod %}"
-                            onsubmit="return confirm('¿Seguro que deseas eliminar este producto?');"
-                        >
-                            {% csrf_token %}
-                            <button class="cat-btn cat-btn--danger" type="submit">
-                                <ion-icon name="trash-outline"></ion-icon>
-                                Eliminar producto
-                            </button>
-                        </form>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>

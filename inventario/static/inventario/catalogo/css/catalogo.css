@@ -866,6 +866,25 @@ body.modal-open { overflow: hidden; }
     color: #1a1a2e;
 }
 
+.product-modal__header-actions {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    margin-left: auto;
+}
+
+.product-modal__danger--head {
+    margin: 0;
+}
+
+.cat-btn--modal-head {
+    min-height: 34px;
+    padding: 0 .75rem;
+    border-radius: 10px;
+    font-size: .8rem;
+    white-space: nowrap;
+}
+
 .product-modal__close {
     border: 0;
     background: #f5f7fa;
@@ -916,6 +935,20 @@ body.modal-open { overflow: hidden; }
     justify-content: flex-end;
     padding-top: .4rem;
     border-top: 1px solid #edf1f6;
+}
+
+@media (max-width: 720px) {
+    .product-modal__header {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .product-modal__header-actions {
+        width: 100%;
+        margin-left: 0;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
 }
 
 .cat-btn--danger {
