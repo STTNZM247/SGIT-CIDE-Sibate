@@ -6,39 +6,12 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 
-from .db_compat import get_safe_usuario_value, usuario_supports_tipo_doc
 from .forms import CorreoAuthenticationForm, RecuperarAccesoForm, RegistroPublicoForm, RestablecerPasswordForm
-from .models import Notificacion, PasswordResetToken, Rol, Usuario
+from .models import PasswordResetToken, Rol
 
 
 class RolRedirectLoginView(LoginView):
     authentication_form = CorreoAuthenticationForm
-
-    def _recordar_tipo_documento(self):
-        user = self.request.user
-        if not user.is_authenticated:
-            return
-
-        tipo_doc_disponible = usuario_supports_tipo_doc(Usuario)
-        if tipo_doc_disponible and (
-            get_safe_usuario_value(user, 'id_tipo_doc_fk', None)
-            or get_safe_usuario_value(user, 'id_tipo_doc_fk_id', None)
-        ):
-            return
-
-        mensaje = (
-            'Tu cuenta es anterior a este cambio. Entra a tu perfil y completa el tipo de documento para mantener tus datos al día.'
-            if tipo_doc_disponible
-            else 'Tu cuenta es anterior a este cambio. Ya puedes ingresar sin problema; cuando la actualización quede aplicada en esta base, completa tu tipo de documento desde el perfil.'
-        )
-
-        Notificacion.objects.get_or_create(
-            id_usuario_fk=user,
-            tipo='actualizar_tipo_doc',
-            titulo='Actualiza tu tipo de documento',
-            mensaje=mensaje,
-            leida=False,
-        )
 
     def _ensure_staff_role(self):
         user = self.request.user
@@ -52,7 +25,6 @@ class RolRedirectLoginView(LoginView):
 
     def get_success_url(self):
         self._ensure_staff_role()
-        self._recordar_tipo_documento()
 
         if getattr(self.request.user, 'is_superuser', False) or getattr(self.request.user, 'is_staff', False):
             return reverse('dashboard')

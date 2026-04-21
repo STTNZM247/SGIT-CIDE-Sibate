@@ -300,12 +300,11 @@ class GestionEstadoUsuarioTests(TestCase):
         self.assertIsNotNone(user)
         self.assertEqual(user.correo, self.usuario.correo)
 
-    @patch('inventario.views_login.usuario_supports_tipo_doc', return_value=True)
-    def test_login_creates_tipo_doc_reminder_notification_for_legacy_user(self, _supports_tipo_doc):
+    def test_login_does_not_create_tipo_doc_reminder_notification_for_legacy_user(self):
         response = self.client.post(reverse('login'), {
             'username': self.usuario.correo,
             'password': 'Usuario123!',
         })
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(Notificacion.objects.filter(id_usuario_fk=self.usuario, tipo='actualizar_tipo_doc').exists())
+        self.assertFalse(Notificacion.objects.filter(id_usuario_fk=self.usuario, tipo='actualizar_tipo_doc').exists())

@@ -185,17 +185,6 @@ html[data-theme="dark"] #perfil-cover-trigger * {
             <ion-icon name="person-circle-outline"></ion-icon>
             Datos personales
           </h2>
-          {% if form.id_tipo_doc_fk %}
-          <div class="perfil-alert perfil-alert--warning" style="margin-bottom:16px;">
-            <ion-icon name="id-card-outline"></ion-icon>
-            Actualiza tu tipo de documento para completar tus datos de cuenta.
-          </div>
-          {% elif not tipo_doc_habilitado %}
-          <div class="perfil-alert perfil-alert--warning" style="margin-bottom:16px;">
-            <ion-icon name="alert-circle-outline"></ion-icon>
-            Tu cuenta antigua ya puede iniciar sesión. El tipo de documento se habilitará aquí en cuanto esta base reciba la migración pendiente.
-          </div>
-          {% endif %}
           <div class="perfil-grid">
             <div class="perfil-field">
               <label for="id_cc"><ion-icon name="card-outline"></ion-icon>Cédula</label>
