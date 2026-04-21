@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .middleware import ActiveUserRequiredMiddleware
-from .models import PasswordResetToken, Rol, Usuario
+from .models import PasswordResetToken, Rol, TipoDoc, Usuario
 from .views_login import RolRedirectLoginView
 from .views_usuario import panel_usuario
 
@@ -135,7 +135,10 @@ class GestionEstadoUsuarioTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_public_registration_creates_usuario_role_account(self):
+        tipo_doc, _ = TipoDoc.objects.get_or_create(codigo='CC', defaults={'nombre': 'Cedula de ciudadania'})
+
         response = self.client.post(reverse('registro_publico'), {
+            'id_tipo_doc_fk': str(tipo_doc.id_tipo_doc),
             'cc': '10203040',
             'nombre': 'Nuevo',
             'apellido': 'Usuario',
@@ -149,6 +152,7 @@ class GestionEstadoUsuarioTests(TestCase):
         self.assertEqual(response.url, reverse('login'))
         self.assertTrue(nuevo.check_password('NuevaClave123!'))
         self.assertEqual(nuevo.id_rol_fk.nombre_rol, 'usuario')
+        self.assertEqual(nuevo.id_tipo_doc_fk.codigo, 'CC')
         self.assertTrue(nuevo.is_active)
 
     def test_recovery_sends_email_with_reset_link(self):

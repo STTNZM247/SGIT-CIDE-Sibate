@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 
-from .models import Catalogo, Producto, Rol, Usuario
+from .models import Catalogo, Producto, Rol, TipoDoc, Usuario
 
 
 class CorreoAuthenticationForm(AuthenticationForm):
@@ -46,6 +46,15 @@ class CorreoAuthenticationForm(AuthenticationForm):
 
 
 class RegistroPublicoForm(forms.ModelForm):
+    id_tipo_doc_fk = forms.ModelChoiceField(
+        label='Tipo de documento',
+        queryset=TipoDoc.objects.none(),
+        empty_label='Selecciona una opción',
+        widget=forms.Select(attrs={
+            'class': 'login-control login-control--select',
+            'id': 'id_tipo_doc_fk',
+        }),
+    )
     password1 = forms.CharField(
         label='Contraseña',
         strip=False,
@@ -67,13 +76,25 @@ class RegistroPublicoForm(forms.ModelForm):
 
     class Meta:
         model = Usuario
-        fields = ['cc', 'nombre', 'apellido', 'correo']
+        fields = ['nombre', 'apellido', 'id_tipo_doc_fk', 'cc', 'correo']
         widgets = {
-            'cc': forms.TextInput(attrs={'class': 'login-control', 'placeholder': 'Documento'}),
-            'nombre': forms.TextInput(attrs={'class': 'login-control', 'placeholder': 'Nombre'}),
-            'apellido': forms.TextInput(attrs={'class': 'login-control', 'placeholder': 'Apellido'}),
-            'correo': forms.EmailInput(attrs={'class': 'login-control', 'placeholder': 'Correo institucional'}),
+            'cc': forms.TextInput(attrs={
+                'class': 'login-control',
+                'placeholder': 'Número de documento',
+                'id': 'id_cc',
+                'disabled': 'disabled',
+                'inputmode': 'numeric',
+            }),
+            'nombre': forms.TextInput(attrs={'class': 'login-control', 'placeholder': 'Nombre(s)', 'id': 'id_nombre'}),
+            'apellido': forms.TextInput(attrs={'class': 'login-control', 'placeholder': 'Apellido(s)', 'id': 'id_apellido'}),
+            'correo': forms.EmailInput(attrs={'class': 'login-control', 'placeholder': 'Correo institucional', 'id': 'id_correo'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['id_tipo_doc_fk'].queryset = TipoDoc.objects.order_by('id_tipo_doc')
+        for field_name in ['nombre', 'apellido', 'id_tipo_doc_fk', 'cc', 'correo', 'password1', 'password2']:
+            self.fields[field_name].required = True
 
     def clean_correo(self):
         correo = (self.cleaned_data.get('correo') or '').strip().lower()
@@ -83,14 +104,22 @@ class RegistroPublicoForm(forms.ModelForm):
 
     def clean_cc(self):
         cc = (self.cleaned_data.get('cc') or '').strip()
+        if not cc:
+            raise forms.ValidationError('Debes ingresar el número de documento.')
         if cc and Usuario.objects.filter(cc=cc).exists():
             raise forms.ValidationError('Ya existe una cuenta con este documento.')
         return cc
 
     def clean(self):
         cleaned_data = super().clean()
+        tipo_doc = cleaned_data.get('id_tipo_doc_fk')
+        cc = (cleaned_data.get('cc') or '').strip()
         password1 = cleaned_data.get('password1')
         password2 = cleaned_data.get('password2')
+        if not tipo_doc:
+            self.add_error('id_tipo_doc_fk', 'Selecciona el tipo de documento.')
+        if tipo_doc and not cc:
+            self.add_error('cc', 'Ingresa el número de documento para continuar.')
         if password1 and password2 and password1 != password2:
             raise forms.ValidationError('Las contraseñas no coinciden.')
         return cleaned_data

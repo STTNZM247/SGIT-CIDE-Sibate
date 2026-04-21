@@ -23,7 +23,7 @@
         <section class="login-card login-card--wide" aria-labelledby="registro-title">
             <div class="login-card__top">
                 <h1 id="registro-title" class="login-title">Crear cuenta</h1>
-                <p class="login-subtitle">Registra tu acceso para ingresar al sistema.</p>
+                <p class="login-subtitle">Completa tus datos por pasos y corrige cualquier detalle antes de continuar.</p>
             </div>
 
             {% if form.non_field_errors or messages %}
@@ -43,47 +43,87 @@
             </div>
             {% endif %}
 
-            <form method="post" class="login-form" novalidate>
+            <div class="registro-steps" aria-label="Progreso del registro">
+                <div class="registro-step-chip is-active" data-step-chip="1">
+                    <span>1</span>
+                    <strong>Datos personales</strong>
+                </div>
+                <div class="registro-step-chip" data-step-chip="2">
+                    <span>2</span>
+                    <strong>Acceso</strong>
+                </div>
+            </div>
+
+            <form method="post" class="login-form login-form--wizard" novalidate data-registro-wizard data-initial-step="{% if form.correo.errors or form.password1.errors or form.password2.errors or form.non_field_errors %}2{% else %}1{% endif %}">
                 {% csrf_token %}
 
-                <div class="field">
-                    <label class="login-label" for="{{ form.cc.id_for_label }}">Documento</label>
-                    <div class="login-input-shell">{{ form.cc }}</div>
-                    {{ form.cc.errors }}
+                <div class="registro-step-panel is-active" data-step-panel="1">
+                    <div class="registro-step-head">
+                        <p class="registro-step-kicker">Paso 1</p>
+                        <h2>Nombre completo y documento</h2>
+                        <p>Selecciona el tipo de documento para habilitar el número.</p>
+                    </div>
+
+                    <div class="registro-grid registro-grid--double">
+                        <div class="field">
+                            <label class="login-label" for="{{ form.nombre.id_for_label }}">Nombre(s)</label>
+                            <div class="login-input-shell">{{ form.nombre }}</div>
+                            {{ form.nombre.errors }}
+                        </div>
+
+                        <div class="field">
+                            <label class="login-label" for="{{ form.apellido.id_for_label }}">Apellido(s)</label>
+                            <div class="login-input-shell">{{ form.apellido }}</div>
+                            {{ form.apellido.errors }}
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="login-label" for="{{ form.id_tipo_doc_fk.id_for_label }}">Tipo de documento</label>
+                        <div class="login-input-shell login-input-shell--select">{{ form.id_tipo_doc_fk }}</div>
+                        {{ form.id_tipo_doc_fk.errors }}
+                    </div>
+
+                    <div class="field">
+                        <label class="login-label" for="{{ form.cc.id_for_label }}">Número de documento</label>
+                        <div class="login-input-shell login-input-shell--disabled" data-doc-shell>{{ form.cc }}</div>
+                        {{ form.cc.errors }}
+                    </div>
+
+                    <div class="login-actions login-actions--split">
+                        <button type="button" class="btn btn--block login-submit login-submit--secondary" data-step-next>Continuar</button>
+                    </div>
                 </div>
 
-                <div class="field">
-                    <label class="login-label" for="{{ form.nombre.id_for_label }}">Nombre</label>
-                    <div class="login-input-shell">{{ form.nombre }}</div>
-                    {{ form.nombre.errors }}
-                </div>
+                <div class="registro-step-panel" data-step-panel="2">
+                    <div class="registro-step-head">
+                        <p class="registro-step-kicker">Paso 2</p>
+                        <h2>Correo y contraseña</h2>
+                        <p>Para crear la cuenta, confirma la contraseña con el mismo valor.</p>
+                    </div>
 
-                <div class="field">
-                    <label class="login-label" for="{{ form.apellido.id_for_label }}">Apellido</label>
-                    <div class="login-input-shell">{{ form.apellido }}</div>
-                    {{ form.apellido.errors }}
-                </div>
+                    <div class="field">
+                        <label class="login-label" for="{{ form.correo.id_for_label }}">Correo</label>
+                        <div class="login-input-shell">{{ form.correo }}</div>
+                        {{ form.correo.errors }}
+                    </div>
 
-                <div class="field">
-                    <label class="login-label" for="{{ form.correo.id_for_label }}">Correo</label>
-                    <div class="login-input-shell">{{ form.correo }}</div>
-                    {{ form.correo.errors }}
-                </div>
+                    <div class="field">
+                        <label class="login-label" for="{{ form.password1.id_for_label }}">Contraseña</label>
+                        <div class="login-input-shell">{{ form.password1 }}</div>
+                        {{ form.password1.errors }}
+                    </div>
 
-                <div class="field">
-                    <label class="login-label" for="{{ form.password1.id_for_label }}">Contraseña</label>
-                    <div class="login-input-shell">{{ form.password1 }}</div>
-                    {{ form.password1.errors }}
-                </div>
+                    <div class="field">
+                        <label class="login-label" for="{{ form.password2.id_for_label }}">Confirmar contraseña</label>
+                        <div class="login-input-shell">{{ form.password2 }}</div>
+                        {{ form.password2.errors }}
+                    </div>
 
-                <div class="field">
-                    <label class="login-label" for="{{ form.password2.id_for_label }}">Confirmar contraseña</label>
-                    <div class="login-input-shell">{{ form.password2 }}</div>
-                    {{ form.password2.errors }}
-                </div>
-
-                <div class="login-actions">
-                    <button type="submit" class="btn btn--block login-submit">Registrarme</button>
+                    <div class="login-actions login-actions--split">
+                        <button type="button" class="btn btn--block login-submit login-submit--secondary" data-step-prev>Volver</button>
+                        <button type="submit" class="btn btn--block login-submit">Registrarme</button>
+                    </div>
                 </div>
 
                 <div class="login-quick-links">
@@ -94,4 +134,119 @@
         </section>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(() => {
+    const wizard = document.querySelector('[data-registro-wizard]');
+    if (!wizard) {
+        return;
+    }
+
+    const panels = Array.from(wizard.querySelectorAll('[data-step-panel]'));
+    const chips = Array.from(document.querySelectorAll('[data-step-chip]'));
+    const nextButton = wizard.querySelector('[data-step-next]');
+    const prevButton = wizard.querySelector('[data-step-prev]');
+    const tipoDoc = document.getElementById('id_tipo_doc_fk');
+    const documentoInput = document.getElementById('id_cc');
+    const docShell = wizard.querySelector('[data-doc-shell]');
+    let currentStep = Number(wizard.dataset.initialStep || '1');
+
+    const setStep = (step) => {
+        currentStep = step;
+        panels.forEach((panel) => {
+            panel.classList.toggle('is-active', Number(panel.dataset.stepPanel) === step);
+        });
+        chips.forEach((chip) => {
+            const chipStep = Number(chip.dataset.stepChip);
+            chip.classList.toggle('is-active', chipStep === step);
+            chip.classList.toggle('is-complete', chipStep < step);
+        });
+    };
+
+    const syncDocumentoState = () => {
+        const enabled = Boolean(tipoDoc && tipoDoc.value);
+        if (!documentoInput) {
+            return;
+        }
+        documentoInput.disabled = !enabled;
+        documentoInput.toggleAttribute('disabled', !enabled);
+        if (docShell) {
+            docShell.classList.toggle('login-input-shell--disabled', !enabled);
+        }
+        if (!enabled) {
+            documentoInput.value = '';
+        }
+    };
+
+    const validateStep = (step) => {
+        const panel = wizard.querySelector(`[data-step-panel="${step}"]`);
+        if (!panel) {
+            return true;
+        }
+
+        const controls = Array.from(panel.querySelectorAll('input, select'));
+        for (const control of controls) {
+            if (control.disabled) {
+                continue;
+            }
+            if (!control.reportValidity()) {
+                control.focus();
+                return false;
+            }
+        }
+        return true;
+    };
+
+    setStep(currentStep);
+    syncDocumentoState();
+
+    if (tipoDoc) {
+        tipoDoc.addEventListener('change', syncDocumentoState);
+    }
+
+    if (nextButton) {
+        nextButton.addEventListener('click', () => {
+            if (!validateStep(1)) {
+                return;
+            }
+            setStep(2);
+        });
+    }
+
+    if (prevButton) {
+        prevButton.addEventListener('click', () => {
+            setStep(1);
+        });
+    }
+
+    wizard.addEventListener('submit', (event) => {
+        setStep(2);
+        if (!validateStep(2)) {
+            event.preventDefault();
+            return;
+        }
+
+        const password1 = document.getElementById('{{ form.password1.id_for_label }}');
+        const password2 = document.getElementById('{{ form.password2.id_for_label }}');
+        if (password1 && password2 && password1.value !== password2.value) {
+            event.preventDefault();
+            password2.setCustomValidity('Las contraseñas no coinciden.');
+            password2.reportValidity();
+            return;
+        }
+        if (password2) {
+            password2.setCustomValidity('');
+        }
+    });
+
+    const password2 = document.getElementById('{{ form.password2.id_for_label }}');
+    if (password2) {
+        password2.addEventListener('input', () => {
+            password2.setCustomValidity('');
+        });
+    }
+})();
+</script>
 {% endblock %}

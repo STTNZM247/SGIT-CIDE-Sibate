@@ -186,6 +186,105 @@ body, html {
     align-items: center;
 }
 
+.login-form--wizard {
+    align-items: stretch;
+}
+
+.registro-steps {
+    width: 92%;
+    max-width: 360px;
+    margin: 0 auto 18px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.registro-step-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 18px;
+    border: 1px solid #dce8d9;
+    background: #f6faf4;
+    color: #607260;
+}
+
+.registro-step-chip span {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #e7efe4;
+    font-weight: 900;
+    color: #36513d;
+}
+
+.registro-step-chip strong {
+    font-size: 0.88rem;
+    line-height: 1.2;
+}
+
+.registro-step-chip.is-active {
+    border-color: rgba(57, 169, 0, 0.38);
+    background: #edf8e9;
+    color: #214c23;
+}
+
+.registro-step-chip.is-active span,
+.registro-step-chip.is-complete span {
+    background: #39A900;
+    color: #fff;
+}
+
+.registro-step-panel {
+    display: none;
+}
+
+.registro-step-panel.is-active {
+    display: block;
+}
+
+.registro-step-head {
+    width: 92%;
+    max-width: 360px;
+    margin: 0 auto 14px;
+}
+
+.registro-step-head h2 {
+    margin: 0 0 6px;
+    color: #18271c;
+    font-size: 1.2rem;
+    font-weight: 900;
+}
+
+.registro-step-head p {
+    margin: 0;
+    color: #607260;
+    font-size: 0.94rem;
+    line-height: 1.5;
+}
+
+.registro-step-kicker {
+    margin: 0 0 6px !important;
+    color: #39A900 !important;
+    font-size: 0.78rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.registro-grid {
+    width: 100%;
+}
+
+.registro-grid--double {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 10px;
+}
+
 .login-form .field {
     margin-bottom: 16px;
     width: 100%;
@@ -216,6 +315,14 @@ body, html {
     padding: 5px 8px;
 }
 
+.login-input-shell--select {
+    padding-right: 16px;
+}
+
+.login-input-shell--disabled {
+    opacity: 0.6;
+}
+
 .login-input-icon,
 .password-toggle {
     width: 50px;
@@ -234,6 +341,7 @@ body, html {
 }
 
 .login-control,
+.login-form select,
 .login-form input[type="text"],
 .login-form input[type="email"],
 .login-form input[type="password"] {
@@ -245,6 +353,22 @@ body, html {
     color: #ffffff;
     padding: 8px 4px 6px;
     border-radius: 0;
+}
+
+.login-control--select,
+.login-form select.login-control {
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+}
+
+.login-form select option {
+    color: #18271c;
+}
+
+.login-form input:disabled {
+    cursor: not-allowed;
+    opacity: 0.82;
 }
 
 .login-control::placeholder {
@@ -303,6 +427,22 @@ body, html {
     display: flex;
     justify-content: center;
     width: 100%;
+}
+
+.login-actions--split {
+    width: 92%;
+    max-width: 360px;
+    gap: 10px;
+}
+
+.login-submit--secondary {
+    background: #eff6ec !important;
+    color: #1f4c28 !important;
+    box-shadow: none;
+}
+
+.login-submit--secondary:hover {
+    background: #dcead6 !important;
 }
 
 .login-quick-links {
@@ -430,5 +570,17 @@ body, html {
 
     .login-card {
         width: 100%;
+    }
+
+    .registro-grid--double {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 560px) {
+    .registro-steps,
+    .login-actions--split {
+        grid-template-columns: 1fr;
+        display: grid;
     }
 }

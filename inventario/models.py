@@ -19,6 +19,21 @@ class Rol(models.Model):
         return f'Rol {self.id_rol}'
 
 
+class TipoDoc(models.Model):
+    id_tipo_doc = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=60, unique=True)
+    codigo = models.CharField(max_length=10, unique=True)
+    fch_registro = models.DateTimeField(null=True, blank=True)
+    fch_ult_act = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'tipo_doc'
+        ordering = ['id_tipo_doc']
+
+    def __str__(self):
+        return self.codigo
+
+
 class UsuarioManager(BaseUserManager):
     def create_user(self, correo, password=None, **extra_fields):
         if not correo:
@@ -48,6 +63,13 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         Rol,
         on_delete=models.SET_NULL,
         db_column='id_rol_fk',
+        null=True,
+        blank=True,
+    )
+    id_tipo_doc_fk = models.ForeignKey(
+        TipoDoc,
+        on_delete=models.SET_NULL,
+        db_column='id_tipo_doc_fk',
         null=True,
         blank=True,
     )
