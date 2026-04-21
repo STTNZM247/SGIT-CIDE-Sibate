@@ -82,6 +82,18 @@
 .perfil-theme-switch input:checked + .perfil-theme-slider::before {
   transform: translateX(24px);
 }
+/* Botón "Cambiar portada" — texto siempre oscuro independiente del tema */
+html[data-theme="dark"] .perfil-cover-btn,
+html[data-theme="dark"] .perfil-cover-btn:hover {
+  background: #ffffff !important;
+  color: #0d2745 !important;
+}
+html[data-theme="dark"] .perfil-cover-btn span,
+html[data-theme="dark"] .perfil-cover-btn ion-icon,
+html[data-theme="dark"] .perfil-cover-btn * {
+  color: #0d2745 !important;
+  opacity: 1 !important;
+}
 </style>
 {% endblock %}
 
