@@ -63,7 +63,7 @@
   overflow: hidden;
 }
 
-/* Imagen invertida + screen: fondo negro=neutro, líneas claras=iluminan el color */
+/* Imagen invertida + screen: líneas claras iluminan el color (colores oscuros) */
 .perfil-cover::before {
   content: '';
   position: absolute;
@@ -76,6 +76,13 @@
   mix-blend-mode: screen;
   opacity: 0.85;
   pointer-events: none;
+}
+
+/* Color claro elegido: imagen original + multiply → líneas más oscuras que el fondo */
+.perfil-cover[data-light-cover]::before {
+  filter: none;
+  mix-blend-mode: multiply;
+  opacity: 0.75;
 }
 
 .perfil-cover::after {

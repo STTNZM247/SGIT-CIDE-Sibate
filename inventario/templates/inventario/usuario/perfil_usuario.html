@@ -412,17 +412,33 @@ html[data-theme="dark"] #perfil-cover-trigger * {
   });
 
   // Seleccionar color → canvas → AJAX save
+  /* Calcula si un color hex es claro (luminancia > 0.55) */
+  function isLightColor(hex) {
+    var h = hex.replace('#','');
+    var r = parseInt(h.slice(0,2),16);
+    var g = parseInt(h.slice(2,4),16);
+    var b = parseInt(h.slice(4,6),16);
+    return (0.299*r + 0.587*g + 0.114*b) / 255 > 0.55;
+  }
+
   document.querySelectorAll('.perfil-cover-color').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var color = this.dataset.color;
+      var light = isLightColor(color);
       coverArea.style.setProperty('--cover-color', color);
       coverArea.style.background = '';
+      /* Cambiar blend mode según luminancia del color */
+      if (light) {
+        coverArea.setAttribute('data-light-cover', '1');
+      } else {
+        coverArea.removeAttribute('data-light-cover');
+      }
       if (coverPreview) coverPreview.style.display = 'none';
       if (coverFallback) coverFallback.style.display = 'none';
       document.querySelectorAll('.perfil-cover-color').forEach(function (b) { b.classList.remove('is-selected'); });
       this.classList.add('is-selected');
       coverPicker.classList.remove('is-open');
-      /* Dibujar textura de olas + tinte de color en canvas */
+      /* Dibujar textura de olas en canvas según modo claro/oscuro */
       var canvas = document.createElement('canvas');
       canvas.width = 1200; canvas.height = 400;
       var ctx = canvas.getContext('2d');
@@ -430,21 +446,26 @@ html[data-theme="dark"] #perfil-cover-trigger * {
       olaImg.crossOrigin = 'anonymous';
       olaImg.src = "{% static 'inventario/img/5623406.jpg' %}";
       olaImg.onload = function () {
-        /* 1. Fondo del color elegido */
         ctx.fillStyle = color;
         ctx.fillRect(0, 0, 1200, 400);
-        /* 2. Invertir imagen en canvas temporal (difference con blanco = invert) */
-        var tmpC = document.createElement('canvas');
-        tmpC.width = 1200; tmpC.height = 400;
-        var tmpCtx = tmpC.getContext('2d');
-        tmpCtx.drawImage(olaImg, 0, 0, 1200, 400);
-        tmpCtx.globalCompositeOperation = 'difference';
-        tmpCtx.fillStyle = '#ffffff';
-        tmpCtx.fillRect(0, 0, 1200, 400);
-        /* 3. Aplicar imagen invertida con screen: negro=neutro, claro=ilumina */
-        ctx.globalCompositeOperation = 'screen';
-        ctx.globalAlpha = 0.85;
-        ctx.drawImage(tmpC, 0, 0, 1200, 400);
+        if (light) {
+          /* Color claro: imagen original con multiply → líneas oscuras sobre fondo claro */
+          ctx.globalCompositeOperation = 'multiply';
+          ctx.globalAlpha = 0.75;
+          ctx.drawImage(olaImg, 0, 0, 1200, 400);
+        } else {
+          /* Color oscuro: imagen invertida con screen → líneas claras sobre fondo oscuro */
+          var tmpC = document.createElement('canvas');
+          tmpC.width = 1200; tmpC.height = 400;
+          var tmpCtx = tmpC.getContext('2d');
+          tmpCtx.drawImage(olaImg, 0, 0, 1200, 400);
+          tmpCtx.globalCompositeOperation = 'difference';
+          tmpCtx.fillStyle = '#ffffff';
+          tmpCtx.fillRect(0, 0, 1200, 400);
+          ctx.globalCompositeOperation = 'screen';
+          ctx.globalAlpha = 0.85;
+          ctx.drawImage(tmpC, 0, 0, 1200, 400);
+        }
         ctx.globalCompositeOperation = 'source-over';
         ctx.globalAlpha = 1.0;
         canvas.toBlob(function (blob) {
@@ -455,7 +476,6 @@ html[data-theme="dark"] #perfil-cover-trigger * {
         });
       };
       olaImg.onerror = function () {
-        /* Fallback: solo color sólido si falla la carga de imagen */
         ctx.fillStyle = color;
         ctx.fillRect(0, 0, 1200, 400);
         canvas.toBlob(function (blob) {
