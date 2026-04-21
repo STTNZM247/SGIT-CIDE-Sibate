@@ -1860,6 +1860,11 @@ html[data-theme="dark"] .audit-hero {
 html[data-theme="dark"] .audit-eyebrow {
     color: #7dd87d !important;
 }
+html[data-theme="dark"] .audit-status-chip {
+    background: #182018 !important;
+    border-color: #253025 !important;
+    color: #c8dcc8 !important;
+}
 html[data-theme="dark"] .audit-kpi {
     background: #111611 !important;
     border-color: #253025 !important;
@@ -1888,12 +1893,17 @@ html[data-theme="dark"] .audit-table-card__head {
 html[data-theme="dark"] .audit-table-card__head p {
     color: #90b090 !important;
 }
+html[data-theme="dark"] .audit-table-wrap {
+    background: #111611 !important;
+    border-color: #253025 !important;
+}
 html[data-theme="dark"] .audit-table thead th {
     background: #182018 !important;
     color: #90b090 !important;
     border-color: #253025 !important;
 }
 html[data-theme="dark"] .audit-table tbody td {
+    background: #0f160f !important;
     color: #c8dcc8 !important;
     border-color: #1e2b1e !important;
 }
@@ -1903,12 +1913,30 @@ html[data-theme="dark"] .audit-table tbody tr:nth-child(even) td {
 html[data-theme="dark"] .audit-table tbody tr:hover td {
     background: #1a2b1a !important;
 }
+html[data-theme="dark"] .audit-user-block strong {
+    color: #e2ede2 !important;
+}
 html[data-theme="dark"] .audit-user-block small {
     color: #6a8a6a !important;
 }
 html[data-theme="dark"] .audit-entity {
     background: #182018 !important;
     color: #7dd87d !important;
+}
+html[data-theme="dark"] .audit-pill--actualizar {
+    background: #1c261c !important;
+    border-color: #304230 !important;
+    color: #b9d7b9 !important;
+}
+html[data-theme="dark"] .audit-pill--crear {
+    background: #18261c !important;
+    border-color: #285033 !important;
+    color: #8fe0a2 !important;
+}
+html[data-theme="dark"] .audit-pill--eliminar {
+    background: #2b1b14 !important;
+    border-color: #6b4324 !important;
+    color: #ffc08a !important;
 }
 
 /* Custom select */
