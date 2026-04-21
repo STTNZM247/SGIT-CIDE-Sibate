@@ -25,10 +25,6 @@
   font-size: 0.88rem;
   font-weight: 800;
   letter-spacing: 0.1em;
-html[data-theme="dark"] .pedidos-page__eyebrow {
-  color: #7dd87d;
-}
-
   text-transform: uppercase;
 }
 
@@ -1075,5 +1071,153 @@ html[data-theme="dark"] .pedidos-page__eyebrow {
 
   .pedido-product-grid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}
+
+html[data-theme="dark"] .pedidos-page__eyebrow {
+  color: #7dd87d !important;
+}
+
+html[data-theme="dark"] .pedidos-page__hero h1 {
+  color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .pedidos-page__hero p:not(.pedidos-page__eyebrow) {
+  color: #91a891 !important;
+}
+
+html[data-theme="dark"] .pedidos-page__summary,
+html[data-theme="dark"] .pedidos-page__summary span,
+html[data-theme="dark"] .pedidos-page__summary ion-icon {
+  background: #182018 !important;
+  color: #8fe0a2 !important;
+  border-color: #27452f !important;
+}
+
+html[data-theme="dark"] .pedido-row {
+  background: #111611 !important;
+  border-color: #253025 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22) !important;
+}
+
+html[data-theme="dark"] .pedido-row:hover {
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28) !important;
+}
+
+html[data-theme="dark"] .pedido-row > div + div {
+  border-left-color: #1f2b1f !important;
+}
+
+html[data-theme="dark"] .pedido-row__avatar {
+  background: linear-gradient(135deg, #182018, #223022) !important;
+  color: #7dd87d !important;
+}
+
+html[data-theme="dark"] .pedido-row__usuario strong,
+html[data-theme="dark"] .pedido-row__meta-item strong {
+  color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .pedido-row__usuario span,
+html[data-theme="dark"] .pedido-row__label,
+html[data-theme="dark"] .pedido-row__meta-item span,
+html[data-theme="dark"] .pedido-row__unidades {
+  color: #91a891 !important;
+}
+
+html[data-theme="dark"] .pedido-row__id,
+html[data-theme="dark"] .pedido-row__empty {
+  color: #8ea88e !important;
+}
+
+html[data-theme="dark"] .pedido-row__individual {
+  background: #182018 !important;
+  color: #8fe0a2 !important;
+  border-color: #27452f !important;
+}
+
+html[data-theme="dark"] .pedido-row__meta-item strong em {
+  color: #8fe0a2 !important;
+}
+
+html[data-theme="dark"] .pedido-row__carnet-ok,
+html[data-theme="dark"] .pedido-row__carnet-ok ion-icon {
+  color: #8fe0a2 !important;
+}
+
+html[data-theme="dark"] .pedido-row__carnet-missing {
+  background: #241515 !important;
+  color: #ffb0b0 !important;
+  border-color: #6d2c2c !important;
+}
+
+html[data-theme="dark"] .pedido-row__carnet-missing ion-icon {
+  color: #ffb0b0 !important;
+}
+
+html[data-theme="dark"] .pedido-row__btn-detalle {
+  background: #182018 !important;
+  color: #8fe0a2 !important;
+  border-color: #27452f !important;
+}
+
+html[data-theme="dark"] .pedido-row__btn-detalle:hover {
+  background: #1e2a1e !important;
+  border-color: #2f5638 !important;
+}
+
+html[data-theme="dark"] .pedidos-estado--pendiente {
+  background: #2b2412 !important;
+  color: #f2d37b !important;
+  border-color: #7a6526 !important;
+}
+
+html[data-theme="dark"] .pedidos-estado--esperando-entrega {
+  background: #152235 !important;
+  color: #8ec5ff !important;
+  border-color: #2d4d78 !important;
+}
+
+html[data-theme="dark"] .pedidos-estado--entregado,
+html[data-theme="dark"] .pedidos-estado--aprobado {
+  background: #182018 !important;
+  color: #8fe0a2 !important;
+  border-color: #27452f !important;
+}
+
+html[data-theme="dark"] .pedidos-estado--rechazado {
+  background: #241515 !important;
+  color: #ffb0b0 !important;
+  border-color: #6d2c2c !important;
+}
+
+html[data-theme="dark"] .pedidos-empty {
+  background: linear-gradient(180deg, #111611, #0f140f) !important;
+  border-color: #253025 !important;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.22) !important;
+}
+
+html[data-theme="dark"] .pedidos-empty__icon {
+  background: #182018 !important;
+  color: #7dd87d !important;
+}
+
+html[data-theme="dark"] .pedidos-empty h2 {
+  color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .pedidos-empty p {
+  color: #91a891 !important;
+}
+
+@media (max-width: 860px) {
+  html[data-theme="dark"] .pedido-row__usuario {
+    border-bottom-color: #253025 !important;
+  }
+}
+
+@media (max-width: 600px) {
+  html[data-theme="dark"] .pedido-row > div + div {
+    border-top-color: #253025 !important;
   }
 }
