@@ -41,3 +41,17 @@
         font-size: .93rem;
     }
 }
+
+html[data-theme="dark"] .product-detail-quick__item {
+    background: #161e16 !important;
+    border-color: #253025 !important;
+    box-shadow: none !important;
+}
+
+html[data-theme="dark"] .product-detail-quick__label {
+    color: #90b090 !important;
+}
+
+html[data-theme="dark"] .product-detail-quick__value {
+    color: #e2ede2 !important;
+}

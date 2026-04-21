@@ -43,3 +43,25 @@
     height: 1.3em;
     color: #fff;
 }
+
+html[data-theme="dark"] .temu-searchbar {
+    background: #141b14 !important;
+    border-color: #253025 !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,.18) !important;
+}
+
+html[data-theme="dark"] .temu-searchbar input[type="search"] {
+    color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .temu-searchbar input[type="search"]::placeholder {
+    color: #6f876f !important;
+}
+
+html[data-theme="dark"] .temu-searchbar button {
+    background: #202620 !important;
+}
+
+html[data-theme="dark"] .temu-searchbar button:hover {
+    background: #2a332a !important;
+}

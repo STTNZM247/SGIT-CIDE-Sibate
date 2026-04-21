@@ -1516,6 +1516,7 @@ html[data-theme="dark"] .product-modal__header { background: #111611 !important;
 html[data-theme="dark"] .product-modal__title { color: #e2ede2 !important; }
 html[data-theme="dark"] .product-modal__close { background: #161e16 !important; color: #c4d8c4 !important; }
 html[data-theme="dark"] .product-modal__img, html[data-theme="dark"] .product-modal__placeholder { background: #161e16 !important; border-color: #253025 !important; }
+html[data-theme="dark"] .product-modal__content { background: #111611 !important; }
 html[data-theme="dark"] .product-modal__danger { border-top-color: #253025 !important; }
 html[data-theme="dark"] .modal { background: #111611 !important; }
 html[data-theme="dark"] .modal__header { background: #111611 !important; border-bottom-color: #253025 !important; }

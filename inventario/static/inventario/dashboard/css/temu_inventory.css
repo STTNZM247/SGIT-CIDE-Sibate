@@ -117,3 +117,42 @@
         padding: .7rem .5rem .8rem .5rem;
     }
 }
+
+html[data-theme="dark"] .temu-card {
+    background: #111611 !important;
+    border-color: #253025 !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,.35) !important;
+}
+
+html[data-theme="dark"] .temu-card:hover {
+    box-shadow: 0 8px 32px rgba(66,165,245,.10) !important;
+    border-color: #1e2b1e !important;
+}
+
+html[data-theme="dark"] .temu-card__media {
+    background: #161e16 !important;
+}
+
+html[data-theme="dark"] .temu-card__placeholder {
+    color: #4f634f !important;
+}
+
+html[data-theme="dark"] .temu-card__name {
+    color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .temu-card__cat {
+    color: #7dd87d !important;
+}
+
+html[data-theme="dark"] .temu-card__desc {
+    color: #b8d0b8 !important;
+}
+
+html[data-theme="dark"] .temu-card__meta {
+    color: #b8d0b8 !important;
+}
+
+html[data-theme="dark"] .temu-card__meta ion-icon {
+    color: #39A900 !important;
+}
