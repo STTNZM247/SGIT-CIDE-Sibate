@@ -841,3 +841,341 @@
     width: 100%;
   }
 }
+
+/* =====================================================
+   DARK MODE
+   ===================================================== */
+html[data-theme="dark"] .prestamos-eyebrow {
+  color: #7dd87d !important;
+}
+
+html[data-theme="dark"] .prestamos-hero h1 {
+  color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .prestamos-hero p:not(.prestamos-eyebrow) {
+  color: #91a891 !important;
+}
+
+html[data-theme="dark"] .prestamos-hero-badge--ok {
+  background: #182018 !important;
+  color: #7dd87d !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .prestamos-hero-badge--warn {
+  background: #2a1515 !important;
+  color: #ffb0b0 !important;
+  border-color: #6d2c2c !important;
+}
+
+html[data-theme="dark"] .prestamos-flash--success {
+  background: #0d1e0d !important;
+  color: #7dd87d !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .prestamos-flash--error {
+  background: #2a1515 !important;
+  color: #ffb0b0 !important;
+  border-color: #6d2c2c !important;
+}
+
+html[data-theme="dark"] .prestamos-stat-tile {
+  background: #111611 !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .prestamos-stat-tile span {
+  color: #8ea88e !important;
+}
+
+html[data-theme="dark"] .prestamos-stat-tile strong {
+  color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .prestamos-stat-tile--vencido {
+  background: #2a1515 !important;
+  border-color: #6d2c2c !important;
+}
+
+html[data-theme="dark"] .prestamos-stat-tile--vencido strong {
+  color: #ffb0b0 !important;
+}
+
+html[data-theme="dark"] .prestamos-stat-tile--devuelto {
+  background: #141f16 !important;
+  border-color: #27452f !important;
+}
+
+html[data-theme="dark"] .prestamos-stat-tile--devuelto strong {
+  color: #8fe0a2 !important;
+}
+
+html[data-theme="dark"] .prestamos-stat-tile--cancelado {
+  background: #241515 !important;
+  border-color: #5b2d2d !important;
+}
+
+html[data-theme="dark"] .prestamos-stat-tile--cancelado strong {
+  color: #ffb0b0 !important;
+}
+
+html[data-theme="dark"] .prestamos-filtro {
+  background: #141b14 !important;
+  border-color: #253025 !important;
+  color: #c8dcc8 !important;
+}
+
+html[data-theme="dark"] .prestamos-filtro strong {
+  background: #182018 !important;
+  color: #7dd87d !important;
+}
+
+html[data-theme="dark"] .prestamos-filtro.is-active {
+  border-color: #39A900 !important;
+  background: #182018 !important;
+  color: #7dd87d !important;
+}
+
+html[data-theme="dark"] .prestamos-filtro--vencido strong {
+  background: #2a1515 !important;
+  color: #ffb0b0 !important;
+}
+
+html[data-theme="dark"] .prestamos-filtro--vencido.is-active {
+  border-color: #6d2c2c !important;
+  background: #2a1515 !important;
+  color: #ffb0b0 !important;
+}
+
+html[data-theme="dark"] .prestamos-filtro--devuelto strong {
+  background: #141f16 !important;
+  color: #8fe0a2 !important;
+}
+
+html[data-theme="dark"] .prestamos-filtro--devuelto.is-active {
+  border-color: #27452f !important;
+  background: #141f16 !important;
+  color: #8fe0a2 !important;
+}
+
+html[data-theme="dark"] .prestamos-filtro--cancelado strong {
+  background: #2a1515 !important;
+  color: #ffb0b0 !important;
+}
+
+html[data-theme="dark"] .prestamos-filtro--cancelado.is-active {
+  border-color: #6d2c2c !important;
+  background: #241515 !important;
+  color: #ffb0b0 !important;
+}
+
+html[data-theme="dark"] .prestamos-list-header {
+  color: #8ea88e !important;
+}
+
+html[data-theme="dark"] .prestamo-row {
+  background: #111611 !important;
+  border-color: #253025 !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18) !important;
+}
+
+html[data-theme="dark"] .prestamo-row:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24) !important;
+}
+
+html[data-theme="dark"] .prestamo-row--vencido {
+  background: #211414 !important;
+  border-color: #6d2c2c !important;
+}
+
+html[data-theme="dark"] .prestamo-row--cancelado {
+  background: #241515 !important;
+  border-color: #6d2c2c !important;
+  opacity: 0.9 !important;
+}
+
+html[data-theme="dark"] .prestamo-row--devuelto {
+  background: #111911 !important;
+  border-color: #27452f !important;
+}
+
+html[data-theme="dark"] .prestamo-row > div {
+  border-right-color: #1f2b1f !important;
+}
+
+html[data-theme="dark"] .prestamo-row__avatar {
+  border-color: #27452f !important;
+}
+
+html[data-theme="dark"] .prestamo-row__avatar-placeholder {
+  background: #182018 !important;
+  border-color: #253025 !important;
+  color: #7dd87d !important;
+}
+
+html[data-theme="dark"] .prestamo-row__nombre,
+html[data-theme="dark"] .prestamo-row__fecha strong,
+html[data-theme="dark"] .prestamo-producto-item__name {
+  color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .prestamo-row__meta,
+html[data-theme="dark"] .prestamo-row__fecha small,
+html[data-theme="dark"] .prestamo-row__estado-meta,
+html[data-theme="dark"] .prestamo-producto-item__meta span {
+  color: #91a891 !important;
+}
+
+html[data-theme="dark"] .prestamo-row__area {
+  color: #c8dcc8 !important;
+}
+
+html[data-theme="dark"] .prestamo-row__tipo {
+  background: #182018 !important;
+  border-color: #253025 !important;
+  color: #8fe0a2 !important;
+}
+
+html[data-theme="dark"] .prestamo-badge--ok,
+html[data-theme="dark"] .prestamo-badge--devuelto {
+  background: #182018 !important;
+  color: #8fe0a2 !important;
+  border-color: #27452f !important;
+}
+
+html[data-theme="dark"] .prestamo-badge--vencido,
+html[data-theme="dark"] .prestamo-badge--cancelado {
+  background: #2a1515 !important;
+  color: #ffb0b0 !important;
+  border-color: #6d2c2c !important;
+}
+
+html[data-theme="dark"] .prestamo-badge--sin-fecha {
+  background: #161e16 !important;
+  color: #a4b7a4 !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .prestamo-btn--detail {
+  background: #182018 !important;
+  color: #7dd87d !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .prestamo-btn--aviso {
+  background: #2a1515 !important;
+  color: #ffb0b0 !important;
+  border-color: #6d2c2c !important;
+}
+
+html[data-theme="dark"] .prestamo-btn--return {
+  background: #182018 !important;
+  color: #8fe0a2 !important;
+  border-color: #27452f !important;
+}
+
+html[data-theme="dark"] .prestamo-modal-confirm {
+  background: #111611 !important;
+  border-color: #253025 !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35) !important;
+}
+
+html[data-theme="dark"] .prestamo-modal-confirm__icon {
+  background: #182018 !important;
+  border-color: #27452f !important;
+  color: #8fe0a2 !important;
+}
+
+html[data-theme="dark"] .prestamo-modal-confirm__title,
+html[data-theme="dark"] .prestamo-modal-confirm__text strong {
+  color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .prestamo-modal-confirm__text,
+html[data-theme="dark"] .prestamo-modal-confirm__field label {
+  color: #91a891 !important;
+}
+
+html[data-theme="dark"] .prestamo-modal-confirm__field input {
+  background: #161e16 !important;
+  border-color: #253025 !important;
+  color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .prestamo-modal-confirm__field input:focus {
+  border-color: #42a5f5 !important;
+  box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.18) !important;
+}
+
+html[data-theme="dark"] .prestamo-modal-confirm__btn--back {
+  background: #161e16 !important;
+  color: #c8dcc8 !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .prestamo-modal-confirm__btn--confirm {
+  background: #1f6fda !important;
+  border-color: #1758ae !important;
+}
+
+html[data-theme="dark"] .prestamos-empty {
+  background: linear-gradient(180deg, #111611, #0f140f) !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .prestamos-empty__icon {
+  background: #182018 !important;
+  color: #7dd87d !important;
+}
+
+html[data-theme="dark"] .prestamos-empty h2 {
+  color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .prestamos-empty p {
+  color: #91a891 !important;
+}
+
+html[data-theme="dark"] .prestamo-productos-toggle {
+  background: #141b14 !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .prestamo-productos-toggle summary {
+  color: #c8dcc8 !important;
+}
+
+html[data-theme="dark"] .prestamo-productos-summary-meta em {
+  color: #91a891 !important;
+}
+
+html[data-theme="dark"] .prestamo-productos-summary-meta strong {
+  background: #182018 !important;
+  border-color: #253025 !important;
+  color: #8fe0a2 !important;
+}
+
+html[data-theme="dark"] .prestamo-producto-item {
+  background: #111611 !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .prestamo-producto-item__qty {
+  background: #182018 !important;
+  color: #8fe0a2 !important;
+}
+
+@media (max-width: 860px) {
+  html[data-theme="dark"] .prestamo-row__usuario,
+  html[data-theme="dark"] .prestamo-row__actions {
+    border-color: #253025 !important;
+  }
+}
+
+@media (max-width: 580px) {
+  html[data-theme="dark"] .prestamo-row > div {
+    border-bottom-color: #253025 !important;
+  }
+}
