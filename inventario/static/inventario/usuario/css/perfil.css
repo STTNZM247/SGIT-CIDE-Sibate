@@ -77,15 +77,16 @@
   pointer-events: none;
 }
 
-/* Capa de color encima — multiply tiñe las olas con el color elegido */
+/* Capa de color — solo activa en preview (antes de guardar), vía CSS var */
 .perfil-cover::after {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 2;
-  background: var(--cover-color, #39A900);
+  background: var(--cover-color, transparent);
   mix-blend-mode: multiply;
   pointer-events: none;
+  /* Solo visible cuando hay --cover-color activo en preview, no cuando hay banner */
 }
 
 .perfil-cover-img {

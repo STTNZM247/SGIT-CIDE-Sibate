@@ -422,18 +422,42 @@ html[data-theme="dark"] #perfil-cover-trigger * {
       document.querySelectorAll('.perfil-cover-color').forEach(function (b) { b.classList.remove('is-selected'); });
       this.classList.add('is-selected');
       coverPicker.classList.remove('is-open');
+      /* Dibujar textura de olas + tinte de color en canvas */
       var canvas = document.createElement('canvas');
       canvas.width = 1200; canvas.height = 400;
       var ctx = canvas.getContext('2d');
-      ctx.fillStyle = color;
-      ctx.fillRect(0, 0, 1200, 400);
-      canvas.toBlob(function (blob) {
-        saveBanner(blob, 'portada-color.png');
-        /* Mantener también en el input por si el usuario guarda el form completo */
-        var dt = new DataTransfer();
-        dt.items.add(new File([blob], 'portada-color.png', { type: 'image/png' }));
-        coverInput.files = dt.files;
-      });
+      var olaImg = new Image();
+      olaImg.crossOrigin = 'anonymous';
+      olaImg.src = "{% static 'inventario/img/5623406.jpg' %}";
+      olaImg.onload = function () {
+        /* 1. Fondo blanco */
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 1200, 400);
+        /* 2. Imagen de olas */
+        ctx.drawImage(olaImg, 0, 0, 1200, 400);
+        /* 3. Capa de color con multiply */
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, 1200, 400);
+        ctx.globalCompositeOperation = 'source-over';
+        canvas.toBlob(function (blob) {
+          saveBanner(blob, 'portada-color.png');
+          var dt = new DataTransfer();
+          dt.items.add(new File([blob], 'portada-color.png', { type: 'image/png' }));
+          coverInput.files = dt.files;
+        });
+      };
+      olaImg.onerror = function () {
+        /* Fallback: solo color sólido si falla la carga de imagen */
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, 1200, 400);
+        canvas.toBlob(function (blob) {
+          saveBanner(blob, 'portada-color.png');
+          var dt = new DataTransfer();
+          dt.items.add(new File([blob], 'portada-color.png', { type: 'image/png' }));
+          coverInput.files = dt.files;
+        });
+      };
     });
   });
 
