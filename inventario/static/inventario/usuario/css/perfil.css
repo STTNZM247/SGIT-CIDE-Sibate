@@ -70,14 +70,20 @@
   inset: 0;
   z-index: 3;
   background-image:
-    radial-gradient(circle, rgba(255,255,255,0.75) 1.4px, transparent 1.4px);
+    radial-gradient(circle, rgba(110,125,110,0.7) 1.5px, transparent 1.5px);
   background-size: 14px 14px;
   background-position: 7px 7px;
   opacity: 1;
   pointer-events: none;
-  /* Viñeta: los puntos son más densos en las esquinas y se desvanecen al centro */
-  -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, transparent 20%, black 80%);
-  mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, transparent 20%, black 80%);
+  /* Esquina inferior-izquierda y superior-derecha solamente */
+  -webkit-mask-image:
+    radial-gradient(ellipse 65% 70% at 2% 98%, black 0%, transparent 100%),
+    radial-gradient(ellipse 65% 70% at 98% 2%, black 0%, transparent 100%);
+  -webkit-mask-composite: source-over;
+  mask-image:
+    radial-gradient(ellipse 65% 70% at 2% 98%, black 0%, transparent 100%),
+    radial-gradient(ellipse 65% 70% at 98% 2%, black 0%, transparent 100%);
+  mask-composite: add;
 }
 
 .perfil-cover::after {
@@ -147,7 +153,7 @@
   justify-content: center;
   margin-top: -76px;
   position: relative;
-  z-index: 2;
+  z-index: 5;
   padding: 0 24px;
 }
 
@@ -627,7 +633,7 @@ html[data-theme="dark"] .perfil-cover {
 /* Patrón de puntos halftone — modo oscuro */
 html[data-theme="dark"] .perfil-cover::before {
   background-image:
-    radial-gradient(circle, rgba(255,255,255,0.55) 1.4px, transparent 1.4px) !important;
+    radial-gradient(circle, rgba(255,255,255,0.6) 1.5px, transparent 1.5px) !important;
   opacity: 1 !important;
 }
 
