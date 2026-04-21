@@ -1908,3 +1908,49 @@ html[data-theme="dark"] .custom-select__arrow {
     color: #6a8a6a !important;
 }
 
+/* Ajustes finos pendientes del dashboard */
+html[data-theme="dark"] .admin-resumen {
+    background: linear-gradient(135deg, #111611 0%, #0d120d 42%, #162016 100%) !important;
+    border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .admin-pending-table-wrap {
+    background: #111611 !important;
+    border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .admin-kpi-pie__center,
+html[data-theme="dark"] .admin-pie__center {
+    background: #0f160f !important;
+    box-shadow: inset 0 0 0 1px #253025;
+}
+
+html[data-theme="dark"] .admin-kpi-pie__center strong,
+html[data-theme="dark"] .admin-pie__center strong,
+html[data-theme="dark"] .admin-pie__center span,
+html[data-theme="dark"] .admin-kpi-pie-legend strong,
+html[data-theme="dark"] .admin-legend li,
+html[data-theme="dark"] .line-window {
+    color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .admin-legend li {
+    background: #141b14 !important;
+    border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .admin-pie,
+html[data-theme="dark"] .admin-kpi-pie {
+    box-shadow: inset 0 0 0 1px rgba(80, 108, 80, .25) !important;
+}
+
+html[data-theme="dark"] .admin-line-chart svg {
+    background: #0f160f !important;
+    border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .admin-line-labels,
+html[data-theme="dark"] .admin-line-legend {
+    color: #b8d0b8 !important;
+}
+
