@@ -361,6 +361,10 @@
   padding: 18px;
 }
 
+.validacion-sena-camera-modal[hidden] {
+  display: none;
+}
+
 .validacion-sena-camera-modal__dialog {
   width: min(520px, 100%);
   max-height: min(92vh, 820px);

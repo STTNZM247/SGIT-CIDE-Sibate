@@ -237,29 +237,22 @@
                 return;
             }
 
-            var settled = false;
+            var attempts = 0;
 
-            function cleanup() {
-                video.removeEventListener('loadedmetadata', onReady);
-                video.removeEventListener('canplay', onReady);
+            function checkReady() {
+                attempts += 1;
+                if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+                    resolve();
+                    return;
+                }
+                if (attempts >= 20) {
+                    reject(new Error('video-timeout'));
+                    return;
+                }
+                window.setTimeout(checkReady, 200);
             }
 
-            function onReady() {
-                if (settled) return;
-                settled = true;
-                cleanup();
-                resolve();
-            }
-
-            video.addEventListener('loadedmetadata', onReady, { once: true });
-            video.addEventListener('canplay', onReady, { once: true });
-
-            window.setTimeout(function () {
-                if (settled) return;
-                settled = true;
-                cleanup();
-                reject(new Error('video-timeout'));
-            }, 4000);
+            checkReady();
         });
     }
 
@@ -346,7 +339,8 @@
             stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: { ideal: 'environment' },
-                    aspectRatio: { ideal: 0.63 }
+                    width: { ideal: 720 },
+                    height: { ideal: 1280 }
                 },
                 audio: false
             });
@@ -357,8 +351,8 @@
             video.setAttribute('playsinline', 'playsinline');
             video.setAttribute('webkit-playsinline', 'webkit-playsinline');
             video.muted = true;
-            await waitForVideoReady();
             await video.play();
+            await waitForVideoReady();
             setCameraStatus('', false);
         } catch (error) {
             stopCamera();
