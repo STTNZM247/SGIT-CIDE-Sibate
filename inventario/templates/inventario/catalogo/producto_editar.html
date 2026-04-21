@@ -7,60 +7,112 @@
 {% endblock %}
 
 {% block content %}
-<div class="product-detail-page">
-    <a class="cat-btn cat-btn--secondary" href="{% url 'productos_catalogo' producto.id_cat_fk.id_cat %}">
-        <ion-icon name="arrow-back-outline"></ion-icon>
-        Volver a productos
-    </a>
-    <div class="product-modal__header">
-        <h1 class="product-modal__title">Editar producto</h1>
+<section class="product-edit-page">
+    <div class="product-edit-page__topbar">
+        <a class="cat-btn cat-btn--secondary" href="{% url 'productos_catalogo' producto.id_cat_fk.id_cat %}">
+            <ion-icon name="arrow-back-outline"></ion-icon>
+            Volver a productos
+        </a>
     </div>
-    <form method="post" enctype="multipart/form-data" class="modal__form" style="max-width:600px;margin:auto;">
-        {% csrf_token %}
-        <div class="mf-group">
-            <label class="mf-label">Nombre del producto *</label>
-            <input type="text" name="nombre_producto" class="form-input" value="{{ producto.nombre_producto }}" required>
-        </div>
-        <div class="mf-group">
-            <label class="mf-label">Descripción</label>
-            <textarea name="descripcion" class="form-input form-textarea" rows="3">{{ producto.descripcion }}</textarea>
-        </div>
-        <div class="mf-group">
-            <label class="mf-label">Catálogo *</label>
-            <select name="id_cat_fk" class="form-input form-select" required>
-                {% for cat in catalogos %}
-                <option value="{{ cat.id_cat }}" {% if cat.id_cat == producto.id_cat_fk.id_cat %}selected{% endif %}>{{ cat.nombre_catalogo }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="mf-row">
-            <div class="mf-group">
-                <label class="mf-label">Stock fijo *</label>
-                <input type="number" name="stock" class="form-input" min="0" value="{{ disponibilidad.stock|default:'0' }}" required>
+
+    <div class="product-edit-shell">
+        <header class="product-edit-shell__header">
+            <div>
+                <p class="product-edit-shell__eyebrow">Catálogo · {{ producto.id_cat_fk.nombre_catalogo }}</p>
+                <h1 class="product-edit-shell__title">Editar producto</h1>
+                <p class="product-edit-shell__subtitle">Actualiza la información principal, disponibilidad y fotografía del producto.</p>
             </div>
-            <div class="mf-group">
-                <label class="mf-label">Cantidad actual *</label>
-                <input type="number" name="cantidad" class="form-input" min="0" value="{{ disponibilidad.cantidad|default:'0' }}" required>
-            </div>
+        </header>
+
+        <div class="product-edit-layout">
+            <form method="post" enctype="multipart/form-data" class="product-edit-form">
+                {% csrf_token %}
+
+                <section class="product-edit-card">
+                    <div class="product-edit-card__head">
+                        <h2>Información general</h2>
+                    </div>
+
+                    <div class="mf-group">
+                        <label class="mf-label">Nombre del producto *</label>
+                        <input type="text" name="nombre_producto" class="form-input" value="{{ producto.nombre_producto }}" required>
+                    </div>
+
+                    <div class="mf-group">
+                        <label class="mf-label">Descripción</label>
+                        <textarea name="descripcion" class="form-input form-textarea" rows="4">{{ producto.descripcion }}</textarea>
+                    </div>
+
+                    <div class="mf-group">
+                        <label class="mf-label">Catálogo *</label>
+                        <select name="id_cat_fk" class="form-input form-select" required>
+                            {% for cat in catalogos %}
+                            <option value="{{ cat.id_cat }}" {% if cat.id_cat == producto.id_cat_fk.id_cat %}selected{% endif %}>{{ cat.nombre_catalogo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </section>
+
+                <section class="product-edit-card">
+                    <div class="product-edit-card__head">
+                        <h2>Inventario y disponibilidad</h2>
+                    </div>
+
+                    <div class="mf-row">
+                        <div class="mf-group">
+                            <label class="mf-label">Stock fijo *</label>
+                            <input type="number" name="stock" class="form-input" min="0" value="{{ disponibilidad.stock|default:'0' }}" required>
+                        </div>
+                        <div class="mf-group">
+                            <label class="mf-label">Cantidad actual *</label>
+                            <input type="number" name="cantidad" class="form-input" min="0" value="{{ disponibilidad.cantidad|default:'0' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mf-group">
+                        <label class="mf-label">Descripción de disponibilidad</label>
+                        <textarea name="descr_dispo" class="form-input form-textarea" rows="3">{{ disponibilidad.descr_dispo }}</textarea>
+                    </div>
+                </section>
+
+                <div class="product-edit-actions">
+                    <a href="{% url 'producto_detalle' producto.id_prod %}" class="cat-btn cat-btn--ghost">Cancelar</a>
+                    <button type="submit" class="cat-btn cat-btn--primary">
+                        <ion-icon name="save-outline"></ion-icon>
+                        Guardar cambios
+                    </button>
+                </div>
+            </form>
+
+            <aside class="product-edit-card product-edit-card--aside">
+                <div class="product-edit-card__head">
+                    <h2>Foto del producto</h2>
+                </div>
+
+                <div class="product-edit-preview">
+                    {% if producto.fot_prod %}
+                    <img src="{{ producto.fot_prod.url }}" alt="{{ producto.nombre_producto }}" class="product-edit-preview__img">
+                    {% else %}
+                    <div class="product-edit-preview__placeholder">
+                        <ion-icon name="image-outline"></ion-icon>
+                        <span>Sin fotografía</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <label class="file-upload-zone product-edit-upload-zone">
+                    <ion-icon name="cloud-upload-outline"></ion-icon>
+                    <span class="file-upload-zone__text">Seleccionar nueva imagen</span>
+                    <span class="file-upload-zone__hint">JPG, PNG o WEBP. Se reemplaza solo si eliges un archivo.</span>
+                    <input type="file" name="fot_prod" class="form-file" accept="image/*">
+                </label>
+
+                <div class="product-edit-note">
+                    <ion-icon name="information-circle-outline"></ion-icon>
+                    <span>La imagen actual se conservará si no cargas una nueva.</span>
+                </div>
+            </aside>
         </div>
-        <div class="mf-group">
-            <label class="mf-label">Descripción de disponibilidad</label>
-            <textarea name="descr_dispo" class="form-input form-textarea" rows="2">{{ disponibilidad.descr_dispo }}</textarea>
-        </div>
-        <div class="mf-group">
-            <label class="mf-label">Foto del producto</label>
-            {% if producto.fot_prod %}
-            <img src="{{ producto.fot_prod.url }}" alt="{{ producto.nombre_producto }}" style="max-width:180px;display:block;margin-bottom:8px;">
-            {% endif %}
-            <input type="file" name="fot_prod" class="form-file" accept="image/*">
-        </div>
-        <div class="modal__actions">
-            <a href="{% url 'producto_detalle' producto.id_prod %}" class="cat-btn cat-btn--ghost">Cancelar</a>
-            <button type="submit" class="cat-btn cat-btn--primary">
-                <ion-icon name="save-outline"></ion-icon>
-                Guardar cambios
-            </button>
-        </div>
-    </form>
-</div>
+    </div>
+</section>
 {% endblock %}
