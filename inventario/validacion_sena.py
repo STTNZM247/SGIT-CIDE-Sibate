@@ -1,7 +1,28 @@
+import base64
 import re
 import unicodedata
 
+from django.core.files.base import ContentFile
+
 from PIL import Image, ImageOps
+
+
+def cargar_captura_desde_data_url(data_url):
+    data_url = (data_url or '').strip()
+    if not data_url or ';base64,' not in data_url:
+        return None
+
+    header, encoded = data_url.split(';base64,', 1)
+    extension = 'png'
+    if '/' in header:
+        extension = header.split('/')[-1] or 'png'
+
+    try:
+        binary = base64.b64decode(encoded)
+    except Exception:
+        return None
+
+    return ContentFile(binary, name=f'captura-carnet.{extension}')
 
 
 def normalizar_texto(texto):

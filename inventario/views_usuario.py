@@ -13,7 +13,7 @@ import secrets
 
 from .db_compat import get_safe_usuario_value, get_usuario_model_from_instance, usuario_supports_verificacion_sena
 from .models import CarritoItem, DetallePedido, Disponibilidad, Notificacion, Pedido, Producto, VerificacionSenaToken
-from .validacion_sena import cargar_imagen_validacion, intentar_validacion_automatica
+from .validacion_sena import cargar_captura_desde_data_url, cargar_imagen_validacion, intentar_validacion_automatica
 from .views import _auto_cancelar_pedidos_pendientes_vencidos, _crear_notificacion, _notificar_staff, _registrar_auditoria
 
 
@@ -164,6 +164,8 @@ def validacion_sena(request):
 
     if request.method == 'POST':
         foto_validacion = request.FILES.get('foto_validacion')
+        if not foto_validacion:
+            foto_validacion = cargar_captura_desde_data_url(request.POST.get('foto_validacion_captura'))
         resultado_ocr = intentar_validacion_automatica(foto_validacion, usuario)
         ahora = timezone.now()
 

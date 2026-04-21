@@ -75,6 +75,7 @@
                     </div>
                     <span class="validacion-sena-capture__subhint">Recomendado: usa la cámara guiada. La opción de galería/archivo es solo respaldo y no muestra la plantilla.</span>
                     <input type="file" id="foto_validacion" name="foto_validacion" accept="image/*" required>
+                    <input type="hidden" id="foto_validacion_captura" name="foto_validacion_captura">
                     <img id="foto_validacion_preview" alt="Vista previa del carnet" hidden>
                 </div>
 
@@ -203,6 +204,7 @@
     var capturarFoto = document.getElementById('capturar_foto_guiada');
     var video = document.getElementById('validacion_sena_camera_video');
     var cameraStatus = document.getElementById('validacion_sena_camera_status');
+    var captureDataInput = document.getElementById('foto_validacion_captura');
     var inlineAlert = document.getElementById('validacion_sena_inline_alert');
     var stream = null;
 
@@ -272,10 +274,15 @@
     }
 
     function setFileToInput(file) {
-        var dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        input.files = dataTransfer.files;
-        input.dispatchEvent(new Event('change', { bubbles: true }));
+        try {
+            var dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            input.files = dataTransfer.files;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            return true;
+        } catch (error) {
+            return false;
+        }
     }
 
     function validateVerticalFile(file) {
@@ -310,12 +317,18 @@
         validateVerticalFile(file).then(function (result) {
             if (!result.ok) {
                 input.value = '';
+                if (captureDataInput) {
+                    captureDataInput.value = '';
+                }
                 preview.hidden = true;
                 preview.removeAttribute('src');
                 showInlineAlert('La foto del carnet debe estar en vertical. Gira el celular y vuelve a intentarlo.');
                 return;
             }
 
+            if (captureDataInput) {
+                captureDataInput.value = '';
+            }
             clearInlineAlert();
             var reader = new FileReader();
             reader.onload = function (event) {
@@ -430,7 +443,17 @@
                     return;
                 }
                 var file = new File([blob], 'carnet-sena-captura.png', { type: 'image/png' });
-                setFileToInput(file);
+                var previewUrl = canvas.toDataURL('image/png', 0.95);
+                var assignedToInput = setFileToInput(file);
+                if (captureDataInput) {
+                    captureDataInput.value = previewUrl;
+                }
+                preview.src = previewUrl;
+                preview.hidden = false;
+                clearInlineAlert();
+                if (!assignedToInput) {
+                    showInlineAlert('La foto quedó capturada. Si no ves el archivo adjunto, igual puedes pulsar Validar ahora.');
+                }
                 stopCamera();
             }, 'image/png', 0.95);
         });
