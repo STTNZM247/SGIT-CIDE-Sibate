@@ -10,8 +10,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         const allItems = Array.from(navList.querySelectorAll(".list"));
         const activeIdx = allItems.findIndex((li) => li.classList.contains("active"));
+        const indicator = navList.querySelector(".indicator");
+        if (activeIdx < 0) {
+            if (indicator) indicator.style.display = "none";
+            return;
+        }
+        if (indicator) indicator.style.display = "";
         navList.style.setProperty("--nav-items", String(Math.max(allItems.length, 1)));
-        navList.style.setProperty("--active-index", String(activeIdx >= 0 ? activeIdx : 0));
+        navList.style.setProperty("--active-index", String(activeIdx));
     };
 
     const setActive = (targetItem) => {
@@ -26,6 +32,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const parsed = new URL(url, window.location.origin);
         const path = parsed.pathname;
 
+        // Notificaciones usuario — no pertenece a ningún ítem del navbar
+        if (path.startsWith("/usuario/notificaciones/")) {
+            return null;
+        }
         // Panel usuario (productos)
         if (path === "/panel_usuario/" || path === "/usuario/inventario/") {
             return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/panel_usuario/")?.closest(".list") ||
