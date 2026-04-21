@@ -100,10 +100,13 @@
                     </button>
                 </form>
                 {% else %}
-                <span class="notif-leida-label">
-                    <ion-icon name="checkmark-done-outline"></ion-icon>
-                    Leída
-                </span>
+                <div class="notif-read-meta">
+                    <span class="notif-leida-label">
+                        <ion-icon name="checkmark-done-outline"></ion-icon>
+                        Leída
+                    </span>
+                    <span class="notif-leida-hora">{{ noti.fch_registro|date:"g:i A" }}</span>
+                </div>
                 {% endif %}
             </div>
 

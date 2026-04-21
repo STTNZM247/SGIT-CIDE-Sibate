@@ -232,7 +232,15 @@
     flex-shrink: 0;
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     padding-top: 2px;
+}
+
+.notif-read-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
 }
 
 .btn-leida {
@@ -269,7 +277,14 @@
     color: #39c0ba;
 }
 
-/* --- Notificaciones LEÍDAS — apagadas ------------------------------------ */
+.notif-leida-hora {
+    font-size: 0.72rem;
+    line-height: 1;
+    color: #9ca3af;
+    white-space: nowrap;
+}
+
+/* --- Notificaciones LEï¿½DAS ï¿½ apagadas ------------------------------------ */
 .notif-card:not(.notif-unread) {
     background: #f6f6f7;
     border-color: #e0e0e3;
@@ -332,6 +347,9 @@ html[data-theme="dark"] .notif-leida-label {
 html[data-theme="dark"] .notif-leida-label ion-icon {
     color: #39c0ba !important;
 }
+html[data-theme="dark"] .notif-leida-hora {
+    color: #5a6e5a !important;
+}
 html[data-theme="dark"] .btn-marcar-todas {
     background: #0d2538 !important;
     border-color: #39c0ba !important;
@@ -347,7 +365,7 @@ html[data-theme="dark"] .notif-empty {
 html[data-theme="dark"] .notif-empty ion-icon {
     color: #3a4e3a !important;
 }
-/* Leídas en dark: más apagadas */
+/* Leï¿½das en dark: mï¿½s apagadas */
 html[data-theme="dark"] .notif-card:not(.notif-unread) {
     background: #0f160f !important;
     border-color: #1e2a1e !important;
