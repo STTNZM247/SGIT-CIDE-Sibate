@@ -75,14 +75,14 @@
   background-position: 7px 7px;
   opacity: 1;
   pointer-events: none;
-  /* Arco cóncavo: centro fuera del elemento → curva hacia adentro */
+  /* Ola diagonal continua: inferior-izquierdo → superior-derecho */
   -webkit-mask-image:
-    radial-gradient(ellipse 110% 110% at -8% 108%, transparent 42%, black 58%, transparent 78%),
-    radial-gradient(ellipse 110% 110% at 108% -8%, transparent 42%, black 58%, transparent 78%);
+    radial-gradient(ellipse 200% 180% at -20% 120%, transparent 38%, black 52%, transparent 66%),
+    radial-gradient(ellipse 200% 180% at 120% -20%, transparent 38%, black 52%, transparent 66%);
   -webkit-mask-composite: source-over;
   mask-image:
-    radial-gradient(ellipse 110% 110% at -8% 108%, transparent 42%, black 58%, transparent 78%),
-    radial-gradient(ellipse 110% 110% at 108% -8%, transparent 42%, black 58%, transparent 78%);
+    radial-gradient(ellipse 200% 180% at -20% 120%, transparent 38%, black 52%, transparent 66%),
+    radial-gradient(ellipse 200% 180% at 120% -20%, transparent 38%, black 52%, transparent 66%);
   mask-composite: add;
 }
 
