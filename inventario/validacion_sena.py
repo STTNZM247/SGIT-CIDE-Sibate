@@ -78,18 +78,15 @@ def _recortar_carnet_sobre_fondo_oscuro(image):
 
 
 def _variantes_para_ocr(image):
+    """Devuelve variantes de imagen para OCR. Máximo 2 variantes para mantener
+    el procesamiento rápido (se eliminó el escalado x2 que multiplicaba 4x los
+    píxeles y era la operación más lenta).
+    """
     variantes = [image]
     try:
         gray = ImageOps.grayscale(image)
         contrast = ImageOps.autocontrast(gray)
         variantes.append(contrast.convert('RGB'))
-
-        # Escalado para OCR en texto pequeño.
-        upscale = contrast.resize(
-            (max(1, contrast.width * 2), max(1, contrast.height * 2)),
-            resample=Image.Resampling.LANCZOS,
-        )
-        variantes.append(upscale.convert('RGB'))
     except Exception:
         pass
     return variantes
@@ -132,10 +129,11 @@ def _extraer_texto_ocr(image):
         return '', 'El OCR automático no está disponible en este servidor.'
 
     try:
-        return pytesseract.image_to_string(image, lang='spa+eng', config='--oem 3 --psm 6'), ''
+        # oem 1 = solo red LSTM, más rápida que oem 3 (LSTM+legacy).
+        return pytesseract.image_to_string(image, lang='spa+eng', config='--oem 1 --psm 6'), ''
     except Exception:
         try:
-            return pytesseract.image_to_string(image, config='--oem 3 --psm 6'), ''
+            return pytesseract.image_to_string(image, config='--oem 1 --psm 6'), ''
         except Exception:
             return '', 'No se pudo leer el texto del carnet en esta imagen.'
 
@@ -187,8 +185,9 @@ def cargar_imagen_validacion(archivo, *, require_vertical=True):
         image = image.rotate(90, expand=True)
 
     # Limitar tamaño máximo para acelerar OCR en fotos de alta resolución.
-    # Una foto de 4K puede tardar 30+ s por variante; con 1400 px es suficiente para leer texto.
-    MAX_LADO = 1400
+    # Limitar a 900 px: suficiente para leer texto de carnet y reduce el tiempo
+    # de OCR de forma drastica (1400px x 1400px = 4x mas pixels que 900x900).
+    MAX_LADO = 900
     w, h = image.size
     if max(w, h) > MAX_LADO:
         escala = MAX_LADO / max(w, h)
@@ -210,6 +209,10 @@ def _evaluar_validacion_por_imagen(image, usuario, orientacion='0'):
         if texto_tmp:
             if texto_tmp not in texto_ocr_total:
                 texto_ocr_total = f'{texto_ocr_total}\n{texto_tmp}'.strip()
+            # Si ya tenemos suficiente texto con la primera variante, no hace
+            # falta procesar la segunda (ahorro de ~50% de tiempo de OCR).
+            if len(texto_ocr_total) >= 80:
+                break
         elif error_tmp and not ocr_error:
             ocr_error = error_tmp
 
