@@ -21,6 +21,12 @@ def notificaciones_no_leidas(request):
             pedidos_pendientes_nav = Pedido.objects.filter(
                 estado__in=['pendiente', 'esperando entrega']
             ).count()
+        else:
+            # Para usuarios: pedidos activos que requieren atención
+            pedidos_pendientes_nav = Pedido.objects.filter(
+                id_usuario_fk=request.user,
+                estado__in=['pendiente', 'esperando entrega'],
+            ).count()
         return {
             'notif_no_leidas': notif_count,
             'carrito_cantidad_nav': carrito_total,

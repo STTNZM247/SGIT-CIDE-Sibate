@@ -22,7 +22,12 @@
         </li>
         <li class="list {% if request.resolver_match.url_name == 'pedidos_usuario' %}active{% endif %}">
             <a href="{% url 'pedidos_usuario' %}">
-                <span class="icon"><ion-icon name="receipt-outline"></ion-icon></span>
+                <span class="icon icon--cart">
+                    <ion-icon name="receipt-outline"></ion-icon>
+                    {% if pedidos_pendientes_nav > 0 %}
+                    <span class="nav-cart-badge">{% if pedidos_pendientes_nav > 99 %}99+{% else %}{{ pedidos_pendientes_nav }}{% endif %}</span>
+                    {% endif %}
+                </span>
                 <span class="text">Pedidos</span>
             </a>
         </li>
