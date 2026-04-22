@@ -260,14 +260,6 @@
         loadingOverlay.hidden = false;
     }
 
-    var cancelarCarga = document.getElementById('cancelar_validacion_carga');
-    if (cancelarCarga) {
-        cancelarCarga.addEventListener('click', function () {
-            // Navega a la misma URL por GET para cancelar la petición POST en curso
-            window.location.href = window.location.pathname;
-        });
-    }
-
     function traceStep(message, data) {
         if (!debugPanel || !debugLog) return;
 
@@ -737,6 +729,8 @@
         }
     }
 
+    var loadingTimeout = null;
+
     if (form) {
         form.addEventListener('submit', function () {
             traceStep('Enviando formulario para validación OCR');
@@ -747,6 +741,19 @@
                 submitButton.disabled = true;
                 submitButton.setAttribute('aria-disabled', 'true');
             }
+
+            // Cancelar automáticamente si el servidor no responde en 90 segundos.
+            loadingTimeout = setTimeout(function () {
+                window.location.href = window.location.pathname;
+            }, 90000);
+        });
+    }
+
+    var cancelarCargaBtn = document.getElementById('cancelar_validacion_carga');
+    if (cancelarCargaBtn) {
+        cancelarCargaBtn.addEventListener('click', function () {
+            if (loadingTimeout) clearTimeout(loadingTimeout);
+            window.location.href = window.location.pathname;
         });
     }
 }());

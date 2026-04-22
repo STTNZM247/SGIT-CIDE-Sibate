@@ -186,6 +186,17 @@ def cargar_imagen_validacion(archivo, *, require_vertical=True):
     if require_vertical and width > height:
         image = image.rotate(90, expand=True)
 
+    # Limitar tamaño máximo para acelerar OCR en fotos de alta resolución.
+    # Una foto de 4K puede tardar 30+ s por variante; con 1400 px es suficiente para leer texto.
+    MAX_LADO = 1400
+    w, h = image.size
+    if max(w, h) > MAX_LADO:
+        escala = MAX_LADO / max(w, h)
+        image = image.resize(
+            (max(1, int(w * escala)), max(1, int(h * escala))),
+            Image.Resampling.LANCZOS,
+        )
+
     return image, None
 
 
@@ -275,6 +286,12 @@ def intentar_validacion_automatica(archivo, usuario):
 
         if not mejor_intento or resultado['score'] > mejor_intento['score']:
             mejor_intento = resultado
+
+        # Salida temprana: si la primera orientación no produjo ningún texto
+        # Y el logo tampoco se detectó, la imagen claramente no es un carnet.
+        # Evita procesar otras 6 variantes innecesariamente.
+        if orientacion == '0' and resultado['debug']['ocr_chars'] == 0 and not resultado['debug']['logo_ok']:
+            break
 
     if mejor_intento:
         mejor_intento.pop('score', None)
