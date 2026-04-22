@@ -44,16 +44,21 @@ def _documento_con_etiqueta_en_texto(texto_normalizado, documento_usuario):
 
     doc_flexible = r'\D*'.join(documento_usuario)
     etiquetas = [
-        r'T\.?\s*I\.?',
+        r'T\.?\s*[I1]\.?',
         r'TARJETA\s+DE\s+IDENTIDAD',
-        r'C\.?\s*C\.?',
+        r'C\.?\s*[C0]\.?',
         r'CEDULA',
         r'CEDULA\s+DE\s+CIUDADANIA',
     ]
 
     for etiqueta in etiquetas:
-        patron = rf'(?:\b{etiqueta}\b)\s*[:#\-\.]?\s*{doc_flexible}\b'
+        patron = rf'(?:{etiqueta})\s*[:#\-\.]?\s*{doc_flexible}\b'
         if re.search(patron, texto_normalizado):
+            return True
+
+        patron_cercano_1 = rf'(?:{etiqueta}).{{0,24}}{doc_flexible}\b'
+        patron_cercano_2 = rf'{doc_flexible}\b.{{0,24}}(?:{etiqueta})'
+        if re.search(patron_cercano_1, texto_normalizado) or re.search(patron_cercano_2, texto_normalizado):
             return True
 
     return False
@@ -66,10 +71,10 @@ def _extraer_texto_ocr(image):
         return '', 'El OCR automático no está disponible en este servidor.'
 
     try:
-        return pytesseract.image_to_string(image, lang='spa+eng'), ''
+        return pytesseract.image_to_string(image, lang='spa+eng', config='--oem 3 --psm 6'), ''
     except Exception:
         try:
-            return pytesseract.image_to_string(image), ''
+            return pytesseract.image_to_string(image, config='--oem 3 --psm 6'), ''
         except Exception:
             return '', 'No se pudo leer el texto del carnet en esta imagen.'
 
@@ -87,7 +92,9 @@ def _detectar_logo_sena(image, texto_normalizado):
 
     green_ratio = verdes / total
     text_has_sena = 'SENA' in texto_normalizado or 'SERVICIO NACIONAL DE APRENDIZAJE' in texto_normalizado
-    return text_has_sena and green_ratio >= 0.04
+
+    # Umbral más tolerante para foto real de carnet donde el logo ocupa poca área.
+    return green_ratio >= 0.018 or (text_has_sena and green_ratio >= 0.012)
 
 
 def cargar_imagen_validacion(archivo, *, require_vertical=True):
@@ -119,6 +126,17 @@ def cargar_imagen_validacion(archivo, *, require_vertical=True):
 
 def _evaluar_validacion_por_imagen(image, usuario):
     texto_ocr, ocr_error = _extraer_texto_ocr(image)
+
+    if texto_ocr:
+        try:
+            image_gray = ImageOps.grayscale(image)
+            image_contrast = ImageOps.autocontrast(image_gray)
+            texto_extra, _ = _extraer_texto_ocr(image_contrast)
+            if texto_extra and texto_extra not in texto_ocr:
+                texto_ocr = f'{texto_ocr}\n{texto_extra}'
+        except Exception:
+            pass
+
     texto_normalizado = normalizar_texto(texto_ocr)
     documento_usuario = re.sub(r'\D+', '', usuario.cc or '')
     tokens_nombre = _tokens_nombre_usuario(usuario)
