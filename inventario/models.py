@@ -186,7 +186,7 @@ class VerificacionSenaToken(models.Model):
         return cls.objects.create(
             usuario=usuario,
             token=secrets.token_urlsafe(32),
-            expira_en=ahora + timedelta(hours=48),
+            expira_en=ahora + timedelta(hours=4),
         )
 
 

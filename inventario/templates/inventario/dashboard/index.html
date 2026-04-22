@@ -164,48 +164,185 @@
             </div>
         </article>
 
-        <article class="admin-card admin-card--sena-manual">
-            <header class="admin-card__head">
-                <h2>Usuarios que no se pudieron validar automáticamente</h2>
-                <span>Total en revisión manual: {{ usuarios_validacion_manual_total }}</span>
-            </header>
+        <div class="admin-sena-grid">
+            <article class="admin-card admin-card--sena-manual">
+                <header class="admin-card__head">
+                    <h2>Usuarios que no se pudieron validar automáticamente</h2>
+                    <span>Solicitudes manuales: {{ usuarios_solicitud_manual_total }}</span>
+                </header>
 
-            {% if usuarios_validacion_manual %}
-            <div class="admin-sena-table-wrap" role="region" aria-label="Usuarios pendientes de validación SENA manual">
-                <table class="admin-sena-table">
-                    <thead>
-                        <tr>
-                            <th>Usuario</th>
-                            <th>Documento</th>
-                            <th>Correo</th>
-                            <th>Estado</th>
-                            <th>Solicitud</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in usuarios_validacion_manual %}
-                        <tr>
-                            <td>{{ item.nombre }}</td>
-                            <td>{{ item.documento }}</td>
-                            <td>{{ item.correo }}</td>
-                            <td><span class="admin-sena-pill">{{ item.estado }}</span></td>
-                            <td>{% if item.solicitada_en %}{{ item.solicitada_en|date:'d/m/Y H:i' }}{% else %}-{% endif %}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <p class="admin-card__empty">No hay usuarios en proceso de validación manual.</p>
-            {% endif %}
+                {% if usuarios_solicitud_manual %}
+                <div class="admin-sena-table-wrap" role="region" aria-label="Usuarios con solicitud manual pendiente">
+                    <table class="admin-sena-table">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Documento</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in usuarios_solicitud_manual %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.nombre }}</strong>
+                                    <small>{{ item.correo }}</small>
+                                </td>
+                                <td>{{ item.documento }}</td>
+                                <td><span class="admin-sena-pill">{{ item.estado }}</span></td>
+                                <td>
+                                    <div class="admin-sena-actions">
+                                        {% if item.intento_url %}
+                                        <a href="{{ item.intento_url }}" target="_blank" rel="noopener" class="admin-sena-link">Ver intento</a>
+                                        {% else %}
+                                        <span class="stock-gap-muted">Sin imagen</span>
+                                        {% endif %}
+                                        <form method="post" action="{% url 'enviar_enlace_validacion_sena' item.id %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                            <button type="submit" class="admin-sena-btn">Enviar enlace</button>
+                                        </form>
+                                    </div>
+                                    <details class="admin-sena-details">
+                                        <summary>Expandir información</summary>
+                                        <p><strong>Solicitud:</strong> {% if item.solicitada_en %}{{ item.solicitada_en|date:'d/m/Y H:i' }}{% else %}-{% endif %}</p>
+                                        <p><strong>Observación:</strong> {{ item.observacion|default:'Sin observación' }}</p>
+                                    </details>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="admin-card__empty">No hay solicitudes manuales pendientes.</p>
+                {% endif %}
 
-            <div class="admin-pending-actions">
-                <a href="{% url 'gestion_usuarios_panel' %}" class="admin-pending-more-btn">
-                    Ir a gestión de usuarios
-                    <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
-                </a>
+                <div class="admin-pending-actions">
+                    <button type="button" class="admin-pending-more-btn" id="openSenaModalBtn">
+                        Ver todos en ventana
+                        <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+                    </button>
+                </div>
+            </article>
+
+            <article class="admin-card admin-card--sena-documentos">
+                <header class="admin-card__head">
+                    <h2>Usuarios que enviaron documentos a validar</h2>
+                    <span>Documentos pendientes: {{ usuarios_documento_validacion_total }}</span>
+                </header>
+
+                {% if usuarios_documento_validacion %}
+                <div class="admin-sena-table-wrap" role="region" aria-label="Usuarios con documento manual cargado">
+                    <table class="admin-sena-table">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Documento</th>
+                                <th>Estado</th>
+                                <th>Acciones de revisión</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in usuarios_documento_validacion %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.nombre }}</strong>
+                                    <small>{{ item.correo }}</small>
+                                </td>
+                                <td>{{ item.documento }}</td>
+                                <td><span class="admin-sena-pill">{{ item.estado }}</span></td>
+                                <td>
+                                    <div class="admin-sena-actions admin-sena-actions--review">
+                                        <form method="post" action="{% url 'aprobar_validacion_sena' item.id %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                            <button type="submit" class="admin-sena-btn admin-sena-btn--ok">Validar usuario</button>
+                                        </form>
+                                        <form method="post" action="{% url 'rechazar_validacion_sena' item.id %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                            <input type="text" name="motivo_rechazo" placeholder="Motivo opcional de rechazo">
+                                            <button type="submit" class="admin-sena-btn admin-sena-btn--danger">Rechazar</button>
+                                        </form>
+                                    </div>
+                                    <details class="admin-sena-details">
+                                        <summary>Expandir información y evidencia</summary>
+                                        <p><strong>Solicitud:</strong> {% if item.solicitada_en %}{{ item.solicitada_en|date:'d/m/Y H:i' }}{% else %}-{% endif %}</p>
+                                        <p><strong>Observación:</strong> {{ item.observacion|default:'Sin observación' }}</p>
+                                        <div class="admin-sena-evidence">
+                                            {% if item.intento_url %}
+                                            <a href="{{ item.intento_url }}" target="_blank" rel="noopener">Ver intento OCR</a>
+                                            {% endif %}
+                                            {% if item.documento_url %}
+                                            <a href="{{ item.documento_url }}" target="_blank" rel="noopener">Ver documento cargado</a>
+                                            {% else %}
+                                            <span class="stock-gap-muted">Sin documento visible</span>
+                                            {% endif %}
+                                        </div>
+                                    </details>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="admin-card__empty">No hay documentos pendientes de revisión manual.</p>
+                {% endif %}
+            </article>
+        </div>
+
+        <div id="senaSolicitudesModal" class="stock-gap-modal" aria-hidden="true">
+            <div class="stock-gap-modal__dialog" role="dialog" aria-modal="true" aria-label="Usuarios con solicitud manual">
+                <div class="stock-gap-modal__head">
+                    <h2>Solicitudes manuales de validación SENA</h2>
+                    <button type="button" class="stock-gap-modal__close" id="closeSenaModalBtn" aria-label="Cerrar">×</button>
+                </div>
+                <div class="stock-gap-modal__body">
+                    {% if usuarios_solicitud_manual_modal %}
+                    <div class="admin-sena-table-wrap">
+                        <table class="admin-sena-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Documento</th>
+                                    <th>Correo</th>
+                                    <th>Solicitud</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in usuarios_solicitud_manual_modal %}
+                                <tr>
+                                    <td>{{ item.nombre }}</td>
+                                    <td>{{ item.documento }}</td>
+                                    <td>{{ item.correo }}</td>
+                                    <td>{% if item.solicitada_en %}{{ item.solicitada_en|date:'d/m/Y H:i' }}{% else %}-{% endif %}</td>
+                                    <td>
+                                        <div class="admin-sena-actions">
+                                            {% if item.intento_url %}
+                                            <a href="{{ item.intento_url }}" target="_blank" rel="noopener" class="admin-sena-link">Ver intento</a>
+                                            {% endif %}
+                                            <form method="post" action="{% url 'enviar_enlace_validacion_sena' item.id %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                                <button type="submit" class="admin-sena-btn">Enviar enlace</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="admin-card__empty">No hay usuarios con solicitud manual activa.</p>
+                    {% endif %}
+                </div>
             </div>
-        </article>
+        </div>
 
         <div class="admin-chart-grid">
             <article class="admin-card admin-card--chart">
@@ -617,6 +754,34 @@
         const openBtn = document.getElementById('openDeficitModalBtn');
         const modal = document.getElementById('deficitProductosModal');
         const closeBtn = document.getElementById('closeDeficitModalBtn');
+        if (!openBtn || !modal || !closeBtn) return;
+
+        const openModal = () => {
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+        };
+
+        const closeModal = () => {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-open');
+        };
+
+        openBtn.addEventListener('click', openModal);
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) closeModal();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+        });
+    })();
+
+    (() => {
+        const openBtn = document.getElementById('openSenaModalBtn');
+        const modal = document.getElementById('senaSolicitudesModal');
+        const closeBtn = document.getElementById('closeSenaModalBtn');
         if (!openBtn || !modal || !closeBtn) return;
 
         const openModal = () => {

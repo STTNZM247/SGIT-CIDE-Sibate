@@ -733,23 +733,88 @@ def dashboard(request):
             'estado': 'Pendiente',
         })
 
-    estados_validacion_manual = ['solicitada', 'enlace_enviado', 'documento_cargado']
-    usuarios_validacion_manual_qs = (
+    usuarios_solicitud_manual_qs = (
         Usuario.objects
-        .filter(verificacion_sena_estado__in=estados_validacion_manual)
+        .filter(verificacion_sena_estado='solicitada')
         .order_by('verificacion_sena_solicitada_en', 'id_usu')
     )
-    usuarios_validacion_manual_total = usuarios_validacion_manual_qs.count()
-    usuarios_validacion_manual = []
-    for usuario in usuarios_validacion_manual_qs[:12]:
+    usuarios_solicitud_manual_total = usuarios_solicitud_manual_qs.count()
+    usuarios_solicitud_manual = []
+    for usuario in usuarios_solicitud_manual_qs[:8]:
         nombre_usuario = (f'{usuario.nombre or ""} {usuario.apellido or ""}'.strip() or usuario.correo or f'Usuario {usuario.pk}')
-        usuarios_validacion_manual.append({
+        intento_url = ''
+        if getattr(usuario, 'verificacion_sena_imagen', None):
+            try:
+                intento_url = usuario.verificacion_sena_imagen.url
+            except Exception:
+                intento_url = ''
+
+        usuarios_solicitud_manual.append({
             'id': usuario.pk,
             'nombre': nombre_usuario,
             'correo': usuario.correo or '-',
             'documento': usuario.cc or '-',
             'estado': usuario.get_verificacion_sena_estado_display(),
+            'observacion': (usuario.verificacion_sena_observacion or '').strip(),
             'solicitada_en': usuario.verificacion_sena_solicitada_en,
+            'intento_url': intento_url,
+        })
+
+    usuarios_solicitud_manual_modal = []
+    for usuario in usuarios_solicitud_manual_qs:
+        nombre_usuario = (f'{usuario.nombre or ""} {usuario.apellido or ""}'.strip() or usuario.correo or f'Usuario {usuario.pk}')
+        intento_url = ''
+        if getattr(usuario, 'verificacion_sena_imagen', None):
+            try:
+                intento_url = usuario.verificacion_sena_imagen.url
+            except Exception:
+                intento_url = ''
+
+        usuarios_solicitud_manual_modal.append({
+            'id': usuario.pk,
+            'nombre': nombre_usuario,
+            'correo': usuario.correo or '-',
+            'documento': usuario.cc or '-',
+            'estado': usuario.get_verificacion_sena_estado_display(),
+            'observacion': (usuario.verificacion_sena_observacion or '').strip(),
+            'solicitada_en': usuario.verificacion_sena_solicitada_en,
+            'intento_url': intento_url,
+        })
+
+    usuarios_documento_validacion_qs = (
+        Usuario.objects
+        .filter(verificacion_sena_estado='documento_cargado')
+        .order_by('verificacion_sena_solicitada_en', 'id_usu')
+    )
+    usuarios_documento_validacion_total = usuarios_documento_validacion_qs.count()
+    usuarios_documento_validacion = []
+    for usuario in usuarios_documento_validacion_qs[:12]:
+        nombre_usuario = (f'{usuario.nombre or ""} {usuario.apellido or ""}'.strip() or usuario.correo or f'Usuario {usuario.pk}')
+
+        intento_url = ''
+        if getattr(usuario, 'verificacion_sena_imagen', None):
+            try:
+                intento_url = usuario.verificacion_sena_imagen.url
+            except Exception:
+                intento_url = ''
+
+        documento_url = ''
+        if getattr(usuario, 'verificacion_sena_documento', None):
+            try:
+                documento_url = usuario.verificacion_sena_documento.url
+            except Exception:
+                documento_url = ''
+
+        usuarios_documento_validacion.append({
+            'id': usuario.pk,
+            'nombre': nombre_usuario,
+            'correo': usuario.correo or '-',
+            'documento': usuario.cc or '-',
+            'estado': usuario.get_verificacion_sena_estado_display(),
+            'observacion': (usuario.verificacion_sena_observacion or '').strip(),
+            'solicitada_en': usuario.verificacion_sena_solicitada_en,
+            'intento_url': intento_url,
+            'documento_url': documento_url,
         })
     productos_en_mora = (
         DetallePedido.objects
@@ -813,8 +878,11 @@ def dashboard(request):
             'pedidos_pendientes_total': pedidos_pendientes_total,
             'hay_mas_pendientes': pedidos_pendientes_total > pendientes_preview_limit,
             'resumen_pendientes': resumen_pendientes,
-            'usuarios_validacion_manual': usuarios_validacion_manual,
-            'usuarios_validacion_manual_total': usuarios_validacion_manual_total,
+            'usuarios_solicitud_manual': usuarios_solicitud_manual,
+            'usuarios_solicitud_manual_modal': usuarios_solicitud_manual_modal,
+            'usuarios_solicitud_manual_total': usuarios_solicitud_manual_total,
+            'usuarios_documento_validacion': usuarios_documento_validacion,
+            'usuarios_documento_validacion_total': usuarios_documento_validacion_total,
             'prestamos_mes_actual': prestamos_mes_actual,
             'productos_en_mora': productos_en_mora,
             'alertas_stock_bajo': alertas_stock_bajo,
@@ -2785,14 +2853,29 @@ def eliminar_usuario(request, usuario_id):
 @login_required
 @require_POST
 def enviar_enlace_validacion_sena(request, usuario_id):
+    next_url = (request.POST.get('next') or request.GET.get('next') or '').strip()
+
+    def _redirect_admin_default():
+        if next_url and next_url.startswith('/') and not next_url.startswith('//'):
+            return redirect(next_url)
+        return redirect('gestion_usuarios_panel')
+
     if not (request.user.id_rol_fk and request.user.id_rol_fk.nombre_rol == 'admin'):
         messages.error(request, 'Solo el administrador puede enviar enlaces de validación SENA.')
-        return redirect('gestion_usuarios_panel')
+        return _redirect_admin_default()
 
     usuario = get_object_or_404(Usuario, pk=usuario_id)
     if usuario.verificacion_sena_estado == 'validado':
         messages.success(request, 'Ese usuario ya tiene la validación SENA aprobada.')
-        return redirect('gestion_usuarios_panel')
+        return _redirect_admin_default()
+
+    if usuario.verificacion_sena_estado in {'enlace_enviado', 'documento_cargado'}:
+        messages.error(request, 'No puedes reenviar enlace a este usuario hasta que el admin apruebe o rechace su caso.')
+        return _redirect_admin_default()
+
+    if usuario.verificacion_sena_estado != 'solicitada':
+        messages.error(request, 'Este usuario no tiene una solicitud manual pendiente para enviar enlace.')
+        return _redirect_admin_default()
 
     token = VerificacionSenaToken.create_for_user(usuario)
     upload_url = request.build_absolute_uri(reverse('validacion_sena_carga_manual', args=[token.token]))
@@ -2818,7 +2901,7 @@ def enviar_enlace_validacion_sena(request, usuario_id):
                 'El administrador aprobó tu solicitud de validación manual.\n'
                 'Usa este enlace único para cargar la foto de tu carnet o un certificado vigente del SENA:\n'
                 f'{upload_url}\n\n'
-                'El enlace vencerá en 48 horas y solo podrá usarse una vez.'
+                'El enlace vencerá en 4 horas y solo podrá usarse una vez.'
             )
             html_content = f"""
 <!DOCTYPE html>
@@ -2870,20 +2953,27 @@ def enviar_enlace_validacion_sena(request, usuario_id):
         descripcion=f'Se envió enlace manual de validación SENA al usuario {usuario.correo}.',
     )
     messages.success(request, f'Se envió el enlace manual de validación a {usuario.correo}.')
-    return redirect('gestion_usuarios_panel')
+    return _redirect_admin_default()
 
 
 @login_required
 @require_POST
 def aprobar_validacion_sena(request, usuario_id):
+    next_url = (request.POST.get('next') or request.GET.get('next') or '').strip()
+
+    def _redirect_admin_default():
+        if next_url and next_url.startswith('/') and not next_url.startswith('//'):
+            return redirect(next_url)
+        return redirect('gestion_usuarios_panel')
+
     if not (request.user.id_rol_fk and request.user.id_rol_fk.nombre_rol == 'admin'):
         messages.error(request, 'Solo el administrador puede aprobar validaciones SENA.')
-        return redirect('gestion_usuarios_panel')
+        return _redirect_admin_default()
 
     usuario = get_object_or_404(Usuario, pk=usuario_id)
     if not usuario.verificacion_sena_documento and not usuario.verificacion_sena_imagen:
         messages.error(request, 'Ese usuario todavía no ha cargado ninguna evidencia para revisar.')
-        return redirect('gestion_usuarios_panel')
+        return _redirect_admin_default()
 
     usuario.verificacion_sena_estado = 'validado'
     usuario.verificacion_sena_validada_en = timezone.now()
@@ -2908,7 +2998,59 @@ def aprobar_validacion_sena(request, usuario_id):
         descripcion=f'Se aprobó manualmente la validación SENA del usuario {usuario.correo}.',
     )
     messages.success(request, f'La validación SENA de {usuario.correo} fue aprobada.')
-    return redirect('gestion_usuarios_panel')
+    return _redirect_admin_default()
+
+
+@login_required
+@require_POST
+def rechazar_validacion_sena(request, usuario_id):
+    next_url = (request.POST.get('next') or request.GET.get('next') or '').strip()
+
+    def _redirect_admin_default():
+        if next_url and next_url.startswith('/') and not next_url.startswith('//'):
+            return redirect(next_url)
+        return redirect('gestion_usuarios_panel')
+
+    if not (request.user.id_rol_fk and request.user.id_rol_fk.nombre_rol == 'admin'):
+        messages.error(request, 'Solo el administrador puede rechazar validaciones SENA.')
+        return _redirect_admin_default()
+
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
+    if not usuario.verificacion_sena_documento and not usuario.verificacion_sena_imagen:
+        messages.error(request, 'Ese usuario todavía no ha cargado ninguna evidencia para revisar.')
+        return _redirect_admin_default()
+
+    motivo_rechazo = (request.POST.get('motivo_rechazo') or '').strip()
+    observacion = 'Validación manual rechazada por administración.'
+    if motivo_rechazo:
+        observacion = f'{observacion} Motivo: {motivo_rechazo}'
+
+    usuario.verificacion_sena_estado = 'rechazada'
+    usuario.verificacion_sena_observacion = observacion
+    usuario.save(update_fields=[
+        'verificacion_sena_estado',
+        'verificacion_sena_observacion',
+    ])
+
+    mensaje_rechazo = 'La revisión manual de tu validación SENA fue rechazada por el administrador.'
+    if motivo_rechazo:
+        mensaje_rechazo = f'{mensaje_rechazo} Motivo: {motivo_rechazo}'
+
+    _crear_notificacion(
+        usuario=usuario,
+        tipo='verificacion_sena_rechazada',
+        titulo='Validación SENA rechazada',
+        mensaje=mensaje_rechazo,
+    )
+    _registrar_auditoria(
+        request,
+        accion='actualizar',
+        entidad='usuario',
+        entidad_id=usuario.id_usu,
+        descripcion=f'Se rechazó manualmente la validación SENA del usuario {usuario.correo}. Motivo: {motivo_rechazo or "sin motivo"}.',
+    )
+    messages.success(request, f'La validación SENA de {usuario.correo} fue rechazada.')
+    return _redirect_admin_default()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
