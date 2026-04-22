@@ -1179,3 +1179,15 @@ html[data-theme="dark"] .prestamo-producto-item__qty {
     border-bottom-color: #253025 !important;
   }
 }
+
+/* Fondo de los pills de meta (catálogo, devolver, etc.) */
+html[data-theme="dark"] .prestamo-producto-item__meta span {
+  background: #1e2b1e !important;
+  color: #91a891 !important;
+}
+
+/* Colores de fecha en dark mode */
+html[data-theme="dark"] .prestamo-producto-item__fecha--ok      { color: #7dd87d !important; }
+html[data-theme="dark"] .prestamo-producto-item__fecha--vencido  { color: #ff9a9a !important; }
+html[data-theme="dark"] .prestamo-producto-item__fecha--none     { color: #4a6a4a !important; }
+html[data-theme="dark"] .prestamo-producto-item__fecha--devuelto { color: #8fe0a2 !important; }
