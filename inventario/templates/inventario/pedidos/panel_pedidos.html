@@ -73,18 +73,15 @@
             </div>
 
             <!-- Columna 4: Carnet -->
+            <!-- Columna 4: Verificación SENA -->
             <div class="pedido-row__carnet">
-                <span class="pedido-row__label">Carnet SENA</span>
-                {% if pedido.foto_carnet %}
-                <a href="{{ pedido.foto_carnet.url }}" target="_blank" rel="noopener" class="pedido-row__carnet-img" title="Ver carnet de {{ pedido.id_usuario_fk.nombre }}">
-                    <img src="{{ pedido.foto_carnet.url }}" alt="Carnet">
-                    <span class="pedido-row__carnet-overlay"><ion-icon name="expand-outline"></ion-icon></span>
-                </a>
-                <span class="pedido-row__carnet-ok"><ion-icon name="checkmark-circle"></ion-icon> Adjunto</span>
+                <span class="pedido-row__label">Verificación</span>
+                {% if pedido.id_usuario_fk.verificacion_sena_estado == 'validado' %}
+                <span class="pedido-row__carnet-ok"><ion-icon name="shield-checkmark-outline"></ion-icon> Verificado</span>
                 {% else %}
                 <div class="pedido-row__carnet-missing">
-                    <ion-icon name="alert-circle-outline"></ion-icon>
-                    <span>Sin carnet</span>
+                    <ion-icon name="person-outline"></ion-icon>
+                    <span>Sin verificar</span>
                 </div>
                 {% endif %}
             </div>

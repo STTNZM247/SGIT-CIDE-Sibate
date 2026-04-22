@@ -34,9 +34,9 @@
         <div class="detalle-info-header">
             <h2 class="detalle-section-title"><ion-icon name="information-circle-outline"></ion-icon> Información general</h2>
             {% with estado_sena=pedido.id_usuario_fk.verificacion_sena_estado %}
-            <span class="detalle-user-badge {% if estado_sena == 'verificado' %}detalle-user-badge--ok{% else %}detalle-user-badge--pending{% endif %}">
-                <ion-icon name="{% if estado_sena == 'verificado' %}shield-checkmark-outline{% else %}person-outline{% endif %}"></ion-icon>
-                {% if estado_sena == 'verificado' %}Verificado SENA{% else %}Sin verificar{% endif %}
+            <span class="detalle-user-badge {% if estado_sena == 'validado' %}detalle-user-badge--ok{% else %}detalle-user-badge--pending{% endif %}">
+                <ion-icon name="{% if estado_sena == 'validado' %}shield-checkmark-outline{% else %}person-outline{% endif %}"></ion-icon>
+                {% if estado_sena == 'validado' %}Verificado SENA{% else %}Sin verificar{% endif %}
             </span>
             {% endwith %}
         </div>

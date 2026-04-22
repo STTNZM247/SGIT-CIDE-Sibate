@@ -370,41 +370,6 @@
 }
 
 /* Col 5 � Acciones */
-.pedido-row__actions {
-  display: flex;
-  justify-content: center;
-}
-
-.pedido-row__btn-detalle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #edf7e7, #d8f0c8);
-  color: #2a7600;
-  font-weight: 800;
-  font-size: 0.88rem;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: background 0.2s, transform 0.15s;
-  border: 1px solid #c8e8b0;
-}
-
-.pedido-row__btn-detalle:hover {
-  background: linear-gradient(135deg, #d8f0c8, #c4e8a8);
-  transform: translateY(-1px);
-}
-
-/* =====================================================
-   DETALLE DEL PEDIDO � /pedidos/<id>/productos/
-   ===================================================== */
-
-/* Sin grid de 2 columnas — se eliminó la columna del carnet */
-.detalle-top-grid {
-  margin-bottom: 24px;
-}
-
 /* T�tulo de secci�n reutilizable */
 .detalle-section-title {
   display: flex;
