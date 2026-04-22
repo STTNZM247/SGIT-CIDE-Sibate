@@ -81,6 +81,10 @@
                 </div>
 
                 <div class="validacion-sena-inline-alert" id="validacion_sena_inline_alert" hidden></div>
+                <div class="validacion-sena-debug" id="validacion_sena_debug" hidden>
+                    <strong>Traza técnica</strong>
+                    <pre id="validacion_sena_debug_log"></pre>
+                </div>
 
                 <div class="validacion-sena-form__actions">
                     <button type="submit" class="validacion-sena-btn validacion-sena-btn--primary">
@@ -208,7 +212,10 @@
     var captureStatus = document.getElementById('validacion_sena_capture_status');
     var captureDataInput = document.getElementById('foto_validacion_captura');
     var inlineAlert = document.getElementById('validacion_sena_inline_alert');
+    var debugPanel = document.getElementById('validacion_sena_debug');
+    var debugLog = document.getElementById('validacion_sena_debug_log');
     var stream = null;
+    var traceLines = [];
 
     if (!input || !preview) return;
 
@@ -224,6 +231,29 @@
         inlineAlert.textContent = '';
     }
 
+    function traceStep(message, data) {
+        if (!debugPanel || !debugLog) return;
+
+        var stamp = new Date().toLocaleTimeString('es-CO', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        var line = '[' + stamp + '] ' + message;
+        if (typeof data !== 'undefined') {
+            try {
+                line += ' | ' + JSON.stringify(data);
+            } catch (error) {
+                line += ' | ' + String(data);
+            }
+        }
+
+        traceLines.push(line);
+        traceLines = traceLines.slice(-10);
+        debugPanel.hidden = false;
+        debugLog.textContent = traceLines.join('\n');
+    }
+
     function setCaptureReadyState(isReady) {
         if (captureCard) {
             captureCard.classList.toggle('is-captured', !!isReady);
@@ -231,6 +261,7 @@
         if (captureStatus) {
             captureStatus.hidden = !isReady;
         }
+        traceStep('Estado de captura actualizado', { lista: !!isReady });
     }
 
     function canUseGuidedCamera() {
@@ -270,6 +301,7 @@
     }
 
     function stopCamera() {
+        traceStep('Cerrando cámara');
         if (stream) {
             stream.getTracks().forEach(function (track) { track.stop(); });
             stream = null;
@@ -290,8 +322,10 @@
             dataTransfer.items.add(file);
             input.files = dataTransfer.files;
             input.dispatchEvent(new Event('change', { bubbles: true }));
+            traceStep('Archivo asignado al input', { nombre: file.name, size: file.size });
             return true;
         } catch (error) {
+            traceStep('Fallo al asignar archivo al input', { error: error.message || String(error) });
             return false;
         }
     }
@@ -338,6 +372,7 @@
 
     input.addEventListener('change', function () {
         var file = input.files && input.files[0];
+        traceStep('Evento change del input', { hayArchivo: !!file });
         if (!file) {
             preview.hidden = true;
             preview.removeAttribute('src');
@@ -368,13 +403,26 @@
                 preview.src = event.target.result;
                 preview.hidden = false;
                 setCaptureReadyState(true);
+                traceStep('Preview cargada desde input', { longitud: (event.target.result || '').length });
+            };
+            reader.onerror = function () {
+                traceStep('Falló la lectura del archivo para preview');
             };
             reader.readAsDataURL(file);
         });
     });
 
+    preview.addEventListener('load', function () {
+        traceStep('Imagen preview renderizada', { width: preview.naturalWidth, height: preview.naturalHeight, hidden: preview.hidden });
+    });
+
+    preview.addEventListener('error', function () {
+        traceStep('Falló el render de la preview');
+    });
+
     if (subirFoto) {
         subirFoto.addEventListener('click', function () {
+            traceStep('Usuario abrió selector de galería/archivo');
             input.click();
         });
     }
@@ -382,6 +430,7 @@
     async function openGuidedCamera() {
         clearInlineAlert();
         setCameraStatus('Preparando cámara...', true);
+        traceStep('Solicitando acceso a la cámara');
         try {
             stream = await navigator.mediaDevices.getUserMedia({
                 video: {
@@ -391,6 +440,7 @@
                 },
                 audio: false
             });
+            traceStep('Stream de cámara recibido', { tracks: stream.getTracks().length });
             video.srcObject = stream;
             modal.hidden = false;
             video.setAttribute('autoplay', 'autoplay');
@@ -399,10 +449,13 @@
             video.setAttribute('webkit-playsinline', 'webkit-playsinline');
             video.muted = true;
             await video.play();
+            traceStep('Video en reproducción');
             await waitForVideoReady();
+            traceStep('Video listo para capturar', { width: video.videoWidth, height: video.videoHeight, readyState: video.readyState });
             setCameraStatus('', false);
         } catch (error) {
             stopCamera();
+            traceStep('No se pudo abrir la cámara', { error: error && (error.name || error.message || String(error)) });
             showInlineAlert('No pudimos abrir la cámara guiada en este dispositivo. Verifica permisos de cámara o usa galería/archivo como respaldo.');
         }
     }
@@ -452,16 +505,20 @@
 
     if (capturarFoto && video) {
         capturarFoto.addEventListener('click', function () {
+            traceStep('Usuario pulsó Capturar', { width: video.videoWidth, height: video.videoHeight, readyState: video.readyState });
             if (!stream) {
+                traceStep('Captura cancelada: no hay stream activo');
                 showInlineAlert('La cámara aún no está activa. Ábrela de nuevo y acepta el permiso del navegador.');
                 return;
             }
             if (!video.videoWidth || !video.videoHeight) {
+                traceStep('Captura cancelada: video sin dimensiones');
                 showInlineAlert('La cámara aún no está lista. Espera un momento y vuelve a capturar.');
                 return;
             }
 
             if (video.videoWidth > video.videoHeight) {
+                traceStep('Captura cancelada: orientación horizontal');
                 showInlineAlert('Pon el celular en vertical antes de capturar el carnet.');
                 return;
             }
@@ -470,9 +527,12 @@
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             var context = canvas.getContext('2d');
+            traceStep('Canvas preparado', { width: canvas.width, height: canvas.height, tieneContexto: !!context });
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             var previewUrl = canvas.toDataURL('image/png');
+            traceStep('dataURL generada', { longitud: (previewUrl || '').length });
             if (!previewUrl || previewUrl === 'data:,') {
+                traceStep('Captura inválida: dataURL vacía');
                 showInlineAlert('No pudimos capturar la foto. Inténtalo de nuevo.');
                 return;
             }
@@ -482,14 +542,17 @@
 
             if (captureDataInput) {
                 captureDataInput.value = previewUrl;
+                traceStep('Captura guardada en campo oculto', { longitud: captureDataInput.value.length });
             }
             preview.src = previewUrl;
             preview.hidden = false;
             setCaptureReadyState(true);
             clearInlineAlert();
+            traceStep('Preview actualizada tras captura', { hidden: preview.hidden, srcLength: preview.src.length });
 
             if (!assignedToInput && !captureDataInput) {
                 setCaptureReadyState(false);
+                traceStep('Captura falló: sin input y sin campo oculto');
                 showInlineAlert('La foto quedó capturada, pero no pudimos adjuntarla. Inténtalo de nuevo.');
                 return;
             }
@@ -500,6 +563,11 @@
             }
         });
     }
+
+    traceStep('Traza activada', {
+        userAgent: navigator.userAgent,
+        cameraSoportada: canUseGuidedCamera()
+    });
 }());
 </script>
 {% endblock %}

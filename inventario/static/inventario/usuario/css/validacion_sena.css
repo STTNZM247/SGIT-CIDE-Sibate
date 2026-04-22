@@ -396,6 +396,30 @@
   font-weight: 700;
 }
 
+.validacion-sena-debug {
+  margin-top: 10px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid #d7e3d4;
+  background: #f6fbf4;
+  color: #1e3822;
+}
+
+.validacion-sena-debug strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.92rem;
+}
+
+.validacion-sena-debug pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  font-family: Consolas, "Courier New", monospace;
+}
+
 .validacion-sena-camera-modal {
   position: fixed;
   inset: 0;
@@ -781,6 +805,12 @@ body.dark-mode .validacion-sena-inline-alert {
   background: #3a2318;
   border-color: #85492a;
   color: #ffd5bd;
+}
+
+body.dark-mode .validacion-sena-debug {
+  background: #18251c;
+  border-color: rgba(197, 230, 193, 0.12);
+  color: #edf7ed;
 }
 
 body.dark-mode .validacion-sena-result,
