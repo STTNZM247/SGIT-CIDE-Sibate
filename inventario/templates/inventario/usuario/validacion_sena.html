@@ -207,6 +207,9 @@
             <div class="validacion-sena-loading__dots" aria-hidden="true">
                 <span></span><span></span><span></span><span></span>
             </div>
+            <button type="button" id="cancelar_validacion_carga" class="validacion-sena-loading__cancel" aria-label="Cancelar validación">
+                Cancelar validación
+            </button>
         </div>
     </div>
 </section>
@@ -255,6 +258,14 @@
     function startLoadingOverlay() {
         if (!loadingOverlay) return;
         loadingOverlay.hidden = false;
+    }
+
+    var cancelarCarga = document.getElementById('cancelar_validacion_carga');
+    if (cancelarCarga) {
+        cancelarCarga.addEventListener('click', function () {
+            // Navega a la misma URL por GET para cancelar la petición POST en curso
+            window.location.href = window.location.pathname;
+        });
     }
 
     function traceStep(message, data) {

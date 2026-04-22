@@ -491,6 +491,28 @@
   margin-top: 18px;
 }
 
+.validacion-sena-loading__cancel {
+  margin-top: 22px;
+  padding: 10px 22px;
+  border-radius: 20px;
+  border: 1.5px solid rgba(255, 120, 120, 0.45);
+  background: rgba(180, 30, 30, 0.18);
+  color: #ffb3b3;
+  font-size: 0.93rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.validacion-sena-loading__cancel:hover,
+.validacion-sena-loading__cancel:focus-visible {
+  background: rgba(220, 40, 40, 0.32);
+  border-color: rgba(255, 100, 100, 0.75);
+  color: #fff;
+  outline: none;
+}
+
 .validacion-sena-loading__dots span {
   width: 14px;
   height: 14px;
