@@ -228,6 +228,7 @@
     var capturarFoto = document.getElementById('capturar_foto_guiada');
     var video = document.getElementById('validacion_sena_camera_video');
     var cameraStatus = document.getElementById('validacion_sena_camera_status');
+    var cameraGuideFrame = modal ? modal.querySelector('.validacion-sena-camera-guide__frame') : null;
     var captureStatus = document.getElementById('validacion_sena_capture_status');
     var captureDataInput = document.getElementById('foto_validacion_captura');
     var inlineAlert = document.getElementById('validacion_sena_inline_alert');
@@ -617,25 +618,8 @@
             var rawContext = rawCanvas.getContext('2d');
             rawContext.drawImage(video, 0, 0, rawCanvas.width, rawCanvas.height);
 
-            var normalizedCanvas = rawCanvas;
-            if (rawCanvas.width > rawCanvas.height) {
-                normalizedCanvas = document.createElement('canvas');
-                normalizedCanvas.width = rawCanvas.height;
-                normalizedCanvas.height = rawCanvas.width;
-                var normalizedContext = normalizedCanvas.getContext('2d');
-                normalizedContext.translate(normalizedCanvas.width / 2, normalizedCanvas.height / 2);
-                normalizedContext.rotate(Math.PI / 2);
-                normalizedContext.drawImage(rawCanvas, -rawCanvas.width / 2, -rawCanvas.height / 2);
-                traceStep('Captura rotada automáticamente a vertical', {
-                    width: rawCanvas.width,
-                    height: rawCanvas.height
-                });
-            }
-
-            var targetRatio = 5.5 / 8.5;
-            var sourceWidth = normalizedCanvas.width;
-            var sourceHeight = normalizedCanvas.height;
-            var sourceRatio = sourceWidth / sourceHeight;
+            var sourceWidth = rawCanvas.width;
+            var sourceHeight = rawCanvas.height;
 
             var canvas = document.createElement('canvas');
             canvas.width = 990;
@@ -648,21 +632,35 @@
                 rotado: rawCanvas.width > rawCanvas.height
             });
 
-            // Recorta según el marco guía para que la captura final sea vertical y enfocada al carnet.
-            var guideWidthRatio = window.matchMedia('(max-width: 720px)').matches ? 0.78 : 0.68;
-            var cropWidth = sourceWidth * guideWidthRatio;
-            var cropHeight = cropWidth / targetRatio;
+            // Captura exactamente lo que está dentro de la guía verde en pantalla.
+            var videoRect = video.getBoundingClientRect();
+            var guideRect = cameraGuideFrame ? cameraGuideFrame.getBoundingClientRect() : videoRect;
 
-            if (cropHeight > sourceHeight * 0.92) {
-                cropHeight = sourceHeight * 0.92;
-                cropWidth = cropHeight * targetRatio;
-            }
+            var displayWidth = videoRect.width;
+            var displayHeight = videoRect.height;
+            var scale = Math.max(displayWidth / sourceWidth, displayHeight / sourceHeight);
+            var renderedWidth = sourceWidth * scale;
+            var renderedHeight = sourceHeight * scale;
+            var renderOffsetX = (displayWidth - renderedWidth) / 2;
+            var renderOffsetY = (displayHeight - renderedHeight) / 2;
 
-            var offsetX = (sourceWidth - cropWidth) / 2;
-            var offsetY = (sourceHeight - cropHeight) / 2;
+            var guideX = guideRect.left - videoRect.left;
+            var guideY = guideRect.top - videoRect.top;
+            var guideW = guideRect.width;
+            var guideH = guideRect.height;
+
+            var offsetX = (guideX - renderOffsetX) / scale;
+            var offsetY = (guideY - renderOffsetY) / scale;
+            var cropWidth = guideW / scale;
+            var cropHeight = guideH / scale;
+
+            offsetX = Math.max(0, Math.min(offsetX, sourceWidth - 2));
+            offsetY = Math.max(0, Math.min(offsetY, sourceHeight - 2));
+            cropWidth = Math.max(2, Math.min(cropWidth, sourceWidth - offsetX));
+            cropHeight = Math.max(2, Math.min(cropHeight, sourceHeight - offsetY));
 
             context.drawImage(
-                normalizedCanvas,
+                rawCanvas,
                 offsetX,
                 offsetY,
                 cropWidth,
@@ -676,7 +674,7 @@
             traceStep('Recorte aplicado según guía', {
                 sourceWidth: sourceWidth,
                 sourceHeight: sourceHeight,
-                sourceRatio: sourceRatio,
+                scale: Number(scale.toFixed(4)),
                 cropWidth: Math.round(cropWidth),
                 cropHeight: Math.round(cropHeight),
                 offsetX: Math.round(offsetX),
