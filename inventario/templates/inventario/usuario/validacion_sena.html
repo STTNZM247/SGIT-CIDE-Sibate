@@ -198,12 +198,25 @@
             {% endif %}
         </aside>
     </div>
+
+    <div class="validacion-sena-loading" id="validacion_sena_loading" hidden>
+        <div class="validacion-sena-loading__card" role="status" aria-live="polite" aria-busy="true">
+            <div class="validacion-sena-loading__logo" aria-hidden="true"></div>
+            <div class="validacion-sena-loading__spinner" aria-hidden="true"></div>
+            <h3>Por favor espera mientras validamos tu carnet</h3>
+            <p>
+                Procesando información
+                <span id="validacion_sena_loading_dots">0..</span>
+            </p>
+        </div>
+    </div>
 </section>
 {% endblock %}
 
 {% block extra_js %}
 <script data-page-script="true">
 (function () {
+    var form = document.getElementById('validacion-sena-form');
     var input = document.getElementById('foto_validacion');
     var preview = document.getElementById('foto_validacion_preview');
     var abrirCamara = document.getElementById('abrir_camara_guiada');
@@ -220,9 +233,12 @@
     var inlineAlert = document.getElementById('validacion_sena_inline_alert');
     var debugPanel = document.getElementById('validacion_sena_debug');
     var debugLog = document.getElementById('validacion_sena_debug_log');
+    var loadingOverlay = document.getElementById('validacion_sena_loading');
+    var loadingDots = document.getElementById('validacion_sena_loading_dots');
     var backendDebugNode = document.getElementById('validacion_sena_backend_debug');
     var stream = null;
     var traceLines = [];
+    var loadingTicker = null;
 
     if (!input || !preview) return;
 
@@ -236,6 +252,23 @@
         if (!inlineAlert) return;
         inlineAlert.hidden = true;
         inlineAlert.textContent = '';
+    }
+
+    function startLoadingOverlay() {
+        if (!loadingOverlay) return;
+        loadingOverlay.hidden = false;
+
+        if (!loadingDots) return;
+        var frames = ['0..', '.0.', '..0'];
+        var idx = 0;
+        loadingDots.textContent = frames[0];
+        if (loadingTicker) {
+            window.clearInterval(loadingTicker);
+        }
+        loadingTicker = window.setInterval(function () {
+            idx = (idx + 1) % frames.length;
+            loadingDots.textContent = frames[idx];
+        }, 420);
     }
 
     function traceStep(message, data) {
@@ -651,6 +684,19 @@
         } catch (error) {
             traceStep('No se pudo leer diagnóstico backend', { error: error.message || String(error) });
         }
+    }
+
+    if (form) {
+        form.addEventListener('submit', function () {
+            traceStep('Enviando formulario para validación OCR');
+            startLoadingOverlay();
+
+            var submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.setAttribute('aria-disabled', 'true');
+            }
+        });
     }
 }());
 </script>
