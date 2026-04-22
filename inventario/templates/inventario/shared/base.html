@@ -105,6 +105,103 @@
     <script src="{% static 'inventario/shared/js/navigation.js' %}" defer></script>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    {% if request.user.is_authenticated %}
+    <script>
+    (function () {
+        var endpoint = "{% url 'live_sync_status' %}";
+        var pollMs = 12000;
+        var lastSignature = null;
+        var pendingReload = false;
+        var isChecking = false;
+
+        function setNotifBadge(unreadCount) {
+            var notifBtns = document.querySelectorAll('.nav-notif-btn');
+            if (!notifBtns.length) return;
+            var hasUnread = Number(unreadCount || 0) > 0;
+            notifBtns.forEach(function (btn) {
+                if (hasUnread) {
+                    btn.classList.add('has-notif');
+                } else {
+                    btn.classList.remove('has-notif');
+                }
+            });
+        }
+
+        function userIsBusy() {
+            var active = document.activeElement;
+            if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) {
+                return true;
+            }
+            if (document.querySelector('.validacion-sena-camera-modal:not([hidden])')) {
+                return true;
+            }
+            return false;
+        }
+
+        function tryReload() {
+            if (!pendingReload) return;
+            if (userIsBusy()) return;
+            pendingReload = false;
+            window.location.reload();
+        }
+
+        function checkNow() {
+            if (isChecking) return;
+            if (document.hidden) return;
+            isChecking = true;
+
+            fetch(endpoint, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+                cache: 'no-store',
+            })
+                .then(function (resp) {
+                    if (!resp.ok) return null;
+                    return resp.json();
+                })
+                .then(function (data) {
+                    if (!data || !data.ok) return;
+
+                    setNotifBadge(data.unread_notifications);
+
+                    if (lastSignature === null) {
+                        lastSignature = data.signature;
+                        return;
+                    }
+
+                    if (data.signature !== lastSignature) {
+                        lastSignature = data.signature;
+                        pendingReload = true;
+                        tryReload();
+                    }
+                })
+                .catch(function () {
+                    // Ignorar errores transitorios de red/servidor para no interrumpir UI.
+                })
+                .finally(function () {
+                    isChecking = false;
+                });
+        }
+
+        window.addEventListener('focus', function () {
+            checkNow();
+            tryReload();
+        });
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) {
+                checkNow();
+                tryReload();
+            }
+        });
+        document.addEventListener('click', tryReload);
+        document.addEventListener('keyup', tryReload);
+
+        checkNow();
+        window.setInterval(checkNow, pollMs);
+    })();
+    </script>
+    {% endif %}
 
     {% block extra_js %}{% endblock %}
 </body>

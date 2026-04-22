@@ -3169,6 +3169,58 @@ def notificaciones_panel(request):
 
 
 @login_required
+def live_sync_status(request):
+    """Devuelve una firma de cambios para refresco ligero del frontend."""
+    if request.method != 'GET':
+        return JsonResponse({'ok': False, 'error': 'method_not_allowed'}, status=405)
+
+    try:
+        from django.db.models import Count
+
+        usuario = request.user
+        rol = getattr(getattr(usuario, 'id_rol_fk', None), 'nombre_rol', '') or ''
+
+        noti_qs = Notificacion.objects.filter(id_usuario_fk=usuario)
+        noti_ultima_id = noti_qs.order_by('-id_noti').values_list('id_noti', flat=True).first() or 0
+        noti_no_leidas = noti_qs.filter(leida=False).count()
+
+        firma_partes = [
+            f'noti:{noti_ultima_id}:{noti_no_leidas}',
+            (
+                'sena:'
+                f'{usuario.verificacion_sena_estado}:'
+                f'{1 if bool(usuario.verificacion_sena_imagen) else 0}:'
+                f'{1 if bool(usuario.verificacion_sena_documento) else 0}'
+            ),
+        ]
+
+        if rol in ['admin', 'almacenista']:
+            pedidos_staff = Pedido.objects.filter(estado__in=['pendiente', 'esperando entrega'])
+            pedidos_staff_total = pedidos_staff.count()
+            pedidos_staff_ultimo = pedidos_staff.order_by('-id_pedido').values_list('id_pedido', flat=True).first() or 0
+            firma_partes.append(f'staff_pedidos:{pedidos_staff_total}:{pedidos_staff_ultimo}')
+        else:
+            pedidos_usuario = Pedido.objects.filter(id_usuario_fk=usuario)
+            pedidos_usuario_ultimo = pedidos_usuario.order_by('-id_pedido').values_list('id_pedido', flat=True).first() or 0
+            conteo_estados = {
+                row['estado']: row['total']
+                for row in pedidos_usuario.values('estado').annotate(total=Count('id_pedido')).order_by('estado')
+            }
+            estados_firma = ';'.join(f'{estado}:{total}' for estado, total in conteo_estados.items())
+            firma_partes.append(f'usuario_pedidos:{pedidos_usuario_ultimo}:{estados_firma}')
+
+        firma = '|'.join(firma_partes)
+        return JsonResponse({
+            'ok': True,
+            'signature': firma,
+            'unread_notifications': noti_no_leidas,
+        })
+    except Exception:
+        # Evita romper la navegación del usuario si falla el endpoint.
+        return JsonResponse({'ok': False, 'error': 'sync_unavailable'})
+
+
+@login_required
 @require_POST
 def notificacion_marcar_leida(request, noti_id):
     noti = get_object_or_404(Notificacion, pk=noti_id, id_usuario_fk=request.user)
