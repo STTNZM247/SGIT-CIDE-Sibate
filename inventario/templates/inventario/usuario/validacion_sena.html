@@ -195,10 +195,11 @@
     <div class="validacion-sena-loading" id="validacion_sena_loading" hidden>
         <div class="validacion-sena-loading__card" role="status" aria-live="polite" aria-busy="true">
             <div class="validacion-sena-loading__logo" aria-hidden="true"></div>
-            <h3>Por favor espera mientras validamos tu carnet</h3>
-            <p>Procesando información</p>
-            <div class="validacion-sena-loading__dots" aria-hidden="true">
-                <span></span><span></span><span></span><span></span>
+            <div class="validacion-sena-loading__content">
+                <h3>Validando tu carnet...</h3>
+                <div class="validacion-sena-loading__dots" aria-hidden="true">
+                    <span></span><span></span><span></span><span></span>
+                </div>
             </div>
             <button type="button" id="cancelar_validacion_carga" class="validacion-sena-loading__cancel" aria-label="Cancelar validación">
                 Cancelar validación
