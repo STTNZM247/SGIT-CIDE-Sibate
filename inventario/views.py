@@ -2991,19 +2991,19 @@ def aprobar_validacion_sena(request, usuario_id):
         mensaje='El administrador aprobó tu verificación manual. Ya puedes realizar pedidos normalmente.',
     )
 
-        correo = getattr(usuario, 'correo', None)
-        if correo:
-                try:
-                        from django.core.mail import EmailMultiAlternatives
+    correo = getattr(usuario, 'correo', None)
+    if correo:
+        try:
+            from django.core.mail import EmailMultiAlternatives
 
-                        nombre_usuario = (f'{usuario.nombre or ""} {usuario.apellido or ""}'.strip() or usuario.correo)
-                        subject = 'Validación SENA aprobada'
-                        text_content = (
-                                f'Hola {nombre_usuario},\n\n'
-                                'Tu validación manual SENA fue aprobada por el administrador.\n'
-                                'Ya puedes realizar pedidos normalmente.\n'
-                        )
-                        html_content = f"""
+            nombre_usuario = (f'{usuario.nombre or ""} {usuario.apellido or ""}'.strip() or usuario.correo)
+            subject = 'Validación SENA aprobada'
+            text_content = (
+                f'Hola {nombre_usuario},\n\n'
+                'Tu validación manual SENA fue aprobada por el administrador.\n'
+                'Ya puedes realizar pedidos normalmente.\n'
+            )
+            html_content = f"""
 <!DOCTYPE html>
 <html lang=\"es\">
 <head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>
@@ -3025,16 +3025,16 @@ def aprobar_validacion_sena(request, usuario_id):
 </body>
 </html>
 """
-                        email = EmailMultiAlternatives(
-                                subject=subject,
-                                body=text_content,
-                                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
-                                to=[correo],
-                        )
-                        email.attach_alternative(html_content, 'text/html')
-                        email.send(fail_silently=False)
-                except Exception:
-                        messages.warning(request, f'Se aprobó la validación, pero no se pudo enviar correo a {correo}.')
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                to=[correo],
+            )
+            email.attach_alternative(html_content, 'text/html')
+            email.send(fail_silently=False)
+        except Exception:
+            messages.warning(request, f'Se aprobó la validación, pero no se pudo enviar correo a {correo}.')
 
     _registrar_auditoria(
         request,
@@ -3089,21 +3089,21 @@ def rechazar_validacion_sena(request, usuario_id):
         mensaje=mensaje_rechazo,
     )
 
-        correo = getattr(usuario, 'correo', None)
-        if correo:
-                try:
-                        from django.core.mail import EmailMultiAlternatives
+    correo = getattr(usuario, 'correo', None)
+    if correo:
+        try:
+            from django.core.mail import EmailMultiAlternatives
 
-                        nombre_usuario = (f'{usuario.nombre or ""} {usuario.apellido or ""}'.strip() or usuario.correo)
-                        subject = 'Validación SENA rechazada'
-                        text_content = (
-                                f'Hola {nombre_usuario},\n\n'
-                                'Tu validación manual SENA fue rechazada por el administrador.\n'
-                                f'{("Motivo: " + motivo_rechazo + "\\n") if motivo_rechazo else ""}'
-                                'Puedes volver a solicitar validación manual cuando tengas una nueva evidencia.\n'
-                        )
-                        motivo_html = f'<p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#b45309;"><strong>Motivo:</strong> {motivo_rechazo}</p>' if motivo_rechazo else ''
-                        html_content = f"""
+            nombre_usuario = (f'{usuario.nombre or ""} {usuario.apellido or ""}'.strip() or usuario.correo)
+            subject = 'Validación SENA rechazada'
+            text_content = (
+                f'Hola {nombre_usuario},\n\n'
+                'Tu validación manual SENA fue rechazada por el administrador.\n'
+                f'{("Motivo: " + motivo_rechazo + "\\n") if motivo_rechazo else ""}'
+                'Puedes volver a solicitar validación manual cuando tengas una nueva evidencia.\n'
+            )
+            motivo_html = f'<p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#b45309;"><strong>Motivo:</strong> {motivo_rechazo}</p>' if motivo_rechazo else ''
+            html_content = f"""
 <!DOCTYPE html>
 <html lang=\"es\">
 <head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>
@@ -3127,16 +3127,16 @@ def rechazar_validacion_sena(request, usuario_id):
 </body>
 </html>
 """
-                        email = EmailMultiAlternatives(
-                                subject=subject,
-                                body=text_content,
-                                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
-                                to=[correo],
-                        )
-                        email.attach_alternative(html_content, 'text/html')
-                        email.send(fail_silently=False)
-                except Exception:
-                        messages.warning(request, f'Se rechazó la validación, pero no se pudo enviar correo a {correo}.')
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                to=[correo],
+            )
+            email.attach_alternative(html_content, 'text/html')
+            email.send(fail_silently=False)
+        except Exception:
+            messages.warning(request, f'Se rechazó la validación, pero no se pudo enviar correo a {correo}.')
 
     _registrar_auditoria(
         request,
