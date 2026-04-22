@@ -400,13 +400,9 @@
    DETALLE DEL PEDIDO � /pedidos/<id>/productos/
    ===================================================== */
 
-/* Layout superior 2 columnas */
+/* Sin grid de 2 columnas — se eliminó la columna del carnet */
 .detalle-top-grid {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 20px;
   margin-bottom: 24px;
-  align-items: start;
 }
 
 /* T�tulo de secci�n reutilizable */
@@ -442,30 +438,74 @@
   color: #2b7600;
 }
 
-/* Columna info */
+/* Columna info (ahora ancho completo) */
 .detalle-info-col {
   background: #fff;
   border: 1px solid #e2eadd;
   border-radius: 22px;
-  padding: 24px;
-  box-shadow: 0 6px 20px rgba(57, 169, 0, 0.05);
+  padding: 26px 28px;
+  box-shadow: 0 6px 28px rgba(57, 169, 0, 0.07);
 }
+
+.detalle-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.detalle-info-header .detalle-section-title {
+  margin-bottom: 0;
+}
+
+.detalle-user-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+.detalle-user-badge--ok {
+  background: #e6f9ee;
+  color: #1a7a42;
+  border: 1px solid #b5e8cc;
+}
+
+.detalle-user-badge--pending {
+  background: #fff4e0;
+  color: #8a5000;
+  border: 1px solid #f8d9a0;
+}
+
+.detalle-user-badge ion-icon { font-size: 1rem; }
 
 .detalle-info-tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 10px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
 .detalle-tile {
-  padding: 14px;
-  border-radius: 14px;
-  background: #f7fbf4;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: #f5fbf2;
   border: 1px solid #dde8d8;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
+  transition: box-shadow 0.18s;
+}
+
+.detalle-tile:hover {
+  box-shadow: 0 4px 16px rgba(57, 169, 0, 0.1);
 }
 
 .detalle-tile--devolucion {
@@ -495,15 +535,17 @@
 .detalle-tile--devolucion span ion-icon { color: #2e63b8; }
 
 .detalle-tile strong {
-  font-size: 0.97rem;
-  color: #1f2520;
+  font-size: 1.05rem;
+  color: #1a2e1c;
+  font-variant-numeric: tabular-nums;
 }
 
 .detalle-area-box {
-  padding: 14px 16px;
-  border-radius: 14px;
-  background: #f9fcf9;
-  border: 1px dashed #c0d8b4;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f5fbf2, #eef8e6);
+  border: 1px solid #c8e0bc;
+  margin-top: 4px;
 }
 
 .detalle-area-box span {
@@ -520,107 +562,11 @@
 
 .detalle-area-box p {
   margin: 0;
-  color: #1f2520;
-  font-size: 0.97rem;
+  color: #1a2e1c;
+  font-size: 1rem;
   line-height: 1.5;
   font-weight: 600;
 }
-
-/* Columna carnet */
-.detalle-carnet-col {
-  position: sticky;
-  top: 16px;
-}
-
-.detalle-carnet-card {
-  background: #fff;
-  border: 1px solid #e2eadd;
-  border-radius: 22px;
-  padding: 20px;
-  box-shadow: 0 6px 20px rgba(57, 169, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.detalle-carnet-card__badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  width: fit-content;
-}
-
-.detalle-carnet-card__badge--ok {
-  background: #e9f8ee;
-  color: #1f7a43;
-  border: 1px solid #cdebd8;
-}
-
-.detalle-carnet-card__img-wrap {
-  display: block;
-  position: relative;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 2px solid #d6e0d6;
-  aspect-ratio: 16 / 9;
-}
-
-.detalle-carnet-card__img-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: opacity 0.2s;
-}
-
-.detalle-carnet-card__overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  color: #fff;
-  font-size: 1.8rem;
-  opacity: 0;
-  transition: opacity 0.2s;
-  font-weight: 700;
-}
-
-.detalle-carnet-card__overlay span { font-size: 0.85rem; }
-
-.detalle-carnet-card__img-wrap:hover .detalle-carnet-card__overlay { opacity: 1; }
-.detalle-carnet-card__img-wrap:hover img { opacity: 0.6; }
-
-.detalle-carnet-card__name {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #4a5a4c;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.detalle-carnet-card--missing {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 140px;
-  text-align: center;
-  background: #fffaf4;
-  border-color: #ffd7ab;
-  color: #c96a00;
-  gap: 10px;
-}
-
-.detalle-carnet-card--missing ion-icon { font-size: 2.5rem; }
-.detalle-carnet-card--missing p { margin: 0; font-size: 0.9rem; font-weight: 600; }
 
 /* Secci�n de acciones */
 .detalle-actions-box {
@@ -780,12 +726,13 @@
 }
 
 .pedido-product-card__media {
-  height: 150px;
-  background: radial-gradient(circle at top, #fff, #eef3eb);
+  height: 170px;
+  background: radial-gradient(circle at 60% 30%, #f8fff4, #e8f5e2);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  border-bottom: 1px solid #e8f0e4;
 }
 
 .pedido-product-card__media img {
@@ -800,7 +747,7 @@
 }
 
 .pedido-product-card__body {
-  padding: 14px;
+  padding: 16px;
 }
 
 .pedido-product-card__catalogo {
@@ -813,10 +760,10 @@
 }
 
 .pedido-product-card h3 {
-  margin: 0 0 10px;
-  color: #1f281f;
-  font-size: 0.97rem;
-  line-height: 1.25;
+  margin: 0 0 12px;
+  color: #1a2e1c;
+  font-size: 1rem;
+  line-height: 1.3;
 }
 
 .pedido-product-card__meta {
@@ -1045,14 +992,6 @@
   .pedido-row__prestamo { grid-column: 2; }
   .pedido-row__carnet   { grid-column: 1; }
   .pedido-row__actions  { grid-column: 2; justify-content: flex-end; }
-
-  .detalle-top-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .detalle-carnet-col {
-    position: static;
-  }
 
   .detalle-codigo-layout {
     grid-template-columns: 1fr;

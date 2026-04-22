@@ -29,69 +29,46 @@
         <span class="pedidos-estado pedidos-estado--{{ pedido.estado|slugify }} pedidos-estado--lg">{{ pedido.estado|title }}</span>
     </header>
 
-    <!-- LAYOUT DOS COLUMNAS: datos + carnet -->
-    <div class="detalle-top-grid">
-
-        <!-- Info general + préstamo -->
-        <div class="detalle-info-col">
+    <!-- Info general -->
+    <div class="detalle-info-col">
+        <div class="detalle-info-header">
             <h2 class="detalle-section-title"><ion-icon name="information-circle-outline"></ion-icon> Información general</h2>
-            <div class="detalle-info-tiles">
-                <div class="detalle-tile">
-                    <span><ion-icon name="layers-outline"></ion-icon> Unidades solicitadas</span>
-                    <strong>{{ pedido.total_unidades }}</strong>
-                </div>
-                <div class="detalle-tile">
-                    <span><ion-icon name="calendar-outline"></ion-icon> Fecha de solicitud</span>
-                    <strong>{{ pedido.fch_registro|date:'d/m/Y H:i' }}</strong>
-                </div>
-                {% if pedido.fecha_devolucion %}
-                <div class="detalle-tile detalle-tile--devolucion">
-                    <span><ion-icon name="arrow-undo-outline"></ion-icon> Fecha de devolución</span>
-                    <strong>{{ pedido.fecha_devolucion|date:'d/m/Y H:i' }}</strong>
-                </div>
-                {% endif %}
-                {% if pedido.tipo_devolucion == 'individual' %}
-                <div class="detalle-tile detalle-tile--devolucion">
-                    <span><ion-icon name="arrow-undo-outline"></ion-icon> Tipo de devolución</span>
-                    <strong>Individual por producto</strong>
-                </div>
-                {% endif %}
+            {% with estado_sena=pedido.id_usuario_fk.verificacion_sena_estado %}
+            <span class="detalle-user-badge {% if estado_sena == 'verificado' %}detalle-user-badge--ok{% else %}detalle-user-badge--pending{% endif %}">
+                <ion-icon name="{% if estado_sena == 'verificado' %}shield-checkmark-outline{% else %}person-outline{% endif %}"></ion-icon>
+                {% if estado_sena == 'verificado' %}Verificado SENA{% else %}Sin verificar{% endif %}
+            </span>
+            {% endwith %}
+        </div>
+        <div class="detalle-info-tiles">
+            <div class="detalle-tile">
+                <span><ion-icon name="layers-outline"></ion-icon> Unidades solicitadas</span>
+                <strong>{{ pedido.total_unidades }}</strong>
             </div>
-
-            {% if pedido.area_ubicacion %}
-            <div class="detalle-area-box">
-                <span><ion-icon name="location-outline"></ion-icon> Área / Ambiente de uso</span>
-                <p>{{ pedido.area_ubicacion }}</p>
+            <div class="detalle-tile">
+                <span><ion-icon name="calendar-outline"></ion-icon> Fecha de solicitud</span>
+                <strong>{{ pedido.fch_registro|date:'d/m/Y H:i' }}</strong>
+            </div>
+            {% if pedido.fecha_devolucion %}
+            <div class="detalle-tile detalle-tile--devolucion">
+                <span><ion-icon name="arrow-undo-outline"></ion-icon> Fecha de devolución</span>
+                <strong>{{ pedido.fecha_devolucion|date:'d/m/Y H:i' }}</strong>
+            </div>
+            {% endif %}
+            {% if pedido.tipo_devolucion == 'individual' %}
+            <div class="detalle-tile detalle-tile--devolucion">
+                <span><ion-icon name="arrow-undo-outline"></ion-icon> Tipo de devolución</span>
+                <strong>Individual por producto</strong>
             </div>
             {% endif %}
         </div>
 
-        <!-- Carnet institucional -->
-        <div class="detalle-carnet-col">
-            <h2 class="detalle-section-title"><ion-icon name="card-outline"></ion-icon> Carnet institucional</h2>
-            {% if pedido.foto_carnet %}
-            <div class="detalle-carnet-card">
-                <div class="detalle-carnet-card__badge detalle-carnet-card__badge--ok">
-                    <ion-icon name="shield-checkmark-outline"></ion-icon>
-                    Verificación adjunta
-                </div>
-                <a href="{{ pedido.foto_carnet.url }}" target="_blank" rel="noopener" class="detalle-carnet-card__img-wrap">
-                    <img src="{{ pedido.foto_carnet.url }}" alt="Carnet de {{ pedido.id_usuario_fk.nombre }}">
-                    <span class="detalle-carnet-card__overlay">
-                        <ion-icon name="expand-outline"></ion-icon>
-                        Ver completo
-                    </span>
-                </a>
-                <p class="detalle-carnet-card__name">{{ pedido.id_usuario_fk.nombre }} {{ pedido.id_usuario_fk.apellido }}{% if pedido.id_usuario_fk.cc %} · CC {{ pedido.id_usuario_fk.cc }}{% endif %}</p>
-            </div>
-            {% else %}
-            <div class="detalle-carnet-card detalle-carnet-card--missing">
-                <ion-icon name="alert-circle-outline"></ion-icon>
-                <p>El usuario no adjuntó foto de carnet.</p>
-            </div>
-            {% endif %}
+        {% if pedido.area_ubicacion %}
+        <div class="detalle-area-box">
+            <span><ion-icon name="location-outline"></ion-icon> Área / Ambiente de uso</span>
+            <p>{{ pedido.area_ubicacion }}</p>
         </div>
-
+        {% endif %}
     </div>
 
     <!-- ACCIONES -->
