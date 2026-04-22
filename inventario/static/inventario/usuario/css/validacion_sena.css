@@ -102,9 +102,9 @@
 }
 
 .validacion-sena-card--secondary {
-  background: linear-gradient(180deg, #163322 0%, #1c3f29 100%);
-  border-color: rgba(255, 255, 255, 0.08);
-  color: #f4fff4;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbf5 100%);
+  border-color: #dce8d8;
+  color: #1a1a1a;
 }
 
 .validacion-sena-card--secondary .validacion-sena-card__eyebrow,
