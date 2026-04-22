@@ -113,6 +113,19 @@
         var lastSignature = null;
         var pendingReload = false;
         var isChecking = false;
+        var formDirty = false;
+
+        function markDirty(evt) {
+            var target = evt && evt.target;
+            if (!target || !target.closest) return;
+            if (target.closest('form')) {
+                formDirty = true;
+            }
+        }
+
+        function clearDirty() {
+            formDirty = false;
+        }
 
         function setNotifBadge(unreadCount) {
             var notifBtns = document.querySelectorAll('.nav-notif-btn');
@@ -129,7 +142,10 @@
 
         function userIsBusy() {
             var active = document.activeElement;
-            if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) {
+            if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT' || active.isContentEditable)) {
+                return true;
+            }
+            if (formDirty) {
                 return true;
             }
             if (document.querySelector('.validacion-sena-camera-modal:not([hidden])')) {
@@ -194,6 +210,9 @@
                 tryReload();
             }
         });
+        document.addEventListener('input', markDirty, true);
+        document.addEventListener('change', markDirty, true);
+        document.addEventListener('submit', clearDirty, true);
         document.addEventListener('click', tryReload);
         document.addEventListener('keyup', tryReload);
 
