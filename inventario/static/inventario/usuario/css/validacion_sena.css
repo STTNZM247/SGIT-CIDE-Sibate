@@ -573,7 +573,7 @@
 .validacion-sena-camera-stage video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
   background: #040806;
 }

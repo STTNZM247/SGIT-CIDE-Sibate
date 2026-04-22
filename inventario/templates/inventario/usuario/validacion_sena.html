@@ -482,8 +482,9 @@
             stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: { ideal: 'environment' },
-                    width: { ideal: 720 },
-                    height: { ideal: 1280 }
+                    width: { ideal: 1080 },
+                    height: { ideal: 1920 },
+                    aspectRatio: { ideal: 9 / 16 }
                 },
                 audio: false
             });
@@ -590,19 +591,6 @@
             var sourceHeight = normalizedCanvas.height;
             var sourceRatio = sourceWidth / sourceHeight;
 
-            var cropWidth = sourceWidth;
-            var cropHeight = sourceHeight;
-            var offsetX = 0;
-            var offsetY = 0;
-
-            if (sourceRatio > targetRatio) {
-                cropWidth = sourceHeight * targetRatio;
-                offsetX = (sourceWidth - cropWidth) / 2;
-            } else {
-                cropHeight = sourceWidth / targetRatio;
-                offsetY = (sourceHeight - cropHeight) / 2;
-            }
-
             var canvas = document.createElement('canvas');
             canvas.width = 990;
             canvas.height = 1530;
@@ -614,17 +602,24 @@
                 rotado: rawCanvas.width > rawCanvas.height
             });
 
-            context.drawImage(
-                normalizedCanvas,
-                offsetX,
-                offsetY,
-                cropWidth,
-                cropHeight,
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
+            // Evita zoom/crop agresivo: ajusta la imagen completa dentro del lienzo vertical.
+            context.fillStyle = '#f4f8f3';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            var drawWidth = canvas.width;
+            var drawHeight = canvas.height;
+            var drawX = 0;
+            var drawY = 0;
+
+            if (sourceRatio > targetRatio) {
+                drawHeight = canvas.width / sourceRatio;
+                drawY = (canvas.height - drawHeight) / 2;
+            } else {
+                drawWidth = canvas.height * sourceRatio;
+                drawX = (canvas.width - drawWidth) / 2;
+            }
+
+            context.drawImage(normalizedCanvas, drawX, drawY, drawWidth, drawHeight);
 
             var previewUrl = canvas.toDataURL('image/png');
             traceStep('dataURL generada', { longitud: (previewUrl || '').length });
