@@ -57,7 +57,7 @@
                 <input type="hidden" name="next" value="{{ redirect_to }}">
 
                 <div class="validacion-sena-capture" id="validacion-sena-capture-card">
-                    <span class="validacion-sena-capture__guide">Alinea el carnet dentro del marco y procura que el logo quede visible.</span>
+                    <span class="validacion-sena-capture__guide">Alinea el carnet dentro del marco, procura que el logo quede visible y usa fondo negro para mejorar el recorte automático.</span>
                     <span class="validacion-sena-capture__hint">La guía solo aparece en la cámara dentro de esta página. Si eliges una foto desde el dispositivo, el celular abrirá su cámara o galería sin plantilla.</span>
                     <div class="validacion-sena-capture__actions">
                         <button type="button" class="validacion-sena-capture__cta validacion-sena-capture__cta--camera" id="abrir_camara_guiada">
@@ -69,7 +69,7 @@
                             Elegir desde galería o archivo
                         </button>
                     </div>
-                    <span class="validacion-sena-capture__subhint">Recomendado: usa la cámara guiada. La opción de galería/archivo es solo respaldo y no muestra la plantilla.</span>
+                    <span class="validacion-sena-capture__subhint">Recomendado: usa la cámara guiada y coloca el carnet sobre fondo negro liso. La opción de galería/archivo es solo respaldo y no muestra la plantilla.</span>
                     <div class="validacion-sena-capture__preview-stage" aria-hidden="true">
                         <span class="validacion-sena-capture__frame"></span>
                         <span class="validacion-sena-capture__frame-corners">
@@ -118,7 +118,7 @@
                         <div class="validacion-sena-camera-stage__status" id="validacion_sena_camera_status">Preparando cámara...</div>
                     </div>
 
-                    <p class="validacion-sena-camera-modal__help">Mantén el celular en vertical, acerca el carnet hasta llenar la guía y evita tomar la foto acostada.</p>
+                    <p class="validacion-sena-camera-modal__help">Mantén el celular en vertical, acerca el carnet hasta llenar la guía, usa fondo negro y evita tomar la foto acostada.</p>
 
                     <div class="validacion-sena-camera-modal__actions">
                         <button type="button" class="validacion-sena-btn validacion-sena-btn--ghost" id="cancelar_captura_guiada">Cancelar</button>

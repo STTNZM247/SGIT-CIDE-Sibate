@@ -38,6 +38,63 @@ def _tokens_nombre_usuario(usuario):
     return [token for token in nombre_completo.split(' ') if len(token) > 2]
 
 
+def _recortar_carnet_sobre_fondo_oscuro(image):
+    """Intenta recortar automáticamente el carnet blanco cuando el fondo es oscuro.
+
+    Si no encuentra un rectángulo razonable, retorna la imagen original.
+    """
+    try:
+        gray = ImageOps.grayscale(image)
+        # El carnet suele ser la zona más clara de la foto.
+        mask = gray.point(lambda px: 255 if px >= 165 else 0)
+        bbox = mask.getbbox()
+        if not bbox:
+            return image, False
+
+        left, top, right, bottom = bbox
+        width = max(1, right - left)
+        height = max(1, bottom - top)
+        img_w, img_h = image.size
+
+        area_ratio = (width * height) / max(1, img_w * img_h)
+        ratio = width / max(1, height)
+
+        # Filtro para evitar recortes absurdos.
+        # Carnet vertical aproximado: ~0.65 (ancho/alto). Damos tolerancia amplia.
+        if area_ratio < 0.08 or ratio < 0.38 or ratio > 1.05:
+            return image, False
+
+        pad_x = int(width * 0.04)
+        pad_y = int(height * 0.04)
+        left = max(0, left - pad_x)
+        top = max(0, top - pad_y)
+        right = min(img_w, right + pad_x)
+        bottom = min(img_h, bottom + pad_y)
+
+        recorte = image.crop((left, top, right, bottom))
+        return recorte, True
+    except Exception:
+        return image, False
+
+
+def _variantes_para_ocr(image):
+    variantes = [image]
+    try:
+        gray = ImageOps.grayscale(image)
+        contrast = ImageOps.autocontrast(gray)
+        variantes.append(contrast.convert('RGB'))
+
+        # Escalado para OCR en texto pequeño.
+        upscale = contrast.resize(
+            (max(1, contrast.width * 2), max(1, contrast.height * 2)),
+            resample=Image.Resampling.LANCZOS,
+        )
+        variantes.append(upscale.convert('RGB'))
+    except Exception:
+        pass
+    return variantes
+
+
 def _documento_con_etiqueta_en_texto(texto_normalizado, documento_usuario):
     if not documento_usuario:
         return False
@@ -60,6 +117,10 @@ def _documento_con_etiqueta_en_texto(texto_normalizado, documento_usuario):
         patron_cercano_2 = rf'{doc_flexible}\b.{{0,24}}(?:{etiqueta})'
         if re.search(patron_cercano_1, texto_normalizado) or re.search(patron_cercano_2, texto_normalizado):
             return True
+
+    # Fallback: si el OCR leyó el documento exacto, lo aceptamos para no bloquear por ruido.
+    if re.search(rf'\b{doc_flexible}\b', texto_normalizado):
+        return True
 
     return False
 
@@ -91,7 +152,11 @@ def _detectar_logo_sena(image, texto_normalizado):
             verdes += 1
 
     green_ratio = verdes / total
-    text_has_sena = 'SENA' in texto_normalizado or 'SERVICIO NACIONAL DE APRENDIZAJE' in texto_normalizado
+    text_has_sena = (
+        'SENA' in texto_normalizado
+        or 'SERVICIO NACIONAL DE APRENDIZAJE' in texto_normalizado
+        or 'APRENDIZ' in texto_normalizado
+    )
 
     # Umbral más tolerante para foto real de carnet donde el logo ocupa poca área.
     return green_ratio >= 0.018 or (text_has_sena and green_ratio >= 0.012)
@@ -125,19 +190,19 @@ def cargar_imagen_validacion(archivo, *, require_vertical=True):
 
 
 def _evaluar_validacion_por_imagen(image, usuario):
-    texto_ocr, ocr_error = _extraer_texto_ocr(image)
+    texto_ocr_total = ''
+    ocr_error = ''
 
-    if texto_ocr:
-        try:
-            image_gray = ImageOps.grayscale(image)
-            image_contrast = ImageOps.autocontrast(image_gray)
-            texto_extra, _ = _extraer_texto_ocr(image_contrast)
-            if texto_extra and texto_extra not in texto_ocr:
-                texto_ocr = f'{texto_ocr}\n{texto_extra}'
-        except Exception:
-            pass
+    recorte, recortado = _recortar_carnet_sobre_fondo_oscuro(image)
+    for variante in _variantes_para_ocr(recorte):
+        texto_tmp, error_tmp = _extraer_texto_ocr(variante)
+        if texto_tmp:
+            if texto_tmp not in texto_ocr_total:
+                texto_ocr_total = f'{texto_ocr_total}\n{texto_tmp}'.strip()
+        elif error_tmp and not ocr_error:
+            ocr_error = error_tmp
 
-    texto_normalizado = normalizar_texto(texto_ocr)
+    texto_normalizado = normalizar_texto(texto_ocr_total)
     documento_usuario = re.sub(r'\D+', '', usuario.cc or '')
     tokens_nombre = _tokens_nombre_usuario(usuario)
 
@@ -148,7 +213,7 @@ def _evaluar_validacion_por_imagen(image, usuario):
 
     nombre_ok = bool(tokens_nombre) and coincidencias_nombre >= min_coincidencias
     documento_ok = _documento_con_etiqueta_en_texto(texto_normalizado, documento_usuario)
-    logo_ok = _detectar_logo_sena(image, texto_normalizado)
+    logo_ok = _detectar_logo_sena(recorte if recortado else image, texto_normalizado)
 
     reasons = []
     if ocr_error:
@@ -156,9 +221,11 @@ def _evaluar_validacion_por_imagen(image, usuario):
     if not nombre_ok:
         reasons.append('El nombre del carnet no coincide claramente con tu cuenta (se compara en mayúsculas, sin importar tildes).')
     if not documento_ok:
-        reasons.append('No encontramos tu documento junto a una etiqueta TI o CC en el carnet.')
+        reasons.append('No encontramos tu documento (TI/CC) en el texto del carnet.')
     if not logo_ok:
         reasons.append('No pudimos confirmar el logo del SENA en la foto.')
+    if not recortado:
+        reasons.append('Tip: usa un fondo negro liso para que el sistema recorte mejor el carnet automáticamente.')
 
     score = int(bool(nombre_ok)) + int(bool(documento_ok)) + int(bool(logo_ok))
     if ocr_error:
@@ -169,7 +236,7 @@ def _evaluar_validacion_por_imagen(image, usuario):
         'message': 'Tu carnet SENA fue validado correctamente.' if (not ocr_error and nombre_ok and documento_ok and logo_ok) else 'No se pudo validar tu carnet de forma automática. Puedes solicitar validación manual si lo necesitas.',
         'error_code': None if (not ocr_error and nombre_ok and documento_ok and logo_ok) else ('ocr_failed' if ocr_error else 'mismatch'),
         'details': ['Logo SENA detectado.', 'Nombre y documento coinciden con tu cuenta.'] if (not ocr_error and nombre_ok and documento_ok and logo_ok) else reasons,
-        'texto_ocr': texto_ocr,
+        'texto_ocr': texto_ocr_total,
         'score': score,
     }
 
