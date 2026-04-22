@@ -273,18 +273,10 @@ def _evaluar_validacion_por_imagen(image, usuario, orientacion='0'):
     logo_ok = _detectar_logo_sena(recorte if recortado else image, texto_normalizado)
 
     reasons = []
-    if ocr_error:
-        reasons.append(ocr_error)
-    if not texto_normalizado:
-        reasons.append('No se pudo extraer texto útil del carnet en este intento.')
     if not nombre_ok:
-        reasons.append('El nombre del carnet no coincide claramente con tu cuenta (se compara en mayúsculas, sin importar tildes).')
+        reasons.append('El nombre del carnet no coincide, inténtalo de nuevo.')
     if not documento_ok:
-        reasons.append('No encontramos tu documento (TI/CC) en el texto del carnet.')
-    if not logo_ok:
-        reasons.append('No pudimos confirmar el logo del SENA en la foto.')
-    if not recortado:
-        reasons.append('Tip: usa un fondo negro liso para que el sistema recorte mejor el carnet automáticamente.')
+        reasons.append('No se distingue el número de documento.')
 
     score = int(bool(nombre_ok)) + int(bool(documento_ok)) + int(bool(logo_ok))
     if ocr_error:
