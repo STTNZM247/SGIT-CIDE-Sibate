@@ -202,12 +202,11 @@
     <div class="validacion-sena-loading" id="validacion_sena_loading" hidden>
         <div class="validacion-sena-loading__card" role="status" aria-live="polite" aria-busy="true">
             <div class="validacion-sena-loading__logo" aria-hidden="true"></div>
-            <div class="validacion-sena-loading__spinner" aria-hidden="true"></div>
             <h3>Por favor espera mientras validamos tu carnet</h3>
-            <p>
-                Procesando información
-                <span id="validacion_sena_loading_dots">0..</span>
-            </p>
+            <p>Procesando información</p>
+            <div class="validacion-sena-loading__dots" aria-hidden="true">
+                <span></span><span></span><span></span><span></span>
+            </div>
         </div>
     </div>
 </section>
@@ -235,11 +234,9 @@
     var debugPanel = document.getElementById('validacion_sena_debug');
     var debugLog = document.getElementById('validacion_sena_debug_log');
     var loadingOverlay = document.getElementById('validacion_sena_loading');
-    var loadingDots = document.getElementById('validacion_sena_loading_dots');
     var backendDebugNode = document.getElementById('validacion_sena_backend_debug');
     var stream = null;
     var traceLines = [];
-    var loadingTicker = null;
 
     if (!input || !preview) return;
 
@@ -258,18 +255,6 @@
     function startLoadingOverlay() {
         if (!loadingOverlay) return;
         loadingOverlay.hidden = false;
-
-        if (!loadingDots) return;
-        var frames = ['0..', '.0.', '..0'];
-        var idx = 0;
-        loadingDots.textContent = frames[0];
-        if (loadingTicker) {
-            window.clearInterval(loadingTicker);
-        }
-        loadingTicker = window.setInterval(function () {
-            idx = (idx + 1) % frames.length;
-            loadingDots.textContent = frames[idx];
-        }, 420);
     }
 
     function traceStep(message, data) {
