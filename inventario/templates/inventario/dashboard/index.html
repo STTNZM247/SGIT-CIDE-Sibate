@@ -178,7 +178,6 @@
                             <tr>
                                 <th>Usuario</th>
                                 <th>Documento</th>
-                                <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -190,22 +189,22 @@
                                     <small>{{ item.correo }}</small>
                                 </td>
                                 <td>{{ item.documento }}</td>
-                                <td><span class="admin-sena-pill">{{ item.estado }}</span></td>
                                 <td>
                                     <div class="admin-sena-actions">
                                         {% if item.intento_url %}
-                                        <a href="{{ item.intento_url }}" target="_blank" rel="noopener" class="admin-sena-link">Ver intento</a>
+                                        <button type="button" class="admin-sena-link js-open-evidence" data-evidence-url="{{ item.intento_url }}" data-evidence-title="Intento OCR · {{ item.nombre }}">Ver intento</button>
                                         {% else %}
                                         <span class="stock-gap-muted">Sin imagen</span>
                                         {% endif %}
                                         <form method="post" action="{% url 'enviar_enlace_validacion_sena' item.id %}">
                                             {% csrf_token %}
                                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                            <button type="submit" class="admin-sena-btn">Enviar enlace</button>
+                                            <button type="submit" class="admin-sena-btn">Enviar enlace único (4h)</button>
                                         </form>
                                     </div>
                                     <details class="admin-sena-details">
                                         <summary>Expandir información</summary>
+                                        <p><strong>Estado:</strong> {{ item.estado }}</p>
                                         <p><strong>Solicitud:</strong> {% if item.solicitada_en %}{{ item.solicitada_en|date:'d/m/Y H:i' }}{% else %}-{% endif %}</p>
                                         <p><strong>Observación:</strong> {{ item.observacion|default:'Sin observación' }}</p>
                                     </details>
@@ -240,7 +239,7 @@
                             <tr>
                                 <th>Usuario</th>
                                 <th>Documento</th>
-                                <th>Estado</th>
+                                <th>Evidencia</th>
                                 <th>Acciones de revisión</th>
                             </tr>
                         </thead>
@@ -252,31 +251,45 @@
                                     <small>{{ item.correo }}</small>
                                 </td>
                                 <td>{{ item.documento }}</td>
-                                <td><span class="admin-sena-pill">{{ item.estado }}</span></td>
                                 <td>
-                                    <div class="admin-sena-actions admin-sena-actions--review">
+                                    {% if item.documento_url %}
+                                    <button type="button" class="admin-sena-thumb js-open-evidence" data-evidence-url="{{ item.documento_url }}" data-evidence-title="Documento cargado · {{ item.nombre }}">
+                                        <img src="{{ item.documento_url }}" alt="Documento de {{ item.nombre }}">
+                                    </button>
+                                    {% elif item.intento_url %}
+                                    <button type="button" class="admin-sena-thumb js-open-evidence" data-evidence-url="{{ item.intento_url }}" data-evidence-title="Intento OCR · {{ item.nombre }}">
+                                        <img src="{{ item.intento_url }}" alt="Intento OCR de {{ item.nombre }}">
+                                    </button>
+                                    {% else %}
+                                    <span class="stock-gap-muted">Sin evidencia</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="admin-sena-review">
+                                        <p class="admin-sena-review__title">Decisión del administrador</p>
                                         <form method="post" action="{% url 'aprobar_validacion_sena' item.id %}">
                                             {% csrf_token %}
                                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                            <button type="submit" class="admin-sena-btn admin-sena-btn--ok">Validar usuario</button>
+                                            <button type="submit" class="admin-sena-btn admin-sena-btn--ok">Aprobar validación</button>
                                         </form>
                                         <form method="post" action="{% url 'rechazar_validacion_sena' item.id %}">
                                             {% csrf_token %}
                                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
                                             <input type="text" name="motivo_rechazo" placeholder="Motivo opcional de rechazo">
-                                            <button type="submit" class="admin-sena-btn admin-sena-btn--danger">Rechazar</button>
+                                            <button type="submit" class="admin-sena-btn admin-sena-btn--danger">Rechazar validación</button>
                                         </form>
                                     </div>
                                     <details class="admin-sena-details">
                                         <summary>Expandir información y evidencia</summary>
+                                        <p><strong>Estado:</strong> {{ item.estado }}</p>
                                         <p><strong>Solicitud:</strong> {% if item.solicitada_en %}{{ item.solicitada_en|date:'d/m/Y H:i' }}{% else %}-{% endif %}</p>
                                         <p><strong>Observación:</strong> {{ item.observacion|default:'Sin observación' }}</p>
                                         <div class="admin-sena-evidence">
                                             {% if item.intento_url %}
-                                            <a href="{{ item.intento_url }}" target="_blank" rel="noopener">Ver intento OCR</a>
+                                            <button type="button" class="admin-sena-link js-open-evidence" data-evidence-url="{{ item.intento_url }}" data-evidence-title="Intento OCR · {{ item.nombre }}">Ver intento OCR</button>
                                             {% endif %}
                                             {% if item.documento_url %}
-                                            <a href="{{ item.documento_url }}" target="_blank" rel="noopener">Ver documento cargado</a>
+                                            <button type="button" class="admin-sena-link js-open-evidence" data-evidence-url="{{ item.documento_url }}" data-evidence-title="Documento cargado · {{ item.nombre }}">Ver documento cargado</button>
                                             {% else %}
                                             <span class="stock-gap-muted">Sin documento visible</span>
                                             {% endif %}
@@ -323,12 +336,12 @@
                                     <td>
                                         <div class="admin-sena-actions">
                                             {% if item.intento_url %}
-                                            <a href="{{ item.intento_url }}" target="_blank" rel="noopener" class="admin-sena-link">Ver intento</a>
+                                            <button type="button" class="admin-sena-link js-open-evidence" data-evidence-url="{{ item.intento_url }}" data-evidence-title="Intento OCR · {{ item.nombre }}">Ver intento</button>
                                             {% endif %}
                                             <form method="post" action="{% url 'enviar_enlace_validacion_sena' item.id %}">
                                                 {% csrf_token %}
                                                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                                <button type="submit" class="admin-sena-btn">Enviar enlace</button>
+                                                <button type="submit" class="admin-sena-btn">Enviar enlace único (4h)</button>
                                             </form>
                                         </div>
                                     </td>
@@ -340,6 +353,18 @@
                     {% else %}
                     <p class="admin-card__empty">No hay usuarios con solicitud manual activa.</p>
                     {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div id="evidencePreviewModal" class="stock-gap-modal" aria-hidden="true">
+            <div class="stock-gap-modal__dialog stock-gap-modal__dialog--evidence" role="dialog" aria-modal="true" aria-label="Vista previa de evidencia">
+                <div class="stock-gap-modal__head">
+                    <h2 id="evidencePreviewTitle">Vista previa de evidencia</h2>
+                    <button type="button" class="stock-gap-modal__close" id="closeEvidencePreviewBtn" aria-label="Cerrar">×</button>
+                </div>
+                <div class="stock-gap-modal__body stock-gap-modal__body--evidence">
+                    <img id="evidencePreviewImage" src="" alt="Evidencia cargada">
                 </div>
             </div>
         </div>
@@ -797,6 +822,48 @@
         };
 
         openBtn.addEventListener('click', openModal);
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) closeModal();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+        });
+    })();
+
+    (() => {
+        const modal = document.getElementById('evidencePreviewModal');
+        const closeBtn = document.getElementById('closeEvidencePreviewBtn');
+        const previewImage = document.getElementById('evidencePreviewImage');
+        const previewTitle = document.getElementById('evidencePreviewTitle');
+        const triggerButtons = document.querySelectorAll('.js-open-evidence[data-evidence-url]');
+        if (!modal || !closeBtn || !previewImage || !previewTitle || !triggerButtons.length) return;
+
+        const openModal = (url, title) => {
+            previewImage.src = url;
+            previewImage.alt = title || 'Evidencia cargada';
+            previewTitle.textContent = title || 'Vista previa de evidencia';
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+        };
+
+        const closeModal = () => {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            previewImage.removeAttribute('src');
+            document.body.classList.remove('modal-open');
+        };
+
+        triggerButtons.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const url = btn.getAttribute('data-evidence-url') || '';
+                const title = btn.getAttribute('data-evidence-title') || '';
+                if (!url) return;
+                openModal(url, title);
+            });
+        });
+
         closeBtn.addEventListener('click', closeModal);
         modal.addEventListener('click', (event) => {
             if (event.target === modal) closeModal();

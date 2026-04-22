@@ -862,6 +862,7 @@
     text-align: left;
     border-bottom: 1px solid #e6efe4;
     color: #203528;
+    vertical-align: top;
 }
 
 .admin-sena-table th {
@@ -905,6 +906,10 @@
     gap: .35rem;
 }
 
+.admin-sena-actions--review {
+    align-items: flex-start;
+}
+
 .admin-sena-actions form {
     display: inline-flex;
     align-items: center;
@@ -923,6 +928,7 @@
     padding: .24rem .58rem;
     font-size: .78rem;
     font-weight: 700;
+    cursor: pointer;
 }
 
 .admin-sena-link:hover {
@@ -956,6 +962,33 @@
     color: #9e3030;
 }
 
+.admin-sena-review {
+    border: 1px solid #d7e7d4;
+    border-radius: 12px;
+    padding: .45rem;
+    background: #fbfefb;
+}
+
+.admin-sena-review__title {
+    margin: 0 0 .35rem;
+    font-size: .74rem;
+    font-weight: 800;
+    color: #32563a;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+}
+
+.admin-sena-review form {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    margin-bottom: .32rem;
+}
+
+.admin-sena-review form:last-child {
+    margin-bottom: 0;
+}
+
 .admin-sena-actions input[name="motivo_rechazo"] {
     height: 30px;
     border: 1px solid #d4e1d5;
@@ -963,6 +996,24 @@
     padding: 0 .45rem;
     font-size: .75rem;
     width: 200px;
+}
+
+.admin-sena-thumb {
+    width: 78px;
+    height: 78px;
+    border-radius: 10px;
+    border: 1px solid #d2e4d1;
+    background: #f6fcf5;
+    padding: 0;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.admin-sena-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .admin-sena-details {
@@ -1000,6 +1051,23 @@
     text-decoration: underline;
 }
 
+.stock-gap-modal__dialog--evidence {
+    max-width: min(900px, 96vw);
+}
+
+.stock-gap-modal__body--evidence {
+    padding: .8rem;
+}
+
+#evidencePreviewImage {
+    width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 10px;
+    border: 1px solid #dce8d8;
+    background: #f5f9f5;
+}
+
 @media (max-width: 1100px) {
     .admin-sena-grid {
         grid-template-columns: 1fr;
@@ -1007,6 +1075,10 @@
 
     .admin-sena-actions input[name="motivo_rechazo"] {
         width: 160px;
+    }
+
+    .admin-sena-review form {
+        flex-wrap: wrap;
     }
 }
 
@@ -1986,6 +2058,13 @@ html[data-theme="dark"] .admin-sena-btn {
     color: #7dd87d !important;
     border-color: #253025 !important;
 }
+html[data-theme="dark"] .admin-sena-review {
+    background: #121d12 !important;
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .admin-sena-review__title {
+    color: #9ed3a7 !important;
+}
 html[data-theme="dark"] .admin-sena-btn--danger {
     background: #2c1a1a !important;
     color: #ffb8b8 !important;
@@ -2002,6 +2081,14 @@ html[data-theme="dark"] .admin-sena-details p {
 }
 html[data-theme="dark"] .admin-sena-evidence a {
     color: #8bc4ff !important;
+}
+html[data-theme="dark"] .admin-sena-thumb {
+    border-color: #2d442e !important;
+    background: #162316 !important;
+}
+html[data-theme="dark"] #evidencePreviewImage {
+    border-color: #2a3f2a !important;
+    background: #111611 !important;
 }
 
 /* Gráfico de barras (line chart) */
