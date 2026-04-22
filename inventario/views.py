@@ -3096,10 +3096,11 @@ def rechazar_validacion_sena(request, usuario_id):
 
             nombre_usuario = (f'{usuario.nombre or ""} {usuario.apellido or ""}'.strip() or usuario.correo)
             subject = 'Validación SENA rechazada'
+            motivo_linea = f'Motivo: {motivo_rechazo}\n' if motivo_rechazo else ''
             text_content = (
                 f'Hola {nombre_usuario},\n\n'
                 'Tu validación manual SENA fue rechazada por el administrador.\n'
-                f'{("Motivo: " + motivo_rechazo + "\\n") if motivo_rechazo else ""}'
+                f'{motivo_linea}'
                 'Puedes volver a solicitar validación manual cuando tengas una nueva evidencia.\n'
             )
             motivo_html = f'<p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#b45309;"><strong>Motivo:</strong> {motivo_rechazo}</p>' if motivo_rechazo else ''
