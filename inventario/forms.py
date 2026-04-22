@@ -314,8 +314,15 @@ class UsuarioPerfilForm(forms.ModelForm):
             'nombre': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_nombre', 'placeholder': 'Nombre'}),
             'apellido': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_apellido', 'placeholder': 'Apellido'}),
             'correo': forms.EmailInput(attrs={'class': 'form-control', 'id': 'id_correo', 'placeholder': 'Correo institucional'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_telefono', 'placeholder': '+57 300 000 0000'}),
-            'programa_formacion': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_programa_formacion', 'placeholder': 'Ej: ADSO / Análisis y desarrollo de software'}),
+            'telefono': forms.TextInput(attrs={
+                'class': 'form-control',
+                'id': 'id_telefono',
+                'placeholder': '+57 300 000 0000',
+                'inputmode': 'numeric',
+                'maxlength': '16',
+                'autocomplete': 'tel',
+            }),
+            'programa_formacion': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_programa_formacion', 'placeholder': 'Escribe tu programa de formación'}),
             'centro_desarrollo': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_centro_desarrollo', 'placeholder': 'Ej: Centro de formación de ...'}),
             'fot_usu': forms.ClearableFileInput(attrs={'class': 'form-file', 'accept': 'image/*', 'id': 'id_fot_usu'}),
             'banner_usu': forms.ClearableFileInput(attrs={'class': 'form-file', 'accept': 'image/*', 'id': 'id_banner_usu'}),
@@ -342,6 +349,21 @@ class UsuarioPerfilForm(forms.ModelForm):
                 self.initial['id_tipo_doc_fk'] = getattr(self.instance, 'id_tipo_doc_fk_id', None)
         else:
             self.fields.pop('id_tipo_doc_fk', None)
+
+    def clean_telefono(self):
+        telefono = (self.cleaned_data.get('telefono') or '').strip()
+        if not telefono:
+            return telefono
+
+        digits = ''.join(ch for ch in telefono if ch.isdigit())
+        if digits.startswith('57'):
+            digits = digits[2:]
+        digits = digits[:10]
+
+        if len(digits) != 10:
+            raise forms.ValidationError('Ingresa un teléfono válido de 10 dígitos.')
+
+        return f'+57 {digits[:3]} {digits[3:6]} {digits[6:]}'
 
     def save(self, commit=True):
         usuario = super().save(commit=False)

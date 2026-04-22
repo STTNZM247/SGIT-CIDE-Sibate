@@ -564,5 +564,48 @@ html[data-theme="dark"] #perfil-cover-trigger * {
   });
 })();
 </script>
+
+<script data-page-script="true">
+/* ── Teléfono Colombia (+57) con formato 300 000 0000 ──────────────────── */
+(function () {
+  var telInput = document.getElementById('id_telefono');
+  if (!telInput) return;
+
+  function formatearTelefonoCol(value) {
+    var digits = String(value || '').replace(/\D/g, '');
+
+    if (digits.startsWith('57')) {
+      digits = digits.slice(2);
+    }
+    if (digits.length > 10) {
+      digits = digits.slice(0, 10);
+    }
+
+    var p1 = digits.slice(0, 3);
+    var p2 = digits.slice(3, 6);
+    var p3 = digits.slice(6, 10);
+    var out = '+57';
+
+    if (p1) out += ' ' + p1;
+    if (p2) out += ' ' + p2;
+    if (p3) out += ' ' + p3;
+    return out;
+  }
+
+  function aplicarFormato() {
+    telInput.value = formatearTelefonoCol(telInput.value);
+  }
+
+  telInput.addEventListener('input', aplicarFormato);
+  telInput.addEventListener('blur', aplicarFormato);
+  telInput.addEventListener('focus', function () {
+    if (!telInput.value.trim()) {
+      telInput.value = '+57 ';
+    }
+  });
+
+  aplicarFormato();
+})();
+</script>
 {% endblock %}
 
