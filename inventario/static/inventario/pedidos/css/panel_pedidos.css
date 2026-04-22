@@ -1125,3 +1125,176 @@ html[data-theme="dark"] .pedidos-empty p {
     border-top-color: #253025 !important;
   }
 }
+
+/* =====================================================
+   DARK MODE — DETALLE DEL PEDIDO
+   ===================================================== */
+
+/* Hero */
+html[data-theme="dark"] .pedidos-page__hero h1 { color: #e2ede2 !important; }
+html[data-theme="dark"] .pedidos-page__hero p:not(.pedidos-page__eyebrow) { color: #91a891 !important; }
+
+/* Flashes */
+html[data-theme="dark"] .pedidos-flash {
+  background: #111611 !important;
+  border: 1px solid #253025 !important;
+  color: #c8e4c8 !important;
+}
+
+/* Info card */
+html[data-theme="dark"] .detalle-info-col {
+  background: #111611 !important;
+  border-color: #253025 !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28) !important;
+}
+
+/* Badge verificación */
+html[data-theme="dark"] .detalle-user-badge--ok {
+  background: #182018 !important;
+  color: #8fe0a2 !important;
+  border-color: #27452f !important;
+}
+html[data-theme="dark"] .detalle-user-badge--pending {
+  background: #2a1f0a !important;
+  color: #f2d37b !important;
+  border-color: #7a6526 !important;
+}
+
+/* Tiles */
+html[data-theme="dark"] .detalle-tile {
+  background: #182018 !important;
+  border-color: #253025 !important;
+}
+html[data-theme="dark"] .detalle-tile span { color: #91a891 !important; }
+html[data-theme="dark"] .detalle-tile strong { color: #e2ede2 !important; }
+html[data-theme="dark"] .detalle-tile span ion-icon { color: #7dd87d !important; }
+
+html[data-theme="dark"] .detalle-tile--devolucion {
+  background: #101a2e !important;
+  border-color: #1e3560 !important;
+}
+html[data-theme="dark"] .detalle-tile--devolucion span { color: #8ec5ff !important; }
+html[data-theme="dark"] .detalle-tile--devolucion strong { color: #b8d8ff !important; }
+html[data-theme="dark"] .detalle-tile--devolucion span ion-icon { color: #8ec5ff !important; }
+
+/* Área de uso */
+html[data-theme="dark"] .detalle-area-box {
+  background: linear-gradient(135deg, #131d13, #1a2b1a) !important;
+  border-color: #253025 !important;
+}
+html[data-theme="dark"] .detalle-area-box span { color: #91a891 !important; }
+html[data-theme="dark"] .detalle-area-box p { color: #ddeadd !important; }
+
+/* Sección de título */
+html[data-theme="dark"] .detalle-section-title { color: #c8e4c8 !important; }
+html[data-theme="dark"] .detalle-section-title ion-icon { color: #7dd87d !important; }
+html[data-theme="dark"] .detalle-section-count {
+  background: #182018 !important;
+  color: #8fe0a2 !important;
+}
+
+/* Caja de acciones */
+html[data-theme="dark"] .detalle-actions-box {
+  background: linear-gradient(135deg, #131d13, #182018) !important;
+  border-color: #253025 !important;
+}
+
+/* Caja de código */
+html[data-theme="dark"] .pedido-codigo-box {
+  background: #0e1a2e !important;
+  border-color: #1e3560 !important;
+  color: #8ec5ff !important;
+}
+html[data-theme="dark"] .pedido-codigo-box p { color: #6a9fd8 !important; }
+html[data-theme="dark"] .pedido-codigo-box strong { color: #b8d8ff !important; }
+html[data-theme="dark"] .pedido-codigo-box small { color: #5a7ab8 !important; }
+
+/* Form confirmación entrega */
+html[data-theme="dark"] .pedido-codigo-form label { color: #c8e4c8 !important; }
+html[data-theme="dark"] .pedido-codigo-form label span { color: #91a891 !important; }
+html[data-theme="dark"] .pedido-codigo-form input[type="text"] {
+  background: #111611 !important;
+  border-color: #253025 !important;
+  color: #e2ede2 !important;
+}
+html[data-theme="dark"] .pedido-codigo-form input[type="text"]:focus {
+  border-color: #7dd87d !important;
+}
+html[data-theme="dark"] .pedido-codigo-form input[type="file"] {
+  background: #111611 !important;
+  border-color: #253025 !important;
+  color: #91a891 !important;
+}
+
+/* Info acción (pedido ya procesado) */
+html[data-theme="dark"] .pedido-action-info {
+  background: #0e1a2e !important;
+  color: #8ec5ff !important;
+}
+
+/* Cards de producto */
+html[data-theme="dark"] .pedido-product-card {
+  background: #111611 !important;
+  border-color: #253025 !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28) !important;
+}
+html[data-theme="dark"] .pedido-product-card:hover {
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.38) !important;
+}
+html[data-theme="dark"] .pedido-product-card__media {
+  background: radial-gradient(circle at 60% 30%, #182018, #131d13) !important;
+  border-bottom-color: #253025 !important;
+}
+html[data-theme="dark"] .pedido-product-card__placeholder { color: #4a6a4a !important; }
+html[data-theme="dark"] .pedido-product-card__catalogo { color: #7dd87d !important; }
+html[data-theme="dark"] .pedido-product-card h3 { color: #ddeadd !important; }
+
+html[data-theme="dark"] .pedido-product-card__meta div {
+  background: #182018 !important;
+  border-color: #253025 !important;
+}
+html[data-theme="dark"] .pedido-product-card__meta-devolucion {
+  background: #101a2e !important;
+  border-color: #1e3560 !important;
+}
+html[data-theme="dark"] .pedido-product-card__meta span { color: #7a9c7a !important; }
+html[data-theme="dark"] .pedido-product-card__meta-devolucion span { color: #8ec5ff !important; }
+html[data-theme="dark"] .pedido-product-card__meta strong { color: #e2ede2 !important; }
+
+/* Badge no disponible */
+html[data-theme="dark"] .pedido-product-card__no-disp-badge {
+  background: #2a1010 !important;
+  color: #ff9a9a !important;
+  border-color: #6d2c2c !important;
+}
+
+/* Checkbox no disponible */
+html[data-theme="dark"] .pedido-product-card__no-disp-label {
+  background: #1e1208 !important;
+  border-color: #5a3010 !important;
+  color: #f5b87a !important;
+}
+html[data-theme="dark"] .pedido-product-card__no-disp-label:has(input:checked) {
+  background: #2a1010 !important;
+  border-color: #6d2c2c !important;
+  color: #ff9a9a !important;
+}
+
+/* Card no disponible */
+html[data-theme="dark"] .pedido-product-card--no-disponible { border-color: #4d2020 !important; }
+html[data-theme="dark"] .pedido-product-card--no-disponible .pedido-product-card__media {
+  background: #1e1212 !important;
+}
+
+/* Submit no disponibles */
+html[data-theme="dark"] .detalle-no-disp-submit {
+  background: #1e1208 !important;
+  border-color: #5a3010 !important;
+}
+html[data-theme="dark"] .detalle-no-disp-submit p { color: #f5b87a !important; }
+
+/* Evidencias */
+html[data-theme="dark"] .pedido-evidencias-grid .pedido-evidencia-item {
+  background: #111611 !important;
+  border-color: #253025 !important;
+}
