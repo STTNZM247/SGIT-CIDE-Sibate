@@ -183,6 +183,52 @@ def _auto_cancelar_pedidos_pendientes_vencidos():
     return len(pedidos)
 
 
+def _auto_marcar_prestamos_vencidos():
+    """Marca como 'vencido' los préstamos entregados cuya fecha de devolución ya pasó."""
+    now = timezone.localtime()
+    with transaction.atomic():
+        pedidos = list(
+            Pedido.objects
+            .select_for_update()
+            .select_related('id_usuario_fk')
+            .filter(
+                estado='entregado',
+                tipo_devolucion__in=['global', None, ''],
+                fecha_devolucion__isnull=False,
+                fecha_devolucion__lte=now,
+            )
+        )
+        if not pedidos:
+            return 0
+
+        pedido_ids = [p.id_pedido for p in pedidos]
+        Pedido.objects.filter(id_pedido__in=pedido_ids).update(
+            estado='vencido',
+            fch_ult_act=now,
+        )
+
+    for pedido in pedidos:
+        _crear_notificacion(
+            usuario=pedido.id_usuario_fk,
+            tipo='prestamo_vencido',
+            titulo='¡Préstamo vencido!',
+            mensaje=(
+                f'Tu préstamo #{pedido.id_pedido} ha vencido. '
+                'Por favor acércate a almacén para devolver los productos a la brevedad posible.'
+            ),
+            pedido_id=pedido.id_pedido,
+        )
+        _registrar_auditoria(
+            None,
+            accion='actualizar',
+            entidad='prestamo',
+            entidad_id=pedido.id_pedido,
+            descripcion=f'Préstamo #{pedido.id_pedido} marcado automáticamente como vencido.',
+        )
+
+    return len(pedidos)
+
+
 def _sumar_stock_disponibilidad(detalle, now):
     if not detalle.id_prod_fk_id:
         return
@@ -994,7 +1040,7 @@ def dashboard_tendencia_detalle(request):
 
     estado_target = {
         'pendientes': {'pendiente'},
-        'prestamos': {'entregado'},
+        'prestamos': {'entregado', 'vencido'},
         'devueltos': {'devuelto'},
         'cancelados': {'cancelado', 'rechazado'},
     }[serie]
@@ -1179,7 +1225,7 @@ def _obtener_prestamos_mes(anio, mes):
 
 def _categoria_pedido_reporte(estado):
     estado_limpio = (estado or '').strip().lower()
-    if estado_limpio in ['entregado', 'devuelto']:
+    if estado_limpio in ['entregado', 'vencido', 'devuelto']:
         return 'REALIZADO'
     if estado_limpio in ['cancelado', 'rechazado']:
         return 'CANCELADO'
@@ -2036,7 +2082,7 @@ def prestamos_panel(request):
     ahora = timezone.now()
     prestamos = list(
         Pedido.objects
-        .filter(estado__in=['entregado', 'devuelto', 'rechazado'])
+        .filter(estado__in=['entregado', 'vencido', 'devuelto', 'rechazado'])
         .select_related('id_usuario_fk')
         .prefetch_related('detalles')
         .order_by('fecha_devolucion', '-fch_registro')
@@ -2050,13 +2096,30 @@ def prestamos_panel(request):
         ]
         prestamo.fecha_cierre_display = prestamo.fch_ult_act
 
-        # Los cancelados nunca se entregaron: sin vencimiento
+        # Los cancelados/devueltos nunca están activos: sin vencimiento
         if prestamo.estado in ['rechazado', 'devuelto']:
             prestamo.fecha_devolucion_display = None
             prestamo.es_vencido = False
             prestamo.dias_restantes = None
             prestamo.dias_vencido = 0
             prestamo.tiempo_vencido_str = ''
+            prestamo.tiempo_restante_str = ''
+            prestamo.detalles_lista = detalles
+            continue
+
+        # Préstamos marcados automáticamente como vencidos
+        if prestamo.estado == 'vencido':
+            prestamo.fecha_devolucion_display = prestamo.fecha_devolucion
+            prestamo.es_vencido = True
+            if prestamo.fecha_devolucion:
+                delta = prestamo.fecha_devolucion - ahora
+                prestamo.dias_restantes = delta.days
+                prestamo.dias_vencido = abs(delta.days)
+                prestamo.tiempo_vencido_str = _tiempo_vencido(prestamo.fecha_devolucion, ahora)
+            else:
+                prestamo.dias_restantes = None
+                prestamo.dias_vencido = 0
+                prestamo.tiempo_vencido_str = ''
             prestamo.tiempo_restante_str = ''
             prestamo.detalles_lista = detalles
             continue
@@ -2096,17 +2159,17 @@ def prestamos_panel(request):
                 prestamo.tiempo_restante_str = ''
         prestamo.detalles_lista = detalles
 
-    # Ordenar: activos vencidos primero, luego activos al día, después devueltos y cancelados.
+    # Ordenar: vencidos primero, luego activos al día, después devueltos y cancelados.
     prestamos.sort(key=lambda p: (
-        0 if p.estado == 'entregado' and p.es_vencido else 1 if p.estado == 'entregado' else 2 if p.estado == 'devuelto' else 3,
+        0 if p.estado == 'vencido' or (p.estado == 'entregado' and p.es_vencido) else 1 if p.estado == 'entregado' else 2 if p.estado == 'devuelto' else 3,
         p.fecha_devolucion_display or ahora.replace(year=9999),
         -(p.fecha_cierre_display.timestamp()) if p.fecha_cierre_display else 0,
     ))
 
     total_cancelados = sum(1 for p in prestamos if p.estado == 'rechazado')
     total_devueltos = sum(1 for p in prestamos if p.estado == 'devuelto')
-    total_vencidos = sum(1 for p in prestamos if p.estado == 'entregado' and p.es_vencido)
-    total_activos = sum(1 for p in prestamos if p.estado == 'entregado')
+    total_vencidos = sum(1 for p in prestamos if p.estado == 'vencido' or (p.estado == 'entregado' and p.es_vencido))
+    total_activos = sum(1 for p in prestamos if p.estado in ('entregado', 'vencido'))
     total_al_dia = total_activos - total_vencidos
 
     filtro = (request.GET.get('filtro') or 'todos').strip().lower()
@@ -2114,7 +2177,7 @@ def prestamos_panel(request):
         filtro = 'todos'
 
     if filtro == 'vencido':
-        prestamos = [p for p in prestamos if p.estado == 'entregado' and p.es_vencido]
+        prestamos = [p for p in prestamos if p.estado == 'vencido' or (p.estado == 'entregado' and p.es_vencido)]
     elif filtro == 'al-dia':
         prestamos = [p for p in prestamos if p.estado == 'entregado' and not p.es_vencido]
     elif filtro == 'devuelto':
@@ -2467,7 +2530,7 @@ def pedido_marcar_devuelto(request, pedido_id):
             pk=pedido_id,
         )
 
-        if pedido.estado != 'entregado':
+        if pedido.estado not in ('entregado', 'vencido'):
             messages.error(request, 'Solo puedes marcar como devuelto un préstamo actualmente entregado.')
             return redirect('prestamos_panel')
 
@@ -3177,8 +3240,9 @@ def live_sync_status(request):
     try:
         from django.db.models import Count
 
-        # Ejecuta autocancelación por hora vencida mientras el frontend hace polling.
+        # Ejecuta autocancelación por hora vencida y marcado de préstamos vencidos mientras el frontend hace polling.
         _auto_cancelar_pedidos_pendientes_vencidos()
+        _auto_marcar_prestamos_vencidos()
 
         usuario = request.user
         rol = getattr(getattr(usuario, 'id_rol_fk', None), 'nombre_rol', '') or ''
@@ -3201,7 +3265,8 @@ def live_sync_status(request):
             pedidos_staff = Pedido.objects.filter(estado__in=['pendiente', 'esperando entrega'])
             pedidos_staff_total = pedidos_staff.count()
             pedidos_staff_ultimo = pedidos_staff.order_by('-id_pedido').values_list('id_pedido', flat=True).first() or 0
-            firma_partes.append(f'staff_pedidos:{pedidos_staff_total}:{pedidos_staff_ultimo}')
+            pedidos_vencidos_count = Pedido.objects.filter(estado='vencido').count()
+            firma_partes.append(f'staff_pedidos:{pedidos_staff_total}:{pedidos_staff_ultimo}:{pedidos_vencidos_count}')
         else:
             pedidos_usuario = Pedido.objects.filter(id_usuario_fk=usuario)
             pedidos_usuario_ultimo = pedidos_usuario.order_by('-id_pedido').values_list('id_pedido', flat=True).first() or 0

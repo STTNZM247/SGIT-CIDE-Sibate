@@ -31,7 +31,7 @@ def _usuario_cliente(request):
 
 
 def _asegurar_codigo_devolucion(pedido, now):
-    if pedido.estado != 'entregado':
+    if pedido.estado not in ('entregado', 'vencido'):
         return False
 
     vigente = bool(
@@ -533,7 +533,7 @@ def pedidos_usuario(request):
             pedido.devolucion_codigo = None
             pedido.devolucion_segundos = 0
             pedido.devolucion_expira_en = None
-        elif pedido.estado == 'entregado':
+        elif pedido.estado in ('entregado', 'vencido'):
             _asegurar_codigo_devolucion(pedido, ahora)
             pedido.codigo_vigente = False
             pedido.devolucion_codigo = pedido.codigo_entrega
@@ -558,19 +558,19 @@ def pedidos_usuario(request):
             pedido.puede_cancelar = False
             pedido.segundos_cancelacion = 0
 
-        # ¿Está vencido? (entregado, con fecha de devolución pasada, no devuelto aún)
+        # ¿Está vencido? (entregado o marcado como vencido, con fecha de devolución pasada)
         pedido.esta_vencido = (
-            pedido.estado == 'entregado'
+            pedido.estado in ('entregado', 'vencido')
             and pedido.fecha_devolucion is not None
             and pedido.fecha_devolucion < ahora
-        )
+        ) or pedido.estado == 'vencido'
 
     # Marcar como vistos: guardar IDs de pedidos activos en sesión para el badge de nav
     activos_ids = [p.id_pedido for p in pedidos if p.estado in ('pendiente', 'esperando entrega')]
     request.session['pedidos_u_visto_ids'] = activos_ids
 
     estado_activo = (request.GET.get('estado') or 'todos').strip().lower()
-    estados_validos = {'todos', 'pendiente', 'esperando-entrega', 'entregado', 'devuelto', 'rechazado', 'cancelado'}
+    estados_validos = {'todos', 'pendiente', 'esperando-entrega', 'entregado', 'vencido', 'devuelto', 'rechazado', 'cancelado'}
     if estado_activo not in estados_validos:
         estado_activo = 'todos'
 
@@ -578,6 +578,7 @@ def pedidos_usuario(request):
         'pendiente': 'pendiente',
         'esperando-entrega': 'esperando entrega',
         'entregado': 'entregado',
+        'vencido': 'vencido',
         'devuelto': 'devuelto',
         'rechazado': 'rechazado',
         'cancelado': 'cancelado',
@@ -592,6 +593,7 @@ def pedidos_usuario(request):
         'pendiente': sum(1 for pedido in pedidos if pedido.estado == 'pendiente'),
         'esperando_entrega': sum(1 for pedido in pedidos if pedido.estado == 'esperando entrega'),
         'entregado': sum(1 for pedido in pedidos if pedido.estado == 'entregado'),
+        'vencido': sum(1 for pedido in pedidos if pedido.estado == 'vencido'),
         'devuelto': sum(1 for pedido in pedidos if pedido.estado == 'devuelto'),
         'rechazado': sum(1 for pedido in pedidos if pedido.estado == 'rechazado'),
         'cancelado': sum(1 for pedido in pedidos if pedido.estado == 'cancelado'),
@@ -683,7 +685,7 @@ def pedido_codigo_devolucion(request, pedido_id):
             id_usuario_fk=request.user,
         )
 
-        if pedido.estado != 'entregado':
+        if pedido.estado not in ('entregado', 'vencido'):
             return JsonResponse({'ok': False, 'error': 'Este pedido no está en estado entregado.'}, status=400)
 
         now = timezone.now()
@@ -758,7 +760,7 @@ def pedido_extender_plazo(request, pedido_id):
             id_usuario_fk=request.user,
         )
 
-        if pedido.estado != 'entregado':
+        if pedido.estado not in ('entregado', 'vencido'):
             messages.error(request, 'Solo puedes extender el plazo de pedidos actualmente entregados.')
             return redirect('pedidos_usuario')
 
@@ -778,8 +780,9 @@ def pedido_extender_plazo(request, pedido_id):
         pedido.fecha_devolucion = nueva_fecha
         pedido.extensiones_plazo += 1
         pedido.notif_vencimiento_enviada = False   # permitir re-notificar si vuelve a vencer
+        pedido.estado = 'entregado'  # reactivar si estaba vencido
         pedido.fch_ult_act = ahora
-        pedido.save(update_fields=['fecha_devolucion', 'extensiones_plazo', 'notif_vencimiento_enviada', 'fch_ult_act'])
+        pedido.save(update_fields=['fecha_devolucion', 'extensiones_plazo', 'notif_vencimiento_enviada', 'estado', 'fch_ult_act'])
 
     extensiones_restantes = MAX_EXTENSIONES - pedido.extensiones_plazo
     _crear_notificacion(
