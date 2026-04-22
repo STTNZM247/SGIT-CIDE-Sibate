@@ -547,20 +547,6 @@
         });
     }
 
-    if (captureCard) {
-        captureCard.addEventListener('click', function (event) {
-            if (preview && !preview.hidden) {
-                return;
-            }
-            if (event.target.closest('button')) {
-                return;
-            }
-            if (canUseGuidedCamera()) {
-                openGuidedCamera();
-            }
-        });
-    }
-
     function handleCloseCamera() {
         stopCamera();
     }
