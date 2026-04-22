@@ -36,10 +36,8 @@
         <article class="validacion-sena-card validacion-sena-card--primary">
             <div class="validacion-sena-card__head">
                 <div>
-                    <p class="validacion-sena-card__eyebrow">Paso 1</p>
                     <h2>Validación automática con OCR</h2>
                 </div>
-                <span class="validacion-sena-chip">Nombre, documento y logo SENA</span>
             </div>
 
             {% if ya_validado %}
@@ -57,8 +55,6 @@
                 <input type="hidden" name="next" value="{{ redirect_to }}">
 
                 <div class="validacion-sena-capture" id="validacion-sena-capture-card">
-                    <span class="validacion-sena-capture__guide">Alinea el carnet dentro del marco, procura que el logo quede visible y usa fondo negro para mejorar el recorte automático.</span>
-                    <span class="validacion-sena-capture__hint">La guía solo aparece en la cámara dentro de esta página. Si eliges una foto desde el dispositivo, el celular abrirá su cámara o galería sin plantilla.</span>
                     <div class="validacion-sena-capture__actions">
                         <button type="button" class="validacion-sena-capture__cta validacion-sena-capture__cta--camera" id="abrir_camara_guiada">
                             <ion-icon name="camera-outline"></ion-icon>
@@ -69,7 +65,7 @@
                             Elegir desde galería o archivo
                         </button>
                     </div>
-                    <span class="validacion-sena-capture__subhint">Recomendado: usa la cámara guiada y coloca el carnet sobre fondo negro liso. La opción de galería/archivo es solo respaldo y no muestra la plantilla.</span>
+                    <span class="validacion-sena-capture__hint">usa la cámara guiada y coloca el carnet sobre fondo negro</span>
                     <div class="validacion-sena-capture__preview-stage" aria-hidden="true">
                         <span class="validacion-sena-capture__frame"></span>
                         <span class="validacion-sena-capture__frame-corners">
@@ -83,10 +79,6 @@
                 </div>
 
                 <div class="validacion-sena-inline-alert" id="validacion_sena_inline_alert" hidden></div>
-                <div class="validacion-sena-debug" id="validacion_sena_debug" hidden>
-                    <strong>Traza técnica</strong>
-                    <pre id="validacion_sena_debug_log"></pre>
-                </div>
 
                 <div class="validacion-sena-form__actions">
                     <button type="submit" class="validacion-sena-btn validacion-sena-btn--primary">
@@ -150,15 +142,16 @@
         <aside class="validacion-sena-card validacion-sena-card--secondary">
             <div class="validacion-sena-card__head">
                 <div>
-                    <p class="validacion-sena-card__eyebrow">Paso 2 y 3</p>
-                    <h2>Si el OCR falla o no tienes el carnet</h2>
+                    <h2>¿No pasó la validación automática?</h2>
                 </div>
             </div>
 
+            <p class="validacion-sena-fallback__intro">Si el OCR no pudo leer tu carnet, el administrador puede validarte manualmente. Envía una solicitud y te indicaremos los próximos pasos.</p>
+
             <ol class="validacion-sena-steps">
-                <li>Envías la solicitud manual al administrador.</li>
-                <li>El administrador aprueba el envío y te llega un correo con un enlace único.</li>
-                <li>Subes tu carnet o certificado SENA y el administrador revisa la evidencia manualmente.</li>
+                <li><strong>Envía la solicitud</strong> explicando tu situación.</li>
+                <li><strong>El administrador te enviará un enlace</strong> único por correo.</li>
+                <li><strong>Carga tu carnet o certificado</strong> y el administrador lo revisará.</li>
             </ol>
 
             {% if estado_validacion == 'solicitada' %}
