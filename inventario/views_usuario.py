@@ -565,6 +565,10 @@ def pedidos_usuario(request):
             and pedido.fecha_devolucion < ahora
         )
 
+    # Marcar como vistos: guardar IDs de pedidos activos en sesión para el badge de nav
+    activos_ids = [p.id_pedido for p in pedidos if p.estado in ('pendiente', 'esperando entrega')]
+    request.session['pedidos_u_visto_ids'] = activos_ids
+
     estado_activo = (request.GET.get('estado') or 'todos').strip().lower()
     estados_validos = {'todos', 'pendiente', 'esperando-entrega', 'entregado', 'devuelto', 'rechazado', 'cancelado'}
     if estado_activo not in estados_validos:
