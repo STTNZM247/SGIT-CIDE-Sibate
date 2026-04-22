@@ -602,24 +602,40 @@
                 rotado: rawCanvas.width > rawCanvas.height
             });
 
-            // Evita zoom/crop agresivo: ajusta la imagen completa dentro del lienzo vertical.
-            context.fillStyle = '#f4f8f3';
-            context.fillRect(0, 0, canvas.width, canvas.height);
+            // Recorta según el marco guía para que la captura final sea vertical y enfocada al carnet.
+            var guideWidthRatio = window.matchMedia('(max-width: 720px)').matches ? 0.78 : 0.68;
+            var cropWidth = sourceWidth * guideWidthRatio;
+            var cropHeight = cropWidth / targetRatio;
 
-            var drawWidth = canvas.width;
-            var drawHeight = canvas.height;
-            var drawX = 0;
-            var drawY = 0;
-
-            if (sourceRatio > targetRatio) {
-                drawHeight = canvas.width / sourceRatio;
-                drawY = (canvas.height - drawHeight) / 2;
-            } else {
-                drawWidth = canvas.height * sourceRatio;
-                drawX = (canvas.width - drawWidth) / 2;
+            if (cropHeight > sourceHeight * 0.92) {
+                cropHeight = sourceHeight * 0.92;
+                cropWidth = cropHeight * targetRatio;
             }
 
-            context.drawImage(normalizedCanvas, drawX, drawY, drawWidth, drawHeight);
+            var offsetX = (sourceWidth - cropWidth) / 2;
+            var offsetY = (sourceHeight - cropHeight) / 2;
+
+            context.drawImage(
+                normalizedCanvas,
+                offsetX,
+                offsetY,
+                cropWidth,
+                cropHeight,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+            traceStep('Recorte aplicado según guía', {
+                sourceWidth: sourceWidth,
+                sourceHeight: sourceHeight,
+                sourceRatio: sourceRatio,
+                cropWidth: Math.round(cropWidth),
+                cropHeight: Math.round(cropHeight),
+                offsetX: Math.round(offsetX),
+                offsetY: Math.round(offsetY)
+            });
 
             var previewUrl = canvas.toDataURL('image/png');
             traceStep('dataURL generada', { longitud: (previewUrl || '').length });
