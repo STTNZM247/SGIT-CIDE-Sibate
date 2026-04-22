@@ -2990,6 +2990,52 @@ def aprobar_validacion_sena(request, usuario_id):
         titulo='Validación SENA aprobada',
         mensaje='El administrador aprobó tu verificación manual. Ya puedes realizar pedidos normalmente.',
     )
+
+        correo = getattr(usuario, 'correo', None)
+        if correo:
+                try:
+                        from django.core.mail import EmailMultiAlternatives
+
+                        nombre_usuario = (f'{usuario.nombre or ""} {usuario.apellido or ""}'.strip() or usuario.correo)
+                        subject = 'Validación SENA aprobada'
+                        text_content = (
+                                f'Hola {nombre_usuario},\n\n'
+                                'Tu validación manual SENA fue aprobada por el administrador.\n'
+                                'Ya puedes realizar pedidos normalmente.\n'
+                        )
+                        html_content = f"""
+<!DOCTYPE html>
+<html lang=\"es\">
+<head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>
+<body style=\"margin:0;padding:0;background:#f3f7f2;font-family:Arial,Helvetica,sans-serif;color:#1f2937;\">
+    <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"padding:24px 12px;\">
+        <tr><td align=\"center\">
+            <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:640px;background:#ffffff;border-radius:22px;overflow:hidden;box-shadow:0 12px 30px rgba(11,71,55,.12);\">
+                <tr><td style=\"background:linear-gradient(135deg,#0b4737,#39A900);padding:28px 32px;color:#fff;\">
+                    <p style=\"margin:0 0 8px;font-size:13px;letter-spacing:1.6px;font-weight:bold;text-transform:uppercase;opacity:.9;\">SENA · Inventario</p>
+                    <h1 style=\"margin:0;font-size:28px;line-height:1.15;\">Validación aprobada</h1>
+                </td></tr>
+                <tr><td style=\"padding:32px;\">
+                    <p style=\"margin:0 0 14px;font-size:16px;line-height:1.6;\">Hola <strong>{nombre_usuario}</strong>,</p>
+                    <p style=\"margin:0;font-size:15px;line-height:1.7;color:#475569;\">Tu validación manual SENA fue aprobada por el administrador. Ya puedes realizar pedidos normalmente.</p>
+                </td></tr>
+            </table>
+        </td></tr>
+    </table>
+</body>
+</html>
+"""
+                        email = EmailMultiAlternatives(
+                                subject=subject,
+                                body=text_content,
+                                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                                to=[correo],
+                        )
+                        email.attach_alternative(html_content, 'text/html')
+                        email.send(fail_silently=False)
+                except Exception:
+                        messages.warning(request, f'Se aprobó la validación, pero no se pudo enviar correo a {correo}.')
+
     _registrar_auditoria(
         request,
         accion='actualizar',
@@ -3042,6 +3088,56 @@ def rechazar_validacion_sena(request, usuario_id):
         titulo='Validación SENA rechazada',
         mensaje=mensaje_rechazo,
     )
+
+        correo = getattr(usuario, 'correo', None)
+        if correo:
+                try:
+                        from django.core.mail import EmailMultiAlternatives
+
+                        nombre_usuario = (f'{usuario.nombre or ""} {usuario.apellido or ""}'.strip() or usuario.correo)
+                        subject = 'Validación SENA rechazada'
+                        text_content = (
+                                f'Hola {nombre_usuario},\n\n'
+                                'Tu validación manual SENA fue rechazada por el administrador.\n'
+                                f'{("Motivo: " + motivo_rechazo + "\\n") if motivo_rechazo else ""}'
+                                'Puedes volver a solicitar validación manual cuando tengas una nueva evidencia.\n'
+                        )
+                        motivo_html = f'<p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#b45309;"><strong>Motivo:</strong> {motivo_rechazo}</p>' if motivo_rechazo else ''
+                        html_content = f"""
+<!DOCTYPE html>
+<html lang=\"es\">
+<head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>
+<body style=\"margin:0;padding:0;background:#f3f7f2;font-family:Arial,Helvetica,sans-serif;color:#1f2937;\">
+    <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"padding:24px 12px;\">
+        <tr><td align=\"center\">
+            <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:640px;background:#ffffff;border-radius:22px;overflow:hidden;box-shadow:0 12px 30px rgba(11,71,55,.12);\">
+                <tr><td style=\"background:linear-gradient(135deg,#7a1f1f,#c2410c);padding:28px 32px;color:#fff;\">
+                    <p style=\"margin:0 0 8px;font-size:13px;letter-spacing:1.6px;font-weight:bold;text-transform:uppercase;opacity:.9;\">SENA · Inventario</p>
+                    <h1 style=\"margin:0;font-size:28px;line-height:1.15;\">Validación rechazada</h1>
+                </td></tr>
+                <tr><td style=\"padding:32px;\">
+                    <p style=\"margin:0 0 14px;font-size:16px;line-height:1.6;\">Hola <strong>{nombre_usuario}</strong>,</p>
+                    <p style=\"margin:0 0 14px;font-size:15px;line-height:1.7;color:#475569;\">Tu validación manual SENA fue rechazada por el administrador.</p>
+                    {motivo_html}
+                    <p style=\"margin:0;font-size:15px;line-height:1.7;color:#475569;\">Puedes volver a solicitar validación manual cuando tengas una nueva evidencia.</p>
+                </td></tr>
+            </table>
+        </td></tr>
+    </table>
+</body>
+</html>
+"""
+                        email = EmailMultiAlternatives(
+                                subject=subject,
+                                body=text_content,
+                                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                                to=[correo],
+                        )
+                        email.attach_alternative(html_content, 'text/html')
+                        email.send(fail_silently=False)
+                except Exception:
+                        messages.warning(request, f'Se rechazó la validación, pero no se pudo enviar correo a {correo}.')
+
     _registrar_auditoria(
         request,
         accion='actualizar',
