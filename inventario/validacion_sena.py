@@ -189,7 +189,7 @@ def cargar_imagen_validacion(archivo, *, require_vertical=True):
     return image, None
 
 
-def _evaluar_validacion_por_imagen(image, usuario):
+def _evaluar_validacion_por_imagen(image, usuario, orientacion='0'):
     texto_ocr_total = ''
     ocr_error = ''
 
@@ -218,6 +218,8 @@ def _evaluar_validacion_por_imagen(image, usuario):
     reasons = []
     if ocr_error:
         reasons.append(ocr_error)
+    if not texto_normalizado:
+        reasons.append('No se pudo extraer texto útil del carnet en este intento.')
     if not nombre_ok:
         reasons.append('El nombre del carnet no coincide claramente con tu cuenta (se compara en mayúsculas, sin importar tildes).')
     if not documento_ok:
@@ -231,12 +233,24 @@ def _evaluar_validacion_por_imagen(image, usuario):
     if ocr_error:
         score -= 1
 
+    debug = {
+        'orientacion': orientacion,
+        'recorte_auto': bool(recortado),
+        'nombre_ok': bool(nombre_ok),
+        'documento_ok': bool(documento_ok),
+        'logo_ok': bool(logo_ok),
+        'ocr_error': ocr_error or '',
+        'ocr_chars': len(texto_normalizado),
+        'ocr_extracto': texto_normalizado[:320],
+    }
+
     return {
         'ok': not ocr_error and nombre_ok and documento_ok and logo_ok,
         'message': 'Tu carnet SENA fue validado correctamente.' if (not ocr_error and nombre_ok and documento_ok and logo_ok) else 'No se pudo validar tu carnet de forma automática. Puedes solicitar validación manual si lo necesitas.',
         'error_code': None if (not ocr_error and nombre_ok and documento_ok and logo_ok) else ('ocr_failed' if ocr_error else 'mismatch'),
         'details': ['Logo SENA detectado.', 'Nombre y documento coinciden con tu cuenta.'] if (not ocr_error and nombre_ok and documento_ok and logo_ok) else reasons,
         'texto_ocr': texto_ocr_total,
+        'debug': debug,
         'score': score,
     }
 
@@ -246,11 +260,15 @@ def intentar_validacion_automatica(archivo, usuario):
     if image_error:
         return image_error
 
-    variantes = [image, image.rotate(90, expand=True), image.rotate(270, expand=True)]
+    variantes = [
+        ('0', image),
+        ('90', image.rotate(90, expand=True)),
+        ('270', image.rotate(270, expand=True)),
+    ]
     mejor_intento = None
 
-    for img in variantes:
-        resultado = _evaluar_validacion_por_imagen(img, usuario)
+    for orientacion, img in variantes:
+        resultado = _evaluar_validacion_por_imagen(img, usuario, orientacion=orientacion)
         if resultado['ok']:
             resultado.pop('score', None)
             return resultado
@@ -268,4 +286,14 @@ def intentar_validacion_automatica(archivo, usuario):
         'error_code': 'ocr_failed',
         'details': ['No se pudo analizar la imagen del carnet.'],
         'texto_ocr': '',
+        'debug': {
+            'orientacion': 'n/a',
+            'recorte_auto': False,
+            'nombre_ok': False,
+            'documento_ok': False,
+            'logo_ok': False,
+            'ocr_error': 'No se obtuvo ningún intento de OCR.',
+            'ocr_chars': 0,
+            'ocr_extracto': '',
+        },
     }

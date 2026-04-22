@@ -141,6 +141,10 @@
                 </ul>
             </div>
             {% endif %}
+
+            {% if resultado_ocr and resultado_ocr.debug %}
+            {{ resultado_ocr.debug|json_script:"validacion_sena_backend_debug" }}
+            {% endif %}
         </article>
 
         <aside class="validacion-sena-card validacion-sena-card--secondary">
@@ -216,6 +220,7 @@
     var inlineAlert = document.getElementById('validacion_sena_inline_alert');
     var debugPanel = document.getElementById('validacion_sena_debug');
     var debugLog = document.getElementById('validacion_sena_debug_log');
+    var backendDebugNode = document.getElementById('validacion_sena_backend_debug');
     var stream = null;
     var traceLines = [];
 
@@ -627,6 +632,26 @@
         userAgent: navigator.userAgent,
         cameraSoportada: canUseGuidedCamera()
     });
+
+    if (backendDebugNode) {
+        try {
+            var backendDebug = JSON.parse(backendDebugNode.textContent || '{}');
+            traceStep('Diagnóstico backend', {
+                orientacion: backendDebug.orientacion,
+                recorte_auto: backendDebug.recorte_auto,
+                nombre_ok: backendDebug.nombre_ok,
+                documento_ok: backendDebug.documento_ok,
+                logo_ok: backendDebug.logo_ok,
+                ocr_chars: backendDebug.ocr_chars,
+                ocr_error: backendDebug.ocr_error || ''
+            });
+            if (backendDebug.ocr_extracto) {
+                traceStep('Extracto OCR backend', backendDebug.ocr_extracto);
+            }
+        } catch (error) {
+            traceStep('No se pudo leer diagnóstico backend', { error: error.message || String(error) });
+        }
+    }
 }());
 </script>
 {% endblock %}
