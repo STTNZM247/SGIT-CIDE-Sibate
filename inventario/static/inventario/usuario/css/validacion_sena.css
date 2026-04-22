@@ -183,11 +183,11 @@
 
 .validacion-sena-capture {
   --carnet-ratio: 5.5 / 8.5;
-  --carnet-frame-width: min(52%, 220px);
+  --carnet-frame-width: min(60%, 240px);
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 420px;
+  min-height: 470px;
   padding: 28px;
   border-radius: 28px;
   background:
@@ -210,7 +210,7 @@
 
 .validacion-sena-capture__frame {
   position: absolute;
-  top: 108px;
+  top: 126px;
   left: 50%;
   width: var(--carnet-frame-width);
   aspect-ratio: var(--carnet-ratio);
@@ -223,7 +223,7 @@
 .validacion-sena-capture__frame-corners,
 .validacion-sena-camera-guide__corners {
   position: absolute;
-  top: 108px;
+  top: 126px;
   left: 50%;
   width: var(--carnet-frame-width);
   aspect-ratio: var(--carnet-ratio);
@@ -342,7 +342,7 @@
 
 .validacion-sena-capture img {
   position: absolute;
-  top: 108px;
+  top: 126px;
   left: 50%;
   width: var(--carnet-frame-width);
   aspect-ratio: var(--carnet-ratio);
@@ -351,6 +351,39 @@
   border-radius: 28px;
   z-index: 2;
   background: rgba(255, 255, 255, 0.74);
+}
+
+.validacion-sena-capture__status {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 3;
+  width: min(92%, 360px);
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(24, 144, 59, 0.14);
+  border: 1px solid rgba(24, 144, 59, 0.28);
+  color: #145326;
+  font-weight: 800;
+  text-align: center;
+}
+
+.validacion-sena-capture.is-captured .validacion-sena-capture__guide,
+.validacion-sena-capture.is-captured .validacion-sena-capture__hint,
+.validacion-sena-capture.is-captured .validacion-sena-capture__subhint {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.validacion-sena-capture.is-captured .validacion-sena-capture__frame,
+.validacion-sena-capture.is-captured .validacion-sena-capture__frame-corners {
+  opacity: 0;
+}
+
+.validacion-sena-capture.is-captured img {
+  z-index: 3;
+  box-shadow: 0 18px 36px rgba(10, 36, 16, 0.2);
 }
 
 .validacion-sena-inline-alert {
@@ -418,7 +451,7 @@
 }
 
 .validacion-sena-camera-stage {
-  --camera-guide-width: min(58%, 210px);
+  --camera-guide-width: min(68%, 252px);
   --camera-guide-ratio: 5.5 / 8.5;
   position: relative;
   aspect-ratio: 9 / 16;
@@ -641,15 +674,15 @@
   }
 
   .validacion-sena-capture {
-    --carnet-frame-width: min(60%, 210px);
-    min-height: 340px;
+    --carnet-frame-width: min(74%, 250px);
+    min-height: 500px;
     padding: 22px;
   }
 
   .validacion-sena-capture__frame,
   .validacion-sena-capture__frame-corners,
   .validacion-sena-capture img {
-    top: 118px;
+    top: 144px;
   }
 
   .validacion-sena-capture__actions,
@@ -674,8 +707,14 @@
   }
 
   .validacion-sena-camera-stage {
-    --camera-guide-width: min(56%, 190px);
-    width: min(100%, 300px);
+    --camera-guide-width: min(78%, 260px);
+    width: min(100%, 340px);
+  }
+
+  .validacion-sena-capture__status {
+    bottom: 16px;
+    width: min(94%, 320px);
+    font-size: 0.9rem;
   }
 
   .validacion-sena-camera-modal__help {
