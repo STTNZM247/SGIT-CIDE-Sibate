@@ -3177,6 +3177,9 @@ def live_sync_status(request):
     try:
         from django.db.models import Count
 
+        # Ejecuta autocancelación por hora vencida mientras el frontend hace polling.
+        _auto_cancelar_pedidos_pendientes_vencidos()
+
         usuario = request.user
         rol = getattr(getattr(usuario, 'id_rol_fk', None), 'nombre_rol', '') or ''
 
