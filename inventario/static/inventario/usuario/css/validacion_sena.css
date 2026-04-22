@@ -186,7 +186,9 @@
   --carnet-frame-width: min(60%, 240px);
   position: relative;
   display: grid;
-  place-items: center;
+  justify-items: center;
+  align-content: start;
+  gap: 12px;
   min-height: 470px;
   padding: 28px;
   border-radius: 28px;
@@ -210,24 +212,25 @@
 
 .validacion-sena-capture__frame {
   position: absolute;
-  top: 126px;
+  top: 50%;
   left: 50%;
   width: var(--carnet-frame-width);
   aspect-ratio: var(--carnet-ratio);
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   border: 3px solid rgba(26, 124, 46, 0.76);
   border-radius: 28px;
   box-shadow: 0 0 0 999px rgba(14, 28, 18, 0.16);
+  pointer-events: none;
 }
 
 .validacion-sena-capture__frame-corners,
 .validacion-sena-camera-guide__corners {
   position: absolute;
-  top: 126px;
+  top: 50%;
   left: 50%;
   width: var(--carnet-frame-width);
   aspect-ratio: var(--carnet-ratio);
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   z-index: 1;
   pointer-events: none;
 }
@@ -316,9 +319,18 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
-  margin-top: 18px;
+  margin-top: 8px;
   position: relative;
-  z-index: 1;
+  z-index: 3;
+}
+
+.validacion-sena-capture__preview-stage {
+  position: relative;
+  width: 100%;
+  min-height: 340px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.38);
 }
 
 .validacion-sena-capture__cta {
@@ -342,23 +354,21 @@
 
 .validacion-sena-capture img {
   position: absolute;
-  top: 126px;
+  top: 50%;
   left: 50%;
   width: var(--carnet-frame-width);
   aspect-ratio: var(--carnet-ratio);
-  transform: translateX(-50%);
-  object-fit: cover;
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  image-orientation: from-image;
   border-radius: 28px;
   z-index: 2;
   background: rgba(255, 255, 255, 0.74);
 }
 
 .validacion-sena-capture__status {
-  position: absolute;
-  left: 50%;
-  bottom: 20px;
-  transform: translateX(-50%);
-  z-index: 3;
+  position: relative;
+  z-index: 4;
   width: min(92%, 360px);
   padding: 10px 14px;
   border-radius: 999px;
@@ -378,7 +388,7 @@
 
 .validacion-sena-capture.is-captured .validacion-sena-capture__frame,
 .validacion-sena-capture.is-captured .validacion-sena-capture__frame-corners {
-  opacity: 0;
+  opacity: 1;
 }
 
 .validacion-sena-capture.is-captured img {
@@ -703,10 +713,14 @@
     padding: 22px;
   }
 
+  .validacion-sena-capture__preview-stage {
+    min-height: 380px;
+  }
+
   .validacion-sena-capture__frame,
   .validacion-sena-capture__frame-corners,
   .validacion-sena-capture img {
-    top: 144px;
+    top: 50%;
   }
 
   .validacion-sena-capture__actions,
@@ -736,7 +750,6 @@
   }
 
   .validacion-sena-capture__status {
-    bottom: 16px;
     width: min(94%, 320px);
     font-size: 0.9rem;
   }

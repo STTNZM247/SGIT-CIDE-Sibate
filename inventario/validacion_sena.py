@@ -38,6 +38,27 @@ def _tokens_nombre_usuario(usuario):
     return [token for token in nombre_completo.split(' ') if len(token) > 2]
 
 
+def _documento_con_etiqueta_en_texto(texto_normalizado, documento_usuario):
+    if not documento_usuario:
+        return False
+
+    doc_flexible = r'\D*'.join(documento_usuario)
+    etiquetas = [
+        r'T\.?\s*I\.?',
+        r'TARJETA\s+DE\s+IDENTIDAD',
+        r'C\.?\s*C\.?',
+        r'CEDULA',
+        r'CEDULA\s+DE\s+CIUDADANIA',
+    ]
+
+    for etiqueta in etiquetas:
+        patron = rf'(?:\b{etiqueta}\b)\s*[:#\-\.]?\s*{doc_flexible}\b'
+        if re.search(patron, texto_normalizado):
+            return True
+
+    return False
+
+
 def _extraer_texto_ocr(image):
     try:
         import pytesseract
@@ -96,47 +117,70 @@ def cargar_imagen_validacion(archivo, *, require_vertical=True):
     return image, None
 
 
-def intentar_validacion_automatica(archivo, usuario):
-    image, image_error = cargar_imagen_validacion(archivo, require_vertical=True)
-    if image_error:
-        return image_error
-
+def _evaluar_validacion_por_imagen(image, usuario):
     texto_ocr, ocr_error = _extraer_texto_ocr(image)
     texto_normalizado = normalizar_texto(texto_ocr)
     documento_usuario = re.sub(r'\D+', '', usuario.cc or '')
-    texto_digitos = re.sub(r'\D+', '', texto_ocr or '')
     tokens_nombre = _tokens_nombre_usuario(usuario)
+
     coincidencias_nombre = sum(1 for token in tokens_nombre if token in texto_normalizado)
     min_coincidencias = len(tokens_nombre)
     if len(tokens_nombre) >= 3:
         min_coincidencias = len(tokens_nombre) - 1
 
     nombre_ok = bool(tokens_nombre) and coincidencias_nombre >= min_coincidencias
-    documento_ok = bool(documento_usuario) and documento_usuario in texto_digitos
+    documento_ok = _documento_con_etiqueta_en_texto(texto_normalizado, documento_usuario)
     logo_ok = _detectar_logo_sena(image, texto_normalizado)
 
     reasons = []
     if ocr_error:
         reasons.append(ocr_error)
     if not nombre_ok:
-        reasons.append('El nombre del carnet no coincide claramente con tu cuenta.')
+        reasons.append('El nombre del carnet no coincide claramente con tu cuenta (se compara en mayúsculas, sin importar tildes).')
     if not documento_ok:
-        reasons.append('El número de documento no coincide con tu cuenta.')
+        reasons.append('No encontramos tu documento junto a una etiqueta TI o CC en el carnet.')
     if not logo_ok:
         reasons.append('No pudimos confirmar el logo del SENA en la foto.')
 
-    if ocr_error or not (nombre_ok and documento_ok and logo_ok):
-        return {
-            'ok': False,
-            'message': 'No se pudo validar tu carnet de forma automática. Puedes solicitar validación manual si lo necesitas.',
-            'error_code': 'ocr_failed' if ocr_error else 'mismatch',
-            'details': reasons,
-            'texto_ocr': texto_ocr,
-        }
+    score = int(bool(nombre_ok)) + int(bool(documento_ok)) + int(bool(logo_ok))
+    if ocr_error:
+        score -= 1
 
     return {
-        'ok': True,
-        'message': 'Tu carnet SENA fue validado correctamente.',
-        'details': ['Logo SENA detectado.', 'Nombre y documento coinciden con tu cuenta.'],
+        'ok': not ocr_error and nombre_ok and documento_ok and logo_ok,
+        'message': 'Tu carnet SENA fue validado correctamente.' if (not ocr_error and nombre_ok and documento_ok and logo_ok) else 'No se pudo validar tu carnet de forma automática. Puedes solicitar validación manual si lo necesitas.',
+        'error_code': None if (not ocr_error and nombre_ok and documento_ok and logo_ok) else ('ocr_failed' if ocr_error else 'mismatch'),
+        'details': ['Logo SENA detectado.', 'Nombre y documento coinciden con tu cuenta.'] if (not ocr_error and nombre_ok and documento_ok and logo_ok) else reasons,
         'texto_ocr': texto_ocr,
+        'score': score,
+    }
+
+
+def intentar_validacion_automatica(archivo, usuario):
+    image, image_error = cargar_imagen_validacion(archivo, require_vertical=True)
+    if image_error:
+        return image_error
+
+    variantes = [image, image.rotate(90, expand=True), image.rotate(270, expand=True)]
+    mejor_intento = None
+
+    for img in variantes:
+        resultado = _evaluar_validacion_por_imagen(img, usuario)
+        if resultado['ok']:
+            resultado.pop('score', None)
+            return resultado
+
+        if not mejor_intento or resultado['score'] > mejor_intento['score']:
+            mejor_intento = resultado
+
+    if mejor_intento:
+        mejor_intento.pop('score', None)
+        return mejor_intento
+
+    return {
+        'ok': False,
+        'message': 'No se pudo validar tu carnet de forma automática. Puedes solicitar validación manual si lo necesitas.',
+        'error_code': 'ocr_failed',
+        'details': ['No se pudo analizar la imagen del carnet.'],
+        'texto_ocr': '',
     }

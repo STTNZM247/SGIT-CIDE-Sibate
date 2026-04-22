@@ -57,10 +57,6 @@
                 <input type="hidden" name="next" value="{{ redirect_to }}">
 
                 <div class="validacion-sena-capture" id="validacion-sena-capture-card">
-                    <span class="validacion-sena-capture__frame"></span>
-                    <span class="validacion-sena-capture__frame-corners" aria-hidden="true">
-                        <span></span><span></span><span></span><span></span>
-                    </span>
                     <span class="validacion-sena-capture__guide">Alinea el carnet dentro del marco y procura que el logo quede visible.</span>
                     <span class="validacion-sena-capture__hint">La guía solo aparece en la cámara dentro de esta página. Si eliges una foto desde el dispositivo, el celular abrirá su cámara o galería sin plantilla.</span>
                     <div class="validacion-sena-capture__actions">
@@ -74,10 +70,16 @@
                         </button>
                     </div>
                     <span class="validacion-sena-capture__subhint">Recomendado: usa la cámara guiada. La opción de galería/archivo es solo respaldo y no muestra la plantilla.</span>
+                    <div class="validacion-sena-capture__preview-stage" aria-hidden="true">
+                        <span class="validacion-sena-capture__frame"></span>
+                        <span class="validacion-sena-capture__frame-corners">
+                            <span></span><span></span><span></span><span></span>
+                        </span>
+                        <img id="foto_validacion_preview" alt="Vista previa del carnet" hidden>
+                    </div>
                     <span class="validacion-sena-capture__status" id="validacion_sena_capture_status" hidden>Foto capturada. Revisa la vista previa y pulsa Validar ahora.</span>
-                    <input type="file" id="foto_validacion" name="foto_validacion" accept="image/*" required>
+                    <input type="file" id="foto_validacion" name="foto_validacion" accept="image/*" capture="environment" required>
                     <input type="hidden" id="foto_validacion_captura" name="foto_validacion_captura">
-                    <img id="foto_validacion_preview" alt="Vista previa del carnet" hidden>
                 </div>
 
                 <div class="validacion-sena-inline-alert" id="validacion_sena_inline_alert" hidden></div>
@@ -524,28 +526,68 @@
                 return;
             }
 
+            var rawCanvas = document.createElement('canvas');
+            rawCanvas.width = video.videoWidth;
+            rawCanvas.height = video.videoHeight;
+            var rawContext = rawCanvas.getContext('2d');
+            rawContext.drawImage(video, 0, 0, rawCanvas.width, rawCanvas.height);
+
+            var normalizedCanvas = rawCanvas;
+            if (rawCanvas.width > rawCanvas.height) {
+                normalizedCanvas = document.createElement('canvas');
+                normalizedCanvas.width = rawCanvas.height;
+                normalizedCanvas.height = rawCanvas.width;
+                var normalizedContext = normalizedCanvas.getContext('2d');
+                normalizedContext.translate(normalizedCanvas.width / 2, normalizedCanvas.height / 2);
+                normalizedContext.rotate(Math.PI / 2);
+                normalizedContext.drawImage(rawCanvas, -rawCanvas.width / 2, -rawCanvas.height / 2);
+                traceStep('Captura rotada automáticamente a vertical', {
+                    width: rawCanvas.width,
+                    height: rawCanvas.height
+                });
+            }
+
+            var targetRatio = 5.5 / 8.5;
+            var sourceWidth = normalizedCanvas.width;
+            var sourceHeight = normalizedCanvas.height;
+            var sourceRatio = sourceWidth / sourceHeight;
+
+            var cropWidth = sourceWidth;
+            var cropHeight = sourceHeight;
+            var offsetX = 0;
+            var offsetY = 0;
+
+            if (sourceRatio > targetRatio) {
+                cropWidth = sourceHeight * targetRatio;
+                offsetX = (sourceWidth - cropWidth) / 2;
+            } else {
+                cropHeight = sourceWidth / targetRatio;
+                offsetY = (sourceHeight - cropHeight) / 2;
+            }
+
             var canvas = document.createElement('canvas');
-            var rotateToPortrait = video.videoWidth > video.videoHeight;
-            canvas.width = rotateToPortrait ? video.videoHeight : video.videoWidth;
-            canvas.height = rotateToPortrait ? video.videoWidth : video.videoHeight;
+            canvas.width = 990;
+            canvas.height = 1530;
             var context = canvas.getContext('2d');
             traceStep('Canvas preparado', {
                 width: canvas.width,
                 height: canvas.height,
                 tieneContexto: !!context,
-                rotado: rotateToPortrait
+                rotado: rawCanvas.width > rawCanvas.height
             });
-            if (rotateToPortrait) {
-                context.translate(canvas.width / 2, canvas.height / 2);
-                context.rotate(Math.PI / 2);
-                context.drawImage(video, -video.videoWidth / 2, -video.videoHeight / 2, video.videoWidth, video.videoHeight);
-                traceStep('Captura rotada automáticamente a vertical', {
-                    width: video.videoWidth,
-                    height: video.videoHeight
-                });
-            } else {
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            }
+
+            context.drawImage(
+                normalizedCanvas,
+                offsetX,
+                offsetY,
+                cropWidth,
+                cropHeight,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
             var previewUrl = canvas.toDataURL('image/png');
             traceStep('dataURL generada', { longitud: (previewUrl || '').length });
             if (!previewUrl || previewUrl === 'data:,') {
