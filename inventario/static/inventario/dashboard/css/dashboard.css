@@ -823,6 +823,59 @@
     background: #e7f7e8;
 }
 
+.admin-card--sena-manual {
+    margin-top: .8rem;
+    border-color: #d9e8da;
+    background: #ffffff;
+}
+
+.admin-sena-table-wrap {
+    margin-top: .45rem;
+    overflow-x: auto;
+    border: 1px solid #d7e7d4;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.admin-sena-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    font-size: .84rem;
+}
+
+.admin-sena-table th,
+.admin-sena-table td {
+    padding: .5rem .55rem;
+    text-align: left;
+    border-bottom: 1px solid #e6efe4;
+    color: #203528;
+}
+
+.admin-sena-table th {
+    background: #f2faf1;
+    color: #355638;
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+}
+
+.admin-sena-table tr:hover td {
+    background: #f8fdf7;
+}
+
+.admin-sena-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid #9fd1a0;
+    background: #e9f9ea;
+    color: #286a2e;
+    font-size: .74rem;
+    font-weight: 700;
+    padding: .14rem .48rem;
+}
+
 .admin-card {
     border: 1px solid #dfe7f1;
     border-radius: 14px;
@@ -1761,6 +1814,33 @@ html[data-theme="dark"] .admin-pending-more-btn {
     background: #182018 !important;
     color: #7dd87d !important;
     border-color: #253025 !important;
+}
+
+/* Tabla validación SENA manual */
+html[data-theme="dark"] .admin-card--sena-manual {
+    background: #0d1a0d !important;
+    border-color: #1e2b1e !important;
+}
+html[data-theme="dark"] .admin-sena-table-wrap {
+    background: #111611 !important;
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .admin-sena-table th {
+    background: #182018 !important;
+    color: #90b090 !important;
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .admin-sena-table td {
+    color: #c8dcc8 !important;
+    border-color: #1e2b1e !important;
+}
+html[data-theme="dark"] .admin-sena-table tr:hover td {
+    background: #1a2b1a !important;
+}
+html[data-theme="dark"] .admin-sena-pill {
+    background: #1c321f !important;
+    border-color: #2c5232 !important;
+    color: #9ed3a7 !important;
 }
 
 /* Gráfico de barras (line chart) */

@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.contrib import messages
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Notificacion, Pedido, PedidoEvidencia, Producto, Rol
+from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Notificacion, Pedido, PedidoEvidencia, Producto, Rol, Usuario
 from .forms import ProductoForm
 
 
@@ -732,6 +732,25 @@ def dashboard(request):
             'codigo_confirmacion': pedido.codigo_entrega or '--',
             'estado': 'Pendiente',
         })
+
+    estados_validacion_manual = ['solicitada', 'enlace_enviado', 'documento_cargado']
+    usuarios_validacion_manual_qs = (
+        Usuario.objects
+        .filter(verificacion_sena_estado__in=estados_validacion_manual)
+        .order_by('verificacion_sena_solicitada_en', 'id_usu')
+    )
+    usuarios_validacion_manual_total = usuarios_validacion_manual_qs.count()
+    usuarios_validacion_manual = []
+    for usuario in usuarios_validacion_manual_qs[:12]:
+        nombre_usuario = (f'{usuario.nombre or ""} {usuario.apellido or ""}'.strip() or usuario.correo or f'Usuario {usuario.pk}')
+        usuarios_validacion_manual.append({
+            'id': usuario.pk,
+            'nombre': nombre_usuario,
+            'correo': usuario.correo or '-',
+            'documento': usuario.cc or '-',
+            'estado': usuario.get_verificacion_sena_estado_display(),
+            'solicitada_en': usuario.verificacion_sena_solicitada_en,
+        })
     productos_en_mora = (
         DetallePedido.objects
         .filter(
@@ -794,6 +813,8 @@ def dashboard(request):
             'pedidos_pendientes_total': pedidos_pendientes_total,
             'hay_mas_pendientes': pedidos_pendientes_total > pendientes_preview_limit,
             'resumen_pendientes': resumen_pendientes,
+            'usuarios_validacion_manual': usuarios_validacion_manual,
+            'usuarios_validacion_manual_total': usuarios_validacion_manual_total,
             'prestamos_mes_actual': prestamos_mes_actual,
             'productos_en_mora': productos_en_mora,
             'alertas_stock_bajo': alertas_stock_bajo,

@@ -164,6 +164,49 @@
             </div>
         </article>
 
+        <article class="admin-card admin-card--sena-manual">
+            <header class="admin-card__head">
+                <h2>Usuarios que no se pudieron validar automáticamente</h2>
+                <span>Total en revisión manual: {{ usuarios_validacion_manual_total }}</span>
+            </header>
+
+            {% if usuarios_validacion_manual %}
+            <div class="admin-sena-table-wrap" role="region" aria-label="Usuarios pendientes de validación SENA manual">
+                <table class="admin-sena-table">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Documento</th>
+                            <th>Correo</th>
+                            <th>Estado</th>
+                            <th>Solicitud</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in usuarios_validacion_manual %}
+                        <tr>
+                            <td>{{ item.nombre }}</td>
+                            <td>{{ item.documento }}</td>
+                            <td>{{ item.correo }}</td>
+                            <td><span class="admin-sena-pill">{{ item.estado }}</span></td>
+                            <td>{% if item.solicitada_en %}{{ item.solicitada_en|date:'d/m/Y H:i' }}{% else %}-{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="admin-card__empty">No hay usuarios en proceso de validación manual.</p>
+            {% endif %}
+
+            <div class="admin-pending-actions">
+                <a href="{% url 'gestion_usuarios_panel' %}" class="admin-pending-more-btn">
+                    Ir a gestión de usuarios
+                    <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+                </a>
+            </div>
+        </article>
+
         <div class="admin-chart-grid">
             <article class="admin-card admin-card--chart">
                 <header class="admin-card__head">
