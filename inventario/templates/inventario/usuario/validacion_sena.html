@@ -360,7 +360,7 @@
             var image = new Image();
             image.onload = function () {
                 URL.revokeObjectURL(objectUrl);
-                resolve({ ok: image.height >= image.width, width: image.width, height: image.height });
+                resolve({ ok: true, width: image.width, height: image.height, rotated: image.width > image.height });
             };
             image.onerror = function () {
                 URL.revokeObjectURL(objectUrl);
@@ -398,6 +398,13 @@
                 captureDataInput.value = '';
             }
             clearInlineAlert();
+            if (result.rotated) {
+                showInlineAlert('La imagen se procesará automáticamente en vertical para la validación.');
+                traceStep('Imagen horizontal detectada en archivo, se normalizará en backend', {
+                    width: result.width,
+                    height: result.height
+                });
+            }
             var reader = new FileReader();
             reader.onload = function (event) {
                 preview.src = event.target.result;
@@ -517,18 +524,28 @@
                 return;
             }
 
-            if (video.videoWidth > video.videoHeight) {
-                traceStep('Captura cancelada: orientación horizontal');
-                showInlineAlert('Pon el celular en vertical antes de capturar el carnet.');
-                return;
-            }
-
             var canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            var rotateToPortrait = video.videoWidth > video.videoHeight;
+            canvas.width = rotateToPortrait ? video.videoHeight : video.videoWidth;
+            canvas.height = rotateToPortrait ? video.videoWidth : video.videoHeight;
             var context = canvas.getContext('2d');
-            traceStep('Canvas preparado', { width: canvas.width, height: canvas.height, tieneContexto: !!context });
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            traceStep('Canvas preparado', {
+                width: canvas.width,
+                height: canvas.height,
+                tieneContexto: !!context,
+                rotado: rotateToPortrait
+            });
+            if (rotateToPortrait) {
+                context.translate(canvas.width / 2, canvas.height / 2);
+                context.rotate(Math.PI / 2);
+                context.drawImage(video, -video.videoWidth / 2, -video.videoHeight / 2, video.videoWidth, video.videoHeight);
+                traceStep('Captura rotada automáticamente a vertical', {
+                    width: video.videoWidth,
+                    height: video.videoHeight
+                });
+            } else {
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            }
             var previewUrl = canvas.toDataURL('image/png');
             traceStep('dataURL generada', { longitud: (previewUrl || '').length });
             if (!previewUrl || previewUrl === 'data:,') {

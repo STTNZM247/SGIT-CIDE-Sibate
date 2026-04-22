@@ -91,12 +91,7 @@ def cargar_imagen_validacion(archivo, *, require_vertical=True):
 
     width, height = image.size
     if require_vertical and width > height:
-        return None, {
-            'ok': False,
-            'message': 'La foto del carnet debe tomarse o subirse en vertical. Gira el celular y vuelve a intentarlo.',
-            'error_code': 'invalid_orientation',
-            'details': ['La imagen fue detectada en formato horizontal. Usa el carnet en posición vertical dentro de la guía.'],
-        }
+        image = image.rotate(90, expand=True)
 
     return image, None
 
