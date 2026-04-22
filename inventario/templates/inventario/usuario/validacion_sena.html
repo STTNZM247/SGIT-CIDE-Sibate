@@ -479,15 +479,52 @@
         setCameraStatus('Preparando cámara...', true);
         traceStep('Solicitando acceso a la cámara');
         try {
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: { ideal: 'environment' },
-                    width: { ideal: 1080 },
-                    height: { ideal: 1920 },
-                    aspectRatio: { ideal: 9 / 16 }
+            var intentos = [
+                {
+                    video: {
+                        facingMode: { ideal: 'environment' },
+                        width: { min: 720, ideal: 1080 },
+                        height: { min: 1280, ideal: 1920 },
+                        aspectRatio: { ideal: 9 / 16, max: 0.7 }
+                    },
+                    audio: false
                 },
-                audio: false
-            });
+                {
+                    video: {
+                        facingMode: { ideal: 'environment' },
+                        width: { ideal: 1080 },
+                        height: { ideal: 1920 },
+                        aspectRatio: { ideal: 9 / 16 }
+                    },
+                    audio: false
+                },
+                {
+                    video: {
+                        facingMode: { ideal: 'environment' }
+                    },
+                    audio: false
+                }
+            ];
+
+            var lastError = null;
+            for (var i = 0; i < intentos.length; i += 1) {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia(intentos[i]);
+                    traceStep('Cámara obtenida con perfil', { perfil: i + 1 });
+                    break;
+                } catch (errorIntento) {
+                    lastError = errorIntento;
+                    traceStep('Perfil de cámara no disponible', {
+                        perfil: i + 1,
+                        error: errorIntento && (errorIntento.name || errorIntento.message || String(errorIntento))
+                    });
+                }
+            }
+
+            if (!stream) {
+                throw lastError || new Error('camera-unavailable');
+            }
+
             traceStep('Stream de cámara recibido', { tracks: stream.getTracks().length });
             video.srcObject = stream;
             modal.hidden = false;
@@ -500,6 +537,15 @@
             traceStep('Video en reproducción');
             await waitForVideoReady();
             traceStep('Video listo para capturar', { width: video.videoWidth, height: video.videoHeight, readyState: video.readyState });
+
+            if (video.videoWidth > video.videoHeight) {
+                setCameraStatus('La cámara del dispositivo entregó señal horizontal. Capturaremos y corregiremos automáticamente a vertical.', true);
+                traceStep('Señal horizontal detectada, se corregirá en captura', {
+                    width: video.videoWidth,
+                    height: video.videoHeight
+                });
+            }
+
             setCameraStatus('', false);
         } catch (error) {
             stopCamera();
