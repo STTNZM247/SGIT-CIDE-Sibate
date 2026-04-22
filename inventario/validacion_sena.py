@@ -92,6 +92,38 @@ def _variantes_para_ocr(image):
     return variantes
 
 
+def _texto_parece_ruido_para_carnet(texto_normalizado):
+    """Heurística conservadora para detectar OCR basura en imágenes no-carnet.
+
+    Se usa solo para cortar temprano cuando también faltan otras señales
+    (sin logo y sin recorte útil), evitando afectar casos válidos.
+    """
+    texto = (texto_normalizado or '').strip()
+    if not texto:
+        return True
+
+    compacto = re.sub(r'\s+', '', texto)
+    if len(compacto) < 8:
+        return True
+
+    palabras = [p for p in re.split(r'\s+', texto) if len(p) >= 3]
+    doc_largo = bool(re.search(r'\d{6,}', texto))
+    claves = (
+        'SENA',
+        'APRENDIZ',
+        'TARJETA',
+        'IDENTIDAD',
+        'CEDULA',
+        'CC',
+        'TI',
+    )
+    tiene_clave = any(clave in texto for clave in claves)
+
+    # Si hay muy poco texto útil, sin documento largo y sin palabras clave,
+    # suele ser ruido OCR de imágenes aleatorias.
+    return len(palabras) <= 2 and not doc_largo and not tiene_clave
+
+
 def _documento_con_etiqueta_en_texto(texto_normalizado, documento_usuario):
     if not documento_usuario:
         return False
@@ -128,12 +160,21 @@ def _extraer_texto_ocr(image):
     except Exception:
         return '', 'El OCR automático no está disponible en este servidor.'
 
+    def _ocr_call(**kwargs):
+        try:
+            return pytesseract.image_to_string(image, timeout=8, **kwargs), ''
+        except TypeError:
+            # Compatibilidad con versiones antiguas de pytesseract sin timeout.
+            return pytesseract.image_to_string(image, **kwargs), ''
+        except RuntimeError:
+            return '', 'La lectura OCR tardó demasiado para esta imagen.'
+
     try:
         # oem 1 = solo red LSTM, más rápida que oem 3 (LSTM+legacy).
-        return pytesseract.image_to_string(image, lang='spa+eng', config='--oem 1 --psm 6'), ''
+        return _ocr_call(lang='spa+eng', config='--oem 1 --psm 6')
     except Exception:
         try:
-            return pytesseract.image_to_string(image, config='--oem 1 --psm 6'), ''
+            return _ocr_call(config='--oem 1 --psm 6')
         except Exception:
             return '', 'No se pudo leer el texto del carnet en esta imagen.'
 
@@ -215,6 +256,8 @@ def _evaluar_validacion_por_imagen(image, usuario, orientacion='0'):
                 break
         elif error_tmp and not ocr_error:
             ocr_error = error_tmp
+            if 'tardó demasiado' in error_tmp:
+                break
 
     texto_normalizado = normalizar_texto(texto_ocr_total)
     documento_usuario = re.sub(r'\D+', '', usuario.cc or '')
@@ -253,6 +296,7 @@ def _evaluar_validacion_por_imagen(image, usuario, orientacion='0'):
         'nombre_ok': bool(nombre_ok),
         'documento_ok': bool(documento_ok),
         'logo_ok': bool(logo_ok),
+        'texto_ruido': bool(_texto_parece_ruido_para_carnet(texto_normalizado)),
         'ocr_error': ocr_error or '',
         'ocr_chars': len(texto_normalizado),
         'ocr_extracto': texto_normalizado[:320],
@@ -290,10 +334,21 @@ def intentar_validacion_automatica(archivo, usuario):
         if not mejor_intento or resultado['score'] > mejor_intento['score']:
             mejor_intento = resultado
 
-        # Salida temprana: si la primera orientación no produjo ningún texto
-        # Y el logo tampoco se detectó, la imagen claramente no es un carnet.
-        # Evita procesar otras 6 variantes innecesariamente.
-        if orientacion == '0' and resultado['debug']['ocr_chars'] == 0 and not resultado['debug']['logo_ok']:
+        # Salida temprana robusta para imágenes random/blancas:
+        # - Sin logo
+        # - Sin recorte útil
+        # - Texto vacío o claramente ruido OCR
+        # Evita seguir con orientaciones extra cuando no hay señales de carnet.
+        if (
+            orientacion == '0'
+            and not resultado['debug']['logo_ok']
+            and not resultado['debug']['recorte_auto']
+            and (
+                resultado['debug']['ocr_chars'] == 0
+                or resultado['debug']['texto_ruido']
+                or 'tardó demasiado' in (resultado['debug']['ocr_error'] or '')
+            )
+        ):
             break
 
     if mejor_intento:
