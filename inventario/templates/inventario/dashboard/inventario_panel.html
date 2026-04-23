@@ -165,9 +165,47 @@
 
 {% block extra_js %}
     <script src="{% static 'inventario/dashboard/js/dashboard.js' %}" defer></script>
-    <script src="{% static 'inventario/dashboard/js/custom_select.js' %}" data-page-script="true"></script>
+    <script src="{% static 'inventario/dashboard/js/custom_select.js' %}" defer></script>
     <script data-page-script="true">
     (() => {
+        // Inicializar custom select de catálogo (re-init en navegación PJAX)
+        (function initCustomSelect() {
+            var sel = document.getElementById('customCatalogSelect');
+            if (!sel || sel._pjaxInited) return;
+            sel._pjaxInited = true;
+            var selectedBtn = document.getElementById('customSelectSelected');
+            var selectedText = document.getElementById('customSelectText');
+            var optsContainer = document.getElementById('customSelectOptions');
+            var input = document.getElementById('categoriaInput');
+            var form = sel.closest('form');
+            function setOpen(open) {
+                sel.classList.toggle('is-open', open);
+                sel.setAttribute('aria-expanded', open ? 'true' : 'false');
+            }
+            if (selectedBtn) selectedBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                setOpen(!sel.classList.contains('is-open'));
+            });
+            if (optsContainer) optsContainer.querySelectorAll('.custom-select__option').forEach(function(opt) {
+                opt.addEventListener('click', function() {
+                    var val = this.getAttribute('data-value') || '';
+                    if (input) input.value = val;
+                    if (selectedText) selectedText.textContent = this.textContent.trim();
+                    optsContainer.querySelectorAll('.custom-select__option').forEach(function(item) {
+                        item.classList.remove('is-active');
+                        item.setAttribute('aria-selected', 'false');
+                    });
+                    this.classList.add('is-active');
+                    this.setAttribute('aria-selected', 'true');
+                    setOpen(false);
+                    if (form) form.submit();
+                });
+            });
+            document.addEventListener('click', function(e) {
+                if (!sel.contains(e.target)) setOpen(false);
+            });
+        })();
+
         const openButtons = document.querySelectorAll('[data-open-modal]');
         const closeButtons = document.querySelectorAll('[data-close-modal]');
         const closeAll = () => {

@@ -1,5 +1,5 @@
 // Custom select para catálogo
-(function () {
+document.addEventListener('DOMContentLoaded', function () {
     const select = document.getElementById('customCatalogSelect');
     if (!select) return;
 
