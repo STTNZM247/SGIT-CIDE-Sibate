@@ -298,9 +298,10 @@ const initCatalogoPage = () => {
                 if (form) {
                     form.reset();
                 }
-                // Limpiar fotos
+                // Limpiar fotos acumuladas
+                fotosAccum = new DataTransfer();
                 const fotosIn = modal.querySelector('#id_fotos');
-                if (fotosIn) fotosIn.value = '';
+                if (fotosIn) { try { fotosIn.files = fotosAccum.files; } catch(e) { fotosIn.value = ''; } }
                 const prev = modal.querySelector('#fotos-preview');
                 if (prev) prev.innerHTML = '';
                 const msg = modal.querySelector('#fotos-count-msg');
@@ -359,38 +360,61 @@ const initCatalogoPage = () => {
         // fallback: albums-outline (ya definido en el HTML)
     });
 
-    /* ---- Vista previa múltiple de imágenes ------------- */
+    /* ---- Vista previa múltiple de imágenes (acumuladas) - */
     const fotosInput = document.getElementById('id_fotos');
     const fotosPreview = document.getElementById('fotos-preview');
     const fotosMsg = document.getElementById('fotos-count-msg');
     const MAX_FOTOS = 5;
+    let fotosAccum = new DataTransfer();
+
+    function renderFotosPreview() {
+        fotosPreview.innerHTML = '';
+        const files = Array.from(fotosAccum.files);
+        if (fotosMsg) {
+            fotosMsg.textContent = files.length
+                ? `${files.length} foto${files.length > 1 ? 's' : ''} seleccionada${files.length > 1 ? 's' : ''} (máx. ${MAX_FOTOS})`
+                : '';
+        }
+        files.forEach((file, idx) => {
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'position:relative;width:72px;height:72px;';
+            const img = document.createElement('img');
+            img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--color-border,#e5e7eb);';
+            if (idx === 0) {
+                const badge = document.createElement('span');
+                badge.textContent = 'Principal';
+                badge.style.cssText = 'position:absolute;bottom:2px;left:2px;right:2px;text-align:center;font-size:.58rem;background:rgba(0,100,60,.82);color:#fff;border-radius:4px;padding:1px 2px;';
+                wrap.appendChild(badge);
+            }
+            // Botón quitar individual
+            const rmBtn = document.createElement('button');
+            rmBtn.type = 'button';
+            rmBtn.title = 'Quitar foto';
+            rmBtn.style.cssText = 'position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.6);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;line-height:1;padding:0;';
+            rmBtn.textContent = '×';
+            rmBtn.addEventListener('click', () => {
+                const newDT = new DataTransfer();
+                Array.from(fotosAccum.files).forEach((f, i) => { if (i !== idx) newDT.items.add(f); });
+                fotosAccum = newDT;
+                fotosInput.files = fotosAccum.files;
+                renderFotosPreview();
+            });
+            const reader = new FileReader();
+            reader.onload = e => { img.src = e.target.result; };
+            reader.readAsDataURL(file);
+            wrap.prepend(img);
+            wrap.appendChild(rmBtn);
+            fotosPreview.appendChild(wrap);
+        });
+    }
 
     if (fotosInput) {
         fotosInput.addEventListener('change', () => {
-            const files = Array.from(fotosInput.files).slice(0, MAX_FOTOS);
-            fotosPreview.innerHTML = '';
-            if (files.length === 0) {
-                if (fotosMsg) fotosMsg.textContent = '';
-                return;
-            }
-            if (fotosMsg) fotosMsg.textContent = `${files.length} foto${files.length > 1 ? 's' : ''} seleccionada${files.length > 1 ? 's' : ''} (máx. ${MAX_FOTOS})`;
-            files.forEach((file, idx) => {
-                const wrap = document.createElement('div');
-                wrap.style.cssText = 'position:relative;width:72px;height:72px;';
-                const img = document.createElement('img');
-                img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--color-border,#e5e7eb);';
-                if (idx === 0) {
-                    const badge = document.createElement('span');
-                    badge.textContent = 'Principal';
-                    badge.style.cssText = 'position:absolute;bottom:2px;left:2px;right:2px;text-align:center;font-size:.58rem;background:rgba(0,100,60,.82);color:#fff;border-radius:4px;padding:1px 2px;';
-                    wrap.appendChild(badge);
-                }
-                const reader = new FileReader();
-                reader.onload = e => { img.src = e.target.result; };
-                reader.readAsDataURL(file);
-                wrap.prepend(img);
-                fotosPreview.appendChild(wrap);
+            Array.from(fotosInput.files).forEach(file => {
+                if (fotosAccum.items.length < MAX_FOTOS) fotosAccum.items.add(file);
             });
+            fotosInput.files = fotosAccum.files;
+            renderFotosPreview();
         });
     }
 
