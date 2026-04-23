@@ -54,7 +54,7 @@
 <section class="cat-grid-section">
     <div class="cat-grid">
         {% for cat in catalogos %}
-        <article class="cat-card cat-card--catalogo">
+        <article class="cat-card cat-card--catalogo" data-href="{% url 'productos_catalogo' cat.id_cat %}" style="cursor:pointer;">
             {% if puede_gestionar_catalogo %}
             <form
                 method="post"
@@ -427,5 +427,16 @@ if (document.readyState === 'loading') {
     initCatalogoPage();
 }
 })();
+</script>
+
+<script>
+// Click en toda la tarjeta de catálogo → navegar a sus productos
+document.querySelectorAll('.cat-card--catalogo[data-href]').forEach(function(card) {
+    card.addEventListener('click', function(e) {
+        // Si el click fue dentro de un botón, enlace, form o input, dejar que actúe normalmente
+        if (e.target.closest('a, button, form, input, select, textarea')) return;
+        window.location.href = card.dataset.href;
+    });
+});
 </script>
 {% endblock %}
