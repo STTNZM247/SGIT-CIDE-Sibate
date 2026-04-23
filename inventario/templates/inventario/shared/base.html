@@ -371,7 +371,25 @@
             iconEl.innerHTML  = '<ion-icon name="' + (alert.icono || 'notifications-outline') + '"></ion-icon>';
             iconEl.style.color = color;
             linkEl.style.color = color;
-            linkEl.href = alert.url;
+
+            // Si la alerta es de validación SENA, el botón abre el modal
+            if (alert.tipo === 'sena_validacion') {
+                linkEl.removeAttribute('href');
+                linkEl.style.cursor = 'pointer';
+                linkEl.onclick = function(e) {
+                    e.preventDefault();
+                    var modal = document.getElementById('senaSolicitudesModal');
+                    if (modal) {
+                        modal.setAttribute('aria-hidden', 'false');
+                        modal.classList.add('is-open');
+                        document.body.classList.add('modal-open');
+                    }
+                };
+            } else {
+                linkEl.href = alert.url;
+                linkEl.onclick = null;
+                linkEl.style.cursor = '';
+            }
 
             remaining = DURATION;
             paused = false;
