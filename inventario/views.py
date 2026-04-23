@@ -1188,6 +1188,7 @@ def inventario_panel(request):
     productos_qs = (
         Producto.objects
         .select_related('id_cat_fk')
+        .prefetch_related('fotos')
         .annotate(
             stock_actual=Subquery(disp_qs.values('stock')[:1]),
             cantidad_actual=Subquery(disp_qs.values('cantidad')[:1]),

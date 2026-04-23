@@ -4,6 +4,25 @@
 {% block title %}Editar Producto | {{ producto.nombre_producto }}{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'inventario/catalogo/css/catalogo.css' %}" data-page-style="true">
+<style>
+/* ---- Mini Carousel ---- */
+.mini-carousel{position:relative;width:100%;overflow:hidden;border-radius:10px;margin-bottom:8px;}
+.mini-carousel__track{display:flex;transition:transform .32s ease;}
+.mini-carousel__slide{min-width:100%;flex-shrink:0;}
+.mini-carousel__slide img{width:100%;height:200px;object-fit:contain;display:block;background:var(--color-bg-alt,#f4f6f8);border-radius:10px;}
+.mini-carousel__btn{position:absolute;top:calc(50% - 15px);background:rgba(0,0,0,.42);border:none;color:#fff;border-radius:50%;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;transition:background .18s;}
+.mini-carousel__btn:hover{background:rgba(0,0,0,.70);}
+.mini-carousel__btn--prev{left:6px;}
+.mini-carousel__btn--next{right:6px;}
+.mini-carousel__dots{display:flex;justify-content:center;gap:5px;margin-top:7px;flex-wrap:wrap;}
+.mini-carousel__dot{width:7px;height:7px;border-radius:50%;background:var(--color-border,#e5e7eb);border:none;cursor:pointer;padding:0;transition:background .2s;flex-shrink:0;}
+.mini-carousel__dot.is-active{background:var(--color-primary,#39b54a);}
+/* ---- Floating bar ---- */
+.edit-float-bar{position:fixed;bottom:0;left:0;right:0;display:flex;align-items:center;gap:10px;justify-content:flex-end;padding:12px 28px;background:var(--color-surface,#fff);border-top:1.5px solid var(--color-border,#e5e7eb);border-radius:18px 18px 0 0;box-shadow:0 -4px 28px rgba(0,0,0,.13);z-index:90;transform:translateY(110%);transition:transform .42s cubic-bezier(.34,1.56,.64,1);}
+.edit-float-bar.is-visible{transform:translateY(0);}
+.edit-float-bar__hint{font-size:.8rem;color:var(--color-muted,#888);display:flex;align-items:center;gap:5px;margin-right:auto;}
+.edit-float-bar__hint ion-icon{color:#f59e0b;font-size:1.05rem;}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -25,7 +44,7 @@
         </header>
 
         <div class="product-edit-layout">
-            <form method="post" enctype="multipart/form-data" class="product-edit-form">
+            <form method="post" enctype="multipart/form-data" class="product-edit-form" id="prod-edit-form">
                 {% csrf_token %}
 
                 <section class="product-edit-card">
@@ -75,13 +94,6 @@
                     </div>
                 </section>
 
-                <div class="product-edit-actions">
-                    <a href="{% url 'producto_detalle' producto.id_prod %}" class="cat-btn cat-btn--ghost">Cancelar</a>
-                    <button type="submit" class="cat-btn cat-btn--primary">
-                        <ion-icon name="save-outline"></ion-icon>
-                        Guardar cambios
-                    </button>
-                </div>
             </form>
 
             <aside class="product-edit-card product-edit-card--aside">
@@ -89,27 +101,43 @@
                     <h2>Fotos del producto <span style="font-size:.75rem;font-weight:400;color:var(--color-muted,#888);">({{ total_fotos }}/5)</span></h2>
                 </div>
 
-                <!-- FOTO PRINCIPAL -->
-                <p class="mf-label" style="margin-bottom:6px;">Foto principal</p>
-                <div class="product-edit-preview">
-                    {% if producto.fot_prod %}
-                    <img src="{{ producto.fot_prod.url }}" alt="{{ producto.nombre_producto }}" class="product-edit-preview__img">
-                    {% else %}
-                    <div class="product-edit-preview__placeholder">
-                        <ion-icon name="image-outline"></ion-icon>
-                        <span>Sin fotografía principal</span>
+                <!-- CARRUSEL DE TODAS LAS FOTOS -->
+                {% if producto.fot_prod or fotos_extra %}
+                <div class="mini-carousel" id="edit-carousel">
+                    <div class="mini-carousel__track" id="edit-carousel-track">
+                        {% if producto.fot_prod %}
+                        <div class="mini-carousel__slide">
+                            <img src="{{ producto.fot_prod.url }}" alt="{{ producto.nombre_producto }}" loading="lazy">
+                            <div style="text-align:center;margin-top:4px;"><span style="font-size:.7rem;background:rgba(0,150,80,.13);color:var(--color-primary,#39b54a);padding:1px 8px;border-radius:10px;">Principal</span></div>
+                        </div>
+                        {% endif %}
+                        {% for foto in fotos_extra %}
+                        <div class="mini-carousel__slide">
+                            <img src="{{ foto.foto.url }}" alt="Foto {{ forloop.counter }}" loading="lazy">
+                        </div>
+                        {% endfor %}
                     </div>
+                    {% if total_fotos > 1 %}
+                    <button class="mini-carousel__btn mini-carousel__btn--prev" type="button" aria-label="Anterior"><ion-icon name="chevron-back-outline"></ion-icon></button>
+                    <button class="mini-carousel__btn mini-carousel__btn--next" type="button" aria-label="Siguiente"><ion-icon name="chevron-forward-outline"></ion-icon></button>
+                    <div class="mini-carousel__dots" id="edit-carousel-dots"></div>
                     {% endif %}
                 </div>
+                {% else %}
+                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;border:2px dashed var(--color-border,#e5e7eb);border-radius:10px;margin-bottom:10px;">
+                    <ion-icon name="image-outline" style="font-size:2.2rem;color:var(--color-muted,#888);"></ion-icon>
+                    <span style="color:var(--color-muted,#888);font-size:.85rem;margin-top:6px;">Sin fotografía</span>
+                </div>
+                {% endif %}
 
                 {% if producto.fot_prod %}
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
                     <label class="file-upload-zone product-edit-upload-zone" style="flex:1;min-width:0;">
                         <ion-icon name="swap-horizontal-outline"></ion-icon>
                         <span class="file-upload-zone__text">Cambiar foto principal</span>
-                        <input type="file" name="fot_prod" class="form-file" accept="image/*">
+                        <input type="file" name="fot_prod" class="form-file" accept="image/*" form="prod-edit-form">
                     </label>
-                    <button type="submit" name="clear_fot_prod" value="1"
+                    <button type="submit" name="clear_fot_prod" value="1" form="prod-edit-form"
                         class="cat-btn cat-btn--ghost"
                         style="border-color:var(--color-error,#ef4444);color:var(--color-error,#ef4444);"
                         onclick="return confirm('¿Eliminar la foto principal?');"
@@ -122,7 +150,7 @@
                     <ion-icon name="cloud-upload-outline"></ion-icon>
                     <span class="file-upload-zone__text">Subir foto principal</span>
                     <span class="file-upload-zone__hint">JPG, PNG o WEBP</span>
-                    <input type="file" name="fot_prod" class="form-file" accept="image/*">
+                    <input type="file" name="fot_prod" class="form-file" accept="image/*" form="prod-edit-form">
                 </label>
                 {% endif %}
 
@@ -134,7 +162,7 @@
                     <div style="position:relative;border-radius:10px;overflow:hidden;border:1.5px solid var(--color-border,#e5e7eb);">
                         <img src="{{ foto.foto.url }}" alt="Foto {{ forloop.counter }}" loading="lazy"
                              style="width:100%;height:90px;object-fit:cover;display:block;">
-                        <form method="post" action="{% url 'eliminar_foto_producto' producto.id_prod foto.id_foto %}" style="position:absolute;top:4px;right:4px;">
+                        <form method="post" action="{% url 'eliminar_foto_producto' producto.id_prod foto.id_foto %}" class="delete-foto-form" style="position:absolute;top:4px;right:4px;">
                             {% csrf_token %}
                             <button type="submit"
                                 class="cat-btn"
@@ -156,7 +184,7 @@
                     <ion-icon name="images-outline"></ion-icon>
                     <span class="file-upload-zone__text">Seleccionar imágenes</span>
                     <span class="file-upload-zone__hint">Máx. {{ cupo_fotos }} archivo{{ cupo_fotos|pluralize }}</span>
-                    <input type="file" name="fotos_nuevas" id="id_fotos_nuevas" class="form-file" accept="image/*" multiple>
+                    <input type="file" name="fotos_nuevas" id="id_fotos_nuevas" class="form-file" accept="image/*" multiple form="prod-edit-form">
                 </label>
                 <div id="nuevas-preview" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;"></div>
                 {% else %}
@@ -169,56 +197,134 @@
         </div>
     </div>
 </section>
+
+<!-- BARRA FLOTANTE DE ACCIONES -->
+<div class="edit-float-bar" id="edit-float-bar" role="region" aria-label="Acciones del formulario">
+    <span class="edit-float-bar__hint">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        Tienes cambios sin guardar
+    </span>
+    <a href="{% url 'producto_detalle' producto.id_prod %}" class="cat-btn cat-btn--ghost" id="btn-cancel-edit">Cancelar</a>
+    <button type="submit" form="prod-edit-form" class="cat-btn cat-btn--primary">
+        <ion-icon name="save-outline"></ion-icon>
+        Guardar cambios
+    </button>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script data-page-script="true">
 (function() {
-    const input = document.getElementById('id_fotos_nuevas');
-    const preview = document.getElementById('nuevas-preview');
-    if (!input || !preview) return;
 
-    let accum = new DataTransfer();
-    const MAX = parseInt(input.closest('label, div')?.querySelector('[data-cupo]')?.dataset.cupo || '4', 10) || 4;
+    // ========== CARRUSEL ==========
+    function initCarousel(container) {
+        var track = container.querySelector('.mini-carousel__track');
+        if (!track) return;
+        var slides = Array.from(track.children);
+        if (slides.length <= 1) return;
+        var prevBtn = container.querySelector('.mini-carousel__btn--prev');
+        var nextBtn = container.querySelector('.mini-carousel__btn--next');
+        var dotsWrap = container.querySelector('.mini-carousel__dots');
+        var cur = 0;
+        if (dotsWrap) {
+            slides.forEach(function(_, i) {
+                var dot = document.createElement('button');
+                dot.type = 'button';
+                dot.className = 'mini-carousel__dot' + (i === 0 ? ' is-active' : '');
+                dot.addEventListener('click', function() { go(i); });
+                dotsWrap.appendChild(dot);
+            });
+        }
+        function go(idx) {
+            cur = ((idx % slides.length) + slides.length) % slides.length;
+            track.style.transform = 'translateX(-' + (cur * 100) + '%)';
+            if (dotsWrap) dotsWrap.querySelectorAll('.mini-carousel__dot').forEach(function(d, i) { d.classList.toggle('is-active', i === cur); });
+        }
+        if (prevBtn) prevBtn.addEventListener('click', function() { go(cur - 1); });
+        if (nextBtn) nextBtn.addEventListener('click', function() { go(cur + 1); });
+    }
+    var editCarousel = document.getElementById('edit-carousel');
+    if (editCarousel) initCarousel(editCarousel);
 
-    // Leer el cupo real del atributo multiple o del texto del hint
-    const cupoHint = input.previousElementSibling;
-
-    function render() {
-        preview.innerHTML = '';
+    // ========== FOTOS NUEVAS ACUMULADAS ==========
+    var fotosInput = document.getElementById('id_fotos_nuevas');
+    var fotosPreview = document.getElementById('nuevas-preview');
+    var accum = new DataTransfer();
+    function renderNuevas() {
+        if (!fotosPreview) return;
+        fotosPreview.innerHTML = '';
         Array.from(accum.files).forEach(function(file, idx) {
-            const wrap = document.createElement('div');
+            var wrap = document.createElement('div');
             wrap.style.cssText = 'position:relative;width:64px;height:64px;';
-            const img = document.createElement('img');
+            var img = document.createElement('img');
             img.style.cssText = 'width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid var(--color-border,#e5e7eb);display:block;';
-            const rmBtn = document.createElement('button');
-            rmBtn.type = 'button';
-            rmBtn.title = 'Quitar foto';
-            rmBtn.textContent = '×';
-            rmBtn.style.cssText = 'position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.6);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;line-height:1;padding:0;';
+            var rmBtn = document.createElement('button');
+            rmBtn.type = 'button'; rmBtn.title = 'Quitar'; rmBtn.textContent = '×';
+            rmBtn.style.cssText = 'position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;line-height:1;padding:0;';
             rmBtn.addEventListener('click', function() {
-                const newDT = new DataTransfer();
+                var newDT = new DataTransfer();
                 Array.from(accum.files).forEach(function(f, i) { if (i !== idx) newDT.items.add(f); });
                 accum = newDT;
-                input.files = accum.files;
-                render();
+                try { if (fotosInput) fotosInput.files = accum.files; } catch(e) {}
+                renderNuevas();
             });
-            const reader = new FileReader();
+            var reader = new FileReader();
             reader.onload = function(e) { img.src = e.target.result; };
             reader.readAsDataURL(file);
-            wrap.appendChild(img);
-            wrap.appendChild(rmBtn);
-            preview.appendChild(wrap);
+            wrap.appendChild(img); wrap.appendChild(rmBtn);
+            fotosPreview.appendChild(wrap);
+        });
+    }
+    if (fotosInput) {
+        fotosInput.addEventListener('change', function() {
+            Array.from(this.files).forEach(function(f) { if (accum.items.length < 5) accum.items.add(f); });
+            try { fotosInput.files = accum.files; } catch(e) {}
+            markDirty();
+            renderNuevas();
         });
     }
 
-    input.addEventListener('change', function() {
-        Array.from(this.files).forEach(function(file) {
-            if (accum.items.length < 5) accum.items.add(file);
-        });
-        input.files = accum.files;
-        render();
+    // ========== BARRA FLOTANTE + CAMBIOS SIN GUARDAR ==========
+    var form = document.getElementById('prod-edit-form');
+    var floatBar = document.getElementById('edit-float-bar');
+    var cancelBtn = document.getElementById('btn-cancel-edit');
+    var isDirty = false;
+
+    function markDirty() {
+        if (!isDirty) {
+            isDirty = true;
+            if (floatBar) floatBar.classList.add('is-visible');
+        }
+    }
+
+    // Escuchar cambios dentro del form
+    if (form) {
+        form.addEventListener('input', markDirty);
+        form.addEventListener('change', markDirty);
+        form.addEventListener('submit', function() { isDirty = false; });
+    }
+    // Escuchar inputs asociados al form via atributo form= (fuera del DOM del form)
+    document.querySelectorAll('[form="prod-edit-form"]').forEach(function(el) {
+        el.addEventListener('change', markDirty);
+        el.addEventListener('input', markDirty);
     });
+    // El boton guardar del float bar
+    if (floatBar) {
+        var floatSubmit = floatBar.querySelector('button[type="submit"]');
+        if (floatSubmit) floatSubmit.addEventListener('click', function() { isDirty = false; });
+    }
+    if (cancelBtn) cancelBtn.addEventListener('click', function() { isDirty = false; });
+    // Formularios eliminar foto: no son "cambios sin guardar"
+    document.querySelectorAll('.delete-foto-form').forEach(function(f) {
+        f.addEventListener('submit', function() { isDirty = false; });
+    });
+
+    window.addEventListener('beforeunload', function(e) {
+        if (isDirty) { e.preventDefault(); e.returnValue = ''; }
+    });
+
+    // dummy: variable usada en callbacks arriba
+    void 0;
 })();
 </script>
 {% endblock %}
