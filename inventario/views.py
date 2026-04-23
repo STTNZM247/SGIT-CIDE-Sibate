@@ -3346,6 +3346,64 @@ def live_sync_status(request):
 
 
 @login_required
+def staff_alerts_api(request):
+    """Devuelve alertas de acciones pendientes para admin y almacenista."""
+    if request.method != 'GET':
+        return JsonResponse({'ok': False}, status=405)
+
+    rol = _user_role(request)
+    if rol not in ('admin', 'almacenista'):
+        return JsonResponse({'ok': False, 'alerts': []}, status=403)
+
+    alerts = []
+
+    # Pedidos pendientes de aprobación
+    n = Pedido.objects.filter(estado='pendiente').count()
+    if n:
+        alerts.append({
+            'mensaje': f'{n} pedido{"s" if n > 1 else ""} pendiente{"s" if n > 1 else ""} de aprobación',
+            'url': reverse('pedidos_panel'),
+            'icono': 'cube-outline',
+            'tipo': 'warning',
+        })
+
+    # Pedidos esperando entrega
+    n = Pedido.objects.filter(estado='esperando entrega').count()
+    if n:
+        alerts.append({
+            'mensaje': f'{n} pedido{"s" if n > 1 else ""} esperando entrega',
+            'url': reverse('pedidos_panel'),
+            'icono': 'bicycle-outline',
+            'tipo': 'info',
+        })
+
+    # Préstamos vencidos
+    n = Pedido.objects.filter(estado='vencido').count()
+    if n:
+        alerts.append({
+            'mensaje': f'{n} préstamo{"s" if n > 1 else ""} vencido{"s" if n > 1 else ""}',
+            'url': reverse('prestamos_panel'),
+            'icono': 'alert-circle-outline',
+            'tipo': 'danger',
+        })
+
+    # Validaciones SENA pendientes — solo admin (almacenista no tiene acceso a /usuarios/)
+    if rol == 'admin':
+        n = Usuario.objects.filter(
+            verificacion_sena_estado__in=['solicitada', 'documento_cargado']
+        ).count()
+        if n:
+            alerts.append({
+                'mensaje': f'{n} validación{"es" if n > 1 else ""} SENA pendiente{"s" if n > 1 else ""} de revisión',
+                'url': reverse('gestion_usuarios_panel'),
+                'icono': 'person-add-outline',
+                'tipo': 'warning',
+            })
+
+    return JsonResponse({'ok': True, 'alerts': alerts})
+
+
+@login_required
 @require_POST
 def notificacion_marcar_leida(request, noti_id):
     noti = get_object_or_404(Notificacion, pk=noti_id, id_usuario_fk=request.user)

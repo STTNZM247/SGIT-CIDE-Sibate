@@ -67,6 +67,106 @@
         }
     </style>
     {% block extra_css %}{% endblock %}
+
+    <style>
+    /* ── Barra flotante de alertas staff ─────────────────────────────────── */
+    #staff-alert-bar {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 1250;
+        width: 300px;
+        max-width: calc(100vw - 48px);
+        background: var(--bg-surface, #fff);
+        border: 1.5px solid var(--bg-border, #e5e7eb);
+        border-radius: 14px;
+        box-shadow: 0 8px 28px rgba(0,0,0,0.18);
+        padding: 13px 15px 11px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transform: translateY(130%);
+        opacity: 0;
+        transition: transform .45s cubic-bezier(.34,1.3,.64,1), opacity .3s;
+        pointer-events: none;
+    }
+    #staff-alert-bar.is-visible {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+    #staff-alert-bar .sa-top {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    #staff-alert-bar .sa-icon {
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+    #staff-alert-bar .sa-msg {
+        flex: 1;
+        font-size: .83rem;
+        font-weight: 500;
+        line-height: 1.35;
+        color: var(--text-primary, #111);
+    }
+    #staff-alert-bar .sa-close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--text-secondary, #888);
+        font-size: 1rem;
+        padding: 0 2px;
+        line-height: 1;
+        flex-shrink: 0;
+        opacity: .7;
+    }
+    #staff-alert-bar .sa-close:hover { opacity: 1; }
+    #staff-alert-bar .sa-bottom {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    #staff-alert-bar .sa-progress {
+        flex: 1;
+        height: 3px;
+        background: var(--bg-border, #e5e7eb);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    #staff-alert-bar .sa-progress-bar {
+        height: 100%;
+        width: 0%;
+        border-radius: 2px;
+        background: var(--color-primary, #39b54a);
+    }
+    #staff-alert-bar .sa-link {
+        padding: 3px 11px;
+        font-size: .78rem;
+        border-radius: 20px;
+        border: 1.5px solid currentColor;
+        text-decoration: none;
+        font-weight: 600;
+        white-space: nowrap;
+        transition: background .18s, color .18s;
+    }
+    #staff-alert-bar .sa-link:hover {
+        background: currentColor;
+    }
+    #staff-alert-bar .sa-link:hover span { color: #fff; }
+    #staff-alert-bar .sa-link span {
+        display: inline-block;
+    }
+    @media (max-width: 480px) {
+        #staff-alert-bar {
+            right: 12px;
+            bottom: 70px;
+            width: calc(100vw - 24px);
+        }
+    }
+    </style>
 </head>
 <body>
     <div class="app-shell">
@@ -221,6 +321,143 @@
     })();
     </script>
     {% endif %}
+
+    {% with rol=request.user.id_rol_fk.nombre_rol %}
+    {% if request.user.is_authenticated and rol == 'admin' or request.user.is_authenticated and rol == 'almacenista' %}
+    <!-- Barra flotante de alertas staff -->
+    <div id="staff-alert-bar" role="status" aria-live="polite" aria-atomic="true" data-url="{% url 'staff_alerts_api' %}">
+        <div class="sa-top">
+            <span class="sa-icon" id="sa-icon"></span>
+            <span class="sa-msg" id="sa-msg"></span>
+            <button class="sa-close" id="sa-close" type="button" aria-label="Cerrar">✕</button>
+        </div>
+        <div class="sa-bottom">
+            <div class="sa-progress"><div class="sa-progress-bar" id="sa-progress-bar"></div></div>
+            <a class="sa-link" id="sa-link" href="#"><span>Ver</span></a>
+        </div>
+    </div>
+    <script>
+    (function () {
+        var bar    = document.getElementById('staff-alert-bar');
+        var msgEl  = document.getElementById('sa-msg');
+        var iconEl = document.getElementById('sa-icon');
+        var linkEl = document.getElementById('sa-link');
+        var closeBtn = document.getElementById('sa-close');
+        var progBar  = document.getElementById('sa-progress-bar');
+        if (!bar) return;
+
+        var endpoint  = bar.dataset.url;
+        var DURATION  = 15000;
+        var COLORS    = { warning: '#f59e0b', danger: '#ef4444', info: '#3b82f6', success: '#10b981' };
+
+        var alerts    = [];
+        var curIdx    = 0;
+        var cycleTimer = null;
+        var paused    = false;
+        var pausedAt  = 0;
+        var remaining = DURATION;
+
+        function resetProgress(dur) {
+            progBar.style.transition = 'none';
+            progBar.style.width = '0%';
+            void progBar.offsetWidth; // reflow
+            progBar.style.transition = 'width ' + (dur / 1000) + 's linear';
+            progBar.style.width = '100%';
+        }
+
+        function show(alert) {
+            var color = COLORS[alert.tipo] || COLORS['info'];
+            msgEl.textContent = alert.mensaje;
+            iconEl.innerHTML  = '<ion-icon name="' + (alert.icono || 'notifications-outline') + '"></ion-icon>';
+            iconEl.style.color = color;
+            linkEl.style.color = color;
+            linkEl.href = alert.url;
+
+            remaining = DURATION;
+            paused = false;
+            resetProgress(DURATION);
+            bar.classList.add('is-visible');
+
+            clearTimeout(cycleTimer);
+            cycleTimer = setTimeout(goNext, DURATION);
+        }
+
+        function hide(cb) {
+            bar.classList.remove('is-visible');
+            clearTimeout(cycleTimer);
+            if (cb) setTimeout(cb, 500);
+        }
+
+        function goNext() {
+            if (!alerts.length) { hide(); return; }
+            var nextIdx = (curIdx + 1) % alerts.length;
+            curIdx = nextIdx;
+            hide(function () { show(alerts[curIdx]); });
+        }
+
+        function start() {
+            if (!alerts.length) return;
+            curIdx = 0;
+            hide(function () { show(alerts[0]); });
+        }
+
+        function fetchAlerts() {
+            fetch(endpoint, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+                cache: 'no-store',
+            })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (data) {
+                if (!data || !data.ok) return;
+                var newAlerts = data.alerts || [];
+                var hasChange = JSON.stringify(newAlerts) !== JSON.stringify(alerts);
+                alerts = newAlerts;
+                if (!alerts.length) {
+                    hide();
+                } else if (!bar.classList.contains('is-visible')) {
+                    start();
+                } else if (hasChange) {
+                    // Reiniciar con nuevos datos al siguiente ciclo
+                    clearTimeout(cycleTimer);
+                    cycleTimer = setTimeout(goNext, remaining);
+                }
+            })
+            .catch(function () {});
+        }
+
+        // Pausar en hover
+        bar.addEventListener('mouseenter', function () {
+            if (!paused) {
+                paused = true;
+                pausedAt = Date.now();
+                clearTimeout(cycleTimer);
+                progBar.style.transition = 'none';
+            }
+        });
+        bar.addEventListener('mouseleave', function () {
+            if (paused) {
+                paused = false;
+                remaining = Math.max(1500, remaining - (Date.now() - pausedAt));
+                resetProgress(remaining);
+                cycleTimer = setTimeout(goNext, remaining);
+            }
+        });
+
+        closeBtn.addEventListener('click', function () {
+            hide();
+            clearTimeout(cycleTimer);
+            // Volver a mostrar en 60s
+            setTimeout(function () { if (alerts.length) { curIdx = (curIdx + 1) % alerts.length; show(alerts[curIdx]); } }, 60000);
+        });
+
+        // Arranque
+        fetchAlerts();
+        setInterval(fetchAlerts, 60000);
+    })();
+    </script>
+    {% endif %}
+    {% endwith %}
 
     {% block extra_js %}{% endblock %}
 </body>

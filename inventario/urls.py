@@ -42,6 +42,7 @@ from .views import (
     producto_editar,
     eliminar_foto_producto,
     live_sync_status,
+    staff_alerts_api,
     notificaciones_panel,
     notificacion_marcar_leida,
     notificaciones_marcar_todas_leidas,
@@ -124,5 +125,6 @@ urlpatterns = [
     path('usuario/notificaciones/<int:noti_id>/leer/', notificacion_marcar_leida, name='notificacion_marcar_leida'),
     path('usuario/notificaciones/leer-todas/', notificaciones_marcar_todas_leidas, name='notificaciones_marcar_todas_leidas'),
     path('live-sync/status/', live_sync_status, name='live_sync_status'),
+    path('api/staff-alerts/', staff_alerts_api, name='staff_alerts_api'),
 ]
 
