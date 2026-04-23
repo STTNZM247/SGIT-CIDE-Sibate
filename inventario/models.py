@@ -5,6 +5,8 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 from django.utils import timezone
 
+from .image_optim import optimize_image_field_to_webp
+
 
 class Rol(models.Model):
     id_rol = models.AutoField(primary_key=True)
@@ -244,6 +246,22 @@ class Producto(models.Model):
 
     def __str__(self):
         return self.nombre_producto or f'Producto {self.id_prod}'
+
+    def save(self, *args, **kwargs):
+        # Evita recomprimir cuando la imagen no cambió.
+        should_optimize = bool(self.fot_prod)
+        if should_optimize and self.pk:
+            same_image = (
+                Producto.objects
+                .filter(pk=self.pk, fot_prod=self.fot_prod.name)
+                .exists()
+            )
+            should_optimize = not same_image
+
+        if should_optimize:
+            optimize_image_field_to_webp(self.fot_prod)
+
+        super().save(*args, **kwargs)
 
 
 class Disponibilidad(models.Model):

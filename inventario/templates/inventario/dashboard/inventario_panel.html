@@ -67,7 +67,7 @@
         <button type="button" class="temu-card temu-card-btn" data-open-modal="producto-{{ p.id_prod }}" title="Ver detalles de {{ p.nombre_producto }}">
             <span class="temu-card__media">
                 {% if p.fot_prod %}
-                <img src="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}">
+                <img src="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}" loading="lazy" decoding="async">
                 {% else %}
                 <span class="temu-card__placeholder">
                     <ion-icon name="image-outline"></ion-icon>
@@ -94,7 +94,7 @@
                 </div>
                 <div class="product-modal__media">
                     {% if p.fot_prod %}
-                    <img src="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}" class="product-modal__img">
+                    <img data-src="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}" class="product-modal__img" loading="lazy" decoding="async">
                     {% else %}
                     <div class="product-modal__placeholder"><ion-icon name="image-outline"></ion-icon></div>
                     {% endif %}
@@ -148,6 +148,10 @@
                 const id = btn.getAttribute('data-open-modal');
                 const modal = document.getElementById(id);
                 if (!modal) return;
+                const modalImg = modal.querySelector('.product-modal__img[data-src]');
+                if (modalImg && !modalImg.getAttribute('src')) {
+                    modalImg.setAttribute('src', modalImg.getAttribute('data-src'));
+                }
                 closeAll();
                 modal.setAttribute('aria-hidden', 'false');
                 document.body.classList.add('modal-open');
