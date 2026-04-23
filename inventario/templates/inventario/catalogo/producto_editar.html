@@ -17,7 +17,16 @@
 .mini-carousel__dots{display:flex;justify-content:center;gap:5px;margin-top:7px;flex-wrap:wrap;}
 .mini-carousel__dot{width:7px;height:7px;border-radius:50%;background:var(--color-border,#e5e7eb);border:none;cursor:pointer;padding:0;transition:background .2s;flex-shrink:0;}
 .mini-carousel__dot.is-active{background:var(--color-primary,#39b54a);}
-/* ---- Floating bar ---- */
+/* ---- Modal cambios sin guardar ---- */
+.unsaved-backdrop{position:fixed;inset:0;background:var(--modal-overlay,rgba(0,0,0,.55));z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s;}
+.unsaved-backdrop.is-open{opacity:1;pointer-events:all;}
+.unsaved-modal{background:var(--bg-surface,#fff);border:1.5px solid var(--bg-border,#e5e7eb);border-radius:18px;padding:28px 28px 22px;max-width:380px;width:calc(100% - 40px);box-shadow:0 12px 48px rgba(0,0,0,.22);transform:scale(.92) translateY(16px);transition:transform .28s cubic-bezier(.34,1.56,.64,1),opacity .22s;opacity:0;}
+.unsaved-backdrop.is-open .unsaved-modal{transform:scale(1) translateY(0);opacity:1;}
+html[data-theme="dark"] .unsaved-modal{background:var(--bg-surface-2,#182018);border-color:var(--bg-border,#253025);box-shadow:0 12px 48px rgba(0,0,0,.6);}
+.unsaved-modal__icon{font-size:2.2rem;color:#f59e0b;display:block;margin-bottom:10px;}
+.unsaved-modal__title{font-size:1.05rem;font-weight:700;margin:0 0 6px;color:var(--text-primary,#111);}
+.unsaved-modal__body{font-size:.87rem;color:var(--text-secondary,#555);margin:0 0 22px;line-height:1.5;}
+.unsaved-modal__actions{display:flex;gap:10px;justify-content:flex-end;}
 .edit-float-bar{
     position:fixed;
     bottom:20px;
@@ -221,6 +230,23 @@ html[data-theme="dark"] .edit-float-bar{
     </div>
 </section>
 
+<!-- MODAL: Cambios sin guardar -->
+<div class="unsaved-backdrop" id="unsaved-backdrop" role="dialog" aria-modal="true" aria-labelledby="unsaved-title">
+    <div class="unsaved-modal">
+        <ion-icon name="warning-outline" class="unsaved-modal__icon"></ion-icon>
+        <p class="unsaved-modal__title" id="unsaved-title">Tienes cambios sin guardar</p>
+        <p class="unsaved-modal__body">Si sales ahora perderás los cambios realizados. ¿Qué deseas hacer?</p>
+        <div class="unsaved-modal__actions">
+            <button type="button" class="cat-btn cat-btn--ghost" id="unsaved-stay">Quedarme</button>
+            <button type="button" class="cat-btn cat-btn--primary" id="unsaved-save" form="prod-edit-form">
+                <ion-icon name="save-outline"></ion-icon>
+                Guardar y salir
+            </button>
+            <a href="#" class="cat-btn" id="unsaved-leave" style="background:transparent;border:1.5px solid var(--bg-border,#e5e7eb);color:var(--text-secondary,#555);">Salir sin guardar</a>
+        </div>
+    </div>
+</div>
+
 <!-- BARRA FLOTANTE DE ACCIONES -->
 <div class="edit-float-bar" id="edit-float-bar" role="region" aria-label="Acciones del formulario">
     <span class="edit-float-bar__hint">
@@ -307,17 +333,30 @@ html[data-theme="dark"] .edit-float-bar{
         });
     }
 
-    // ========== BARRA FLOTANTE + CAMBIOS SIN GUARDAR ==========
+    // ========== BARRA FLOTANTE + MODAL CAMBIOS SIN GUARDAR ==========
     var form = document.getElementById('prod-edit-form');
     var floatBar = document.getElementById('edit-float-bar');
     var cancelBtn = document.getElementById('btn-cancel-edit');
+    var backdrop = document.getElementById('unsaved-backdrop');
+    var stayBtn = document.getElementById('unsaved-stay');
+    var saveBtn = document.getElementById('unsaved-save');
+    var leaveBtn = document.getElementById('unsaved-leave');
     var isDirty = false;
+    var pendingHref = null;
 
     function markDirty() {
         if (!isDirty) {
             isDirty = true;
             if (floatBar) floatBar.classList.add('is-visible');
         }
+    }
+    function showUnsaved(href) {
+        pendingHref = href;
+        if (backdrop) backdrop.classList.add('is-open');
+    }
+    function closeUnsaved() {
+        if (backdrop) backdrop.classList.remove('is-open');
+        pendingHref = null;
     }
 
     // Escuchar cambios dentro del form
@@ -326,25 +365,54 @@ html[data-theme="dark"] .edit-float-bar{
         form.addEventListener('change', markDirty);
         form.addEventListener('submit', function() { isDirty = false; });
     }
-    // Escuchar inputs asociados al form via atributo form= (fuera del DOM del form)
+    // Inputs con form= fuera del DOM del form
     document.querySelectorAll('[form="prod-edit-form"]').forEach(function(el) {
         el.addEventListener('change', markDirty);
         el.addEventListener('input', markDirty);
     });
-    // El boton guardar del float bar
+    // Botón guardar del float bar
     if (floatBar) {
         var floatSubmit = floatBar.querySelector('button[type="submit"]');
         if (floatSubmit) floatSubmit.addEventListener('click', function() { isDirty = false; });
     }
-    if (cancelBtn) cancelBtn.addEventListener('click', function() { isDirty = false; });
-    // Formularios eliminar foto: no son "cambios sin guardar"
+    // Formularios eliminar foto no disparan "cambios sin guardar"
     document.querySelectorAll('.delete-foto-form').forEach(function(f) {
         f.addEventListener('submit', function() { isDirty = false; });
     });
 
-    window.addEventListener('beforeunload', function(e) {
-        if (isDirty) { e.preventDefault(); e.returnValue = ''; }
+    // Interceptar TODOS los links que salen de la página
+    document.addEventListener('click', function(e) {
+        var link = e.target.closest('a[href]');
+        if (!link) return;
+        var href = link.getAttribute('href');
+        if (!href || href === '#' || href.startsWith('javascript')) return;
+        // Ignorar el botón Cancelar del float bar (ya tiene id propio)
+        if (link.id === 'btn-cancel-edit') { e.preventDefault(); showUnsaved(link.href); return; }
+        if (!isDirty) return;
+        // Ignorar el propio link de "Salir sin guardar"
+        if (link.id === 'unsaved-leave') return;
+        e.preventDefault();
+        showUnsaved(link.href);
     });
+
+    // Modal: quedarme
+    if (stayBtn) stayBtn.addEventListener('click', closeUnsaved);
+    // Modal: cerrar al hacer clic fuera
+    if (backdrop) backdrop.addEventListener('click', function(e) { if (e.target === backdrop) closeUnsaved(); });
+    // Modal: guardar y salir
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+            isDirty = false;
+            if (form) { form.requestSubmit ? form.requestSubmit() : form.submit(); }
+        });
+    }
+    // Modal: salir sin guardar
+    if (leaveBtn) {
+        leaveBtn.addEventListener('click', function() {
+            isDirty = false;
+            if (pendingHref) window.location.href = pendingHref;
+        });
+    }
 
     // dummy: variable usada en callbacks arriba
     void 0;
