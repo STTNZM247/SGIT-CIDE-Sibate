@@ -3,6 +3,7 @@
     align-items: center;
     width: 100%;
     max-width: 480px;
+    margin: 0 auto;
     border-radius: 2em;
     border: 2.5px solid #222;
     background: #fff;
@@ -46,14 +47,16 @@
 
 .inventario-toolbar {
     width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
+    position: relative;
+    display: block;
     margin: 0 0 1.6rem;
 }
 
 .inventario-categoria-form {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -139,6 +142,7 @@
 
 @media (max-width: 900px) {
     .inventario-toolbar {
+        display: flex;
         flex-direction: column;
         align-items: stretch;
         gap: .8rem;
@@ -149,6 +153,8 @@
     }
 
     .inventario-categoria-form {
+        position: static;
+        transform: none;
         width: 100%;
         justify-content: flex-start;
     }
