@@ -165,7 +165,7 @@
 
 {% block extra_js %}
     <script src="{% static 'inventario/dashboard/js/dashboard.js' %}" defer></script>
-    <script src="{% static 'inventario/dashboard/js/custom_select.js' %}" defer></script>
+    <script src="{% static 'inventario/dashboard/js/custom_select.js' %}" data-page-script="true"></script>
     <script data-page-script="true">
     (() => {
         const openButtons = document.querySelectorAll('[data-open-modal]');
