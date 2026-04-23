@@ -177,16 +177,47 @@
     const input = document.getElementById('id_fotos_nuevas');
     const preview = document.getElementById('nuevas-preview');
     if (!input || !preview) return;
-    input.addEventListener('change', function() {
+
+    let accum = new DataTransfer();
+    const MAX = parseInt(input.closest('label, div')?.querySelector('[data-cupo]')?.dataset.cupo || '4', 10) || 4;
+
+    // Leer el cupo real del atributo multiple o del texto del hint
+    const cupoHint = input.previousElementSibling;
+
+    function render() {
         preview.innerHTML = '';
-        Array.from(this.files).forEach(function(file) {
+        Array.from(accum.files).forEach(function(file, idx) {
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'position:relative;width:64px;height:64px;';
             const img = document.createElement('img');
-            img.style.cssText = 'width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid var(--color-border,#e5e7eb);';
+            img.style.cssText = 'width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid var(--color-border,#e5e7eb);display:block;';
+            const rmBtn = document.createElement('button');
+            rmBtn.type = 'button';
+            rmBtn.title = 'Quitar foto';
+            rmBtn.textContent = '×';
+            rmBtn.style.cssText = 'position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.6);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;line-height:1;padding:0;';
+            rmBtn.addEventListener('click', function() {
+                const newDT = new DataTransfer();
+                Array.from(accum.files).forEach(function(f, i) { if (i !== idx) newDT.items.add(f); });
+                accum = newDT;
+                input.files = accum.files;
+                render();
+            });
             const reader = new FileReader();
             reader.onload = function(e) { img.src = e.target.result; };
             reader.readAsDataURL(file);
-            preview.appendChild(img);
+            wrap.appendChild(img);
+            wrap.appendChild(rmBtn);
+            preview.appendChild(wrap);
         });
+    }
+
+    input.addEventListener('change', function() {
+        Array.from(this.files).forEach(function(file) {
+            if (accum.items.length < 5) accum.items.add(file);
+        });
+        input.files = accum.files;
+        render();
     });
 })();
 </script>
