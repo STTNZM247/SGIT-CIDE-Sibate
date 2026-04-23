@@ -1,34 +1,56 @@
 // Custom select para catálogo
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const select = document.getElementById('customCatalogSelect');
     if (!select) return;
-    const selected = document.getElementById('customSelectSelected');
+
+    const selectedBtn = document.getElementById('customSelectSelected');
+    const selectedText = document.getElementById('customSelectText');
     const options = document.getElementById('customSelectOptions');
     const input = document.getElementById('categoriaInput');
-    let isOpen = false;
+    const form = select.closest('form');
 
-    function closeOptions() {
-        options.style.display = 'none';
-        isOpen = false;
+    function setOpen(open) {
+        select.classList.toggle('is-open', open);
+        select.setAttribute('aria-expanded', open ? 'true' : 'false');
     }
 
-    selected.addEventListener('click', function(e) {
+    function closeOptions() {
+        setOpen(false);
+    }
+
+    selectedBtn.addEventListener('click', function (e) {
         e.stopPropagation();
-        isOpen = !isOpen;
-        options.style.display = isOpen ? 'block' : 'none';
+        const isOpen = select.classList.contains('is-open');
+        setOpen(!isOpen);
     });
 
-    const form = select.closest('form');
-    options.querySelectorAll('.custom-select__option').forEach(function(opt) {
-        opt.addEventListener('click', function(e) {
-            input.value = this.getAttribute('data-value');
-            selected.childNodes[0].textContent = this.textContent;
+    options.querySelectorAll('.custom-select__option').forEach(function (opt) {
+        opt.addEventListener('click', function () {
+            const val = this.getAttribute('data-value') || '';
+            input.value = val;
+            selectedText.textContent = this.textContent.trim();
+
+            options.querySelectorAll('.custom-select__option').forEach(function (item) {
+                item.classList.remove('is-active');
+                item.setAttribute('aria-selected', 'false');
+            });
+            this.classList.add('is-active');
+            this.setAttribute('aria-selected', 'true');
+
             closeOptions();
             if (form) form.submit();
         });
     });
 
-    document.addEventListener('click', function() {
-        closeOptions();
+    document.addEventListener('click', function (e) {
+        if (!select.contains(e.target)) {
+            closeOptions();
+        }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeOptions();
+        }
     });
 });

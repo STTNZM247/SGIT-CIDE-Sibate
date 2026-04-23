@@ -12,15 +12,48 @@
 {% endblock %}
 
 {% block header_center %}
-<div class="busqueda-contenedor-centrado" style="margin-bottom: 2rem;">
+<div class="inventario-toolbar">
     <form class="temu-searchbar" method="get" action="{% url 'inventario_panel' %}">
         <input type="search" name="q" value="{{ q }}" placeholder="Buscar producto" aria-label="Buscar en inventario">
+        {% if categoria_activa %}<input type="hidden" name="categoria" value="{{ categoria_activa }}">{% endif %}
+        {% if bajo_stock %}<input type="hidden" name="bajo_stock" value="1">{% endif %}
         <button type="submit" aria-label="Buscar">
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="10" cy="10" r="7" stroke="#fff" stroke-width="2"/>
                 <line x1="16.0607" y1="16.4749" x2="20" y2="20.4142" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
             </svg>
         </button>
+    </form>
+
+    <form class="inventario-categoria-form" method="get" action="{% url 'inventario_panel' %}">
+        {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+        {% if bajo_stock %}<input type="hidden" name="bajo_stock" value="1">{% endif %}
+        <input type="hidden" name="categoria" id="categoriaInput" value="{{ categoria_activa }}">
+
+        <div class="custom-select" id="customCatalogSelect" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-label="Filtrar por categoría">
+            <button type="button" class="custom-select__selected" id="customSelectSelected">
+                <span class="custom-select__text" id="customSelectText">
+                    {% if categoria_activa %}
+                        {% for cat in catalogos %}
+                            {% if categoria_activa == cat.id_cat|stringformat:"s" %}{{ cat.nombre_catalogo }}{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        Todas las categorías
+                    {% endif %}
+                </span>
+                <ion-icon name="chevron-down-outline"></ion-icon>
+            </button>
+            <div class="custom-select__options" id="customSelectOptions" role="listbox">
+                <button type="button" class="custom-select__option {% if not categoria_activa %}is-active{% endif %}" data-value="" role="option" aria-selected="{% if not categoria_activa %}true{% else %}false{% endif %}">
+                    Todas las categorías
+                </button>
+                {% for cat in catalogos %}
+                <button type="button" class="custom-select__option {% if categoria_activa == cat.id_cat|stringformat:"s" %}is-active{% endif %}" data-value="{{ cat.id_cat }}" role="option" aria-selected="{% if categoria_activa == cat.id_cat|stringformat:"s" %}true{% else %}false{% endif %}">
+                    {{ cat.nombre_catalogo }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
     </form>
 </div>
 {% endblock %}
