@@ -413,6 +413,17 @@ html[data-theme="dark"] .edit-float-bar{
         });
     }
 
+    // Auto-resize de todos los textarea al cargar y al escribir
+    function autoResize(el) {
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+    }
+    document.querySelectorAll('textarea.form-textarea').forEach(function(ta) {
+        ta.style.overflowY = 'hidden';
+        autoResize(ta);
+        ta.addEventListener('input', function() { autoResize(ta); });
+    });
+
     // dummy: variable usada en callbacks arriba
     void 0;
 })();
