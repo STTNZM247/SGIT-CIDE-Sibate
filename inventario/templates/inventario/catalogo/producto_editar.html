@@ -242,7 +242,7 @@ html[data-theme="dark"] .edit-float-bar{
                 <ion-icon name="save-outline"></ion-icon>
                 Guardar y salir
             </button>
-            <a href="#" class="cat-btn" id="unsaved-leave" style="background:transparent;border:1.5px solid var(--bg-border,#e5e7eb);color:var(--text-secondary,#555);">Salir sin guardar</a>
+            <a href="{% url 'productos_catalogo' producto.id_cat_fk.id_cat %}" class="cat-btn" id="unsaved-leave" style="background:transparent;border:1.5px solid var(--bg-border,#e5e7eb);color:var(--text-secondary,#555);">Salir sin guardar</a>
         </div>
     </div>
 </div>
@@ -406,11 +406,10 @@ html[data-theme="dark"] .edit-float-bar{
             if (form) { form.requestSubmit ? form.requestSubmit() : form.submit(); }
         });
     }
-    // Modal: salir sin guardar
+    // Modal: salir sin guardar → siempre al catálogo del producto
     if (leaveBtn) {
         leaveBtn.addEventListener('click', function() {
             isDirty = false;
-            if (pendingHref) window.location.href = pendingHref;
         });
     }
 
