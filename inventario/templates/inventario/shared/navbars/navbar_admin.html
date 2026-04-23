@@ -7,36 +7,42 @@
             <a href="{% url 'dashboard' %}">
                 <span class="icon"><ion-icon name="home-outline"></ion-icon></span>
                 <span class="text">Home</span>
+                <span class="text-mini">Home</span>
             </a>
         </li>
         <li class="list {% if request.resolver_match.url_name == 'inventario_panel' %}active{% endif %}">
             <a href="{% url 'inventario_panel' %}">
                 <span class="icon"><ion-icon name="file-tray-stacked-outline"></ion-icon></span>
                 <span class="text">Inventario</span>
+                <span class="text-mini">Inventario</span>
             </a>
         </li>
         <li class="list {% if request.resolver_match.url_name == 'catalogo' or request.resolver_match.url_name == 'productos_catalogo' or request.resolver_match.url_name == 'registrar_catalogo' or request.resolver_match.url_name == 'registrar_producto' or request.resolver_match.url_name == 'producto_detalle' or request.resolver_match.url_name == 'producto_editar' %}active{% endif %}">
             <a href="{% url 'catalogo' %}">
                 <span class="icon"><ion-icon name="albums-outline"></ion-icon></span>
                 <span class="text">Catalogo</span>
+                <span class="text-mini">Catalogo</span>
             </a>
         </li>
         <li class="list {% if request.resolver_match.url_name == 'gestion_usuarios_panel' %}active{% endif %}">
             <a href="{% url 'gestion_usuarios_panel' %}">
                 <span class="icon"><ion-icon name="people-outline"></ion-icon></span>
                 <span class="text">Usuarios</span>
+                <span class="text-mini">Usuarios</span>
             </a>
         </li>
         <li class="list {% if request.resolver_match.url_name == 'auditorias_panel' %}active{% endif %}">
             <a href="{% url 'auditorias_panel' %}">
                 <span class="icon"><ion-icon name="reader-outline"></ion-icon></span>
                 <span class="text">Auditoria</span>
+                <span class="text-mini">Auditoria</span>
             </a>
         </li>
         <li class="list {% if request.resolver_match.url_name == 'prestamos_panel' %}active{% endif %}">
             <a href="{% url 'prestamos_panel' %}">
                 <span class="icon"><ion-icon name="git-compare-outline"></ion-icon></span>
                 <span class="text">Prestamos</span>
+                <span class="text-mini">Prestamos</span>
             </a>
         </li>
         <li class="list {% if request.resolver_match.url_name == 'pedidos_panel' or request.resolver_match.url_name == 'pedido_detalle_panel' %}active{% endif %}">
@@ -48,12 +54,14 @@
                     {% endif %}
                 </span>
                 <span class="text">Pedidos</span>
+                <span class="text-mini">Pedidos</span>
             </a>
         </li>
         <li class="list {% if request.resolver_match.url_name == 'perfil_usuario' %}active{% endif %}">
             <a href="{% url 'perfil_usuario' %}">
                 <span class="icon"><ion-icon name="person-outline"></ion-icon></span>
                 <span class="text">Perfil</span>
+                <span class="text-mini">Perfil</span>
             </a>
         </li>
         <div class="indicator"></div>
