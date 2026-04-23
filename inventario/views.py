@@ -588,6 +588,7 @@ def productos_catalogo(request, cat_id):
             descr_dispo_actual=Subquery(disp_qs.values('descr_dispo')[:1]),
         )
         .order_by('nombre_producto')
+        .prefetch_related('fotos')
     )
     return render(
         request,
