@@ -223,16 +223,15 @@
                 </div>
             </div>
             <div class="mf-group">
-                <label class="mf-label">Foto del producto</label>
+                <label class="mf-label">Fotos del producto <span class="mf-hint" style="font-weight:normal;">(máx. 5 imágenes)</span></label>
                 <div class="file-drop" id="fot-zone">
-                    <ion-icon name="image-outline"></ion-icon>
-                    <span class="file-drop__text">Haz clic o arrastra una imagen</span>
-                    <span class="file-drop__hint">JPG · PNG · WEBP — máx. 5 MB</span>
-                    {{ prod_form.fot_prod }}
-                    <button type="button" class="file-drop__remove" style="display:none;position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.5);border:none;border-radius:50%;width:32px;height:32px;z-index:2;align-items:center;justify-content:center;color:#fff;font-size:1.3em;cursor:pointer;" aria-label="Quitar imagen">
-                        <ion-icon name="close-outline"></ion-icon>
-                    </button>
+                    <ion-icon name="images-outline"></ion-icon>
+                    <span class="file-drop__text">Haz clic o arrastra hasta 5 imágenes</span>
+                    <span class="file-drop__hint">JPG · PNG · WEBP — máx. 5 MB por imagen</span>
+                    <input type="file" name="fotos" id="id_fotos" class="form-file" accept="image/*" multiple>
                 </div>
+                <div id="fotos-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
+                <p id="fotos-count-msg" style="font-size:.78rem;color:var(--color-muted,#888);margin-top:4px;"></p>
             </div>
             <div class="modal__actions">
                 <button type="button" class="cat-btn cat-btn--ghost" data-modal-close>Cancelar</button>
@@ -299,18 +298,13 @@ const initCatalogoPage = () => {
                 if (form) {
                     form.reset();
                 }
-                // Limpiar imagen
-                const zone = modal.querySelector('#fot-zone');
-                if (zone) {
-                    const img = zone.querySelector('.file-drop__preview');
-                    if (img) img.remove();
-                    const input = zone.querySelector('input[type="file"]');
-                    if (input) input.value = '', input.style.display = '';
-                    const removeBtn = zone.querySelector('.file-drop__remove');
-                    if (removeBtn) removeBtn.style.display = 'none';
-                    const text = zone.querySelector('.file-drop__text');
-                    if (text) text.textContent = 'Haz clic o arrastra una imagen';
-                }
+                // Limpiar fotos
+                const fotosIn = modal.querySelector('#id_fotos');
+                if (fotosIn) fotosIn.value = '';
+                const prev = modal.querySelector('#fotos-preview');
+                if (prev) prev.innerHTML = '';
+                const msg = modal.querySelector('#fotos-count-msg');
+                if (msg) msg.textContent = '';
             }
             closeAll();
         });
@@ -365,53 +359,42 @@ const initCatalogoPage = () => {
         // fallback: albums-outline (ya definido en el HTML)
     });
 
-    /* ---- Vista previa imagen ---------------------------- */
-    const input = document.querySelector('#fot-zone input[type="file"]');
-    const zone  = document.getElementById('fot-zone');
-    const removeBtn = zone ? zone.querySelector('.file-drop__remove') : null;
-    if (input && zone && removeBtn) {
-        input.addEventListener('change', () => {
-            const file = input.files[0];
-            if (!file) return;
-            const text = zone.querySelector('.file-drop__text');
-            if (text) text.textContent = file.name;
-            // Previsualización
-            let img = zone.querySelector('.file-drop__preview');
-            if (!img) {
-                img = document.createElement('img');
-                img.className = 'file-drop__preview';
-                img.style.maxWidth = '100%';
-                img.style.maxHeight = '120px';
-                img.style.display = 'block';
-                img.style.margin = '0 auto 8px auto';
-                img.style.borderRadius = '10px';
-                img.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
-                img.style.position = 'relative';
-                zone.prepend(img);
+    /* ---- Vista previa múltiple de imágenes ------------- */
+    const fotosInput = document.getElementById('id_fotos');
+    const fotosPreview = document.getElementById('fotos-preview');
+    const fotosMsg = document.getElementById('fotos-count-msg');
+    const MAX_FOTOS = 5;
+
+    if (fotosInput) {
+        fotosInput.addEventListener('change', () => {
+            const files = Array.from(fotosInput.files).slice(0, MAX_FOTOS);
+            fotosPreview.innerHTML = '';
+            if (files.length === 0) {
+                if (fotosMsg) fotosMsg.textContent = '';
+                return;
             }
-            const reader = new FileReader();
-            reader.onload = e => {
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-            // Ocultar input y mostrar X
-            input.style.display = 'none';
-            removeBtn.style.display = 'flex';
-        });
-        removeBtn.addEventListener('click', () => {
-            // Eliminar preview
-            const img = zone.querySelector('.file-drop__preview');
-            if (img) img.remove();
-            // Limpiar input
-            input.value = '';
-            // Restaurar textos
-            const text = zone.querySelector('.file-drop__text');
-            if (text) text.textContent = 'Haz clic o arrastra una imagen';
-            // Mostrar input y ocultar X
-            input.style.display = '';
-            removeBtn.style.display = 'none';
+            if (fotosMsg) fotosMsg.textContent = `${files.length} foto${files.length > 1 ? 's' : ''} seleccionada${files.length > 1 ? 's' : ''} (máx. ${MAX_FOTOS})`;
+            files.forEach((file, idx) => {
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'position:relative;width:72px;height:72px;';
+                const img = document.createElement('img');
+                img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--color-border,#e5e7eb);';
+                if (idx === 0) {
+                    const badge = document.createElement('span');
+                    badge.textContent = 'Principal';
+                    badge.style.cssText = 'position:absolute;bottom:2px;left:2px;right:2px;text-align:center;font-size:.58rem;background:rgba(0,100,60,.82);color:#fff;border-radius:4px;padding:1px 2px;';
+                    wrap.appendChild(badge);
+                }
+                const reader = new FileReader();
+                reader.onload = e => { img.src = e.target.result; };
+                reader.readAsDataURL(file);
+                wrap.prepend(img);
+                fotosPreview.appendChild(wrap);
+            });
         });
     }
+
+    /* ---- Limpiar previews al cerrar modal --------------- */
 };
 
 if (document.readyState === 'loading') {

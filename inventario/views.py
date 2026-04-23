@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.contrib import messages
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Notificacion, Pedido, PedidoEvidencia, Producto, Rol, Usuario
+from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Notificacion, Pedido, PedidoEvidencia, Producto, ProductoFoto, Rol, Usuario
 from .forms import ProductoForm
 
 
@@ -296,6 +296,8 @@ def producto_editar(request, prod_id):
         cantidad = request.POST.get('cantidad')
         descr_dispo = request.POST.get('descr_dispo', '').strip()
         fot_prod = request.FILES.get('fot_prod')
+        clear_fot_prod = request.POST.get('clear_fot_prod')
+
         # Validaciones mínimas
         if not nombre or not id_cat_fk or stock is None or cantidad is None:
             messages.error(request, 'Completa todos los campos obligatorios.')
@@ -303,10 +305,28 @@ def producto_editar(request, prod_id):
             producto.nombre_producto = nombre
             producto.descripcion = descripcion
             producto.id_cat_fk_id = id_cat_fk
+
+            # Gestión foto principal
             if fot_prod:
+                if producto.fot_prod:
+                    producto.fot_prod.delete(save=False)
                 producto.fot_prod = fot_prod
+            elif clear_fot_prod and producto.fot_prod:
+                producto.fot_prod.delete(save=False)
+                producto.fot_prod = None
+
             producto.fch_ult_act = timezone.now()
             producto.save()
+
+            # Fotos adicionales nuevas (respetando máximo de 5 total)
+            fotos_nuevas = request.FILES.getlist('fotos_nuevas')
+            if fotos_nuevas:
+                total_actuales = producto.fotos.count() + (1 if producto.fot_prod else 0)
+                cupo = max(0, 5 - total_actuales)
+                orden_base = (producto.fotos.order_by('-orden').values_list('orden', flat=True).first() or 0) + 1
+                for i, f in enumerate(fotos_nuevas[:cupo]):
+                    ProductoFoto.objects.create(id_prod_fk=producto, foto=f, orden=orden_base + i)
+
             # Actualizar disponibilidad
             if disp:
                 disp.stock = stock
@@ -324,12 +344,34 @@ def producto_editar(request, prod_id):
                     fch_ult_act=timezone.now(),
                 )
             messages.success(request, 'Producto actualizado correctamente.')
-            return redirect('producto_detalle', prod_id=producto.id_prod)
+            return redirect('producto_editar', prod_id=producto.id_prod)
+
+    fotos_extra = producto.fotos.all()
+    total_fotos = fotos_extra.count() + (1 if producto.fot_prod else 0)
     return render(request, 'inventario/catalogo/producto_editar.html', {
         'producto': producto,
         'catalogos': catalogos,
         'disponibilidad': disp,
+        'fotos_extra': fotos_extra,
+        'total_fotos': total_fotos,
+        'cupo_fotos': max(0, 5 - total_fotos),
     })
+
+
+@login_required
+def eliminar_foto_producto(request, prod_id, foto_id):
+    if not _is_admin(request):
+        messages.error(request, 'No tienes permisos para eliminar fotos.')
+        return redirect('producto_detalle', prod_id=prod_id)
+
+    foto = get_object_or_404(ProductoFoto, pk=foto_id, id_prod_fk_id=prod_id)
+    if request.method == 'POST':
+        if foto.foto:
+            foto.foto.delete(save=False)
+        foto.delete()
+        messages.success(request, 'Foto eliminada correctamente.')
+    return redirect('producto_editar', prod_id=prod_id)
+
 
 @login_required
 def producto_detalle(request, prod_id):
@@ -347,10 +389,12 @@ def producto_detalle(request, prod_id):
         .order_by('-id_disp')
         .first()
     )
+    fotos_extra = producto.fotos.all()
     return render(request, 'inventario/catalogo/producto_detalle.html', {
         'producto': producto,
         'catalogo': producto.id_cat_fk,
         'disponibilidad': disp,
+        'fotos_extra': fotos_extra,
     })
 
 # Panel de almacenista
@@ -372,7 +416,7 @@ from django.utils import timezone
 
 from .db_compat import usuario_supports_tipo_doc
 from .forms import CatalogoForm, ProductoForm, UsuarioPerfilForm
-from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Pedido, PedidoEvidencia, Producto, Usuario, Rol, VerificacionSenaToken
+from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Pedido, PedidoEvidencia, Producto, ProductoFoto, Usuario, Rol, VerificacionSenaToken
 
 
 def _user_role(request):
@@ -461,7 +505,18 @@ def registrar_producto(request):
             obj = form.save(commit=False)
             obj.fch_registro = timezone.now()
             obj.fch_ult_act = timezone.now()
+
+            # Múltiples fotos: primera → fot_prod, resto → ProductoFoto (máx 5 total)
+            fotos = request.FILES.getlist('fotos')[:5]
+            if fotos:
+                obj.fot_prod = fotos[0]
+
             obj.save()
+
+            # Fotos adicionales (índices 1-4)
+            for i, f in enumerate(fotos[1:], start=1):
+                ProductoFoto.objects.create(id_prod_fk=obj, foto=f, orden=i)
+
             _registrar_auditoria(
                 request,
                 accion='crear',

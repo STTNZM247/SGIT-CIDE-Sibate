@@ -86,33 +86,108 @@
 
             <aside class="product-edit-card product-edit-card--aside">
                 <div class="product-edit-card__head">
-                    <h2>Foto del producto</h2>
+                    <h2>Fotos del producto <span style="font-size:.75rem;font-weight:400;color:var(--color-muted,#888);">({{ total_fotos }}/5)</span></h2>
                 </div>
 
+                <!-- FOTO PRINCIPAL -->
+                <p class="mf-label" style="margin-bottom:6px;">Foto principal</p>
                 <div class="product-edit-preview">
                     {% if producto.fot_prod %}
                     <img src="{{ producto.fot_prod.url }}" alt="{{ producto.nombre_producto }}" class="product-edit-preview__img">
                     {% else %}
                     <div class="product-edit-preview__placeholder">
                         <ion-icon name="image-outline"></ion-icon>
-                        <span>Sin fotografía</span>
+                        <span>Sin fotografía principal</span>
                     </div>
                     {% endif %}
                 </div>
 
-                <label class="file-upload-zone product-edit-upload-zone">
+                {% if producto.fot_prod %}
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+                    <label class="file-upload-zone product-edit-upload-zone" style="flex:1;min-width:0;">
+                        <ion-icon name="swap-horizontal-outline"></ion-icon>
+                        <span class="file-upload-zone__text">Cambiar foto principal</span>
+                        <input type="file" name="fot_prod" class="form-file" accept="image/*">
+                    </label>
+                    <button type="submit" name="clear_fot_prod" value="1"
+                        class="cat-btn cat-btn--ghost"
+                        style="border-color:var(--color-error,#ef4444);color:var(--color-error,#ef4444);"
+                        onclick="return confirm('¿Eliminar la foto principal?');"
+                        title="Eliminar foto principal">
+                        <ion-icon name="trash-outline"></ion-icon>
+                    </button>
+                </div>
+                {% else %}
+                <label class="file-upload-zone product-edit-upload-zone" style="margin-bottom:10px;">
                     <ion-icon name="cloud-upload-outline"></ion-icon>
-                    <span class="file-upload-zone__text">Seleccionar nueva imagen</span>
-                    <span class="file-upload-zone__hint">JPG, PNG o WEBP. Se reemplaza solo si eliges un archivo.</span>
+                    <span class="file-upload-zone__text">Subir foto principal</span>
+                    <span class="file-upload-zone__hint">JPG, PNG o WEBP</span>
                     <input type="file" name="fot_prod" class="form-file" accept="image/*">
                 </label>
+                {% endif %}
 
-                <div class="product-edit-note">
-                    <ion-icon name="information-circle-outline"></ion-icon>
-                    <span>La imagen actual se conservará si no cargas una nueva.</span>
+                <!-- FOTOS ADICIONALES -->
+                {% if fotos_extra %}
+                <p class="mf-label" style="margin-top:12px;margin-bottom:6px;">Fotos adicionales</p>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;">
+                    {% for foto in fotos_extra %}
+                    <div style="position:relative;border-radius:10px;overflow:hidden;border:1.5px solid var(--color-border,#e5e7eb);">
+                        <img src="{{ foto.foto.url }}" alt="Foto {{ forloop.counter }}" loading="lazy"
+                             style="width:100%;height:90px;object-fit:cover;display:block;">
+                        <form method="post" action="{% url 'eliminar_foto_producto' producto.id_prod foto.id_foto %}" style="position:absolute;top:4px;right:4px;">
+                            {% csrf_token %}
+                            <button type="submit"
+                                class="cat-btn"
+                                style="width:28px;height:28px;padding:0;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;"
+                                onclick="return confirm('¿Eliminar esta foto?');"
+                                title="Eliminar foto">
+                                <ion-icon name="close-outline" style="font-size:1rem;"></ion-icon>
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
                 </div>
+                {% endif %}
+
+                <!-- AGREGAR MÁS FOTOS -->
+                {% if cupo_fotos > 0 %}
+                <p class="mf-label" style="margin-top:4px;margin-bottom:6px;">Agregar fotos <span style="font-weight:400;color:var(--color-muted,#888);">(hasta {{ cupo_fotos }} más)</span></p>
+                <label class="file-upload-zone product-edit-upload-zone">
+                    <ion-icon name="images-outline"></ion-icon>
+                    <span class="file-upload-zone__text">Seleccionar imágenes</span>
+                    <span class="file-upload-zone__hint">Máx. {{ cupo_fotos }} archivo{{ cupo_fotos|pluralize }}</span>
+                    <input type="file" name="fotos_nuevas" id="id_fotos_nuevas" class="form-file" accept="image/*" multiple>
+                </label>
+                <div id="nuevas-preview" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;"></div>
+                {% else %}
+                <div class="product-edit-note">
+                    <ion-icon name="checkmark-circle-outline"></ion-icon>
+                    <span>Has alcanzado el máximo de 5 fotos. Elimina alguna para agregar nuevas.</span>
+                </div>
+                {% endif %}
             </aside>
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script data-page-script="true">
+(function() {
+    const input = document.getElementById('id_fotos_nuevas');
+    const preview = document.getElementById('nuevas-preview');
+    if (!input || !preview) return;
+    input.addEventListener('change', function() {
+        preview.innerHTML = '';
+        Array.from(this.files).forEach(function(file) {
+            const img = document.createElement('img');
+            img.style.cssText = 'width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid var(--color-border,#e5e7eb);';
+            const reader = new FileReader();
+            reader.onload = function(e) { img.src = e.target.result; };
+            reader.readAsDataURL(file);
+            preview.appendChild(img);
+        });
+    });
+})();
+</script>
 {% endblock %}

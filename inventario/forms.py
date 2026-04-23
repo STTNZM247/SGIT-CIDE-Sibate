@@ -267,12 +267,11 @@ class ProductoForm(forms.ModelForm):
 
     class Meta:
         model = Producto
-        fields = ['nombre_producto', 'descripcion', 'id_cat_fk', 'fot_prod']
+        fields = ['nombre_producto', 'descripcion', 'id_cat_fk']
         labels = {
             'nombre_producto': 'Nombre del producto',
             'descripcion': 'Descripción',
             'id_cat_fk': 'Catálogo',
-            'fot_prod': 'Foto del producto',
         }
         widgets = {
             'nombre_producto': forms.TextInput(attrs={
@@ -287,10 +286,6 @@ class ProductoForm(forms.ModelForm):
             }),
             'id_cat_fk': forms.Select(attrs={
                 'class': 'form-input form-select',
-            }),
-            'fot_prod': forms.ClearableFileInput(attrs={
-                'class': 'form-file',
-                'accept': 'image/*',
             }),
         }
 

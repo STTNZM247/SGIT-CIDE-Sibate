@@ -264,6 +264,35 @@ class Producto(models.Model):
         super().save(*args, **kwargs)
 
 
+class ProductoFoto(models.Model):
+    id_foto = models.AutoField(primary_key=True)
+    id_prod_fk = models.ForeignKey(
+        Producto,
+        on_delete=models.CASCADE,
+        db_column='id_prod_fk',
+        related_name='fotos',
+    )
+    foto = models.ImageField(upload_to='productos/fotos/')
+    orden = models.PositiveSmallIntegerField(default=0)
+    fch_registro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'producto_foto'
+        ordering = ['orden', 'id_foto']
+
+    def __str__(self):
+        return f'Foto {self.id_foto} — Producto {self.id_prod_fk_id}'
+
+    def save(self, *args, **kwargs):
+        should_optimize = bool(self.foto)
+        if should_optimize and self.pk:
+            same = ProductoFoto.objects.filter(pk=self.pk, foto=self.foto.name).exists()
+            should_optimize = not same
+        if should_optimize:
+            optimize_image_field_to_webp(self.foto)
+        super().save(*args, **kwargs)
+
+
 class Disponibilidad(models.Model):
     id_disp = models.AutoField(primary_key=True)
     id_prod_fk = models.ForeignKey(
