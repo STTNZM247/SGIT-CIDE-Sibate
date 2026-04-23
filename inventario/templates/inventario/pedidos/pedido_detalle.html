@@ -82,9 +82,9 @@
                     Aprobar y marcar como esperando entrega
                 </button>
             </form>
-            <form method="post" action="{% url 'pedido_rechazar' pedido.id_pedido %}" onsubmit="return confirm('¿Seguro que deseas rechazar el pedido #{{ pedido.id_pedido }}? Esta acción no se puede deshacer.')">
+            <form method="post" action="{% url 'pedido_rechazar' pedido.id_pedido %}" id="pedidoRejectForm">
                 {% csrf_token %}
-                <button type="submit" class="pedido-action-btn pedido-action-btn--reject">
+                <button type="button" class="pedido-action-btn pedido-action-btn--reject" id="openRejectPedidoModalBtn">
                     <ion-icon name="close-circle-outline"></ion-icon>
                     Rechazar pedido
                 </button>
@@ -245,4 +245,68 @@
     {% endif %}
 
 </section>
+{% endblock %}
+
+{% block extra_js %}
+{% if pedido.estado == 'pendiente' %}
+<div id="pedidoRejectModal" class="pedido-reject-modal" aria-hidden="true">
+    <div class="pedido-reject-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="pedidoRejectModalTitle" aria-describedby="pedidoRejectModalText">
+        <button type="button" class="pedido-reject-modal__close" id="closeRejectPedidoModalBtn" aria-label="Cerrar">×</button>
+        <div class="pedido-reject-modal__icon" aria-hidden="true">
+            <ion-icon name="alert-circle-outline"></ion-icon>
+        </div>
+        <h3 id="pedidoRejectModalTitle">Confirmar rechazo de pedido</h3>
+        <p id="pedidoRejectModalText">¿Seguro que deseas rechazar el pedido #{{ pedido.id_pedido }}? Esta acción no se puede deshacer.</p>
+        <div class="pedido-reject-modal__actions">
+            <button type="button" class="pedido-reject-modal__btn pedido-reject-modal__btn--ghost" id="cancelRejectPedidoBtn">Cancelar</button>
+            <button type="button" class="pedido-reject-modal__btn pedido-reject-modal__btn--danger" id="confirmRejectPedidoBtn">Sí, rechazar pedido</button>
+        </div>
+    </div>
+</div>
+
+<script data-page-script="true">
+(function () {
+    var openBtn = document.getElementById('openRejectPedidoModalBtn');
+    var modal = document.getElementById('pedidoRejectModal');
+    var closeBtn = document.getElementById('closeRejectPedidoModalBtn');
+    var cancelBtn = document.getElementById('cancelRejectPedidoBtn');
+    var confirmBtn = document.getElementById('confirmRejectPedidoBtn');
+    var form = document.getElementById('pedidoRejectForm');
+
+    if (!openBtn || !modal || !closeBtn || !cancelBtn || !confirmBtn || !form) {
+        return;
+    }
+
+    function openModal() {
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+    }
+
+    function closeModal() {
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+    }
+
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+
+    modal.addEventListener('click', function (event) {
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') {
+            closeModal();
+        }
+    });
+
+    confirmBtn.addEventListener('click', function () {
+        form.submit();
+    });
+})();
+</script>
+{% endif %}
 {% endblock %}

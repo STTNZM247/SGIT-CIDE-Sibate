@@ -856,6 +856,102 @@
   background: linear-gradient(135deg, #d4820a, #9b5c00);
 }
 
+/* Modal rechazo de pedido */
+.pedido-reject-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(15, 23, 15, 0.55);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.pedido-reject-modal[aria-hidden="false"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pedido-reject-modal__dialog {
+  width: min(460px, 100%);
+  border-radius: 18px;
+  border: 1px solid #e8ddd6;
+  background: linear-gradient(180deg, #fffefd, #fff7f4);
+  box-shadow: 0 22px 52px rgba(40, 19, 10, 0.3);
+  padding: 20px 20px 18px;
+  position: relative;
+}
+
+.pedido-reject-modal__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #efdfd6;
+  background: #fff;
+  color: #8f4b3a;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.pedido-reject-modal__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 10px;
+  background: #ffecec;
+  color: #c0392b;
+  font-size: 1.5rem;
+}
+
+.pedido-reject-modal__dialog h3 {
+  margin: 0;
+  color: #2b1e1b;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.pedido-reject-modal__dialog p {
+  margin: 10px 0 0;
+  color: #6d5049;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.pedido-reject-modal__actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.pedido-reject-modal__btn {
+  border: 0;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.pedido-reject-modal__btn--ghost {
+  background: #efe9e6;
+  color: #6d5049;
+}
+
+.pedido-reject-modal__btn--danger {
+  background: linear-gradient(135deg, #c0392b, #8e1a11);
+  color: #fff;
+}
+
 /* Producto no disponible - checkboxes (estado pendiente) */
 .pedido-product-card__no-disp-label {
   display: inline-flex;
@@ -1278,6 +1374,40 @@ html[data-theme="dark"] .pedido-product-card__no-disp-label:has(input:checked) {
   background: #2a1010 !important;
   border-color: #6d2c2c !important;
   color: #ff9a9a !important;
+}
+
+html[data-theme="dark"] .pedido-reject-modal {
+  background: rgba(4, 8, 15, 0.72) !important;
+}
+
+html[data-theme="dark"] .pedido-reject-modal__dialog {
+  background: linear-gradient(180deg, #171a24, #121520) !important;
+  border-color: #2f3546 !important;
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.48) !important;
+}
+
+html[data-theme="dark"] .pedido-reject-modal__close {
+  background: #1b2030 !important;
+  border-color: #343b50 !important;
+  color: #c4cbe0 !important;
+}
+
+html[data-theme="dark"] .pedido-reject-modal__icon {
+  background: #34171f !important;
+  color: #ff8793 !important;
+}
+
+html[data-theme="dark"] .pedido-reject-modal__dialog h3 {
+  color: #f2f4ff !important;
+}
+
+html[data-theme="dark"] .pedido-reject-modal__dialog p {
+  color: #b5bbcf !important;
+}
+
+html[data-theme="dark"] .pedido-reject-modal__btn--ghost {
+  background: #23283a !important;
+  color: #c6cee2 !important;
 }
 
 /* Card no disponible */
