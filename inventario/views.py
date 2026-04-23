@@ -3395,9 +3395,9 @@ def staff_alerts_api(request):
         if n:
             alerts.append({
                 'mensaje': f'{n} validación{"es" if n > 1 else ""} SENA pendiente{"s" if n > 1 else ""} de revisión',
-                'url': reverse('gestion_usuarios_panel'),
+                'url': '#',  # No redirige, solo abre modal si el frontend lo decide
                 'icono': 'person-add-outline',
-                'tipo': 'warning',
+                'tipo': 'sena_validacion',
             })
 
     return JsonResponse({'ok': True, 'alerts': alerts})
