@@ -43,15 +43,9 @@
 .prestamo-dias--warn {
     background: #fffbe6;
     color: #b8860b;
-        // Delegation: sobrevive al reemplazo de #live-section-data
-        document.addEventListener('click', (ev) => {
-            const btn = ev.target.closest('button[data-trigger-devuelto]');
-            if (!btn) return;
-            ev.preventDefault();
-            const form = btn.closest('form');
-            if (!form) return;
-            openModal(form, btn.dataset.pedidoId);
-        });
+    border: 1.5px solid #ffe082;
+}
+
 html[data-theme="dark"] .prestamo-fecha-dia {
     color: #e2ede2;
 }
@@ -96,41 +90,6 @@ html[data-theme="dark"] .prestamo-dias--ok {
     </div>
     {% endif %}
 
-    // ── Event delegation: los handlers sobreviven al reemplazo de #live-section-data ──
-    (function () {
-        const avisoModal = document.getElementById('aviso-confirm-modal');
-        const avisoUsuario = document.getElementById('aviso-modal-usuario');
-        const avisoPedido  = document.getElementById('aviso-modal-pedido');
-        const avisoConfirm = document.getElementById('aviso-modal-confirm-btn');
-        if (!avisoModal || !avisoConfirm) return;
-
-        let avisoForm = null;
-        const openAviso = (form, pedidoId, nombreUsuario) => {
-            avisoForm = form;
-            if (avisoPedido)  avisoPedido.textContent  = '#' + (pedidoId || '—');
-            if (avisoUsuario) avisoUsuario.textContent = nombreUsuario || '—';
-            avisoModal.classList.add('is-open');
-            avisoModal.setAttribute('aria-hidden', 'false');
-        };
-        const closeAviso = () => {
-            avisoModal.classList.remove('is-open');
-            avisoModal.setAttribute('aria-hidden', 'true');
-            avisoForm = null;
-        };
-        // Delegation: click en cualquier botón [data-trigger-aviso] en el documento
-        document.addEventListener('click', (ev) => {
-            const btn = ev.target.closest('button[data-trigger-aviso]');
-            if (!btn) return;
-            const form = btn.closest('form');
-            if (!form) return;
-            openAviso(form, btn.dataset.pedidoId, btn.dataset.usuarioNombre);
-        });
-        avisoConfirm.addEventListener('click', () => { if (avisoForm) avisoForm.submit(); });
-        avisoModal.querySelectorAll('[data-close-aviso]').forEach((b) => b.addEventListener('click', closeAviso));
-        avisoModal.addEventListener('click', (ev) => { if (ev.target === avisoModal) closeAviso(); });
-        document.addEventListener('keydown', (ev) => {
-            if (ev.key === 'Escape' && avisoModal.classList.contains('is-open')) closeAviso();
-        });
             <strong>{{ total_devueltos }}</strong>
         </div>
         {% if total_cancelados > 0 %}
@@ -348,7 +307,7 @@ html[data-theme="dark"] .prestamo-dias--ok {
                 {% if prestamo.estado == 'entregado' %}
                 <form method="post" action="{% url 'pedido_marcar_devuelto' prestamo.id_pedido %}" class="prestamo-action-form">
                     {% csrf_token %}
-                    <button type="submit" class="prestamo-btn prestamo-btn--return"
+                    <button type="button" class="prestamo-btn prestamo-btn--return"
                             title="Marcar préstamo como devuelto"
                             data-trigger-devuelto
                             data-pedido-id="{{ prestamo.id_pedido }}">
@@ -436,41 +395,39 @@ html[data-theme="dark"] .prestamo-dias--ok {
 
 <script>
 (function () {
-    // ── Modal aviso devolución ────────────────────────────────────────────
+    // ── Modal aviso devolución — delegation pura ──────────────────────────
     const avisoModal = document.getElementById('aviso-confirm-modal');
     const avisoUsuario = document.getElementById('aviso-modal-usuario');
     const avisoPedido  = document.getElementById('aviso-modal-pedido');
     const avisoConfirm = document.getElementById('aviso-modal-confirm-btn');
-    if (avisoModal && avisoConfirm) {
-        let avisoForm = null;
-        const openAviso = (form, pedidoId, nombreUsuario) => {
-            avisoForm = form;
-            if (avisoPedido)  avisoPedido.textContent  = '#' + (pedidoId || '—');
-            if (avisoUsuario) avisoUsuario.textContent = nombreUsuario || '—';
-            avisoModal.classList.add('is-open');
-            avisoModal.setAttribute('aria-hidden', 'false');
-        };
-        const closeAviso = () => {
-            avisoModal.classList.remove('is-open');
-            avisoModal.setAttribute('aria-hidden', 'true');
-            avisoForm = null;
-        };
-        document.querySelectorAll('button[data-trigger-aviso]').forEach((btn) => {
-            btn.addEventListener('click', () => {
-                const form = btn.closest('form');
-                if (!form) return;
-                openAviso(form, btn.dataset.pedidoId, btn.dataset.usuarioNombre);
-            });
-        });
-        avisoConfirm.addEventListener('click', () => {
-            if (avisoForm) avisoForm.submit();
-        });
-        avisoModal.querySelectorAll('[data-close-aviso]').forEach((b) => b.addEventListener('click', closeAviso));
-        avisoModal.addEventListener('click', (ev) => { if (ev.target === avisoModal) closeAviso(); });
-        document.addEventListener('keydown', (ev) => {
-            if (ev.key === 'Escape' && avisoModal.classList.contains('is-open')) closeAviso();
-        });
-    }
+    if (!avisoModal || !avisoConfirm) return;
+
+    let avisoForm = null;
+    const openAviso = (form, pedidoId, nombreUsuario) => {
+        avisoForm = form;
+        if (avisoPedido)  avisoPedido.textContent  = '#' + (pedidoId || '—');
+        if (avisoUsuario) avisoUsuario.textContent = nombreUsuario || '—';
+        avisoModal.classList.add('is-open');
+        avisoModal.setAttribute('aria-hidden', 'false');
+    };
+    const closeAviso = () => {
+        avisoModal.classList.remove('is-open');
+        avisoModal.setAttribute('aria-hidden', 'true');
+        avisoForm = null;
+    };
+    document.addEventListener('click', (ev) => {
+        const btn = ev.target.closest('button[data-trigger-aviso]');
+        if (!btn) return;
+        const form = btn.closest('form');
+        if (!form) return;
+        openAviso(form, btn.dataset.pedidoId, btn.dataset.usuarioNombre);
+    });
+    avisoConfirm.addEventListener('click', () => { if (avisoForm) avisoForm.submit(); });
+    avisoModal.addEventListener('click', (ev) => { if (ev.target === avisoModal) closeAviso(); });
+    document.addEventListener('click', (ev) => { if (ev.target.closest('[data-close-aviso]')) closeAviso(); });
+    document.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Escape' && avisoModal.classList.contains('is-open')) closeAviso();
+    });
 })();
 </script>
 
@@ -501,14 +458,15 @@ html[data-theme="dark"] .prestamo-dias--ok {
         formToSubmit = null;
     };
 
-    document.querySelectorAll('button[data-trigger-devuelto]').forEach((btn) => {
-        btn.addEventListener('click', (ev) => {
-            ev.preventDefault();
-            const form = btn.closest('form');
-            if (!form) return;
-            openModal(form, btn.dataset.pedidoId);
-        });
-    });
+    document.addEventListener('click', (ev) => {
+        const btn = ev.target.closest('button[data-trigger-devuelto]');
+        if (!btn) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        const form = btn.closest('form');
+        if (!form) return;
+        openModal(form, btn.dataset.pedidoId);
+    }, true); // capture=true: intercepta antes del submit nativo
 
     confirmBtn.addEventListener('click', () => {
         if (!formToSubmit) return;
@@ -532,11 +490,8 @@ html[data-theme="dark"] .prestamo-dias--ok {
         formToSubmit.submit();
     });
 
-    modal.querySelectorAll('[data-close-devuelto]').forEach((btn) => {
-        btn.addEventListener('click', closeModal);
-    });
-
-    modal.addEventListener('click', (ev) => {
+    document.addEventListener('click', (ev) => {
+        if (ev.target.closest('[data-close-devuelto]')) closeModal();
         if (ev.target === modal) closeModal();
     });
 
