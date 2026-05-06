@@ -90,6 +90,40 @@ html[data-theme="dark"] .prestamo-dias--ok {
     </div>
     {% endif %}
 
+    <div class="prestamos-hero">
+        <div>
+            <p class="prestamos-eyebrow">CONTROL DE PRÉSTAMOS</p>
+            <h1>Préstamos y devoluciones</h1>
+            <p>Controla los pedidos entregados, marca los que ya fueron devueltos y consulta qué productos salieron en cada préstamo.</p>
+        </div>
+        {% if total_vencidos > 0 %}
+        <span class="prestamos-hero-badge prestamos-hero-badge--warn">
+            <ion-icon name="alert-circle-outline"></ion-icon>
+            {{ total_vencidos }} préstamo{% if total_vencidos != 1 %}s{% endif %} vencido{% if total_vencidos != 1 %}s{% endif %}
+        </span>
+        {% else %}
+        <span class="prestamos-hero-badge prestamos-hero-badge--ok">
+            <ion-icon name="checkmark-circle-outline"></ion-icon>
+            Todo al día
+        </span>
+        {% endif %}
+    </div>
+
+    <div class="prestamos-stats">
+        <div class="prestamos-stat-tile">
+            <span>Préstamos activos</span>
+            <strong>{{ total_activos }}</strong>
+        </div>
+        <div class="prestamos-stat-tile prestamos-stat-tile--vencido">
+            <span>Vencidos</span>
+            <strong>{{ total_vencidos }}</strong>
+        </div>
+        <div class="prestamos-stat-tile">
+            <span>Al día</span>
+            <strong>{{ total_al_dia }}</strong>
+        </div>
+        <div class="prestamos-stat-tile prestamos-stat-tile--devuelto">
+            <span>Devueltos</span>
             <strong>{{ total_devueltos }}</strong>
         </div>
         {% if total_cancelados > 0 %}
