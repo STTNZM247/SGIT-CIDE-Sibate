@@ -67,6 +67,7 @@
         </form>
     </section>
 
+    <div id="live-section-data">
     <div class="tabla-usuarios-wrapper" role="region" aria-label="Tabla de usuarios">
         <table class="tabla-usuarios-admin">
             <thead>
@@ -262,6 +263,7 @@
             </form>
         </div>
     </div>
+    </div>
 </section>
 {% endblock %}
 
@@ -281,18 +283,17 @@ const deleteForm = document.getElementById('deleteUserForm');
 const deleteUserLabel = document.getElementById('deleteUserLabel');
 const btnCerrarDelete = document.getElementById('btnCerrarModalEliminarUsuario');
 
-document.querySelectorAll('.btn-eliminar-usuario').forEach(function(button) {
-    button.addEventListener('click', function() {
-        if(!deleteModal || !deleteForm || !deleteUserLabel){
-            return;
-        }
-        const usuarioId = this.dataset.usuarioId;
-        const nombre = (this.dataset.usuarioNombre || '').replace(/\s+/g, ' ').trim() || 'Sin nombre';
-        const correo = (this.dataset.usuarioCorreo || '').trim();
-        deleteUserLabel.textContent = `${nombre} (${correo})`;
-        deleteForm.action = `/usuarios/${usuarioId}/eliminar/`;
-        deleteModal.style.display = 'flex';
-    });
+// Usar event delegation para que sobreviva a refresco de #live-section-data
+document.addEventListener('click', function(e) {
+    const button = e.target.closest('.btn-eliminar-usuario');
+    if (!button) return;
+    if(!deleteModal || !deleteForm || !deleteUserLabel) return;
+    const usuarioId = button.dataset.usuarioId;
+    const nombre = (button.dataset.usuarioNombre || '').replace(/\s+/g, ' ').trim() || 'Sin nombre';
+    const correo = (button.dataset.usuarioCorreo || '').trim();
+    deleteUserLabel.textContent = `${nombre} (${correo})`;
+    deleteForm.action = `/usuarios/${usuarioId}/eliminar/`;
+    deleteModal.style.display = 'flex';
 });
 
 if(btnCerrarDelete && deleteModal){
@@ -319,28 +320,31 @@ if(inputPassword && togglePassword && iconEye){
         }
     };
 }
-// Custom select para rol (masivo)
-document.querySelectorAll('.custom-select-rol').forEach(function(select) {
-    const selected = select.querySelector('.selected-rol');
-    const options = select.querySelector('.rol-options');
-    const input = select.querySelector('input[type="hidden"]');
-    select.addEventListener('click', function(e) {
-        e.stopPropagation();
+// Custom select para rol: event delegation para sobrevivir al refresh
+document.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const select = e.target.closest('.custom-select-rol');
+    if (select) {
+        const options = select.querySelector('.rol-options');
         document.querySelectorAll('.rol-options').forEach(o => { if(o !== options) o.style.display = 'none'; });
-        options.style.display = options.style.display === 'block' ? 'none' : 'block';
-    });
-    options.querySelectorAll('.rol-option').forEach(function(option) {
-        option.addEventListener('click', function(e) {
-            e.stopPropagation();
-            selected.textContent = this.textContent;
-            input.value = this.getAttribute('data-value');
-            options.style.display = 'none';
-            options.querySelectorAll('.rol-option').forEach(o => o.classList.remove('selected'));
-            this.classList.add('selected');
-        });
-    });
-});
-document.addEventListener('click', function() {
+        if (options) options.style.display = options.style.display === 'block' ? 'none' : 'block';
+        return;
+    }
+    const option = e.target.closest('.rol-option');
+    if (option) {
+        const optionsWrap = option.closest('.rol-options');
+        const select2 = option.closest('.custom-select-rol');
+        const selected = select2 && select2.querySelector('.selected-rol');
+        const input = select2 && select2.querySelector('input[type="hidden"]');
+        if (selected) selected.textContent = option.textContent;
+        if (input) input.value = option.getAttribute('data-value');
+        if (optionsWrap) {
+            optionsWrap.style.display = 'none';
+            optionsWrap.querySelectorAll('.rol-option').forEach(o => o.classList.remove('selected'));
+        }
+        option.classList.add('selected');
+        return;
+    }
     document.querySelectorAll('.rol-options').forEach(o => o.style.display = 'none');
 });
 </script>

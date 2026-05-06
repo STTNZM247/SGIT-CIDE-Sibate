@@ -190,7 +190,9 @@
                         {% block header_extra %}{% endblock %}
                     </section>
 
-                    {% block content %}{% endblock %}
+                    <div id="live-panel-content">
+                        {% block content %}{% endblock %}
+                    </div>
                 </div>
             </main>
 
@@ -209,7 +211,7 @@
     <script>
     (function () {
         var endpoint = "{% url 'live_sync_status' %}";
-        var pollMs = 4000;
+            var pollMs = 8000;
         var lastSignature = null;
         var pendingReload = false;
         var isChecking = false;
@@ -258,7 +260,13 @@
             if (!pendingReload) return;
             if (userIsBusy()) return;
             pendingReload = false;
-            window.location.reload();
+                // Intentar refresco parcial primero; si no hay sección viva, recargar.
+                var liveSection = document.getElementById('live-section-data');
+                if (liveSection) {
+                    _livePartialRefresh();
+                } else {
+                    window.location.reload();
+                }
         }
 
         function checkNow() {
@@ -318,6 +326,78 @@
 
         checkNow();
         window.setInterval(checkNow, pollMs);
+
+            // ── Ticker de countdown (cada segundo) ──────────────────────────
+            function _duracion(s) {
+                s = Math.abs(Math.round(s));
+                var d = Math.floor(s / 86400);
+                var h = Math.floor((s % 86400) / 3600);
+                var m = Math.floor((s % 3600) / 60);
+                var sec = s % 60;
+                if (d >= 2) return d + ' d';
+                if (d === 1) return '1 día ' + h + ' h';
+                if (h > 0) return h + ' h ' + m + ' min';
+                if (m > 0) return m + ' min';
+                return sec + ' s';
+            }
+
+            function _tickCountdowns() {
+                var now = Date.now();
+                document.querySelectorAll('[data-expira-en][data-expira-tipo]').forEach(function(span) {
+                    if (!span._expiraMs) {
+                        span._expiraMs = new Date(span.getAttribute('data-expira-en')).getTime();
+                    }
+                    var liveEl = span.querySelector('[data-live-time]');
+                    if (!liveEl) return;
+                    var diff = (span._expiraMs - now) / 1000;
+                    var tipo = span.getAttribute('data-expira-tipo');
+                    if (diff <= 0) {
+                        liveEl.textContent = _duracion(diff) + ' vencido';
+                    } else if (tipo === 'hoy') {
+                        liveEl.textContent = 'Vence hoy · ' + _duracion(diff);
+                    } else if (tipo === 'manana') {
+                        liveEl.textContent = 'Vence mañana · ' + _duracion(diff);
+                    } else {
+                        liveEl.textContent = _duracion(diff) + ' restantes';
+                    }
+                });
+            }
+            window.setInterval(_tickCountdowns, 1000);
+            _tickCountdowns();
+
+            // ── Refresco parcial del panel (sin recarga de página) ───────────
+            var _liveRefreshing = false;
+            function _livePartialRefresh() {
+                if (_liveRefreshing || document.hidden) return;
+                if (userIsBusy()) return;
+                var section = document.getElementById('live-section-data');
+                if (!section) return;
+                _liveRefreshing = true;
+                fetch(window.location.href, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    cache: 'no-store'
+                })
+                .then(function(resp) { return resp.ok ? resp.text() : null; })
+                .then(function(html) {
+                    if (!html) return;
+                    var doc = new DOMParser().parseFromString(html, 'text/html');
+                    var newSection = doc.getElementById('live-section-data');
+                    var curSection = document.getElementById('live-section-data');
+                    if (!newSection || !curSection) return;
+                    curSection.innerHTML = newSection.innerHTML;
+                    _tickCountdowns();
+                    document.dispatchEvent(new CustomEvent('live-section-refreshed'));
+                    if (typeof window.sgitReinitPage === 'function') window.sgitReinitPage();
+                })
+                .catch(function() {})
+                .finally(function() { _liveRefreshing = false; });
+            }
+            // También ejecutar el refresco parcial cada 8 segundos independientemente de cambios en firma
+            window.setInterval(function() {
+                var section = document.getElementById('live-section-data');
+                if (section) _livePartialRefresh();
+            }, pollMs);
     })();
     </script>
     {% endif %}

@@ -110,6 +110,7 @@
     </nav>
 
     {% if pedidos %}
+<div id="live-section-data">
     <div class="pedidos-usuario-list">
         {% for pedido in pedidos %}
         <article class="pedidos-usuario-card pedidos-usuario-card--{{ pedido.estado|slugify }}">
@@ -341,6 +342,7 @@
         <p>Cambia el filtro superior para revisar pedidos pendientes, en espera, entregados, devueltos o rechazados.</p>
     </section>
     {% endif %}
+</div>
 </section>
 
 <!-- ─── Modal de confirmación cancelar pedido ─────────────────────────── -->
@@ -367,69 +369,38 @@
 
 {% block extra_js %}
 <script data-page-script="true">
-(() => {
+// ── Función global de reinit para sobrevivir al refresco de #live-section-data ─
+window.sgitReinitPage = function() {
+
+    // ── Lightbox de evidencias ────────────────────────────────────────────
     const lightbox = document.getElementById('pedidosUsuarioLightbox');
     const lightboxImg = document.getElementById('pedidosUsuarioLightboxImg');
-    if (!lightbox || !lightboxImg) {
-        return;
+    if (lightbox && lightboxImg) {
+        document.querySelectorAll('.pedidos-usuario-evidencia-item[data-evidencia-src]:not([data-ev-init])').forEach((item) => {
+            item.setAttribute('data-ev-init', '1');
+            item.addEventListener('click', () => {
+                lightboxImg.src = item.dataset.evidenciaSrc;
+                lightboxImg.alt = item.dataset.evidenciaAlt || 'Evidencia';
+                lightbox.classList.add('is-open');
+                lightbox.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('modal-open');
+            });
+        });
     }
 
-    const abrirEvidencia = (src, alt) => {
-        lightboxImg.src = src;
-        lightboxImg.alt = alt || 'Evidencia de entrega';
-        lightbox.classList.add('is-open');
-        lightbox.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('modal-open');
-    };
-
-    const cerrarEvidencia = () => {
-        lightbox.classList.remove('is-open');
-        lightbox.setAttribute('aria-hidden', 'true');
-        lightboxImg.src = '';
-        document.body.classList.remove('modal-open');
-    };
-
-    document.querySelectorAll('.pedidos-usuario-evidencia-item[data-evidencia-src]').forEach((item) => {
-        item.addEventListener('click', () => {
-            abrirEvidencia(item.dataset.evidenciaSrc, item.dataset.evidenciaAlt);
-        });
-    });
-
-    lightbox.querySelectorAll('[data-close-evidencia]').forEach((item) => {
-        item.addEventListener('click', cerrarEvidencia);
-    });
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && lightbox.classList.contains('is-open')) {
-            cerrarEvidencia();
-        }
-    });
-})();
-</script>
-
-<script data-page-script="true">
-// ── Countdown + Modal custom de cancelación ───────────────────────────────
-(() => {
-    const fmtSeg = (s) => {
-        const m = Math.floor(s / 60);
-        const sc = String(s % 60).padStart(2, '0');
-        return `${m}:${sc}`;
-    };
-
-    // Countdown por cada tarjeta
-    document.querySelectorAll('[data-cancelar-pedido]').forEach((wrap) => {
+    // ── Cancelación countdown (reutiliza data-segundos del servidor) ──────
+    document.querySelectorAll('[data-cancelar-pedido]:not([data-cd-init])').forEach((wrap) => {
+        wrap.setAttribute('data-cd-init', '1');
         const btn = wrap.querySelector('.pedidos-usuario-btn-cancelar');
         const display = wrap.querySelector('.pedidos-cancelar-countdown');
         if (!display) return;
-
         let secs = parseInt(wrap.dataset.segundos || '0', 10);
+        const fmtSeg = (s) => { const m = Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; };
         display.textContent = fmtSeg(secs);
-
-        const timer = setInterval(() => {
+        const t = setInterval(() => {
             secs -= 1;
             if (secs <= 0) {
-                clearInterval(timer);
-                display.textContent = '0:00';
+                clearInterval(t); display.textContent = '0:00';
                 wrap.classList.add('pedidos-cancelar-expirado');
                 if (btn) btn.disabled = true;
             } else {
@@ -437,94 +408,15 @@
                 if (secs <= 60) wrap.classList.add('pedidos-cancelar-urgente');
             }
         }, 1000);
+        wrap._cdTimer = t;
     });
 
-    // Modal custom de confirmación
-    const overlay   = document.getElementById('cancelar-confirm-modal');
-    const numLabel  = document.getElementById('cancelar-modal-num');
-    const btnBack   = document.getElementById('cancelar-modal-back');
-    const btnConf   = document.getElementById('cancelar-modal-confirm');
-    if (!overlay) return;
+    // ── Devolución código dinámico ────────────────────────────────────────
+    const parseIsoMs = (v) => { if (!v) return NaN; const p = Date.parse(v); return Number.isFinite(p) ? p : NaN; };
+    const fmtSecs = (s) => { const mm = Math.floor(s/60); return `${mm}:${String(s%60).padStart(2,'0')}`; };
 
-    let pendingForm = null;
-
-    const openModal = (form, numPedido) => {
-        pendingForm = form;
-        if (numLabel) numLabel.textContent = 'pedido #' + numPedido;
-        overlay.classList.add('is-open');
-        overlay.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden';
-        if (btnBack) btnBack.focus();
-    };
-
-    const closeModal = () => {
-        overlay.classList.remove('is-open');
-        overlay.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
-        pendingForm = null;
-    };
-
-    // Abrir al pulsar el botón de cancelar
-    document.querySelectorAll('[data-trigger-cancelar]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            const form = btn.closest('[data-cancelar-form]');
-            if (!form) return;
-            openModal(form, form.dataset.pedidoNum);
-        });
-    });
-
-    // Confirmar → submit real del form
-    if (btnConf) {
-        btnConf.addEventListener('click', () => {
-            if (pendingForm) pendingForm.submit();
-        });
-    }
-
-    // Cerrar
-    if (btnBack) btnBack.addEventListener('click', closeModal);
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal();
-    });
-})();
-</script>
-
-<script data-page-script="true">
-// ── Código dinámico de devolución (renueva cada 60s) ──────────────────────
-(() => {
-    const formatSecs = (s) => {
-        const mm = Math.floor(s / 60);
-        const ss = String(s % 60).padStart(2, '0');
-        return `${mm}:${ss}`;
-    };
-
-    const parseIsoMillis = (value) => {
-        if (!value) return NaN;
-        const parsed = Date.parse(value);
-        return Number.isFinite(parsed) ? parsed : NaN;
-    };
-
-    const refreshCodigo = async (box) => {
-        const pedidoId = box.dataset.pedidoId;
-        if (!pedidoId) return;
-        try {
-            const res = await fetch(`/usuario/pedidos/${pedidoId}/codigo-devolucion/`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            const data = await res.json();
-            if (!res.ok || !data.ok) return;
-
-            box.dataset.segundos = String(data.segundos || 0);
-            box.dataset.expiraEn = data.expira_en || '';
-            box.dataset.serverAhora = data.server_now || '';
-            const codigoEl = box.querySelector('[data-codigo]');
-            if (codigoEl) codigoEl.textContent = data.codigo || '------';
-        } catch (_) {
-            // Sin bloqueo visual ante error temporal de red.
-        }
-    };
-
-    document.querySelectorAll('[data-devolucion-codigo]').forEach((box) => {
+    document.querySelectorAll('[data-devolucion-codigo]:not([data-dev-init])').forEach((box) => {
+        box.setAttribute('data-dev-init', '1');
         const ring = box.querySelector('[data-ring]');
         const codeEl = box.querySelector('[data-codigo]');
         const countEl = box.querySelector('[data-countdown]');
@@ -533,13 +425,10 @@
         let expiresAtMs = NaN;
         let refreshInFlight = false;
 
-        const syncClockFromDataset = () => {
-            const serverNowMs = parseIsoMillis(box.dataset.serverAhora || '');
-            if (Number.isFinite(serverNowMs)) {
-                serverOffsetMs = serverNowMs - Date.now();
-            }
-
-            expiresAtMs = parseIsoMillis(box.dataset.expiraEn || '');
+        const syncClock = () => {
+            const snMs = parseIsoMs(box.dataset.serverAhora || '');
+            if (Number.isFinite(snMs)) serverOffsetMs = snMs - Date.now();
+            expiresAtMs = parseIsoMs(box.dataset.expiraEn || '');
             if (Number.isFinite(expiresAtMs)) {
                 secs = Math.max(0, Math.ceil((expiresAtMs - (Date.now() + serverOffsetMs)) / 1000));
             } else {
@@ -547,50 +436,114 @@
             }
         };
 
-        const refreshCodigoSync = async () => {
-            if (refreshInFlight) return;
-            refreshInFlight = true;
-            try {
-                await refreshCodigo(box);
-                syncClockFromDataset();
-            } finally {
-                refreshInFlight = false;
-            }
+        const paint = () => {
+            const s = Math.max(0, secs);
+            if (ring) ring.style.setProperty('--progress', String(Math.max(0, Math.min(1, s / 60))));
+            if (countEl) countEl.textContent = fmtSecs(s);
+            if (ring) ring.classList.toggle('is-warning', s <= 15);
         };
 
-        const paint = () => {
-            const safeSecs = Math.max(0, secs);
-            const progress = Math.max(0, Math.min(1, safeSecs / 60));
-            if (ring) ring.style.setProperty('--progress', String(progress));
-            if (countEl) countEl.textContent = formatSecs(safeSecs);
-            if (ring) ring.classList.toggle('is-warning', safeSecs <= 15);
+        const refreshCodigo = async () => {
+            if (refreshInFlight) return; refreshInFlight = true;
+            try {
+                const res = await fetch(`/usuario/pedidos/${box.dataset.pedidoId}/codigo-devolucion/`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) return;
+                box.dataset.segundos = String(data.segundos || 0);
+                box.dataset.expiraEn = data.expira_en || '';
+                box.dataset.serverAhora = data.server_now || '';
+                if (codeEl) codeEl.textContent = data.codigo || '------';
+                syncClock();
+            } catch(_) {} finally { refreshInFlight = false; }
         };
 
         const tick = async () => {
             if (Number.isFinite(expiresAtMs)) {
                 secs = Math.max(0, Math.ceil((expiresAtMs - (Date.now() + serverOffsetMs)) / 1000));
-            } else {
-                secs = Math.max(0, secs - 1);
-            }
-
-            if (secs <= 0) {
-                paint();
-                await refreshCodigoSync();
-            }
-            paint();
+            } else { secs = Math.max(0, secs - 1); }
+            if (secs <= 0) { paint(); await refreshCodigo(); } paint();
         };
 
-        syncClockFromDataset();
-        paint();
-
+        syncClock(); paint();
         if (!codeEl || codeEl.textContent.trim() === '------' || secs <= 0 || !Number.isFinite(expiresAtMs)) {
-            refreshCodigoSync().then(() => {
-                paint();
-            });
+            refreshCodigo().then(() => paint());
         }
-
         setInterval(tick, 1000);
     });
+};
+
+// ── Lightbox: cerrar y keydown (solo se registran una vez en document) ───
+(function() {
+    const getLB = () => document.getElementById('pedidosUsuarioLightbox');
+    const getLBImg = () => document.getElementById('pedidosUsuarioLightboxImg');
+    const cerrarEvidencia = () => {
+        const lb = getLB(), img = getLBImg();
+        if (lb) { lb.classList.remove('is-open'); lb.setAttribute('aria-hidden', 'true'); }
+        if (img) img.src = '';
+        document.body.classList.remove('modal-open');
+    };
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-close-evidencia]');
+        if (btn) cerrarEvidencia();
+        const lb = getLB();
+        if (lb && e.target === lb) cerrarEvidencia();
+    });
+    document.addEventListener('keydown', (e) => {
+        const lb = getLB();
+        if (e.key === 'Escape' && lb && lb.classList.contains('is-open')) cerrarEvidencia();
+    });
 })();
+
+// ── Cancelación modal: event delegation (sobrevive al refresh) ───────────
+(function() {
+    const getOverlay = () => document.getElementById('cancelar-confirm-modal');
+    const getNumLabel = () => document.getElementById('cancelar-modal-num');
+    const getBtnBack = () => document.getElementById('cancelar-modal-back');
+    const getBtnConf = () => document.getElementById('cancelar-modal-confirm');
+    let pendingForm = null;
+
+    const openModal = (form, numPedido) => {
+        pendingForm = form;
+        const nl = getNumLabel();
+        if (nl) nl.textContent = 'pedido #' + numPedido;
+        const ov = getOverlay();
+        if (ov) { ov.classList.add('is-open'); ov.setAttribute('aria-hidden', 'false'); }
+        document.body.style.overflow = 'hidden';
+        const bb = getBtnBack();
+        if (bb) bb.focus();
+    };
+
+    const closeModal = () => {
+        const ov = getOverlay();
+        if (ov) { ov.classList.remove('is-open'); ov.setAttribute('aria-hidden', 'true'); }
+        document.body.style.overflow = '';
+        pendingForm = null;
+    };
+
+    document.addEventListener('click', (e) => {
+        const triggerBtn = e.target.closest('[data-trigger-cancelar]');
+        if (triggerBtn) {
+            const form = triggerBtn.closest('[data-cancelar-form]');
+            if (form) openModal(form, form.dataset.pedidoNum);
+            return;
+        }
+        const backBtn = e.target.closest('#cancelar-modal-back');
+        if (backBtn) { closeModal(); return; }
+        const confBtn = e.target.closest('#cancelar-modal-confirm');
+        if (confBtn) { if (pendingForm) pendingForm.submit(); return; }
+        const ov = getOverlay();
+        if (ov && e.target === ov) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        const ov = getOverlay();
+        if (e.key === 'Escape' && ov && ov.classList.contains('is-open')) closeModal();
+    });
+})();
+
+// ── Primer init ──────────────────────────────────────────────────────────
+window.sgitReinitPage();
+document.addEventListener('live-section-refreshed', window.sgitReinitPage);
 </script>
 {% endblock %}

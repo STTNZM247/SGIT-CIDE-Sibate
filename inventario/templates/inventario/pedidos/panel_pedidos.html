@@ -19,6 +19,8 @@
         </div>
     </header>
 
+    <div id="live-section-data">
+
     {% if pedidos %}
     <div class="pedidos-cards">
         {% for pedido in pedidos %}
@@ -83,6 +85,7 @@
                     <ion-icon name="person-outline"></ion-icon>
                     <span>Sin verificar</span>
                 </div>
+                </div>
                 {% endif %}
             </div>
 
@@ -106,5 +109,6 @@
         <p>Cuando un usuario realice una solicitud desde su carrito, aparecerá aquí con el detalle completo.</p>
     </section>
     {% endif %}
+</div>
 </section>
 {% endblock %}

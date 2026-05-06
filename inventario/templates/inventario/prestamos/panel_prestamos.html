@@ -43,14 +43,15 @@
 .prestamo-dias--warn {
     background: #fffbe6;
     color: #b8860b;
-    border: 1.5px solid #ffe082;
-}
-.prestamo-dias--ok {
-    background: #f0f9f0;
-    color: #2e7d32;
-    border: 1.5px solid #c8e6c9;
-}
-
+        // Delegation: sobrevive al reemplazo de #live-section-data
+        document.addEventListener('click', (ev) => {
+            const btn = ev.target.closest('button[data-trigger-devuelto]');
+            if (!btn) return;
+            ev.preventDefault();
+            const form = btn.closest('form');
+            if (!form) return;
+            openModal(form, btn.dataset.pedidoId);
+        });
 html[data-theme="dark"] .prestamo-fecha-dia {
     color: #e2ede2;
 }
@@ -95,40 +96,41 @@ html[data-theme="dark"] .prestamo-dias--ok {
     </div>
     {% endif %}
 
-    <header class="prestamos-hero">
-        <div>
-            <p class="prestamos-eyebrow">Control de préstamos</p>
-            <h1>Préstamos y devoluciones</h1>
-            <p>Controla los pedidos entregados, marca los que ya fueron devueltos y consulta qué productos salieron en cada préstamo.</p>
-        </div>
-        {% if total_vencidos > 0 %}
-        <span class="prestamos-hero-badge prestamos-hero-badge--warn">
-            <ion-icon name="alert-circle-outline"></ion-icon>
-            {{ total_vencidos }} préstamo{{ total_vencidos|pluralize }} vencido{{ total_vencidos|pluralize }}
-        </span>
-        {% elif prestamos %}
-        <span class="prestamos-hero-badge prestamos-hero-badge--ok">
-            <ion-icon name="checkmark-circle-outline"></ion-icon>
-            Todo al día
-        </span>
-        {% endif %}
-    </header>
+    // ── Event delegation: los handlers sobreviven al reemplazo de #live-section-data ──
+    (function () {
+        const avisoModal = document.getElementById('aviso-confirm-modal');
+        const avisoUsuario = document.getElementById('aviso-modal-usuario');
+        const avisoPedido  = document.getElementById('aviso-modal-pedido');
+        const avisoConfirm = document.getElementById('aviso-modal-confirm-btn');
+        if (!avisoModal || !avisoConfirm) return;
 
-    <div class="prestamos-stats">
-        <div class="prestamos-stat-tile">
-            <span>Préstamos activos</span>
-            <strong>{{ total_activos }}</strong>
-        </div>
-        <div class="prestamos-stat-tile prestamos-stat-tile--vencido">
-            <span>Vencidos</span>
-            <strong>{{ total_vencidos }}</strong>
-        </div>
-        <div class="prestamos-stat-tile">
-            <span>Al día</span>
-            <strong>{{ total_al_dia }}</strong>
-        </div>
-        <div class="prestamos-stat-tile prestamos-stat-tile--devuelto">
-            <span>Devueltos</span>
+        let avisoForm = null;
+        const openAviso = (form, pedidoId, nombreUsuario) => {
+            avisoForm = form;
+            if (avisoPedido)  avisoPedido.textContent  = '#' + (pedidoId || '—');
+            if (avisoUsuario) avisoUsuario.textContent = nombreUsuario || '—';
+            avisoModal.classList.add('is-open');
+            avisoModal.setAttribute('aria-hidden', 'false');
+        };
+        const closeAviso = () => {
+            avisoModal.classList.remove('is-open');
+            avisoModal.setAttribute('aria-hidden', 'true');
+            avisoForm = null;
+        };
+        // Delegation: click en cualquier botón [data-trigger-aviso] en el documento
+        document.addEventListener('click', (ev) => {
+            const btn = ev.target.closest('button[data-trigger-aviso]');
+            if (!btn) return;
+            const form = btn.closest('form');
+            if (!form) return;
+            openAviso(form, btn.dataset.pedidoId, btn.dataset.usuarioNombre);
+        });
+        avisoConfirm.addEventListener('click', () => { if (avisoForm) avisoForm.submit(); });
+        avisoModal.querySelectorAll('[data-close-aviso]').forEach((b) => b.addEventListener('click', closeAviso));
+        avisoModal.addEventListener('click', (ev) => { if (ev.target === avisoModal) closeAviso(); });
+        document.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Escape' && avisoModal.classList.contains('is-open')) closeAviso();
+        });
             <strong>{{ total_devueltos }}</strong>
         </div>
         {% if total_cancelados > 0 %}
@@ -165,7 +167,9 @@ html[data-theme="dark"] .prestamo-dias--ok {
     {% endif %}
 
     {% if prestamos %}
-    <div class="prestamos-list-header">
+    <div id="live-section-data">
+        {% if prestamos %}
+        <div class="prestamos-list-header">
         <span>Usuario</span>
         <span>Área / Ambiente</span>
         <span>Tipo dev.</span>
@@ -235,24 +239,24 @@ html[data-theme="dark"] .prestamo-dias--ok {
                 </div>
                 <!-- Tiempo vencido / restante -->
                 {% if prestamo.es_vencido %}
-                <span class="prestamo-dias prestamo-dias--vencido">
+                    <span class="prestamo-dias prestamo-dias--vencido" data-expira-en="{{ prestamo.fecha_devolucion_display|date:'c' }}" data-expira-tipo="vencido">
                     <ion-icon name="time-outline"></ion-icon>
-                    {{ prestamo.tiempo_vencido_str }}
+                        <span data-live-time>{{ prestamo.tiempo_vencido_str }}</span>
                 </span>
                 {% elif prestamo.dias_restantes == 0 %}
-                <span class="prestamo-dias prestamo-dias--warn">
+                    <span class="prestamo-dias prestamo-dias--warn" data-expira-en="{{ prestamo.fecha_devolucion_display|date:'c' }}" data-expira-tipo="hoy">
                     <ion-icon name="alert-outline"></ion-icon>
-                    Vence hoy · {{ prestamo.tiempo_restante_str }}
+                        <span data-live-time>Vence hoy · {{ prestamo.tiempo_restante_str }}</span>
                 </span>
                 {% elif prestamo.dias_restantes == 1 %}
-                <span class="prestamo-dias prestamo-dias--warn">
+                    <span class="prestamo-dias prestamo-dias--warn" data-expira-en="{{ prestamo.fecha_devolucion_display|date:'c' }}" data-expira-tipo="manana">
                     <ion-icon name="alert-outline"></ion-icon>
-                    Vence mañana · {{ prestamo.tiempo_restante_str }}
+                        <span data-live-time>Vence mañana · {{ prestamo.tiempo_restante_str }}</span>
                 </span>
                 {% elif prestamo.dias_restantes is not None %}
-                <span class="prestamo-dias prestamo-dias--ok">
+                    <span class="prestamo-dias prestamo-dias--ok" data-expira-en="{{ prestamo.fecha_devolucion_display|date:'c' }}" data-expira-tipo="ok">
                     <ion-icon name="checkmark-outline"></ion-icon>
-                    {{ prestamo.tiempo_restante_str }} restantes
+                        <span data-live-time>{{ prestamo.tiempo_restante_str }} restantes</span>
                 </span>
                 {% endif %}
                 {% else %}
@@ -379,6 +383,7 @@ html[data-theme="dark"] .prestamo-dias--ok {
     {% endif %}
 
 </section>
+</div>
 
 <div class="prestamo-modal-overlay" id="devuelto-confirm-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="devuelto-modal-title">
     <div class="prestamo-modal-confirm">
