@@ -273,6 +273,22 @@ class GestionEstadoUsuarioTests(TestCase):
         self.assertTrue(Notificacion.objects.filter(id_usuario_fk=self.usuario, tipo='solicitud_validacion_sena').exists())
         self.assertTrue(Notificacion.objects.filter(id_usuario_fk=self.admin, tipo='staff_solicitud_validacion_sena').exists())
 
+    def test_manual_validation_request_expires_after_four_hours_and_allows_new_request(self):
+        self.usuario.verificacion_sena_estado = 'solicitada'
+        self.usuario.verificacion_sena_solicitada_en = timezone.now() - timedelta(hours=5)
+        self.usuario.save(update_fields=['verificacion_sena_estado', 'verificacion_sena_solicitada_en'])
+
+        self.client.force_login(self.usuario)
+        response = self.client.post(reverse('solicitar_validacion_manual'), {
+            'motivo_manual': 'Reintento por expiración de solicitud anterior.',
+        })
+
+        self.usuario.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.usuario.verificacion_sena_estado, 'solicitada')
+        self.assertIsNotNone(self.usuario.verificacion_sena_solicitada_en)
+        self.assertGreaterEqual(self.usuario.verificacion_sena_solicitada_en, timezone.now() - timedelta(minutes=1))
+
     def test_admin_sends_manual_link_email(self):
         self.usuario.verificacion_sena_estado = 'solicitada'
         self.usuario.save(update_fields=['verificacion_sena_estado'])
@@ -286,6 +302,19 @@ class GestionEstadoUsuarioTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn('/validacion-sena/manual/', mail.outbox[0].body)
         self.assertEqual(VerificacionSenaToken.objects.filter(usuario=self.usuario, usado_en__isnull=True).count(), 1)
+
+    @patch('django.core.mail.EmailMultiAlternatives.send', side_effect=Exception('smtp down'))
+    def test_admin_send_manual_link_email_failure_keeps_request_pending(self, _send_mock):
+        self.usuario.verificacion_sena_estado = 'solicitada'
+        self.usuario.save(update_fields=['verificacion_sena_estado'])
+        self.client.force_login(self.admin)
+
+        response = self.client.post(reverse('enviar_enlace_validacion_sena', args=[self.usuario.id_usu]))
+
+        self.usuario.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.usuario.verificacion_sena_estado, 'solicitada')
+        self.assertEqual(VerificacionSenaToken.objects.filter(usuario=self.usuario, usado_en__isnull=True).count(), 0)
 
     def test_manual_upload_and_admin_approval_complete_verification(self):
         token = VerificacionSenaToken.create_for_user(self.usuario)

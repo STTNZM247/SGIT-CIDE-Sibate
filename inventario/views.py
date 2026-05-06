@@ -7,16 +7,48 @@ from collections import defaultdict
 from datetime import date, timedelta
 
 from django.conf import settings
+from django.db.models import Exists, OuterRef
 from django.http import Http404, HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.contrib import messages
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Notificacion, Pedido, PedidoEvidencia, Producto, ProductoFoto, Rol, Usuario
+from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Notificacion, Pedido, PedidoEvidencia, Producto, ProductoFoto, Rol, Usuario, VerificacionSenaToken
 from .forms import ProductoForm
 
 
 DEVOLUCION_CODIGO_SEGUNDOS = 60
+VALIDACION_MANUAL_VENCE_HORAS = 4
+
+
+def _expirar_solicitudes_validacion_manual():
+    """Caduca solicitudes manuales SENA en estado 'solicitada' con más de 4 horas."""
+    limite = timezone.now() - timedelta(hours=VALIDACION_MANUAL_VENCE_HORAS)
+    return (
+        Usuario.objects
+        .filter(verificacion_sena_estado='solicitada', verificacion_sena_solicitada_en__lte=limite)
+        .update(
+            verificacion_sena_estado='pendiente',
+            verificacion_sena_solicitada_en=None,
+        )
+    )
+
+
+def _reabrir_solicitudes_con_enlace_vencido():
+    """Reabre solicitudes en enlace_enviado cuando no existe token vigente sin usar."""
+    ahora = timezone.now()
+    token_vigente_qs = VerificacionSenaToken.objects.filter(
+        usuario=OuterRef('pk'),
+        usado_en__isnull=True,
+        expira_en__gte=ahora,
+    )
+    return (
+        Usuario.objects
+        .filter(verificacion_sena_estado='enlace_enviado')
+        .annotate(tiene_token_vigente=Exists(token_vigente_qs))
+        .filter(tiene_token_vigente=False)
+        .update(verificacion_sena_estado='solicitada')
+    )
 
 
 def _crear_notificacion(usuario, tipo, titulo, mensaje, pedido_id=None):
@@ -50,7 +82,7 @@ def _notificar_staff(tipo, titulo, mensaje, pedido_id=None):
                 id_pedido_ref=pedido_id,
             )
             for u in staff
-        ])
+        ])  
     except Exception:
         pass
 
@@ -635,6 +667,8 @@ def dashboard(request):
         return redirect('panel_usuario')
 
     _auto_cancelar_pedidos_pendientes_vencidos()
+    _expirar_solicitudes_validacion_manual()
+    _reabrir_solicitudes_con_enlace_vencido()
 
     ahora = timezone.localtime()
     anio_actual = ahora.year
@@ -2804,6 +2838,9 @@ def gestion_usuarios_panel(request):
         messages.error(request, 'Solo el administrador puede gestionar usuarios.')
         return redirect('dashboard')
 
+    _expirar_solicitudes_validacion_manual()
+    _reabrir_solicitudes_con_enlace_vencido()
+
     query = request.GET.get('q', '').strip()
     base_usuarios = Usuario.objects.all().select_related('id_rol_fk')
     usuarios = base_usuarios.order_by('nombre', 'apellido')
@@ -2974,6 +3011,8 @@ def eliminar_usuario(request, usuario_id):
 @require_POST
 def enviar_enlace_validacion_sena(request, usuario_id):
     next_url = (request.POST.get('next') or request.GET.get('next') or '').strip()
+    _expirar_solicitudes_validacion_manual()
+    _reabrir_solicitudes_con_enlace_vencido()
 
     def _redirect_admin_default():
         if next_url and next_url.startswith('/') and not next_url.startswith('//'):
@@ -2989,41 +3028,36 @@ def enviar_enlace_validacion_sena(request, usuario_id):
         messages.success(request, 'Ese usuario ya tiene la validación SENA aprobada.')
         return _redirect_admin_default()
 
-    if usuario.verificacion_sena_estado in {'enlace_enviado', 'documento_cargado'}:
-        messages.error(request, 'No puedes reenviar enlace a este usuario hasta que el admin apruebe o rechace su caso.')
+    if usuario.verificacion_sena_estado == 'documento_cargado':
+        messages.error(request, 'Este usuario ya cargó documento y está pendiente de aprobación/rechazo.')
         return _redirect_admin_default()
 
-    if usuario.verificacion_sena_estado != 'solicitada':
-        messages.error(request, 'Este usuario no tiene una solicitud manual pendiente para enviar enlace.')
+    estados_permitidos = {'solicitada', 'enlace_enviado', 'pendiente', 'rechazada'}
+    if usuario.verificacion_sena_estado not in estados_permitidos:
+        messages.error(request, 'Este usuario no está habilitado para envío manual de enlace en su estado actual.')
         return _redirect_admin_default()
-
-    token = VerificacionSenaToken.create_for_user(usuario)
-    upload_url = request.build_absolute_uri(reverse('validacion_sena_carga_manual', args=[token.token]))
-    ahora = timezone.now()
-    usuario.verificacion_sena_estado = 'enlace_enviado'
-    usuario.verificacion_sena_solicitada_en = usuario.verificacion_sena_solicitada_en or ahora
-    usuario.verificacion_sena_observacion = 'Administración envió enlace manual para cargar carnet o certificado SENA.'
-    usuario.save(update_fields=[
-        'verificacion_sena_estado',
-        'verificacion_sena_solicitada_en',
-        'verificacion_sena_observacion',
-    ])
 
     correo = getattr(usuario, 'correo', None)
-    if correo:
-        try:
-            from django.core.mail import EmailMultiAlternatives
+    if not correo:
+        messages.error(request, 'Este usuario no tiene correo registrado para enviar el enlace manual.')
+        return _redirect_admin_default()
 
-            subject = 'Enlace de validación manual SENA'
-            nombre_usuario = usuario.nombre or usuario.correo
-            text_content = (
-                f'Hola {nombre_usuario},\n\n'
-                'El administrador aprobó tu solicitud de validación manual.\n'
-                'Usa este enlace único para cargar la foto de tu carnet o un certificado vigente del SENA:\n'
-                f'{upload_url}\n\n'
-                'El enlace vencerá en 4 horas y solo podrá usarse una vez.'
-            )
-            html_content = f"""
+    # Invalida cualquier enlace previo sin usar y genera uno nuevo.
+    token = VerificacionSenaToken.create_for_user(usuario)
+    upload_url = request.build_absolute_uri(reverse('validacion_sena_carga_manual', args=[token.token]))
+    try:
+        from django.core.mail import EmailMultiAlternatives
+
+        subject = 'Enlace de validación manual SENA'
+        nombre_usuario = usuario.nombre or usuario.correo
+        text_content = (
+            f'Hola {nombre_usuario},\n\n'
+            'El administrador aprobó tu solicitud de validación manual.\n'
+            'Usa este enlace único para cargar la foto de tu carnet o un certificado vigente del SENA:\n'
+            f'{upload_url}\n\n'
+            'El enlace vencerá en 4 horas y solo podrá usarse una vez.'
+        )
+        html_content = f"""
 <!DOCTYPE html>
 <html lang=\"es\">
 <head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>
@@ -3048,16 +3082,42 @@ def enviar_enlace_validacion_sena(request, usuario_id):
 </body>
 </html>
 """
-            email = EmailMultiAlternatives(
-                subject=subject,
-                body=text_content,
-                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
-                to=[correo],
-            )
-            email.attach_alternative(html_content, 'text/html')
-            email.send(fail_silently=False)
-        except Exception:
-            messages.error(request, 'No se pudo enviar el correo, pero el enlace quedó generado para reintentar.')
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+            to=[correo],
+        )
+        email.attach_alternative(html_content, 'text/html')
+        email.send(fail_silently=False)
+    except Exception:
+        if getattr(settings, 'IS_PYTHONANYWHERE', False):
+            token.usado_en = timezone.now()
+            token.save(update_fields=['usado_en'])
+            messages.error(request, 'No se pudo enviar el correo. El usuario sigue en solicitud pendiente para reintentar envío.')
+            return _redirect_admin_default()
+
+        # En desarrollo local: dejar enlace utilizable aunque falle SMTP.
+        usuario.verificacion_sena_estado = 'enlace_enviado'
+        usuario.verificacion_sena_solicitada_en = timezone.now()
+        usuario.verificacion_sena_observacion = 'Enlace manual generado en localhost; envío por correo no disponible.'
+        usuario.save(update_fields=[
+            'verificacion_sena_estado',
+            'verificacion_sena_solicitada_en',
+            'verificacion_sena_observacion',
+        ])
+        messages.warning(request, f'Correo no enviado en localhost. Usa este enlace manual para compartir con el usuario: {upload_url}')
+        return _redirect_admin_default()
+
+    ahora = timezone.now()
+    usuario.verificacion_sena_estado = 'enlace_enviado'
+    usuario.verificacion_sena_solicitada_en = ahora
+    usuario.verificacion_sena_observacion = 'Administración envió enlace manual para cargar carnet o certificado SENA.'
+    usuario.save(update_fields=[
+        'verificacion_sena_estado',
+        'verificacion_sena_solicitada_en',
+        'verificacion_sena_observacion',
+    ])
 
     _crear_notificacion(
         usuario=usuario,
@@ -3350,6 +3410,9 @@ def staff_alerts_api(request):
     """Devuelve alertas de acciones pendientes para admin y almacenista."""
     if request.method != 'GET':
         return JsonResponse({'ok': False}, status=405)
+
+    _expirar_solicitudes_validacion_manual()
+    _reabrir_solicitudes_con_enlace_vencido()
 
     rol = _user_role(request)
     if rol not in ('admin', 'almacenista'):

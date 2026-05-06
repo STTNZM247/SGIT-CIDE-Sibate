@@ -144,7 +144,7 @@
                             </span>
                             {% endif %}
 
-                            {% if usuario.verificacion_sena_estado == 'solicitada' or usuario.verificacion_sena_estado == 'enlace_enviado' %}
+                            {% if usuario.verificacion_sena_estado == 'solicitada' or usuario.verificacion_sena_estado == 'enlace_enviado' or usuario.verificacion_sena_estado == 'pendiente' or usuario.verificacion_sena_estado == 'rechazada' %}
                             <form method="post" action="{% url 'enviar_enlace_validacion_sena' usuario.id_usu %}" class="form-estado-usuario">
                                 {% csrf_token %}
                                 <button type="submit" class="usuarios-btn usuarios-btn--manual">

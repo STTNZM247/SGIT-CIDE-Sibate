@@ -199,7 +199,7 @@
                                         <form method="post" action="{% url 'enviar_enlace_validacion_sena' item.id %}">
                                             {% csrf_token %}
                                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                            <button type="submit" class="admin-sena-btn">Enviar enlace único (4h)</button>
+                                            <button type="submit" class="admin-sena-btn admin-sena-btn--send">Enviar enlace único (4h)</button>
                                         </form>
                                     </div>
                                     <details class="admin-sena-details">
@@ -341,7 +341,7 @@
                                             <form method="post" action="{% url 'enviar_enlace_validacion_sena' item.id %}">
                                                 {% csrf_token %}
                                                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                                <button type="submit" class="admin-sena-btn">Enviar enlace único (4h)</button>
+                                                <button type="submit" class="admin-sena-btn admin-sena-btn--send">Enviar enlace único (4h)</button>
                                             </form>
                                         </div>
                                     </td>

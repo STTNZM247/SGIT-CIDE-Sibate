@@ -14,7 +14,7 @@ import secrets
 from .db_compat import get_safe_usuario_value, get_usuario_model_from_instance, usuario_supports_verificacion_sena
 from .models import CarritoItem, DetallePedido, Disponibilidad, Notificacion, Pedido, Producto, VerificacionSenaToken
 from .validacion_sena import cargar_captura_desde_data_url, cargar_imagen_validacion, intentar_validacion_automatica
-from .views import _auto_cancelar_pedidos_pendientes_vencidos, _crear_notificacion, _notificar_staff, _registrar_auditoria
+from .views import _auto_cancelar_pedidos_pendientes_vencidos, _crear_notificacion, _expirar_solicitudes_validacion_manual, _notificar_staff, _reabrir_solicitudes_con_enlace_vencido, _registrar_auditoria
 
 
 DEVOLUCION_CODIGO_SEGUNDOS = 60
@@ -158,6 +158,9 @@ def validacion_sena(request):
     if not _usuario_cliente(request):
         return redirect('dashboard')
 
+    _expirar_solicitudes_validacion_manual()
+    _reabrir_solicitudes_con_enlace_vencido()
+
     usuario = request.user
     resultado_ocr = None
     redirect_to = _redireccion_validacion_destino(request)
@@ -213,6 +216,9 @@ def validacion_sena(request):
 def solicitar_validacion_manual(request):
     if not _usuario_cliente(request):
         return redirect('dashboard')
+
+    _expirar_solicitudes_validacion_manual()
+    _reabrir_solicitudes_con_enlace_vencido()
 
     usuario = request.user
     if _usuario_tiene_validacion_sena(usuario):

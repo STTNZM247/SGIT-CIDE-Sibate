@@ -917,6 +917,10 @@
     margin: 0;
 }
 
+.admin-sena-actions form:has(.admin-sena-btn--send) {
+    justify-content: center;
+}
+
 .admin-sena-link {
     display: inline-flex;
     align-items: center;
@@ -944,10 +948,68 @@
     font-size: .78rem;
     font-weight: 700;
     cursor: pointer;
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
 }
 
 .admin-sena-btn:hover {
     background: #e4f6e7;
+}
+
+.admin-sena-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(57, 169, 0, 0.18);
+}
+
+.admin-sena-btn:active {
+    transform: translateY(1px) scale(.98);
+}
+
+.admin-sena-btn--send {
+    background: linear-gradient(180deg, #f6fff4 0%, #eaf9e9 100%);
+    border-color: #80bf8f;
+    color: #1e5e2a;
+    box-shadow: 0 3px 10px rgba(34, 95, 43, 0.14);
+    margin-inline: auto;
+    animation: adminSenaBtnJump 1.9s ease-in-out infinite;
+}
+
+.admin-sena-btn--send:hover {
+    transform: translateY(-1px);
+    border-color: #70b884;
+    background: linear-gradient(180deg, #f1feef 0%, #def2df 100%);
+    box-shadow: 0 7px 16px rgba(34, 95, 43, 0.2);
+}
+
+@keyframes adminSenaBtnPulse {
+    0%, 100% {
+        box-shadow: 0 3px 10px rgba(34, 95, 43, 0.14);
+    }
+    50% {
+        box-shadow: 0 6px 14px rgba(34, 95, 43, 0.24);
+    }
+}
+
+@keyframes adminSenaBtnJump {
+    0%, 100% {
+        transform: translateY(0);
+        box-shadow: 0 3px 10px rgba(34, 95, 43, 0.14);
+    }
+    22% {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(34, 95, 43, 0.2);
+    }
+    44% {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 18px rgba(34, 95, 43, 0.24);
+    }
+    60% {
+        transform: translateY(-2px);
+        box-shadow: 0 7px 15px rgba(34, 95, 43, 0.2);
+    }
+    75% {
+        transform: translateY(0);
+        box-shadow: 0 3px 10px rgba(34, 95, 43, 0.14);
+    }
 }
 
 .admin-sena-btn--ok {
@@ -2057,6 +2119,51 @@ html[data-theme="dark"] .admin-sena-btn {
     background: #182018 !important;
     color: #7dd87d !important;
     border-color: #253025 !important;
+}
+html[data-theme="dark"] .admin-sena-btn--send {
+    background: linear-gradient(180deg, #17301b 0%, #1b3a20 100%) !important;
+    color: #abecb2 !important;
+    border-color: #2f6b3a !important;
+    box-shadow: 0 4px 14px rgba(27, 165, 68, 0.18) !important;
+    animation: adminSenaBtnJumpDark 1.9s ease-in-out infinite;
+}
+html[data-theme="dark"] .admin-sena-btn--send:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(180deg, #1b3821 0%, #214629 100%) !important;
+    border-color: #3b7f48 !important;
+    box-shadow: 0 8px 18px rgba(27, 165, 68, 0.24) !important;
+}
+
+@keyframes adminSenaBtnPulseDark {
+    0%, 100% {
+        box-shadow: 0 4px 14px rgba(27, 165, 68, 0.18);
+    }
+    50% {
+        box-shadow: 0 7px 20px rgba(27, 165, 68, 0.28);
+    }
+}
+
+@keyframes adminSenaBtnJumpDark {
+    0%, 100% {
+        transform: translateY(0);
+        box-shadow: 0 4px 14px rgba(27, 165, 68, 0.18);
+    }
+    22% {
+        transform: translateY(-2px);
+        box-shadow: 0 7px 18px rgba(27, 165, 68, 0.24);
+    }
+    44% {
+        transform: translateY(-5px);
+        box-shadow: 0 11px 22px rgba(27, 165, 68, 0.3);
+    }
+    60% {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(27, 165, 68, 0.24);
+    }
+    75% {
+        transform: translateY(0);
+        box-shadow: 0 4px 14px rgba(27, 165, 68, 0.18);
+    }
 }
 html[data-theme="dark"] .admin-sena-review {
     background: #121d12 !important;
