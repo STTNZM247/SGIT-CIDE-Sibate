@@ -139,7 +139,9 @@ html[data-theme="dark"] #perfil-cover-trigger * {
           {% if usuario.fot_usu %}
             <img src="{{ usuario.fot_usu.url }}" alt="Foto de perfil" class="perfil-avatar-img" id="perfil-avatar-preview">
           {% else %}
-            <img src="{% static 'inventario/img/default-user.png' %}" alt="Foto de perfil" class="perfil-avatar-img" id="perfil-avatar-preview">
+            <div class="perfil-avatar-img perfil-avatar-placeholder" id="perfil-avatar-preview">
+              <ion-icon name="person-outline"></ion-icon>
+            </div>
           {% endif %}
           <button type="button" class="perfil-avatar-btn" id="perfil-avatar-trigger" title="Cambiar foto">
             <ion-icon name="camera-outline"></ion-icon>
@@ -390,7 +392,19 @@ html[data-theme="dark"] #perfil-cover-trigger * {
   avatarTrigger.addEventListener('click', function () { avatarInput.click(); });
   avatarInput.addEventListener('change', function () {
     if (this.files && this.files[0]) {
-      avatarPreview.src = URL.createObjectURL(this.files[0]);
+      var url = URL.createObjectURL(this.files[0]);
+      if (avatarPreview.tagName === 'IMG') {
+        avatarPreview.src = url;
+      } else {
+        // Era el placeholder (div), reemplazarlo con <img>
+        var img = document.createElement('img');
+        img.src = url;
+        img.alt = 'Foto de perfil';
+        img.className = 'perfil-avatar-img';
+        img.id = 'perfil-avatar-preview';
+        avatarPreview.replaceWith(img);
+        avatarPreview = img;
+      }
     }
   });
 

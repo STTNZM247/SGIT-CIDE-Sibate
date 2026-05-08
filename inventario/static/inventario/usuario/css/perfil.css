@@ -172,6 +172,15 @@
   image-rendering: crisp-edges;
 }
 
+.perfil-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dbe7db;
+  color: #39a900;
+  font-size: 3.5rem;
+}
+
 .perfil-avatar-btn {
   position: absolute;
   bottom: 2px;
