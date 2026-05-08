@@ -7,6 +7,7 @@ from collections import defaultdict
 from datetime import date, timedelta
 
 from django.conf import settings
+from django.core.cache import cache
 from django.db.models import Exists, OuterRef
 from django.http import Http404, HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -3357,9 +3358,20 @@ def live_sync_status(request):
     try:
         from django.db.models import Count
 
-        # Ejecuta autocancelación por hora vencida y marcado de préstamos vencidos mientras el frontend hace polling.
-        _auto_cancelar_pedidos_pendientes_vencidos()
-        _auto_marcar_prestamos_vencidos()
+        # Throttle: evitar ejecutar mantenimientos pesados en cada poll del frontend.
+        now = timezone.now()
+        last_maintenance_at = cache.get('live_sync:last_maintenance_at')
+        should_run_maintenance = (
+            not last_maintenance_at
+            or (now - last_maintenance_at).total_seconds() >= 60
+        )
+        if should_run_maintenance and cache.add('live_sync:maintenance_lock', 1, timeout=20):
+            try:
+                _auto_cancelar_pedidos_pendientes_vencidos()
+                _auto_marcar_prestamos_vencidos()
+                cache.set('live_sync:last_maintenance_at', now, timeout=120)
+            finally:
+                cache.delete('live_sync:maintenance_lock')
 
         usuario = request.user
         rol = getattr(getattr(usuario, 'id_rol_fk', None), 'nombre_rol', '') or ''

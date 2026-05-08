@@ -211,7 +211,8 @@
     <script>
     (function () {
         var endpoint = "{% url 'live_sync_status' %}";
-            var pollMs = 8000;
+        // Menos presión sobre servidor: polling moderado.
+        var pollMs = 15000;
         var lastSignature = null;
         var pendingReload = false;
         var isChecking = false;
@@ -393,11 +394,7 @@
                 .catch(function() {})
                 .finally(function() { _liveRefreshing = false; });
             }
-            // También ejecutar el refresco parcial cada 8 segundos independientemente de cambios en firma
-            window.setInterval(function() {
-                var section = document.getElementById('live-section-data');
-                if (section) _livePartialRefresh();
-            }, pollMs);
+            // El refresco parcial se ejecuta solo cuando cambia la firma en live_sync_status.
     })();
     </script>
     {% endif %}

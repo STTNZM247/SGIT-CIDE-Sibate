@@ -25,7 +25,7 @@ IS_PYTHONANYWHERE = str(BASE_DIR).startswith('/home/')
 SECRET_KEY = 'django-insecure-grw0385sfjhp4js71+%rw@1f@yn$^aq9206up)fk-lk)lgo6m_'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() == 'true'
+DEBUG = os.getenv('DJANGO_DEBUG', 'False' if IS_PYTHONANYWHERE else 'True').lower() == 'true'
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
