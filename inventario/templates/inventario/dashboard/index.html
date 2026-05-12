@@ -206,15 +206,15 @@
                                 <td>
                                     <div class="admin-sena-review">
                                         <p class="admin-sena-review__title">Decisión del administrador</p>
-                                        <form method="post" action="{% url 'aprobar_validacion_sena' item.id %}">
+                                        <form method="post" action="{% url 'aprobar_validacion_sena' item.id %}" class="admin-sena-review__form admin-sena-review__form--approve">
                                             {% csrf_token %}
                                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
                                             <button type="submit" class="admin-sena-btn admin-sena-btn--ok">Aprobar validación</button>
                                         </form>
-                                        <form method="post" action="{% url 'rechazar_validacion_sena' item.id %}">
+                                        <form method="post" action="{% url 'rechazar_validacion_sena' item.id %}" class="admin-sena-review__form admin-sena-review__form--reject">
                                             {% csrf_token %}
                                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                            <input type="text" name="motivo_rechazo" placeholder="Motivo opcional de rechazo">
+                                            <textarea name="motivo_rechazo" class="admin-sena-review__reason" rows="2" placeholder="Motivo opcional de rechazo"></textarea>
                                             <button type="submit" class="admin-sena-btn admin-sena-btn--danger">Rechazar validación</button>
                                         </form>
                                     </div>
