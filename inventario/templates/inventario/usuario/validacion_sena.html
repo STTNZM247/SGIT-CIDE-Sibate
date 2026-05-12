@@ -196,13 +196,13 @@
         <div class="validacion-sena-loading__card" role="status" aria-live="polite" aria-busy="true">
             <div class="validacion-sena-loading__logo" aria-hidden="true"></div>
             <div class="validacion-sena-loading__content">
-                <h3>Validando tu carnet</h3>
+                <h3>Enviando foto a un administrador</h3>
                 <div class="validacion-sena-loading__dots" aria-hidden="true">
                     <span></span><span></span><span></span><span></span>
                 </div>
             </div>
-            <button type="button" id="cancelar_validacion_carga" class="validacion-sena-loading__cancel" aria-label="Cancelar validación">
-                Cancelar validación
+            <button type="button" id="cancelar_validacion_carga" class="validacion-sena-loading__cancel" aria-label="Cancelar envío">
+                Cancelar envío
             </button>
         </div>
     </div>
@@ -713,7 +713,7 @@
 
     if (form) {
         form.addEventListener('submit', function () {
-            traceStep('Enviando formulario para validación OCR');
+            traceStep('Enviando formulario con foto para revisión manual');
             startLoadingOverlay();
 
             var submitButton = form.querySelector('button[type="submit"]');
