@@ -73,7 +73,7 @@
                         </span>
                         <img id="foto_validacion_preview" alt="Vista previa del carnet" hidden>
                     </div>
-                    <span class="validacion-sena-capture__status" id="validacion_sena_capture_status" hidden>Foto capturada. Revisa la vista previa y pulsa Validar ahora.</span>
+                    <span class="validacion-sena-capture__status" id="validacion_sena_capture_status" hidden>Foto capturada. Revisa la vista previa y pulsa Enviar a validar.</span>
                     <input type="file" id="foto_validacion" name="foto_validacion" accept="image/jpeg,image/png,image/gif,image/webp" required>
                     <input type="hidden" id="foto_validacion_captura" name="foto_validacion_captura">
                 </div>
@@ -82,8 +82,8 @@
 
                 <div class="validacion-sena-form__actions">
                     <button type="submit" class="validacion-sena-btn validacion-sena-btn--primary">
-                        <ion-icon name="scan-outline"></ion-icon>
-                        Validar ahora
+                        <ion-icon name="send-outline"></ion-icon>
+                        Enviar a validar
                     </button>
                     <a href="{{ redirect_to }}" class="validacion-sena-btn validacion-sena-btn--ghost">Volver</a>
                 </div>

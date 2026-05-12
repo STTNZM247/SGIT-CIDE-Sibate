@@ -165,70 +165,9 @@
         </article>
 
         <div class="admin-sena-grid">
-            <article class="admin-card admin-card--sena-manual">
-                <header class="admin-card__head">
-                    <h2>Usuarios que no se pudieron validar automáticamente</h2>
-                    <span>Solicitudes manuales: {{ usuarios_solicitud_manual_total }}</span>
-                </header>
-
-                {% if usuarios_solicitud_manual %}
-                <div class="admin-sena-table-wrap" role="region" aria-label="Usuarios con solicitud manual pendiente">
-                    <table class="admin-sena-table">
-                        <thead>
-                            <tr>
-                                <th>Usuario</th>
-                                <th>Documento</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in usuarios_solicitud_manual %}
-                            <tr>
-                                <td>
-                                    <strong>{{ item.nombre }}</strong>
-                                    <small>{{ item.correo }}</small>
-                                </td>
-                                <td>{{ item.documento }}</td>
-                                <td>
-                                    <div class="admin-sena-actions">
-                                        {% if item.intento_url %}
-                                        <button type="button" class="admin-sena-link js-open-evidence" data-evidence-url="{{ item.intento_url }}" data-evidence-title="Intento OCR · {{ item.nombre }}">Ver intento</button>
-                                        {% else %}
-                                        <span class="stock-gap-muted">Sin imagen</span>
-                                        {% endif %}
-                                        <form method="post" action="{% url 'enviar_enlace_validacion_sena' item.id %}">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                            <button type="submit" class="admin-sena-btn admin-sena-btn--send">Enviar enlace único (4h)</button>
-                                        </form>
-                                    </div>
-                                    <details class="admin-sena-details">
-                                        <summary>Expandir información</summary>
-                                        <p><strong>Estado:</strong> {{ item.estado }}</p>
-                                        <p><strong>Solicitud:</strong> {% if item.solicitada_en %}{{ item.solicitada_en|date:'d/m/Y H:i' }}{% else %}-{% endif %}</p>
-                                        <p><strong>Observación:</strong> {{ item.observacion|default:'Sin observación' }}</p>
-                                    </details>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <p class="admin-card__empty">No hay solicitudes manuales pendientes.</p>
-                {% endif %}
-
-                <div class="admin-pending-actions">
-                    <button type="button" class="admin-pending-more-btn" id="openSenaModalBtn">
-                        Ver todos en ventana
-                        <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
-                    </button>
-                </div>
-            </article>
-
             <article class="admin-card admin-card--sena-documentos">
                 <header class="admin-card__head">
-                    <h2>Usuarios que enviaron documentos a validar</h2>
+                    <h2>Usuarios que necesitan ser validados</h2>
                     <span>Documentos pendientes: {{ usuarios_documento_validacion_total }}</span>
                 </header>
 
