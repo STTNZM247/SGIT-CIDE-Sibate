@@ -13,7 +13,7 @@ import secrets
 
 from .db_compat import get_safe_usuario_value, get_usuario_model_from_instance, usuario_supports_verificacion_sena
 from .models import CarritoItem, DetallePedido, Disponibilidad, Notificacion, Pedido, Producto, VerificacionSenaToken
-from .validacion_sena import cargar_captura_desde_data_url, intentar_validacion_automatica
+from .validacion_sena import cargar_captura_desde_data_url
 from .views import _auto_cancelar_pedidos_pendientes_vencidos, _crear_notificacion, _expirar_solicitudes_validacion_manual, _notificar_staff, _reabrir_solicitudes_con_enlace_vencido, _registrar_auditoria
 
 
@@ -162,50 +162,40 @@ def validacion_sena(request):
     _reabrir_solicitudes_con_enlace_vencido()
 
     usuario = request.user
-    resultado_ocr = None
     redirect_to = _redireccion_validacion_destino(request)
 
     if request.method == 'POST':
         foto_validacion = request.FILES.get('foto_validacion')
         if not foto_validacion:
             foto_validacion = cargar_captura_desde_data_url(request.POST.get('foto_validacion_captura'))
-        resultado_ocr = intentar_validacion_automatica(foto_validacion, usuario)
-        ahora = timezone.now()
-
-        if foto_validacion:
+        if not foto_validacion:
+            messages.error(request, 'Debes enviar una foto del carnet para que el administrador la revise.')
+        else:
             usuario.verificacion_sena_imagen = foto_validacion
-
-        if resultado_ocr['ok']:
-            usuario.verificacion_sena_estado = 'validado'
-            usuario.verificacion_sena_validada_en = ahora
-            usuario.verificacion_sena_observacion = 'Validaci贸n autom谩tica aprobada.'
+            usuario.verificacion_sena_estado = 'documento_cargado'
+            usuario.verificacion_sena_observacion = 'Foto del carnet enviada al administrador para revisi贸n manual.'
             usuario.save(update_fields=[
                 'verificacion_sena_estado',
                 'verificacion_sena_imagen',
-                'verificacion_sena_validada_en',
                 'verificacion_sena_observacion',
             ])
             _crear_notificacion(
                 usuario=usuario,
-                tipo='verificacion_sena_aprobada',
-                titulo='Validaci贸n SENA aprobada',
-                mensaje='Tu identidad fue validada autom谩ticamente. Ya puedes realizar pedidos sin volver a cargar el carnet.',
+                tipo='documento_validacion_sena',
+                titulo='Foto enviada para validaci贸n SENA',
+                mensaje='Tu foto del carnet fue enviada al administrador. Quedar谩 pendiente de revisi贸n manual.',
             )
-            messages.success(request, 'Tu carnet fue validado correctamente. Ya puedes continuar con tu pedido.')
+            _notificar_staff(
+                tipo='staff_documento_validacion_sena',
+                titulo='Nueva foto para validaci贸n SENA',
+                mensaje=f'{getattr(usuario, "nombre", "") or getattr(usuario, "correo", "Usuario")} envi贸 su foto de carnet para revisi贸n manual.',
+            )
+            messages.success(request, 'Tu foto fue enviada al administrador para su revisi贸n. Cuando la apruebe podr谩s continuar.')
             return redirect(redirect_to)
-
-        usuario.verificacion_sena_estado = 'pendiente'
-        usuario.verificacion_sena_observacion = ' '.join(resultado_ocr.get('details') or []) or resultado_ocr['message']
-        campos = ['verificacion_sena_estado', 'verificacion_sena_observacion']
-        if foto_validacion:
-            campos.append('verificacion_sena_imagen')
-        usuario.save(update_fields=campos)
-        messages.error(request, resultado_ocr['message'])
 
     return render(request, 'inventario/usuario/validacion_sena.html', {
         'usuario': usuario,
         'redirect_to': redirect_to,
-        'resultado_ocr': resultado_ocr,
         'estado_validacion': usuario.verificacion_sena_estado,
         'ya_validado': _usuario_tiene_validacion_sena(usuario),
     })
@@ -273,7 +263,7 @@ def validacion_sena_carga_manual(request, token):
         elif not (getattr(soporte, 'content_type', '') or '').startswith('image/'):
             messages.error(request, 'El documento manual debe ser una imagen v谩lida.')
         else:
-            # Validaci髇 autom醫ica removida - admin revisa manualmente
+            # Validaci锟絥 autom锟絫ica removida - admin revisa manualmente
             usuario.verificacion_sena_documento = soporte
             usuario.verificacion_sena_estado = 'documento_cargado'
             usuario.verificacion_sena_observacion = 'Documento manual cargado y pendiente de aprobaci贸n administrativa.'
