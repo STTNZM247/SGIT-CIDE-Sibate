@@ -36,7 +36,7 @@
         <article class="validacion-sena-card validacion-sena-card--primary">
             <div class="validacion-sena-card__head">
                 <div>
-                    <h2>Validación automática con OCR</h2>
+                    <h2>Envía tu foto para revisión manual</h2>
                 </div>
             </div>
 
@@ -62,10 +62,10 @@
                         </button>
                         <button type="button" class="validacion-sena-capture__cta validacion-sena-capture__cta--upload" id="subir_foto_carnet">
                             <ion-icon name="image-outline"></ion-icon>
-                            Elegir desde galería o archivo
+                            Tomar o elegir foto
                         </button>
                     </div>
-                    <span class="validacion-sena-capture__hint">usa la cámara guiada y coloca el carnet sobre fondo negro</span>
+                    <span class="validacion-sena-capture__hint">toma la foto del carnet y envíala al administrador para que la revise</span>
                     <div class="validacion-sena-capture__preview-stage" aria-hidden="true">
                         <span class="validacion-sena-capture__frame"></span>
                         <span class="validacion-sena-capture__frame-corners">
@@ -73,7 +73,7 @@
                         </span>
                         <img id="foto_validacion_preview" alt="Vista previa del carnet" hidden>
                     </div>
-                    <span class="validacion-sena-capture__status" id="validacion_sena_capture_status" hidden>Foto capturada. Revisa la vista previa y pulsa Enviar a validar.</span>
+                    <span class="validacion-sena-capture__status" id="validacion_sena_capture_status" hidden>Foto capturada. Revisa la vista previa y pulsa Enviar foto.</span>
                     <input type="file" id="foto_validacion" name="foto_validacion" accept="image/jpeg,image/png,image/gif,image/webp" required>
                     <input type="hidden" id="foto_validacion_captura" name="foto_validacion_captura">
                 </div>
@@ -83,7 +83,7 @@
                 <div class="validacion-sena-form__actions">
                     <button type="submit" class="validacion-sena-btn validacion-sena-btn--primary">
                         <ion-icon name="send-outline"></ion-icon>
-                        Enviar a validar
+                        Enviar foto
                     </button>
                     <a href="{{ redirect_to }}" class="validacion-sena-btn validacion-sena-btn--ghost">Volver</a>
                 </div>
@@ -123,35 +123,21 @@
             </div>
             {% endif %}
 
-            {% if resultado_ocr and resultado_ocr.details %}
-            <div class="validacion-sena-result">
-                <p>Resultado del intento automático</p>
-                <ul>
-                    {% for detail in resultado_ocr.details %}
-                    <li>{{ detail }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-
-            {% if resultado_ocr and resultado_ocr.debug %}
-            {{ resultado_ocr.debug|json_script:"validacion_sena_backend_debug" }}
-            {% endif %}
         </article>
 
         <aside class="validacion-sena-card validacion-sena-card--secondary">
             <div class="validacion-sena-card__head">
                 <div>
-                    <h2>¿No pasó la validación automática?</h2>
+                    <h2>¿Qué pasa después?</h2>
                 </div>
             </div>
 
-            <p class="validacion-sena-fallback__intro">Si el OCR no pudo leer tu carnet, el administrador puede validarte manualmente. Envía una solicitud y te indicaremos los próximos pasos.</p>
+            <p class="validacion-sena-fallback__intro">Solo envía la foto del carnet y un administrador la revisará en el panel <strong>Usuarios que necesitan ser validados</strong>.</p>
 
             <ol class="validacion-sena-steps">
-                <li><strong>Envía la solicitud</strong> explicando tu situación.</li>
-                <li><strong>El administrador te enviará un enlace</strong> único por correo.</li>
-                <li><strong>Carga tu carnet o certificado</strong> y el administrador lo revisará.</li>
+                <li><strong>Toma o carga la foto</strong> del carnet.</li>
+                <li><strong>Presiona Enviar foto</strong> para mandarla al administrador.</li>
+                <li><strong>El administrador la aprobará</strong> y tu cuenta quedará lista.</li>
             </ol>
 
             {% if estado_validacion == 'solicitada' %}
@@ -174,18 +160,18 @@
             <div class="validacion-sena-pendingbox">
                 <ion-icon name="document-attach-outline"></ion-icon>
                 <div>
-                    <strong>Documento recibido.</strong>
-                    <p>El administrador ya tiene tu evidencia y solo falta la aprobación final.</p>
+                    <strong>Foto enviada.</strong>
+                    <p>El administrador ya recibió tu foto y solo falta la aprobación final.</p>
                 </div>
             </div>
             {% elif not ya_validado %}
             <form method="post" action="{% url 'solicitar_validacion_manual' %}" class="validacion-sena-manual-form">
                 {% csrf_token %}
-                <label for="motivo_manual">Cuéntanos qué pasó</label>
-                <textarea id="motivo_manual" name="motivo_manual" rows="4" placeholder="Ej: el OCR no leyó mi carnet, mi carnet está en trámite o solo tengo certificado."></textarea>
+                <label for="motivo_manual">Mensaje opcional para el administrador</label>
+                <textarea id="motivo_manual" name="motivo_manual" rows="4" placeholder="Ej: ya envié mi foto y solo necesito revisión manual."></textarea>
                 <button type="submit" class="validacion-sena-btn validacion-sena-btn--secondary">
                     <ion-icon name="paper-plane-outline"></ion-icon>
-                    Solicitar validación manual
+                    Enviar solicitud al administrador
                 </button>
             </form>
             {% endif %}
@@ -231,7 +217,6 @@
     var debugPanel = document.getElementById('validacion_sena_debug');
     var debugLog = document.getElementById('validacion_sena_debug_log');
     var loadingOverlay = document.getElementById('validacion_sena_loading');
-    var backendDebugNode = document.getElementById('validacion_sena_backend_debug');
     var stream = null;
     var traceLines = [];
 
@@ -688,26 +673,6 @@
         userAgent: navigator.userAgent,
         cameraSoportada: canUseGuidedCamera()
     });
-
-    if (backendDebugNode) {
-        try {
-            var backendDebug = JSON.parse(backendDebugNode.textContent || '{}');
-            traceStep('Diagnóstico backend', {
-                orientacion: backendDebug.orientacion,
-                recorte_auto: backendDebug.recorte_auto,
-                nombre_ok: backendDebug.nombre_ok,
-                documento_ok: backendDebug.documento_ok,
-                logo_ok: backendDebug.logo_ok,
-                ocr_chars: backendDebug.ocr_chars,
-                ocr_error: backendDebug.ocr_error || ''
-            });
-            if (backendDebug.ocr_extracto) {
-                traceStep('Extracto OCR backend', backendDebug.ocr_extracto);
-            }
-        } catch (error) {
-            traceStep('No se pudo leer diagnóstico backend', { error: error.message || String(error) });
-        }
-    }
 
     var loadingTimeout = null;
 
