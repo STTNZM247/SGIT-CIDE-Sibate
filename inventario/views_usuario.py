@@ -13,7 +13,7 @@ import secrets
 
 from .db_compat import get_safe_usuario_value, get_usuario_model_from_instance, usuario_supports_verificacion_sena
 from .models import CarritoItem, DetallePedido, Disponibilidad, Notificacion, Pedido, Producto, VerificacionSenaToken
-from .validacion_sena import cargar_captura_desde_data_url, cargar_imagen_validacion, intentar_validacion_automatica
+from .validacion_sena import cargar_captura_desde_data_url, intentar_validacion_automatica
 from .views import _auto_cancelar_pedidos_pendientes_vencidos, _crear_notificacion, _expirar_solicitudes_validacion_manual, _notificar_staff, _reabrir_solicitudes_con_enlace_vencido, _registrar_auditoria
 
 
@@ -273,10 +273,7 @@ def validacion_sena_carga_manual(request, token):
         elif not (getattr(soporte, 'content_type', '') or '').startswith('image/'):
             messages.error(request, 'El documento manual debe ser una imagen v√°lida.')
         else:
-            _, image_error = cargar_imagen_validacion(soporte, require_vertical=True)
-            if image_error:
-                messages.error(request, image_error['message'])
-                return redirect(request.path)
+            # ValidaciÛn autom·tica removida - admin revisa manualmente
             usuario.verificacion_sena_documento = soporte
             usuario.verificacion_sena_estado = 'documento_cargado'
             usuario.verificacion_sena_observacion = 'Documento manual cargado y pendiente de aprobaci√≥n administrativa.'
@@ -858,3 +855,5 @@ def usuario_agregar_carrito(request, prod_id):
 
         messages.success(request, 'Producto agregado al carrito.')
     return redirect('panel_usuario')
+
+
