@@ -8,23 +8,12 @@
 {% endblock %}
 
 {% block content %}
-<section class="login-split" aria-label="Recuperar acceso">
-    <aside class="login-visual" aria-hidden="true">
-        <span class="login-ring login-ring--one"></span>
-        <span class="login-ring login-ring--two"></span>
-        <span class="login-sena-watermark"></span>
-        <div class="login-visual-inner">
-            <p class="visual-kicker">SENA · Inventario</p>
-            <h2 class="visual-title">Recuperar acceso</h2>
+<div class="login-page" aria-label="Recuperar acceso">
+    <section class="login-card" aria-labelledby="recuperar-title">
+        <div class="login-card__top">
+            <h1 id="recuperar-title" class="login-title">Recuperar acceso</h1>
+            <p class="login-subtitle">Escribe tu correo y te enviaremos un enlace de recuperación.</p>
         </div>
-    </aside>
-
-    <div class="login-panel">
-        <section class="login-card login-card--wide" aria-labelledby="recuperar-title">
-            <div class="login-card__top">
-                <h1 id="recuperar-title" class="login-title">Olvidé mi contraseña o correo</h1>
-                <p class="login-subtitle">Escribe tu correo registrado y te enviaremos un enlace único.</p>
-            </div>
 
 
             {% if form.non_field_errors or messages %}
@@ -57,12 +46,10 @@
                     <button type="submit" class="btn btn--block login-submit">Enviar enlace</button>
                 </div>
 
-                <div class="login-quick-links">
-                    <a href="{% url 'login' %}" class="login-mini-link login-mini-link--recover">Volver a iniciar sesión</a>
-                    <a href="{% url 'registro_publico' %}" class="login-mini-link login-mini-link--register">Registrarme</a>
+                <div class="login-footer-row">
+                    <a href="{% url 'login' %}" class="login-register-link">← Volver al login</a>
                 </div>
             </form>
-        </section>
-    </div>
-</section>
+    </section>
+</div>
 {% endblock %}

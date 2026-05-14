@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import login
 from django.contrib.auth.views import LoginView
 from django.core.mail import EmailMultiAlternatives
 from django.shortcuts import redirect, render
@@ -44,9 +45,10 @@ def registro_publico(request):
 
     form = RegistroPublicoForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
-        form.save()
-        messages.success(request, 'Tu cuenta fue creada correctamente. Ya puedes iniciar sesión.')
-        return redirect('login')
+        usuario = form.save()
+        login(request, usuario, backend='inventario.auth_backends.CompatibleModelBackend')
+        messages.success(request, '¡Bienvenido/a! Tu cuenta fue creada correctamente.')
+        return redirect('dashboard')
 
     return render(request, 'inventario/login/registro.html', {'form': form})
 

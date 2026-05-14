@@ -34,19 +34,8 @@
 {% endblock %}
 
 {% block content %}
-<section class="login-split" aria-label="Registro público">
-    <aside class="login-visual" aria-hidden="true">
-        <span class="login-ring login-ring--one"></span>
-        <span class="login-ring login-ring--two"></span>
-        <span class="login-sena-watermark"></span>
-        <div class="login-visual-inner">
-            <p class="visual-kicker">SENA · Inventario</p>
-            <h2 class="visual-title">Regístrate</h2>
-        </div>
-    </aside>
-
-    <div class="login-panel">
-        <section class="login-card login-card--wide" aria-labelledby="registro-title">
+<div class="login-page" aria-label="Registro público">
+    <section class="login-card login-card--wide" aria-labelledby="registro-title">
             <div class="login-card__top">
                 <h1 id="registro-title" class="login-title">Crear cuenta</h1>
                 <p class="login-subtitle">Completa tus datos por pasos y corrige cualquier detalle antes de continuar.</p>
@@ -177,19 +166,20 @@
                     </div>
 
                     <div class="login-actions login-actions--split">
-                        <button type="button" class="btn btn--block login-submit login-submit--secondary" data-step-prev>Volver</button>
+                        <button type="button" class="btn login-submit--back-circle" data-step-prev aria-label="Volver">
+                            <img src="{% static 'inventario/img/alt-arrow-left-svgrepo-com.svg' %}" alt="Volver" style="width:22px;height:22px;display:block;">
+                        </button>
                         <button type="submit" class="btn btn--block login-submit">Registrarme</button>
                     </div>
                 </div>
 
-                <div class="login-quick-links">
-                    <a href="{% url 'login' %}" class="login-mini-link login-mini-link--recover">Volver a iniciar sesión</a>
-                    <a href="{% url 'recuperar_acceso' %}" class="login-mini-link login-mini-link--register">Olvidé mi contraseña o correo</a>
+                <div class="login-footer-row" style="flex-direction:column;gap:10px;">
+                    <div><span>¿Ya tienes cuenta?</span> <a href="{% url 'login' %}" class="login-register-link">Inicia sesión</a></div>
+                    <div><a href="{% url 'recuperar_acceso' %}" class="login-forget-link">Olvidé mi contraseña</a></div>
                 </div>
             </form>
-        </section>
-    </div>
-</section>
+    </section>
+</div>
 {% endblock %}
 
 {% block extra_js %}

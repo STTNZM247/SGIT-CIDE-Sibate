@@ -3,7 +3,8 @@ body, html {
     height: 100%;
     margin: 0;
     padding: 0;
-    background: linear-gradient(135deg, #f5faf4 0%, #edf5ed 100%);
+    background: linear-gradient(135deg, #6dd746 0%, #5bc236 20%, #4da932 40%, #39A900 60%, #4da932 80%, #5bc236 100%);
+    background-attachment: fixed;
 }
 
 .app-shell, .app-content, .app-main, .app-container {
@@ -14,123 +15,25 @@ body, html {
     box-sizing: border-box;
 }
 
-.login-split {
-    display: grid;
-    grid-template-columns: 1.05fr 0.95fr;
+/* ── Layout centrado ───────────────────────────────────────── */
+.login-page {
     min-height: 100vh;
-}
-
-.login-visual {
-    position: relative;
-    overflow: hidden;
-    background: radial-gradient(circle at top left, #0b4737 0%, #063022 48%, #041a13 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: clamp(28px, 5vw, 64px);
-}
-
-.login-visual::after {
-    content: "";
-    position: absolute;
-    inset: -10% -12% 38% 42%;
-    background: linear-gradient(135deg, rgba(57,169,0,0.28), rgba(57,169,0,0));
-    transform: rotate(10deg);
-}
-
-.login-ring {
-    position: absolute;
-    border-radius: 50%;
-    border: 18px solid #39A900;
-    opacity: 0.95;
-}
-
-.login-ring--one {
-    width: 430px;
-    height: 430px;
-    left: -180px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-.login-ring--two {
-    width: 220px;
-    height: 220px;
-    left: 86px;
-    top: 10%;
-    border-width: 12px;
-    border-color: rgba(57,169,0,0.76);
-}
-
-.login-sena-watermark {
-    position: absolute;
-    left: -56px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 190px;
-    height: 190px;
-    background: rgba(120, 255, 170, 0.18);
-    -webkit-mask-image: url('/static/inventario/img/Logo%20SENA.svg');
-    -webkit-mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    -webkit-mask-size: contain;
-    mask-image: url('/static/inventario/img/Logo%20SENA.svg');
-    mask-repeat: no-repeat;
-    mask-position: center;
-    mask-size: contain;
-    opacity: 0.22;
-    filter: blur(0.15px);
-    z-index: 0;
-    pointer-events: none;
-}
-
-.login-visual-inner {
-    position: relative;
-    z-index: 1;
-    max-width: 390px;
-    margin-left: clamp(30px, 4vw, 90px);
-    color: #fff;
-}
-
-.visual-kicker {
-    font-size: 0.95rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    margin: 0 0 12px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.82);
-}
-
-.visual-title {
-    font-size: clamp(2.35rem, 4vw, 3.5rem);
-    font-weight: 900;
-    margin: 0 0 12px;
-    line-height: 1;
-    letter-spacing: 0.02em;
-    text-transform: capitalize;
-}
-
-.visual-subtitle {
-    font-size: 1.03rem;
-    line-height: 1.6;
-    color: rgba(255,255,255,0.84);
-    margin: 0;
-}
-
-.login-panel {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding: clamp(20px, 4vw, 56px);
+    padding: 24px 16px;
+    box-sizing: border-box;
 }
 
 .login-card {
     width: min(390px, 100%);
-    background: #fff;
+    background: rgba(255,255,255,0.10);
     border-radius: 28px;
-    border: 1px solid #dce8d9;
-    box-shadow: 0 24px 60px rgba(20, 44, 24, 0.12);
-    padding: 30px 24px;
+    border: 1px solid rgba(255,255,255,0.22);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.22);
+    padding: 36px 30px 28px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
 }
 
 .login-card__top {
@@ -138,16 +41,19 @@ body, html {
 }
 
 .login-title {
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 900;
-    margin: 0 0 6px;
-    color: #18271c;
+    margin: 0 0 24px;
+    color: #ffffff;
+    text-align: center;
+    letter-spacing: .01em;
 }
 
 .login-subtitle {
-    font-size: 1rem;
-    color: #607260;
-    margin: 0;
+    font-size: .92rem;
+    color: rgba(255,255,255,0.72);
+    margin: 0 0 18px;
+    text-align: center;
 }
 
 .login-alerts {
@@ -193,7 +99,7 @@ body, html {
 .registro-steps {
     width: 92%;
     max-width: 360px;
-    margin: 0 auto 18px;
+    margin: 0 auto 22px;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
@@ -203,33 +109,37 @@ body, html {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 12px;
-    border-radius: 18px;
-    border: 1px solid #dce8d9;
-    background: #f6faf4;
-    color: #607260;
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.55);
+    transition: background .2s, border-color .2s;
 }
 
 .registro-step-chip span {
-    width: 30px;
-    height: 30px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     display: grid;
     place-items: center;
-    background: #e7efe4;
+    background: rgba(255,255,255,0.12);
     font-weight: 900;
-    color: #36513d;
+    color: rgba(255,255,255,0.65);
+    font-size: .84rem;
+    flex-shrink: 0;
 }
 
 .registro-step-chip strong {
-    font-size: 0.88rem;
+    font-size: 0.84rem;
+    font-weight: 700;
     line-height: 1.2;
 }
 
 .registro-step-chip.is-active {
-    border-color: rgba(57, 169, 0, 0.38);
-    background: #edf8e9;
-    color: #214c23;
+    border-color: rgba(255,255,255,0.45);
+    background: rgba(255,255,255,0.16);
+    color: #ffffff;
 }
 
 .registro-step-chip.is-active span,
@@ -253,25 +163,25 @@ body, html {
 }
 
 .registro-step-head h2 {
-    margin: 0 0 6px;
-    color: #18271c;
-    font-size: 1.2rem;
-    font-weight: 900;
+    margin: 0 0 4px;
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 800;
 }
 
 .registro-step-head p {
     margin: 0;
-    color: #607260;
-    font-size: 0.94rem;
+    color: rgba(255,255,255,0.6);
+    font-size: 0.88rem;
     line-height: 1.5;
 }
 
 .registro-step-kicker {
-    margin: 0 0 6px !important;
-    color: #39A900 !important;
-    font-size: 0.78rem !important;
-    font-weight: 900 !important;
-    letter-spacing: 0.08em;
+    margin: 0 0 4px !important;
+    color: rgba(255,255,255,0.45) !important;
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
 }
 
@@ -297,22 +207,25 @@ body, html {
     display: block;
     width: 92%;
     max-width: 312px;
-    font-weight: 800;
-    color: #203124;
-    margin-bottom: 7px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.88);
+    margin-bottom: 4px;
+    font-size: .97rem;
 }
 
 .login-input-shell {
     display: flex;
     align-items: center;
     gap: 10px;
-    min-height: 58px;
+    min-height: 52px;
     width: 92%;
     max-width: 312px;
-    border-radius: 999px;
-    border: 1px solid rgba(8, 54, 40, 0.65);
-    background: #0b4737;
-    padding: 5px 8px;
+    border-radius: 0;
+    border: none;
+    border-bottom: 1.5px solid rgba(255,255,255,0.55);
+    background: transparent;
+    padding: 4px 2px;
+    transition: border-color .2s ease;
 }
 
 .login-input-shell--select {
@@ -337,25 +250,35 @@ body, html {
 
 .registro-doc-select__trigger {
     width: 100%;
-    min-height: 58px;
-    border-radius: 28px;
-    border: 1px solid rgba(8, 54, 40, 0.65);
-    background: #0b4737;
-    color: #ffffff;
-    padding: 14px 18px;
+    min-height: 48px;
+    border-radius: 0;
+    border: none;
+    border-bottom: 1.5px solid rgba(255,255,255,0.55);
+    background: transparent;
+    color: rgba(255,255,255,0.85);
+    padding: 8px 2px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
     font: inherit;
-    font-size: 1rem;
+    font-size: .97rem;
     cursor: pointer;
     text-align: left;
+    transition: border-color .2s ease;
+}
+
+.registro-doc-select__trigger:focus,
+.registro-doc-select.is-open .registro-doc-select__trigger {
+    border-color: rgba(255,255,255,0.9);
+    outline: none;
 }
 
 .registro-doc-select__trigger ion-icon {
-    font-size: 1.15rem;
+    font-size: 1rem;
+    color: rgba(255,255,255,0.55);
     transition: transform .18s ease;
+    flex-shrink: 0;
 }
 
 .registro-doc-select.is-open .registro-doc-select__trigger ion-icon {
@@ -364,48 +287,52 @@ body, html {
 
 .registro-doc-select__menu {
     position: absolute;
-    top: calc(100% + 10px);
+    top: calc(100% + 8px);
     left: 0;
     right: 0;
     display: none;
-    padding: 8px;
-    border-radius: 22px;
-    border: 1px solid #dce8d9;
-    background: #ffffff;
-    box-shadow: 0 18px 38px rgba(20, 44, 24, 0.14);
+    padding: 6px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(60, 20, 40, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.32);
     z-index: 20;
 }
 
 .registro-doc-select.is-open .registro-doc-select__menu {
     display: grid;
-    gap: 8px;
+    gap: 4px;
 }
 
 .registro-doc-select__option {
     border: 0;
-    border-radius: 18px;
-    background: #f5faf4;
-    padding: 12px 14px;
+    border-radius: 10px;
+    background: transparent;
+    padding: 11px 14px;
     text-align: left;
     cursor: pointer;
     display: grid;
-    gap: 3px;
-    color: #203124;
+    gap: 2px;
+    color: rgba(255,255,255,0.88);
+    transition: background .15s ease;
 }
 
 .registro-doc-select__option strong {
-    font-size: 0.96rem;
+    font-size: 0.94rem;
+    font-weight: 700;
 }
 
 .registro-doc-select__option small {
     font-size: 0.78rem;
-    color: #607260;
+    color: rgba(255,255,255,0.5);
 }
 
 .registro-doc-select__option:hover,
 .registro-doc-select__option.is-selected {
-    background: #edf8e9;
-    outline: 1px solid rgba(57, 169, 0, 0.34);
+    background: rgba(255,255,255,0.12);
+    outline: none;
 }
 
 .login-input-shell--disabled {
@@ -414,19 +341,19 @@ body, html {
 
 .login-input-icon,
 .password-toggle {
-    width: 50px;
-    height: 50px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     display: grid;
     place-items: center;
-    background: #fff;
-    box-shadow: 0 8px 16px rgba(15, 41, 20, 0.08);
+    background: transparent;
+    box-shadow: none;
     flex-shrink: 0;
 }
 
 .login-input-icon {
-    color: #20382a;
-    font-size: 1.35rem;
+    color: rgba(255,255,255,0.75);
+    font-size: 1.2rem;
 }
 
 .login-control,
@@ -442,6 +369,7 @@ body, html {
     color: #ffffff;
     padding: 8px 4px 6px;
     border-radius: 0;
+    flex: 1;
 }
 
 .login-control--select,
@@ -493,8 +421,8 @@ body, html {
 }
 
 .login-input-shell:focus-within {
-    border-color: rgba(57, 169, 0, 0.65);
-    box-shadow: 0 0 0 4px rgba(57, 169, 0, 0.12);
+    border-color: rgba(255,255,255,0.9);
+    box-shadow: none;
 }
 
 .login-input-shell--password {
@@ -509,8 +437,13 @@ body, html {
     transition: transform .15s ease, background .2s ease;
 }
 
+.password-toggle {
+    color: rgba(255,255,255,0.75);
+    font-size: 1.2rem;
+}
+
 .password-toggle:hover {
-    background: #f4fff0;
+    background: rgba(255,255,255,0.1);
     transform: scale(1.03);
 }
 
@@ -534,20 +467,37 @@ body, html {
     width: 100%;
 }
 
+.login-actions {
+    position: relative;
+    width: 92%;
+    max-width: 312px;
+    margin: 18px auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
 .login-actions--split {
     width: 92%;
     max-width: 312px;
     margin: 18px auto 0;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: stretch;
-    gap: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    position: relative;
 }
 
 .login-actions--split .login-submit {
-    width: 100% !important;
+    width: auto !important;
     max-width: none;
     margin: 0;
+}
+
+.login-actions--split .login-submit:not(.login-submit--back-circle) {
+    width: auto;
+    padding: 12px 32px;
 }
 
 .login-submit--secondary {
@@ -558,6 +508,26 @@ body, html {
 
 .login-submit--secondary:hover {
     background: #dcead6 !important;
+}
+
+.login-submit--back-circle {
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px;
+    flex-shrink: 0;
+    border-radius: 50% !important;
+    background: rgba(255,255,255,0.18) !important;
+    border: 1.5px solid rgba(255,255,255,0.4) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    cursor: pointer;
+    transition: background .18s ease;
+}
+
+.login-submit--back-circle:hover {
+    background: rgba(255,255,255,0.28) !important;
 }
 
 .login-quick-links {
@@ -588,15 +558,19 @@ body, html {
     text-decoration: none !important;
 }
 
-.login-mini-link--recover {
-    background: rgba(11, 71, 55, 0.08);
-    color: #0b4737 !important;
-    border-color: rgba(11, 71, 55, 0.18);
+/* mini-links legacy ya no se muestran — usar login-footer-row */
+.login-mini-link--recover,
+.login-mini-link--register {
+    background: transparent;
+    color: rgba(255,255,255,0.8) !important;
+    border-color: rgba(255,255,255,0.2);
+    font-size: .88rem;
+    font-weight: 600;
 }
-
-.login-mini-link--recover:hover {
-    background: rgba(11, 71, 55, 0.14);
-    box-shadow: 0 10px 20px rgba(11, 71, 55, 0.08);
+.login-mini-link--recover:hover,
+.login-mini-link--register:hover {
+    background: rgba(255,255,255,0.08);
+    box-shadow: none;
 }
 
 .login-mini-link--register {
@@ -630,59 +604,21 @@ body, html {
     min-height: 54px;
     border-radius: 999px !important;
     font-size: 1.06rem !important;
-    font-weight: 800 !important;
-    background: #39A900 !important;
-    box-shadow: 0 12px 24px rgba(57,169,0,0.18);
+    font-weight: 700 !important;
+    background: #ffffff !important;
+    color: #2c2020 !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+    border: none !important;
+    letter-spacing: .02em;
 }
 
 .login-submit:hover {
-    background: #2e8a00 !important;
+    background: #f0f0f0 !important;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.22);
+    transform: translateY(-1px);
 }
 
 @media (max-width: 960px) {
-    .login-split {
-        grid-template-columns: 1fr;
-    }
-
-    .login-visual {
-        min-height: 230px;
-        padding: 26px 18px;
-    }
-
-    .login-visual-inner {
-        margin-left: 0;
-        text-align: center;
-    }
-
-    .login-ring--one {
-        width: 260px;
-        height: 260px;
-        left: -90px;
-    }
-
-    .login-ring--two {
-        width: 140px;
-        height: 140px;
-        left: auto;
-        right: -30px;
-        top: 16px;
-    }
-
-    .login-sena-watermark {
-        width: 120px;
-        height: 120px;
-        left: -18px;
-        top: 50%;
-        bottom: auto;
-        transform: translateY(-50%);
-        opacity: 0.10;
-    }
-
-    .login-panel {
-        justify-content: center;
-        padding: 18px 14px 30px;
-    }
-
     .login-card {
         width: 100%;
     }
@@ -690,6 +626,91 @@ body, html {
     .registro-grid--double {
         grid-template-columns: 1fr;
     }
+}
+
+/* ─── Nuevos elementos: remember me row, footer link ─────────────────── */
+
+.login-card__top {
+    margin-bottom: 4px;
+}
+
+.login-remember-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 92%;
+    max-width: 312px;
+    margin: 14px auto 4px;
+    font-size: .88rem;
+    color: rgba(255,255,255,0.88);
+}
+
+.login-remember-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.login-remember-check {
+    width: 16px;
+    height: 16px;
+    accent-color: #ffffff;
+    cursor: pointer;
+}
+
+.login-forget-link {
+    color: rgba(255,255,255,0.9) !important;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: .88rem;
+    transition: opacity .15s ease;
+}
+
+.login-forget-link:hover {
+    opacity: .7;
+    text-decoration: none;
+}
+
+.login-footer-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    margin-top: 18px;
+    font-size: .9rem;
+    color: rgba(255,255,255,0.8);
+}
+
+.login-register-link {
+    color: #ffffff !important;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.login-register-link:hover {
+    text-decoration: underline;
+}
+
+/* Alerts sobre fondo oscuro */
+.login-card .login-alert--error {
+    background: rgba(255, 80, 80, 0.18);
+    border-color: rgba(255, 120, 120, 0.35);
+    color: #ffd4d4;
+}
+
+.login-card .login-alert--info,
+.login-card .login-alert--success {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #e8ffe8;
+}
+
+.login-card .errorlist {
+    color: #ffb3b3;
+    width: 92%;
+    max-width: 312px;
 }
 
 @media (max-width: 560px) {
