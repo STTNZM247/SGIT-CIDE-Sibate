@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView
+from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -11,8 +12,75 @@ from .forms import CorreoAuthenticationForm, RecuperarAccesoForm, RegistroPublic
 from .models import PasswordResetToken, Rol
 
 
+LOGIN_THROTTLE_LIMIT = 5
+LOGIN_THROTTLE_WINDOW = 300
+RECOVERY_THROTTLE_LIMIT = 5
+RECOVERY_THROTTLE_WINDOW = 600
+
+
+def _client_ip(request):
+    xff = (request.META.get('HTTP_X_FORWARDED_FOR') or '').strip()
+    if xff:
+        return xff.split(',')[0].strip()
+    return (request.META.get('REMOTE_ADDR') or 'unknown').strip() or 'unknown'
+
+
+def _throttle_keys(scope, request, identity=''):
+    ip = _client_ip(request).lower()
+    identity = (identity or '').strip().lower()
+    keys = [f'throttle:{scope}:ip:{ip}']
+    if identity:
+        keys.append(f'throttle:{scope}:id:{identity}')
+    return keys
+
+
+def _is_throttled(keys, limit):
+    for key in keys:
+        if int(cache.get(key, 0) or 0) >= limit:
+            return True
+    return False
+
+
+def _throttle_hit(keys, window_seconds):
+    for key in keys:
+        if cache.add(key, 1, timeout=window_seconds):
+            continue
+        try:
+            cache.incr(key)
+        except Exception:
+            current = int(cache.get(key, 0) or 0)
+            cache.set(key, current + 1, timeout=window_seconds)
+
+
+def _throttle_clear(keys):
+    for key in keys:
+        cache.delete(key)
+
+
 class RolRedirectLoginView(LoginView):
     authentication_form = CorreoAuthenticationForm
+
+    def post(self, request, *args, **kwargs):
+        username = (request.POST.get('username') or '').strip()
+        keys = _throttle_keys('login', request, username)
+        if _is_throttled(keys, LOGIN_THROTTLE_LIMIT):
+            form = self.get_form()
+            form.add_error(
+                None,
+                'Demasiados intentos de inicio de sesión. Espera unos minutos e inténtalo de nuevo.',
+            )
+            return self.form_invalid(form)
+        return super().post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        username = (self.request.POST.get('username') or '').strip()
+        _throttle_clear(_throttle_keys('login', self.request, username))
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        username = (self.request.POST.get('username') or '').strip()
+        _throttle_hit(_throttle_keys('login', self.request, username), LOGIN_THROTTLE_WINDOW)
+        return super().form_invalid(form)
 
     def _ensure_staff_role(self):
         user = self.request.user
@@ -56,6 +124,12 @@ def registro_publico(request):
 def recuperar_acceso(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
+
+    correo = (request.POST.get('correo') or '').strip().lower()
+    recovery_keys = _throttle_keys('recuperar_acceso', request, correo)
+    if request.method == 'POST' and _is_throttled(recovery_keys, RECOVERY_THROTTLE_LIMIT):
+        messages.error(request, 'Demasiados intentos de recuperación. Espera unos minutos e inténtalo de nuevo.')
+        return render(request, 'inventario/login/recuperar_acceso.html', {'form': RecuperarAccesoForm()})
 
     form = RecuperarAccesoForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -130,8 +204,12 @@ def recuperar_acceso(request):
         email.attach_alternative(html_content, 'text/html')
         email.send(fail_silently=False)
 
+        _throttle_clear(recovery_keys)
+
         messages.success(request, 'Te enviamos un enlace de restablecimiento a tu correo registrado.')
         return redirect('login')
+    elif request.method == 'POST':
+        _throttle_hit(recovery_keys, RECOVERY_THROTTLE_WINDOW)
 
     return render(request, 'inventario/login/recuperar_acceso.html', {'form': form})
 

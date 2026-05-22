@@ -327,53 +327,62 @@ def usuario_realizar_pedido(request):
     area_ubicacion = request.POST.get('area_ubicacion', '').strip()
     tipo_devolucion = request.POST.get('tipo_devolucion', '').strip()
 
+    solo_consumo = bool(carrito_items) and all(
+        (getattr(item['producto'], 'tipo_bien', 'devolutivo') == 'consumo')
+        for item in carrito_items
+    )
+
     if not area_ubicacion:
         messages.error(request, 'Debes indicar el área o ambiente donde se usarán los productos.')
         return redirect('carrito_usuario')
 
-    if tipo_devolucion not in ('mismo_dia', 'por_dias'):
-        messages.error(request, 'Debes seleccionar una opción de devolución (mismo día o por días).')
-        return redirect('carrito_usuario')
-
-    # Construir fecha_devolucion según el tipo elegido
     now_tz = timezone.localtime()
     fecha_devolucion_global = None
 
-    if tipo_devolucion == 'mismo_dia':
-        hora_str = request.POST.get('hora_devolucion', '').strip()
-        if not hora_str:
-            messages.error(request, 'Debes indicar la hora de devolución para el mismo día.')
-            return redirect('carrito_usuario')
-        try:
-            h, m = [int(x) for x in hora_str.split(':')[:2]]
-            fecha_devolucion_global = now_tz.replace(hour=h, minute=m, second=0, microsecond=0)
-        except (ValueError, TypeError):
-            messages.error(request, 'Hora de devolución inválida.')
+    if solo_consumo:
+        tipo_devolucion = 'consumo'
+        fecha_devolucion_global = None
+    else:
+        if tipo_devolucion not in ('mismo_dia', 'por_dias'):
+            messages.error(request, 'Debes seleccionar una opción de devolución (mismo día o por días).')
             return redirect('carrito_usuario')
 
-        if fecha_devolucion_global <= now_tz:
-            messages.error(request, 'La hora de devolución debe ser posterior a la hora actual.')
-            return redirect('carrito_usuario')
+        # Construir fecha_devolucion según el tipo elegido
+        if tipo_devolucion == 'mismo_dia':
+            hora_str = request.POST.get('hora_devolucion', '').strip()
+            if not hora_str:
+                messages.error(request, 'Debes indicar la hora de devolución para el mismo día.')
+                return redirect('carrito_usuario')
+            try:
+                h, m = [int(x) for x in hora_str.split(':')[:2]]
+                fecha_devolucion_global = now_tz.replace(hour=h, minute=m, second=0, microsecond=0)
+            except (ValueError, TypeError):
+                messages.error(request, 'Hora de devolución inválida.')
+                return redirect('carrito_usuario')
 
-    else:  # por_dias
-        fecha_str = request.POST.get('fecha_devolucion_dias', '').strip()
-        if not fecha_str:
-            messages.error(request, 'Debes seleccionar el día de devolución.')
-            return redirect('carrito_usuario')
-        try:
-            from datetime import date as _date
-            d = _date.fromisoformat(fecha_str)
-            from datetime import datetime as _dt
-            fecha_devolucion_global = timezone.make_aware(
-                _dt(d.year, d.month, d.day, 17, 0, 0)
-            )
-        except (ValueError, TypeError):
-            messages.error(request, 'Fecha de devolución inválida.')
-            return redirect('carrito_usuario')
+            if fecha_devolucion_global <= now_tz:
+                messages.error(request, 'La hora de devolución debe ser posterior a la hora actual.')
+                return redirect('carrito_usuario')
 
-        if fecha_devolucion_global <= now_tz:
-            messages.error(request, 'La fecha de devolución debe ser en el futuro.')
-            return redirect('carrito_usuario')
+        else:  # por_dias
+            fecha_str = request.POST.get('fecha_devolucion_dias', '').strip()
+            if not fecha_str:
+                messages.error(request, 'Debes seleccionar el día de devolución.')
+                return redirect('carrito_usuario')
+            try:
+                from datetime import date as _date
+                d = _date.fromisoformat(fecha_str)
+                from datetime import datetime as _dt
+                fecha_devolucion_global = timezone.make_aware(
+                    _dt(d.year, d.month, d.day, 17, 0, 0)
+                )
+            except (ValueError, TypeError):
+                messages.error(request, 'Fecha de devolución inválida.')
+                return redirect('carrito_usuario')
+
+            if fecha_devolucion_global <= now_tz:
+                messages.error(request, 'La fecha de devolución debe ser en el futuro.')
+                return redirect('carrito_usuario')
 
     now = timezone.now()
     with transaction.atomic():
@@ -714,7 +723,7 @@ def panel_usuario(request):
 def producto_detalle_usuario(request, prod_id):
     if not _usuario_cliente(request):
         return redirect('dashboard')
-    producto = get_object_or_404(Producto, pk=prod_id)
+    producto = get_object_or_404(Producto.objects.prefetch_related('subcategorias'), pk=prod_id)
     disp = (
         Disponibilidad.objects
         .filter(id_prod_fk=producto)

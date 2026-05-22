@@ -5,15 +5,17 @@ from unittest.mock import patch
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.core.cache import cache
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponse
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from PIL import Image
 
 from .auth_backends import CompatibleModelBackend
+from .forms import ProductoForm
 from .middleware import ActiveUserRequiredMiddleware
 from .models import CarritoItem, Catalogo, Disponibilidad, Notificacion, PasswordResetToken, Producto, Rol, TipoDoc, Usuario, VerificacionSenaToken
 from .validacion_sena import intentar_validacion_automatica
@@ -23,6 +25,7 @@ from .views_usuario import panel_usuario
 
 class GestionEstadoUsuarioTests(TestCase):
     def setUp(self):
+        cache.clear()
         self.rol_admin = Rol.objects.create(nombre_rol='admin')
         self.rol_usuario = Rol.objects.create(nombre_rol='usuario')
 
@@ -379,3 +382,84 @@ class GestionEstadoUsuarioTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Notificacion.objects.filter(id_usuario_fk=self.usuario, tipo='actualizar_tipo_doc').exists())
+
+    @override_settings(
+        CACHES={
+            'default': {
+                'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+                'LOCATION': 'test-throttle-login',
+            }
+        }
+    )
+    def test_login_is_throttled_after_repeated_failures(self):
+        payload = {
+            'username': self.usuario.correo,
+            'password': 'ClaveErrada123',
+        }
+
+        for _ in range(5):
+            response = self.client.post(reverse('login'), payload)
+            self.assertEqual(response.status_code, 200)
+
+        blocked = self.client.post(reverse('login'), payload)
+
+        self.assertEqual(blocked.status_code, 200)
+        self.assertContains(blocked, 'Demasiados intentos de inicio de sesión')
+
+    @override_settings(
+        CACHES={
+            'default': {
+                'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+                'LOCATION': 'test-throttle-recovery',
+            }
+        }
+    )
+    def test_recovery_is_throttled_after_repeated_failures(self):
+        payload = {
+            'correo': 'noexiste@sena.edu.co',
+        }
+
+        for _ in range(5):
+            response = self.client.post(reverse('recuperar_acceso'), payload)
+            self.assertEqual(response.status_code, 200)
+
+        blocked = self.client.post(reverse('recuperar_acceso'), payload)
+
+        self.assertEqual(blocked.status_code, 200)
+        self.assertContains(blocked, 'Demasiados intentos de recuperación')
+
+    def test_producto_form_requires_plate_and_accountable_for_devolutivo(self):
+        catalogo = Catalogo.objects.create(nombre_catalogo='Eléctricos')
+        form = ProductoForm(data={
+            'nombre_producto': 'Alicate dieléctrico',
+            'descripcion': 'Herramienta de prueba',
+            'id_cat_fk': catalogo.id_cat,
+            'unidad_medida': 'unidad',
+            'ubicacion': 'Estante A1',
+            'tipo_bien': 'devolutivo',
+            'numero_placa': '',
+            'cuentadante': '',
+            'stock_inicial': 3,
+            'descr_dispo': '',
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('numero_placa', form.errors)
+        self.assertIn('cuentadante', form.errors)
+
+    def test_producto_form_allows_consumo_without_plate_and_accountable(self):
+        catalogo = Catalogo.objects.create(nombre_catalogo='Consumibles')
+        form = ProductoForm(data={
+            'nombre_producto': 'Cinta aislante',
+            'descripcion': 'Material de consumo',
+            'id_cat_fk': catalogo.id_cat,
+            'unidad_medida': 'rollo',
+            'ubicacion': 'Zona B3',
+            'tipo_bien': 'consumo',
+            'numero_placa': '',
+            'cuentadante': '',
+            'stock_inicial': 20,
+            'descr_dispo': '',
+        })
+
+        self.assertTrue(form.is_valid())

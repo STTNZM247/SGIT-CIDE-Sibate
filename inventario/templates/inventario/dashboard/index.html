@@ -21,6 +21,10 @@
                     <ion-icon name="document-text-outline"></ion-icon>
                     Excel
                 </button>
+                <button type="submit" formaction="{% url 'exportar_inventario_excel' %}" class="btn-export btn-export--inventory">
+                    <ion-icon name="download-outline"></ion-icon>
+                    Exportar todo el inventario
+                </button>
                 <button type="submit" formaction="{% url 'reporte_prestamos_pdf' %}" class="btn-export btn-export--pdf">
                     <ion-icon name="document-outline"></ion-icon>
                     PDF

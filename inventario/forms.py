@@ -1,9 +1,10 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
+from django.utils import timezone
 
 from .db_compat import usuario_missing_optional_fields, usuario_supports_tipo_doc
-from .models import Catalogo, Producto, Rol, TipoDoc, Usuario
+from .models import Catalogo, Producto, Rol, Subcategoria, TipoDoc, Usuario
 
 
 class CorreoAuthenticationForm(AuthenticationForm):
@@ -264,14 +265,120 @@ class ProductoForm(forms.ModelForm):
             'rows': 2,
         }),
     )
+    subcategorias = forms.ModelMultipleChoiceField(
+        queryset=Subcategoria.objects.none(),
+        required=False,
+        label='Subcategorías',
+        widget=forms.SelectMultiple(attrs={
+            'class': 'form-input form-select form-select-multiple',
+            'size': '6',
+        }),
+    )
+    nuevas_subcategorias = forms.CharField(
+        required=False,
+        label='Nuevas subcategorías',
+        widget=forms.Textarea(attrs={
+            'class': 'form-input form-textarea',
+            'placeholder': 'Ej: Cajas y tableros / Accesorios tableros / Bornera 4mm',
+            'rows': 2,
+        }),
+        help_text='Separa por coma, slash (/) o salto de línea.',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['subcategorias'].queryset = Subcategoria.objects.select_related('id_cat_fk').order_by(
+            'id_cat_fk__nombre_catalogo',
+            'nombre_subcategoria',
+        )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        tipo_bien = cleaned_data.get('tipo_bien')
+        placa = (cleaned_data.get('numero_placa') or '').strip()
+        cuentadante = (cleaned_data.get('cuentadante') or '').strip()
+
+        if tipo_bien == 'devolutivo':
+            if not placa:
+                self.add_error('numero_placa', 'Para un bien devolutivo debes registrar el número de placa.')
+            if not cuentadante:
+                self.add_error('cuentadante', 'Para un bien devolutivo debes registrar el cuentadante.')
+        else:
+            cleaned_data['numero_placa'] = ''
+            cleaned_data['cuentadante'] = ''
+
+        return cleaned_data
+
+    @staticmethod
+    def _parse_subcategorias_text(raw_text):
+        text = (raw_text or '').replace('\n', ',').replace('/', ',').replace(';', ',')
+        items = []
+        for part in text.split(','):
+            value = part.strip()
+            if value:
+                items.append(value)
+        unique = []
+        seen = set()
+        for item in items:
+            key = item.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            unique.append(item)
+        return unique
+
+    def save(self, commit=True):
+        producto = super().save(commit=commit)
+
+        if not commit:
+            return producto
+
+        seleccionadas = list(self.cleaned_data.get('subcategorias') or [])
+        nuevas_raw = self.cleaned_data.get('nuevas_subcategorias')
+        nuevas = self._parse_subcategorias_text(nuevas_raw)
+        catalogo = self.cleaned_data.get('id_cat_fk')
+
+        if catalogo and nuevas:
+            for nombre in nuevas:
+                subcat, _ = Subcategoria.objects.get_or_create(
+                    id_cat_fk=catalogo,
+                    nombre_subcategoria=nombre,
+                    defaults={
+                        'fch_registro': timezone.now(),
+                        'fch_ult_act': timezone.now(),
+                    },
+                )
+                seleccionadas.append(subcat)
+
+        if seleccionadas:
+            producto.subcategorias.set(list({s.pk: s for s in seleccionadas}.values()))
+        else:
+            producto.subcategorias.clear()
+
+        return producto
 
     class Meta:
         model = Producto
-        fields = ['nombre_producto', 'descripcion', 'id_cat_fk']
+        fields = [
+            'nombre_producto',
+            'descripcion',
+            'id_cat_fk',
+            'unidad_medida',
+            'ubicacion',
+            'tipo_bien',
+            'numero_placa',
+            'cuentadante',
+            'subcategorias',
+        ]
         labels = {
             'nombre_producto': 'Nombre del producto',
             'descripcion': 'Descripción',
             'id_cat_fk': 'Catálogo',
+            'unidad_medida': 'Unidad de medida',
+            'ubicacion': 'Ubicación',
+            'tipo_bien': 'Clasificación del bien',
+            'numero_placa': 'Número de placa',
+            'cuentadante': 'Cuentadante',
         }
         widgets = {
             'nombre_producto': forms.TextInput(attrs={
@@ -286,6 +393,27 @@ class ProductoForm(forms.ModelForm):
             }),
             'id_cat_fk': forms.Select(attrs={
                 'class': 'form-input form-select',
+            }),
+            'unidad_medida': forms.Select(attrs={
+                'class': 'form-input form-select',
+            }),
+            'ubicacion': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Ej: Estante B2 - Zona eléctrica',
+                'autocomplete': 'off',
+            }),
+            'tipo_bien': forms.Select(attrs={
+                'class': 'form-input form-select',
+            }),
+            'numero_placa': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Ej: PLA-2026-001',
+                'autocomplete': 'off',
+            }),
+            'cuentadante': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Nombre del responsable',
+                'autocomplete': 'off',
             }),
         }
 

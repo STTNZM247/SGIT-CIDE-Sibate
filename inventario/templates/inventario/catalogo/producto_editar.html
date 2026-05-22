@@ -102,6 +102,63 @@ html[data-theme="dark"] .edit-float-bar{
                             {% endfor %}
                         </select>
                     </div>
+
+                    <div class="mf-row">
+                        <div class="mf-group">
+                            <label class="mf-label">Unidad de medida *</label>
+                            <select name="unidad_medida" class="form-input form-select" required>
+                                <option value="unidad" {% if producto.unidad_medida == 'unidad' %}selected{% endif %}>Unidad</option>
+                                <option value="metro" {% if producto.unidad_medida == 'metro' %}selected{% endif %}>Metro</option>
+                                <option value="rollo" {% if producto.unidad_medida == 'rollo' %}selected{% endif %}>Rollo</option>
+                                <option value="caja" {% if producto.unidad_medida == 'caja' %}selected{% endif %}>Caja</option>
+                                <option value="par" {% if producto.unidad_medida == 'par' %}selected{% endif %}>Par</option>
+                                <option value="set" {% if producto.unidad_medida == 'set' %}selected{% endif %}>Set</option>
+                                <option value="kg" {% if producto.unidad_medida == 'kg' %}selected{% endif %}>Kilogramo</option>
+                                <option value="litro" {% if producto.unidad_medida == 'litro' %}selected{% endif %}>Litro</option>
+                            </select>
+                        </div>
+                        <div class="mf-group">
+                            <label class="mf-label">Ubicación (estante/zona) *</label>
+                            <input type="text" name="ubicacion" class="form-input" value="{{ producto.ubicacion|default:'' }}" placeholder="Ej: Estante B2 - Zona eléctrica" required>
+                        </div>
+                    </div>
+
+                    <div class="mf-row">
+                        <div class="mf-group">
+                            <label class="mf-label">Clasificación del bien *</label>
+                            <select name="tipo_bien" id="id_tipo_bien" class="form-input form-select" required>
+                                <option value="devolutivo" {% if producto.tipo_bien == 'devolutivo' %}selected{% endif %}>Devolutivo</option>
+                                <option value="consumo" {% if producto.tipo_bien == 'consumo' %}selected{% endif %}>Consumo</option>
+                            </select>
+                        </div>
+                        <div class="mf-group mf-group--stack">
+                            <label class="mf-label">Subcategorías</label>
+                            <select name="subcategorias" class="form-input form-select form-select-multiple" multiple size="6">
+                                {% for sub in subcategorias %}
+                                <option value="{{ sub.id_subcat }}" {% if sub in producto.subcategorias.all %}selected{% endif %}>
+                                    {{ sub.id_cat_fk.nombre_catalogo }} / {{ sub.nombre_subcategoria }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="mf-hint">Puedes seleccionar varias.</small>
+                        </div>
+                    </div>
+
+                    <div class="mf-group">
+                        <label class="mf-label">Nuevas subcategorías</label>
+                        <textarea name="nuevas_subcategorias" class="form-input form-textarea" rows="2" placeholder="Ej: Cajas y tableros / Accesorios / Bornera 4mm"></textarea>
+                    </div>
+
+                    <div class="mf-row" id="devolutivo-fields-edit">
+                        <div class="mf-group">
+                            <label class="mf-label">Número de placa *</label>
+                            <input type="text" name="numero_placa" id="id_numero_placa" class="form-input" value="{{ producto.numero_placa|default:'' }}" placeholder="Ej: PLA-2026-001">
+                        </div>
+                        <div class="mf-group">
+                            <label class="mf-label">Cuentadante *</label>
+                            <input type="text" name="cuentadante" id="id_cuentadante" class="form-input" value="{{ producto.cuentadante|default:'' }}" placeholder="Nombre del responsable">
+                        </div>
+                    </div>
                 </section>
 
                 <section class="product-edit-card">
@@ -294,6 +351,29 @@ html[data-theme="dark"] .edit-float-bar{
     }
     var editCarousel = document.getElementById('edit-carousel');
     if (editCarousel) initCarousel(editCarousel);
+
+    // ========== DEVOLUTIVO / CONSUMO ==========
+    var tipoBien = document.getElementById('id_tipo_bien');
+    var placaInput = document.getElementById('id_numero_placa');
+    var cuentadanteInput = document.getElementById('id_cuentadante');
+    var devolutivoWrap = document.getElementById('devolutivo-fields-edit');
+    function toggleDevolutivoEdit() {
+        if (!tipoBien || !placaInput || !cuentadanteInput) return;
+        var esDevolutivo = tipoBien.value === 'devolutivo';
+        placaInput.required = esDevolutivo;
+        cuentadanteInput.required = esDevolutivo;
+        if (!esDevolutivo) {
+            placaInput.value = '';
+            cuentadanteInput.value = '';
+        }
+        if (devolutivoWrap) {
+            devolutivoWrap.style.opacity = esDevolutivo ? '1' : '.55';
+        }
+    }
+    if (tipoBien) {
+        tipoBien.addEventListener('change', toggleDevolutivoEdit);
+        toggleDevolutivoEdit();
+    }
 
     // ========== FOTOS NUEVAS ACUMULADAS ==========
     var fotosInput = document.getElementById('id_fotos_nuevas');

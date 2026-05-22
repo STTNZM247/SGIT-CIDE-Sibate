@@ -116,6 +116,32 @@
     margin-top: 16px !important;
   }
 }
+
+.subcats-chip-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin-top: .25rem;
+}
+
+.subcats-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid #cde8d1;
+  background: #edf9ef;
+  color: #1f6d2d;
+  font-size: .74rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  line-height: 1.2;
+}
+
+html[data-theme='oscuro'] .subcats-chip {
+  border-color: #2f5a38;
+  background: #17331d;
+  color: #9bd7aa;
+}
 </style>
 {% endblock %}
 
@@ -153,8 +179,40 @@
                 <span class="usuario-product-detail-label">Catálogo:</span>
                 <span class="usuario-product-detail-value">{{ producto.id_cat_fk.nombre_catalogo }}</span>
             </div>
+            <div class="usuario-product-detail-cat" style="margin-top:10px;">
+              <span class="usuario-product-detail-label">Unidad de medida:</span>
+              <span class="usuario-product-detail-value">{{ producto.get_unidad_medida_display }}</span>
+            </div>
+            <div class="usuario-product-detail-cat" style="margin-top:10px;">
+              <span class="usuario-product-detail-label">Ubicación:</span>
+              <span class="usuario-product-detail-value">{{ producto.ubicacion|default:'Sin ubicación' }}</span>
+            </div>
+            <div class="usuario-product-detail-cat" style="margin-top:10px;">
+              <span class="usuario-product-detail-label">Tipo de bien:</span>
+              <span class="usuario-product-detail-value">{{ producto.get_tipo_bien_display }}</span>
+            </div>
+            <div class="usuario-product-detail-cat" style="margin-top:10px;">
+              <span class="usuario-product-detail-label">Devolución:</span>
+              <span class="usuario-product-detail-value">
+                {% if producto.tipo_bien == 'devolutivo' %}
+                Requiere devolución al almacén
+                {% else %}
+                Material de consumo (sin devolución)
+                {% endif %}
+              </span>
+            </div>
         </div>
     </div>
+        {% if producto.subcategorias.all %}
+        <div class="usuario-product-detail-block">
+          <p class="usuario-product-detail-label">Subcategorías</p>
+          <div class="subcats-chip-wrap">
+            {% for sub in producto.subcategorias.all %}
+            <span class="subcats-chip">{{ sub.nombre_subcategoria }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
     <div class="usuario-product-detail-block">
         <p class="usuario-product-detail-label">Descripción del producto</p>
         <p class="usuario-product-detail-value usuario-product-detail-value--preserve">{% if producto.descripcion %}{{ producto.descripcion }}{% else %}Sin descripción.{% endif %}</p>

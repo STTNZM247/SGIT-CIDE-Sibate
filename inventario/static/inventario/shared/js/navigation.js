@@ -69,6 +69,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (path === "/") {
             return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/")?.closest(".list") || null;
         }
+        if (path === "/inventario/importar-excel/" || path.startsWith("/inventario/importar-excel/")) {
+            return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/inventario/importar-excel/")?.closest(".list") || null;
+        }
         if (path === "/inventario/" || path.startsWith("/inventario/")) {
             return navLinks.find((link) => new URL(link.href, window.location.origin).pathname === "/inventario/")?.closest(".list") || null;
         }

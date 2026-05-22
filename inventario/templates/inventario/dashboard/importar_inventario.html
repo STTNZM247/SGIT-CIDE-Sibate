@@ -1,0 +1,338 @@
+{% extends 'inventario/shared/base.html' %}
+{% load static %}
+
+{% block title %}Importar inventario desde Excel{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventario/dashboard/css/dashboard.css' %}" data-page-style="true">
+<style data-page-style="true">
+.import-shell {
+    display: grid;
+    gap: 1rem;
+}
+.import-card {
+    border: 1px solid #d8e4f1;
+    background: #fff;
+    border-radius: 14px;
+    padding: 1rem;
+}
+.import-card h2 {
+    margin: 0 0 .35rem;
+    color: #123024;
+}
+.import-card p {
+    margin: 0;
+    color: #4a6278;
+}
+.import-note {
+    margin-top: .6rem;
+    padding: .65rem .8rem;
+    border: 1px dashed #b9d8bb;
+    border-radius: 10px;
+    background: #f3fbf2;
+    color: #245236;
+    font-size: .9rem;
+}
+.import-actions {
+    margin-top: .9rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .65rem;
+    align-items: center;
+}
+.import-file {
+    min-width: 280px;
+    max-width: 100%;
+}
+.import-btn {
+    border: none;
+    border-radius: 10px;
+    height: 40px;
+    padding: 0 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+}
+.import-btn--preview {
+    background: #1f6fda;
+    color: #fff;
+}
+.import-btn--upload {
+    background: #198754;
+    color: #fff;
+}
+.import-btn--cancel {
+    background: #6c757d;
+    color: #fff;
+}
+.import-meta {
+    margin-top: .75rem;
+    font-size: .92rem;
+    color: #35526a;
+}
+.import-search {
+    margin-top: .9rem;
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+.import-search input {
+    flex: 1;
+    min-width: 220px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid #c7d7ea;
+    padding: 0 .8rem;
+}
+.import-search button {
+    height: 38px;
+    border: none;
+    border-radius: 10px;
+    padding: 0 .95rem;
+    background: #0f8a83;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+.import-table-wrap {
+    margin-top: .9rem;
+    overflow: auto;
+    border: 1px solid #dce8d8;
+    border-radius: 12px;
+}
+.import-preview-group {
+    margin-top: 1rem;
+    border: 1px solid #dce8d8;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.import-preview-group__head {
+    background: #e8f5e8;
+    color: #1d4f2f;
+    padding: .6rem .8rem;
+    font-weight: 700;
+}
+.import-preview-list {
+    display: grid;
+    gap: .7rem;
+    padding: .7rem;
+}
+.import-preview-item {
+    border: 1px solid #e4ece4;
+    border-radius: 10px;
+    padding: .6rem;
+    background: #fff;
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: .7rem;
+}
+.import-preview-main {
+    width: 110px;
+    height: 110px;
+    border-radius: 10px;
+    border: 1px solid #d7e7d8;
+    object-fit: cover;
+    background: #f5faf5;
+}
+.import-preview-main--empty {
+    display: grid;
+    place-items: center;
+    color: #7f8f80;
+    font-size: .75rem;
+}
+.import-preview-title {
+    margin: 0;
+    font-size: 1rem;
+    color: #19392b;
+}
+.import-preview-meta {
+    margin-top: .35rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+}
+.import-chip {
+    display: inline-flex;
+    border-radius: 999px;
+    padding: 2px 9px;
+    background: #eef8ef;
+    border: 1px solid #d0e5d2;
+    color: #1f4a2f;
+    font-size: .74rem;
+    font-weight: 600;
+}
+.import-preview-desc {
+    margin-top: .45rem;
+    font-size: .88rem;
+    color: #345646;
+}
+.import-preview-sec {
+    margin-top: .5rem;
+    display: flex;
+    gap: .35rem;
+    flex-wrap: wrap;
+}
+.import-preview-sec img {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    border: 1px solid #d7e7d8;
+    object-fit: cover;
+    background: #f5faf5;
+}
+@media (max-width: 640px) {
+    .import-preview-item {
+        grid-template-columns: 1fr;
+    }
+}
+.import-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 760px;
+}
+.import-table thead th {
+    background: #e8f5e8;
+    color: #1d4f2f;
+    text-align: left;
+    padding: .55rem .6rem;
+    font-size: .9rem;
+    border-bottom: 1px solid #cbe3cb;
+}
+.import-table tbody td {
+    padding: .5rem .6rem;
+    border-bottom: 1px solid #edf3ee;
+    font-size: .9rem;
+    color: #244237;
+    vertical-align: top;
+}
+.import-history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.import-history-table th,
+.import-history-table td {
+    border-bottom: 1px solid #edf3ee;
+    padding: .52rem .6rem;
+    text-align: left;
+    font-size: .89rem;
+}
+.import-badge {
+    display: inline-flex;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: .78rem;
+    font-weight: 700;
+    background: #e8f5e8;
+    color: #1f6d2d;
+}
+.import-badge--warn {
+    background: #fff3cd;
+    color: #8a6d1f;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="import-shell">
+    <article class="import-card">
+        <h2>Cargar archivo Excel</h2>
+        <p>Selecciona el archivo de respaldo, revisa la previsualización y luego cárgalo para actualizar la base de datos.</p>
+        <p class="import-note">Recuerda: usa el formato generado por el botón <strong>Exportar todo el inventario</strong> (hojas Inventario e Imágenes Secundarias).</p>
+
+        <form method="post" enctype="multipart/form-data" class="import-actions">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="preview">
+            <input class="import-file" type="file" name="excel_file" accept=".xlsx" required>
+            <button type="submit" class="import-btn import-btn--preview">
+                <ion-icon name="eye-outline"></ion-icon>
+                Cargar y visualizar
+            </button>
+        </form>
+
+        {% if active_file_name %}
+        <p class="import-meta"><strong>Archivo activo:</strong> {{ active_file_name }}</p>
+        {% else %}
+        <p class="import-meta">Aún no hay archivo cargado.</p>
+        {% endif %}
+
+        {% if active_file_name %}
+        <p class="import-meta"><strong>Archivo activo:</strong> {{ active_file_name }}</p>
+
+        <form method="get" class="import-search">
+            <input type="search" name="q" value="{{ preview_search }}" placeholder="Buscar en la previsualización del Excel">
+            <button type="submit">Buscar</button>
+        </form>
+
+        {% if preview_error %}
+        <p class="import-meta" style="color:#b02a37;">{{ preview_error }}</p>
+        {% endif %}
+
+        {% if preview_rows %}
+        {% for group in preview_groups %}
+        <div class="import-preview-group">
+            <div class="import-preview-group__head">{{ group.categoria }} ({{ group.items|length }} productos)</div>
+            <div class="import-preview-list">
+                {% for row in group.items %}
+                <article class="import-preview-item">
+                    {% if row.MainImage %}
+                    <img src="{{ row.MainImage }}" alt="{{ row.Producto }}" class="import-preview-main">
+                    {% else %}
+                    <div class="import-preview-main import-preview-main--empty">Sin foto</div>
+                    {% endif %}
+                    <div>
+                        <h3 class="import-preview-title">{{ row.Producto }}</h3>
+                        <div class="import-preview-meta">
+                            <span class="import-chip">{{ row.Unidad|default:'Unidad' }}</span>
+                            <span class="import-chip">{{ row.Tipo|default:'Tipo' }}</span>
+                            <span class="import-chip">Stock: {{ row.Stock|default:'0' }}</span>
+                            <span class="import-chip">Cantidad: {{ row.Cantidad|default:'0' }}</span>
+                            {% if row.Ubicacion %}<span class="import-chip">{{ row.Ubicacion }}</span>{% endif %}
+                        </div>
+                        {% if row.Subcategorias %}
+                        <p class="import-preview-desc"><strong>Subcategorías:</strong> {{ row.Subcategorias }}</p>
+                        {% endif %}
+                        {% if row.Descripcion %}
+                        <p class="import-preview-desc">{{ row.Descripcion|truncatechars:180 }}</p>
+                        {% endif %}
+                        {% if row.SecondaryCount %}
+                        <div class="import-preview-sec">
+                            {% for sec in row.SecondaryImages %}
+                            <img src="{{ sec }}" alt="Secundaria {{ forloop.counter }}">
+                            {% endfor %}
+                            {% if row.SecondaryCount > row.SecondaryImages|length %}
+                            <span class="import-chip">+{{ row.SecondaryCount|add:'-4' }} más</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <form method="post" class="import-actions" style="margin-top: .9rem;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="import">
+            <button type="submit" class="import-btn import-btn--upload">
+                <ion-icon name="cloud-upload-outline"></ion-icon>
+                Cargar inventario a la base de datos
+            </button>
+        </form>
+        <form method="post" class="import-actions" style="margin-top: .4rem;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="cancel">
+            <button type="submit" class="import-btn import-btn--cancel">
+                <ion-icon name="close-circle-outline"></ion-icon>
+                Cancelar previsualización
+            </button>
+        </form>
+        {% else %}
+        <p class="import-meta">No hay filas para mostrar con ese filtro.</p>
+        {% endif %}
+        {% endif %}
+    </article>
+</section>
+{% endblock %}

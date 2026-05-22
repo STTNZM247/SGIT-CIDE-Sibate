@@ -10,6 +10,13 @@
                 <span class="text-mini">Home</span>
             </a>
         </li>
+        <li class="list {% if request.resolver_match.url_name == 'importar_inventario_panel' or request.resolver_match.url_name == 'importar_inventario_carga' %}active{% endif %}">
+            <a href="{% url 'importar_inventario_panel' %}">
+                <span class="icon"><ion-icon name="cloud-upload-outline"></ion-icon></span>
+                <span class="text">Cargar inventario</span>
+                <span class="text-mini">Cargar inv</span>
+            </a>
+        </li>
         <li class="list {% if request.resolver_match.url_name == 'inventario_panel' %}active{% endif %}">
             <a href="{% url 'inventario_panel' %}">
                 <span class="icon"><ion-icon name="file-tray-stacked-outline"></ion-icon></span>
@@ -66,8 +73,4 @@
         </li>
         <div class="indicator"></div>
     </ul>
-    <a href="{% url 'notificaciones_panel' %}" class="nav-notif-btn {% if notif_no_leidas %}has-notif{% endif %}" aria-label="Notificaciones" title="Notificaciones">
-        <ion-icon name="notifications-outline"></ion-icon>
-        <span class="nav-notif-dot" aria-hidden="true"></span>
-    </a>
 </nav>

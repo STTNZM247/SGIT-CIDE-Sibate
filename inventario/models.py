@@ -229,15 +229,37 @@ class UsuCat(models.Model):
 
 
 class Producto(models.Model):
+    TIPO_BIEN_CHOICES = [
+        ('devolutivo', 'Devolutivo'),
+        ('consumo', 'Consumo'),
+    ]
+
+    UNIDAD_MEDIDA_CHOICES = [
+        ('unidad', 'Unidad'),
+        ('metro', 'Metro'),
+        ('rollo', 'Rollo'),
+        ('caja', 'Caja'),
+        ('par', 'Par'),
+        ('set', 'Set'),
+        ('kg', 'Kilogramo'),
+        ('litro', 'Litro'),
+    ]
+
     id_prod = models.AutoField(primary_key=True)
     nombre_producto = models.CharField(max_length=255, null=True, blank=True)
     descripcion = models.TextField(null=True, blank=True)
     fot_prod = models.ImageField(upload_to='productos/', null=True, blank=True)
+    unidad_medida = models.CharField(max_length=20, choices=UNIDAD_MEDIDA_CHOICES, default='unidad')
+    ubicacion = models.CharField(max_length=255, default='Pendiente por asignar')
+    tipo_bien = models.CharField(max_length=20, choices=TIPO_BIEN_CHOICES, default='devolutivo')
+    numero_placa = models.CharField(max_length=80, null=True, blank=True)
+    cuentadante = models.CharField(max_length=255, null=True, blank=True)
     id_cat_fk = models.ForeignKey(
         Catalogo,
         on_delete=models.CASCADE,
         db_column='id_cat_fk',
     )
+    subcategorias = models.ManyToManyField('Subcategoria', related_name='productos', blank=True)
     fch_registro = models.DateTimeField(null=True, blank=True)
     fch_ult_act = models.DateTimeField(null=True, blank=True)
 
@@ -262,6 +284,29 @@ class Producto(models.Model):
             optimize_image_field_to_webp(self.fot_prod)
 
         super().save(*args, **kwargs)
+
+
+class Subcategoria(models.Model):
+    id_subcat = models.AutoField(primary_key=True)
+    id_cat_fk = models.ForeignKey(
+        Catalogo,
+        on_delete=models.CASCADE,
+        db_column='id_cat_fk',
+        related_name='subcategorias',
+    )
+    nombre_subcategoria = models.CharField(max_length=255)
+    fch_registro = models.DateTimeField(null=True, blank=True)
+    fch_ult_act = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'subcategoria'
+        ordering = ['id_cat_fk_id', 'nombre_subcategoria']
+        constraints = [
+            models.UniqueConstraint(fields=['id_cat_fk', 'nombre_subcategoria'], name='uq_subcat_catalogo_nombre'),
+        ]
+
+    def __str__(self):
+        return f'{self.id_cat_fk.nombre_catalogo} / {self.nombre_subcategoria}'
 
 
 class ProductoFoto(models.Model):
@@ -356,6 +401,35 @@ class AuditoriaLog(models.Model):
 
     def __str__(self):
         return f'{self.accion} {self.entidad} ({self.entidad_id or "-"})'
+
+
+class ImportacionInventarioLog(models.Model):
+    id_log_import = models.AutoField(primary_key=True)
+    id_usuario_fk = models.ForeignKey(
+        Usuario,
+        on_delete=models.SET_NULL,
+        db_column='id_usuario_fk',
+        null=True,
+        blank=True,
+        related_name='importaciones_inventario',
+    )
+    nombre_archivo = models.CharField(max_length=255)
+    estado = models.CharField(max_length=20, default='ok')
+    total_productos = models.PositiveIntegerField(default=0)
+    total_creados = models.PositiveIntegerField(default=0)
+    total_actualizados = models.PositiveIntegerField(default=0)
+    total_imagenes_principales = models.PositiveIntegerField(default=0)
+    total_imagenes_secundarias = models.PositiveIntegerField(default=0)
+    total_errores = models.PositiveIntegerField(default=0)
+    resumen = models.TextField(blank=True, null=True)
+    fch_registro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'importacion_inventario_log'
+        ordering = ['-fch_registro', '-id_log_import']
+
+    def __str__(self):
+        return f'Importación {self.id_log_import} - {self.nombre_archivo}'
 
 
 class Pedido(models.Model):

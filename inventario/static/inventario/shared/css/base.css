@@ -592,7 +592,7 @@ body {
         place-items: center;
         position: fixed;
         top: max(10px, env(safe-area-inset-top));
-        left: max(10px, env(safe-area-inset-left));
+        right: max(10px, env(safe-area-inset-right));
         width: 44px;
         height: 44px;
         border-radius: 50%;
@@ -615,25 +615,25 @@ body {
         display: grid;
         place-items: center;
         position: fixed;
-        bottom: 22px;
-        left: calc(73px / 2);
-        transform: translateX(-50%);
+        top: 18px;
+        right: 22px;
         width: 42px;
         height: 42px;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.13);
-        border: 1.5px solid rgba(255, 255, 255, 0.25);
+        background: rgba(57, 169, 0, 0.95);
+        border: 1.5px solid rgba(255, 255, 255, 0.55);
         color: #fff;
         font-size: 1.35rem;
         cursor: pointer;
-        z-index: 1100;
+        z-index: 1300;
         transition: background 0.2s, transform 0.15s;
         overflow: visible;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     }
 
     .nav-notif-btn:hover {
-        background: rgba(255, 255, 255, 0.24);
-        transform: translateX(-50%) scale(1.08);
+        background: rgba(49, 152, 0, 0.98);
+        transform: scale(1.08);
     }
 
     .app-shell {

@@ -468,7 +468,7 @@
 
 .admin-report-toolbar {
     display: grid;
-    grid-template-columns: 160px auto auto;
+    grid-template-columns: 160px repeat(3, max-content);
     gap: .45rem;
     align-items: center;
 }
@@ -498,6 +498,10 @@
 
 .btn-export--excel {
     background: #1f6fda;
+}
+
+.btn-export--inventory {
+    background: #0f8a83;
 }
 
 .btn-export--pdf {
@@ -2000,6 +2004,11 @@ html[data-theme="dark"] .btn-export--excel {
     background: #1a3a1a;
     color: #7dd87d;
     border-color: #253025;
+}
+html[data-theme="dark"] .btn-export--inventory {
+    background: #123739;
+    color: #8de7e1;
+    border-color: #244143;
 }
 html[data-theme="dark"] .btn-export--pdf {
     background: #1a2a1a;

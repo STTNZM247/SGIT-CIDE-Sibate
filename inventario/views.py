@@ -1,3 +1,4 @@
+import base64
 import csv
 import io
 import os
@@ -14,7 +15,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.contrib import messages
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Notificacion, Pedido, PedidoEvidencia, Producto, ProductoFoto, Rol, Usuario, VerificacionSenaToken
+from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, ImportacionInventarioLog, Notificacion, Pedido, PedidoEvidencia, Producto, ProductoFoto, Rol, Subcategoria, Usuario, VerificacionSenaToken
 from .forms import ProductoForm
 
 
@@ -306,6 +307,47 @@ def _renovar_codigo_devolucion(pedido, now):
     pedido.save(update_fields=['codigo_entrega', 'codigo_expira_en', 'fch_ult_act'])
 
 
+def _parse_subcategorias_text(raw_text):
+    text = (raw_text or '').replace('\n', ',').replace('/', ',').replace(';', ',')
+    values = []
+    for part in text.split(','):
+        item = (part or '').strip()
+        if item:
+            values.append(item)
+    unique = []
+    seen = set()
+    for value in values:
+        key = value.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(value)
+    return unique
+
+
+def _sync_subcategorias_producto(producto, catalogo_id, selected_ids=None, raw_new=''):
+    selected_ids = selected_ids or []
+    selected_qs = Subcategoria.objects.filter(pk__in=selected_ids)
+    related = list(selected_qs)
+
+    catalogo = Catalogo.objects.filter(pk=catalogo_id).first() if catalogo_id else None
+    for nombre in _parse_subcategorias_text(raw_new):
+        if not catalogo:
+            continue
+        subcat, _ = Subcategoria.objects.get_or_create(
+            id_cat_fk=catalogo,
+            nombre_subcategoria=nombre,
+            defaults={
+                'fch_registro': timezone.now(),
+                'fch_ult_act': timezone.now(),
+            },
+        )
+        related.append(subcat)
+
+    dedup = list({s.pk: s for s in related}.values())
+    producto.subcategorias.set(dedup)
+
+
 @login_required
 def producto_editar(request, prod_id):
     # Solo admin puede editar
@@ -315,6 +357,7 @@ def producto_editar(request, prod_id):
 
     producto = get_object_or_404(Producto, pk=prod_id)
     catalogos = Catalogo.objects.all().order_by('nombre_catalogo')
+    subcategorias = Subcategoria.objects.select_related('id_cat_fk').order_by('id_cat_fk__nombre_catalogo', 'nombre_subcategoria')
     disp = (
         Disponibilidad.objects
         .filter(id_prod_fk=producto)
@@ -325,6 +368,13 @@ def producto_editar(request, prod_id):
         nombre = request.POST.get('nombre_producto', '').strip()
         descripcion = request.POST.get('descripcion', '').strip()
         id_cat_fk = request.POST.get('id_cat_fk')
+        unidad_medida = request.POST.get('unidad_medida', 'unidad').strip() or 'unidad'
+        ubicacion = request.POST.get('ubicacion', '').strip()
+        tipo_bien = request.POST.get('tipo_bien', 'devolutivo').strip() or 'devolutivo'
+        numero_placa = request.POST.get('numero_placa', '').strip()
+        cuentadante = request.POST.get('cuentadante', '').strip()
+        subcategorias_ids = request.POST.getlist('subcategorias')
+        nuevas_subcategorias = request.POST.get('nuevas_subcategorias', '')
         stock = request.POST.get('stock')
         cantidad = request.POST.get('cantidad')
         descr_dispo = request.POST.get('descr_dispo', '').strip()
@@ -332,12 +382,19 @@ def producto_editar(request, prod_id):
         clear_fot_prod = request.POST.get('clear_fot_prod')
 
         # Validaciones mínimas
-        if not nombre or not id_cat_fk or stock is None or cantidad is None:
+        if not nombre or not id_cat_fk or not ubicacion or stock is None or cantidad is None:
             messages.error(request, 'Completa todos los campos obligatorios.')
+        elif tipo_bien == 'devolutivo' and (not numero_placa or not cuentadante):
+            messages.error(request, 'Para bienes devolutivos debes registrar número de placa y cuentadante.')
         else:
             producto.nombre_producto = nombre
             producto.descripcion = descripcion
             producto.id_cat_fk_id = id_cat_fk
+            producto.unidad_medida = unidad_medida
+            producto.ubicacion = ubicacion
+            producto.tipo_bien = tipo_bien
+            producto.numero_placa = numero_placa if tipo_bien == 'devolutivo' else ''
+            producto.cuentadante = cuentadante if tipo_bien == 'devolutivo' else ''
 
             # Gestión foto principal
             if fot_prod:
@@ -350,6 +407,7 @@ def producto_editar(request, prod_id):
 
             producto.fch_ult_act = timezone.now()
             producto.save()
+            _sync_subcategorias_producto(producto, id_cat_fk, subcategorias_ids, nuevas_subcategorias)
 
             # Fotos adicionales nuevas (respetando máximo de 5 total)
             fotos_nuevas = request.FILES.getlist('fotos_nuevas')
@@ -384,6 +442,7 @@ def producto_editar(request, prod_id):
     return render(request, 'inventario/catalogo/producto_editar.html', {
         'producto': producto,
         'catalogos': catalogos,
+        'subcategorias': subcategorias,
         'disponibilidad': disp,
         'fotos_extra': fotos_extra,
         'total_fotos': total_fotos,
@@ -413,7 +472,7 @@ def producto_detalle(request, prod_id):
 
     from .models import Producto, Disponibilidad
     try:
-        producto = Producto.objects.select_related('id_cat_fk').get(pk=prod_id)
+        producto = Producto.objects.select_related('id_cat_fk').prefetch_related('subcategorias').get(pk=prod_id)
     except Producto.DoesNotExist:
         raise Http404('Producto no encontrado')
     disp = (
@@ -449,7 +508,7 @@ from django.utils import timezone
 
 from .db_compat import usuario_supports_tipo_doc
 from .forms import CatalogoForm, ProductoForm, UsuarioPerfilForm
-from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Pedido, PedidoEvidencia, Producto, ProductoFoto, Usuario, Rol, VerificacionSenaToken
+from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Pedido, PedidoEvidencia, Producto, ProductoFoto, Subcategoria, Usuario, Rol, VerificacionSenaToken
 
 
 def _user_role(request):
@@ -545,6 +604,12 @@ def registrar_producto(request):
                 obj.fot_prod = fotos[0]
 
             obj.save()
+            _sync_subcategorias_producto(
+                obj,
+                obj.id_cat_fk_id,
+                [str(s.pk) for s in (form.cleaned_data.get('subcategorias') or [])],
+                form.cleaned_data.get('nuevas_subcategorias', ''),
+            )
 
             # Fotos adicionales (índices 1-4)
             for i, f in enumerate(fotos[1:], start=1):
@@ -555,7 +620,10 @@ def registrar_producto(request):
                 accion='crear',
                 entidad='producto',
                 entidad_id=obj.id_prod,
-                descripcion=f'Se creó el producto "{obj.nombre_producto}".',
+                descripcion=(
+                    f'Se creó el producto "{obj.nombre_producto}" '
+                    f'({obj.get_tipo_bien_display()}, unidad: {obj.get_unidad_medida_display()}, ubicación: {obj.ubicacion}).'
+                ),
             )
 
             stock_inicial = form.cleaned_data.get('stock_inicial') or 0
@@ -621,7 +689,7 @@ def productos_catalogo(request, cat_id):
             descr_dispo_actual=Subquery(disp_qs.values('descr_dispo')[:1]),
         )
         .order_by('nombre_producto')
-        .prefetch_related('fotos')
+        .prefetch_related('fotos', 'subcategorias')
     )
     return render(
         request,
@@ -1404,6 +1472,7 @@ def reporte_prestamos_excel(request):
         from openpyxl import Workbook
         from openpyxl.drawing.image import Image as XLImage
         from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+        from PIL import Image as PILImage
     except Exception:
         response = HttpResponse(content_type='text/csv; charset=utf-8')
         response['Content-Disposition'] = f'attachment; filename="reporte_prestamos_{anio}_{mes:02d}.csv"'
@@ -1631,6 +1700,921 @@ def reporte_prestamos_excel(request):
     )
     response['Content-Disposition'] = f'attachment; filename="reporte_prestamos_{anio}_{mes:02d}.xlsx"'
     return response
+
+
+@login_required
+def exportar_inventario_excel(request):
+    if not _is_admin_or_almacenista(request):
+        return redirect('panel_usuario')
+
+    from django.db.models import Subquery, TextField, Value
+    from django.db.models.functions import Coalesce
+
+    disp_qs = Disponibilidad.objects.filter(id_prod_fk=OuterRef('pk')).order_by('-id_disp')
+    productos = list(
+        Producto.objects
+        .select_related('id_cat_fk')
+        .prefetch_related('subcategorias', 'fotos')
+        .annotate(
+            stock_actual=Coalesce(Subquery(disp_qs.values('stock')[:1]), 0),
+            cantidad_actual=Coalesce(Subquery(disp_qs.values('cantidad')[:1]), 0),
+            descr_dispo_actual=Coalesce(
+                Subquery(disp_qs.values('descr_dispo')[:1]),
+                Value('', output_field=TextField()),
+                output_field=TextField(),
+            ),
+        )
+        .order_by('id_cat_fk__nombre_catalogo', 'nombre_producto', 'id_prod')
+    )
+
+    if not productos:
+        messages.info(request, 'No hay productos para exportar en este momento.')
+        return redirect('dashboard')
+
+    catalogos = defaultdict(list)
+    for producto in productos:
+        catalogos[producto.id_cat_fk].append(producto)
+
+    generated_at = timezone.localtime().strftime('%d/%m/%Y %H:%M')
+
+    try:
+        from openpyxl import Workbook
+        from openpyxl.drawing.image import Image as XLImage
+        from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+        from PIL import Image as PILImage
+    except Exception:
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="inventario_completo.csv"'
+        response.write('\ufeff')
+
+        writer = csv.writer(response, delimiter=';', quoting=csv.QUOTE_MINIMAL)
+        writer.writerow(['Inventario completo por categorias'])
+        writer.writerow(['Generado', generated_at])
+        writer.writerow([])
+        writer.writerow([
+            'Categoria', 'Producto', 'Descripcion', 'Unidad de medida', 'Ubicacion', 'Tipo de bien',
+            'Numero de placa', 'Cuentadante', 'Subcategorias', 'Stock actual', 'Cantidad actual',
+            'Detalle disponibilidad', 'Imagen principal', 'Imagenes secundarias'
+        ])
+
+        for catalogo, items in catalogos.items():
+            writer.writerow([f'CATEGORIA: {catalogo.nombre_catalogo}', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+            for producto in items:
+                sec_names = ', '.join(
+                    os.path.basename(getattr(foto.foto, 'name', '') or '')
+                    for foto in producto.fotos.all()
+                )
+                writer.writerow([
+                    catalogo.nombre_catalogo,
+                    producto.nombre_producto or f'Producto {producto.id_prod}',
+                    (producto.descripcion or '').replace(';', ','),
+                    producto.get_unidad_medida_display(),
+                    producto.ubicacion or '',
+                    producto.get_tipo_bien_display(),
+                    producto.numero_placa or '',
+                    producto.cuentadante or '',
+                    ', '.join(sub.nombre_subcategoria for sub in producto.subcategorias.all()),
+                    int(producto.stock_actual or 0),
+                    int(producto.cantidad_actual or 0),
+                    (producto.descr_dispo_actual or '').replace(';', ','),
+                    producto.fot_prod.url if producto.fot_prod else '',
+                    sec_names,
+                ])
+            writer.writerow([])
+        return response
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Inventario'
+    ws.sheet_view.showGridLines = False
+
+    widths = {
+        'A': 24,
+        'B': 16,
+        'C': 28,
+        'D': 50,
+        'E': 15,
+        'F': 22,
+        'G': 15,
+        'H': 16,
+        'I': 18,
+        'J': 24,
+        'K': 10,
+        'L': 10,
+        'M': 28,
+        'N': 34,
+        'O': 34,
+    }
+    for col, width in widths.items():
+        ws.column_dimensions[col].width = width
+
+    thin = Side(style='thin', color='C9DFC9')
+    medium = Side(style='medium', color='7CAF7D')
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    border_strong = Border(left=medium, right=medium, top=medium, bottom=medium)
+
+    fill_title = PatternFill('solid', fgColor='D9F2D9')
+    fill_meta = PatternFill('solid', fgColor='EEF9EE')
+    fill_category = PatternFill('solid', fgColor='DFF1DF')
+    fill_head = PatternFill('solid', fgColor='CFEBCF')
+    fill_alt = PatternFill('solid', fgColor='F7FCF7')
+    fill_image_empty = PatternFill('solid', fgColor='F4F8F4')
+    fill_stock = PatternFill('solid', fgColor='E8F7E8')
+
+    font_title = Font(name='Calibri', size=18, bold=True, color='1E5C30')
+    font_sub = Font(name='Calibri', size=11, bold=True, color='2A5E3F')
+    font_meta = Font(name='Calibri', size=10, color='345B3D')
+    font_head = Font(name='Calibri', size=10, bold=True, color='1F4A2B')
+    font_cell = Font(name='Calibri', size=10, color='1F4330')
+    font_placeholder = Font(name='Calibri', size=10, italic=True, color='7E8C7F')
+
+    total_categorias = len(catalogos)
+    total_productos = len(productos)
+    total_con_foto = sum(1 for producto in productos if producto.fot_prod)
+    imagenes_insertadas = 0
+
+    def _excel_image_from_path(image_path):
+        normalized = io.BytesIO()
+        with PILImage.open(image_path) as pil_image:
+            pil_image = pil_image.convert('RGBA')
+            background = PILImage.new('RGBA', pil_image.size, (255, 255, 255, 255))
+            background.alpha_composite(pil_image)
+            background.convert('RGB').save(normalized, format='PNG')
+        normalized.seek(0)
+        excel_image = XLImage(normalized)
+        excel_image._normalized_buffer = normalized
+        return excel_image
+
+    row = 1
+    ws.merge_cells(start_row=1, start_column=1, end_row=2, end_column=11)
+    title_cell = ws.cell(row=1, column=1, value='Inventario completo por categorias')
+    title_cell.font = font_title
+    title_cell.fill = fill_title
+    title_cell.border = border_strong
+    title_cell.alignment = Alignment(horizontal='left', vertical='center')
+    for merged_row in range(1, 3):
+        for merged_col in range(1, 12):
+            ws.cell(row=merged_row, column=merged_col).fill = fill_title
+            ws.cell(row=merged_row, column=merged_col).border = border_strong
+
+    logo_candidates = [
+        os.path.join(settings.BASE_DIR, 'logoSena.png'),
+        os.path.join(settings.BASE_DIR, 'inventario', 'static', 'inventario', 'img', 'logoSena.png'),
+    ]
+    for logo_path in logo_candidates:
+        if not os.path.exists(logo_path):
+            continue
+        try:
+            logo = _excel_image_from_path(logo_path)
+            logo.width = 120
+            logo.height = 78
+            ws.add_image(logo, 'M1')
+            break
+        except Exception:
+            continue
+
+    ws.row_dimensions[1].height = 34
+    ws.row_dimensions[2].height = 26
+
+    meta_rows = [
+        ('Generado', generated_at),
+        ('Categorias exportadas', total_categorias),
+        ('Productos exportados', total_productos),
+        ('Productos con foto registrada', total_con_foto),
+        ('Imagenes embebidas en Excel', ''),
+    ]
+    meta_start = 4
+    for idx, (label, value) in enumerate(meta_rows, start=meta_start):
+        left = ws.cell(row=idx, column=1, value=label)
+        right = ws.cell(row=idx, column=2, value=value)
+        left.font = font_sub
+        right.font = font_meta
+        left.fill = fill_meta
+        right.fill = fill_meta
+        left.border = border
+        right.border = border
+        left.alignment = Alignment(vertical='center')
+        right.alignment = Alignment(vertical='center')
+
+    row = 10
+    headers = [
+        'Categoria', 'Imagen', 'Producto', 'Descripcion', 'Unidad', 'Ubicacion',
+        'Tipo', 'Placa', 'Cuentadante', 'Subcategorias', 'Stock', 'Cantidad', 'Detalle',
+        'Archivo imagen', 'Archivos secundarios'
+    ]
+    for col, name in enumerate(headers, start=1):
+        cell = ws.cell(row=row, column=col, value=name)
+        cell.font = font_head
+        cell.fill = fill_head
+        cell.border = border_strong
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    ws.row_dimensions[row].height = 28
+    ws.auto_filter.ref = f'A{row}:O{row}'
+
+    data_start_row = row + 1
+    for catalogo, items in catalogos.items():
+        row += 1
+        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=15)
+        category_cell = ws.cell(row=row, column=1, value=f'Categoria: {catalogo.nombre_catalogo} ({len(items)} productos)')
+        category_cell.font = font_sub
+        category_cell.fill = fill_category
+        category_cell.border = border_strong
+        category_cell.alignment = Alignment(horizontal='left', vertical='center')
+        for merged_col in range(1, 16):
+            ws.cell(row=row, column=merged_col).fill = fill_category
+            ws.cell(row=row, column=merged_col).border = border_strong
+        ws.row_dimensions[row].height = 24
+
+        for producto in items:
+            row += 1
+            ws.row_dimensions[row].height = 92
+
+            subcategorias = ', '.join(sub.nombre_subcategoria for sub in producto.subcategorias.all())
+            image_name = ''
+            if producto.fot_prod:
+                image_name = os.path.basename(getattr(producto.fot_prod, 'name', '') or '')
+            secondary_names = ', '.join(
+                os.path.basename(getattr(foto.foto, 'name', '') or '')
+                for foto in producto.fotos.all()
+            )
+
+            values = [
+                catalogo.nombre_catalogo,
+                '',
+                producto.nombre_producto or f'Producto {producto.id_prod}',
+                producto.descripcion or '',
+                producto.get_unidad_medida_display(),
+                producto.ubicacion or '',
+                producto.get_tipo_bien_display(),
+                producto.numero_placa or '',
+                producto.cuentadante or '',
+                subcategorias,
+                int(producto.stock_actual or 0),
+                int(producto.cantidad_actual or 0),
+                producto.descr_dispo_actual or '',
+                image_name,
+                secondary_names,
+            ]
+
+            for col, value in enumerate(values, start=1):
+                cell = ws.cell(row=row, column=col, value=value)
+                cell.font = font_cell
+                cell.border = border
+                cell.alignment = Alignment(vertical='center', wrap_text=True)
+
+            if (row - data_start_row) % 2 == 1:
+                for col in range(1, 16):
+                    ws.cell(row=row, column=col).fill = fill_alt
+
+            for stock_col in (11, 12):
+                ws.cell(row=row, column=stock_col).fill = fill_stock
+                ws.cell(row=row, column=stock_col).alignment = Alignment(horizontal='center', vertical='center')
+
+            image_cell = ws.cell(row=row, column=2)
+            image_cell.alignment = Alignment(horizontal='center', vertical='center')
+            image_cell.border = border
+            image_cell.fill = fill_image_empty
+
+            if producto.fot_prod:
+                try:
+                    image_path = producto.fot_prod.path
+                    if not os.path.exists(image_path):
+                        raise FileNotFoundError(image_path)
+
+                    image = _excel_image_from_path(image_path)
+
+                    image.width = 78
+                    image.height = 78
+                    ws.add_image(image, f'B{row}')
+                    imagenes_insertadas += 1
+                    image_cell.value = None
+                except Exception:
+                    image_cell.value = 'Sin vista previa'
+                    image_cell.font = font_placeholder
+            else:
+                image_cell.value = ''
+
+    ws.cell(row=8, column=2, value=imagenes_insertadas).font = font_meta
+    ws.cell(row=8, column=2).fill = fill_meta
+    ws.cell(row=8, column=2).border = border
+    ws.cell(row=8, column=2).alignment = Alignment(vertical='center')
+
+    sec_ws = wb.create_sheet(title='Imagenes Secundarias')
+    sec_ws.sheet_view.showGridLines = False
+    sec_widths = {
+        'A': 14,
+        'B': 24,
+        'C': 32,
+        'D': 10,
+        'E': 32,
+        'F': 18,
+    }
+    for col, width in sec_widths.items():
+        sec_ws.column_dimensions[col].width = width
+
+    sec_headers = ['ID Producto', 'Categoria', 'Producto', 'Orden', 'Archivo secundario', 'Imagen']
+    sec_row = 1
+    for col, name in enumerate(sec_headers, start=1):
+        c = sec_ws.cell(row=sec_row, column=col, value=name)
+        c.font = font_head
+        c.fill = fill_head
+        c.border = border_strong
+        c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+    sec_row += 1
+    for producto in productos:
+        fotos_sec = list(producto.fotos.all())
+        if not fotos_sec:
+            continue
+        for foto in fotos_sec:
+            sec_ws.row_dimensions[sec_row].height = 88
+            sec_values = [
+                producto.id_prod,
+                producto.id_cat_fk.nombre_catalogo if producto.id_cat_fk else '',
+                producto.nombre_producto or '',
+                foto.orden,
+                os.path.basename(getattr(foto.foto, 'name', '') or ''),
+                '',
+            ]
+            for col, value in enumerate(sec_values, start=1):
+                c = sec_ws.cell(row=sec_row, column=col, value=value)
+                c.font = font_cell
+                c.border = border
+                c.alignment = Alignment(vertical='center', wrap_text=True)
+
+            img_cell = sec_ws.cell(row=sec_row, column=6)
+            img_cell.fill = fill_image_empty
+            img_cell.border = border
+            img_cell.alignment = Alignment(horizontal='center', vertical='center')
+
+            try:
+                sec_path = foto.foto.path
+                if os.path.exists(sec_path):
+                    sec_image = _excel_image_from_path(sec_path)
+                    sec_image.width = 78
+                    sec_image.height = 78
+                    sec_ws.add_image(sec_image, f'F{sec_row}')
+            except Exception:
+                img_cell.value = 'Sin vista previa'
+                img_cell.font = font_placeholder
+
+            sec_row += 1
+
+    sec_ws.freeze_panes = 'A2'
+
+    ws.freeze_panes = 'A11'
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    response = HttpResponse(
+        output.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = (
+        f'attachment; filename="inventario_completo_{timezone.localtime().strftime("%Y%m%d_%H%M")}.xlsx"'
+    )
+    return response
+
+
+def _header_key(value):
+    text = (value or '').strip().lower()
+    text = text.replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u')
+    return ' '.join(text.split())
+
+
+def _find_header_row(sheet, required_keys, max_scan_rows=60):
+    for row_idx in range(1, max_scan_rows + 1):
+        row_values = [sheet.cell(row=row_idx, column=col).value for col in range(1, sheet.max_column + 1)]
+        normalized = {_header_key(str(v)) for v in row_values if v is not None and str(v).strip()}
+        if required_keys.issubset(normalized):
+            return row_idx
+    return None
+
+
+def _extract_images_by_row(sheet):
+    row_map = defaultdict(list)
+    for image in getattr(sheet, '_images', []):
+        try:
+            anchor = getattr(image, 'anchor', None)
+            if not anchor or not hasattr(anchor, '_from'):
+                continue
+            row_1_based = int(anchor._from.row) + 1
+            col_1_based = int(anchor._from.col) + 1
+            raw = image._data()
+            ext = (getattr(image, 'format', None) or 'png').lower()
+            if ext == 'jpeg':
+                ext = 'jpg'
+            row_map[row_1_based].append((col_1_based, raw, ext))
+        except Exception:
+            continue
+    return row_map
+
+
+def _image_to_data_uri(raw_bytes, ext='png'):
+    try:
+        from PIL import Image as PILImage
+
+        src = io.BytesIO(raw_bytes)
+        dst = io.BytesIO()
+        with PILImage.open(src) as img:
+            img = img.convert('RGB')
+            img.thumbnail((140, 140))
+            img.save(dst, format='JPEG', quality=80)
+        encoded = base64.b64encode(dst.getvalue()).decode('ascii')
+        return f'data:image/jpeg;base64,{encoded}'
+    except Exception:
+        try:
+            encoded = base64.b64encode(raw_bytes).decode('ascii')
+            safe_ext = (ext or 'png').lower()
+            if safe_ext == 'jpg':
+                safe_ext = 'jpeg'
+            return f'data:image/{safe_ext};base64,{encoded}'
+        except Exception:
+            return ''
+
+
+def _build_preview_from_excel(temp_path, search=''):
+    try:
+        from openpyxl import load_workbook
+    except Exception:
+        return {'groups': [], 'rows': [], 'error': 'openpyxl no está disponible para previsualizar.'}
+
+    wb = load_workbook(temp_path, data_only=True)
+    ws = wb['Inventario'] if 'Inventario' in wb.sheetnames else wb.active
+
+    required = {'categoria', 'producto'}
+    header_row = _find_header_row(ws, required)
+    if not header_row:
+        return {'groups': [], 'rows': [], 'error': 'No se encontró la tabla de inventario en el Excel.'}
+
+    header_to_col = {}
+    for col in range(1, ws.max_column + 1):
+        value = ws.cell(row=header_row, column=col).value
+        text = str(value).strip() if value is not None else ''
+        if not text:
+            continue
+        header_to_col[_header_key(text)] = col
+
+    image_col = header_to_col.get('imagen')
+    main_images_by_row = _extract_images_by_row(ws)
+
+    secondary_images_map = defaultdict(list)
+    if 'Imagenes Secundarias' in wb.sheetnames:
+        sec_ws = wb['Imagenes Secundarias']
+        sec_required = {'categoria', 'producto'}
+        sec_header_row = _find_header_row(sec_ws, sec_required, max_scan_rows=20)
+        if sec_header_row:
+            sec_header_to_col = {}
+            for col in range(1, sec_ws.max_column + 1):
+                value = sec_ws.cell(row=sec_header_row, column=col).value
+                if value is None:
+                    continue
+                sec_header_to_col[_header_key(str(value))] = col
+
+            sec_img_col = sec_header_to_col.get('imagen')
+            sec_images_by_row = _extract_images_by_row(sec_ws)
+            for row_idx in range(sec_header_row + 1, sec_ws.max_row + 1):
+                categoria = str(sec_ws.cell(row=row_idx, column=sec_header_to_col.get('categoria', 1)).value or '').strip()
+                producto = str(sec_ws.cell(row=row_idx, column=sec_header_to_col.get('producto', 1)).value or '').strip()
+                if not categoria or not producto:
+                    continue
+                key = (categoria.lower(), producto.lower())
+                for col_1_based, raw, ext in sec_images_by_row.get(row_idx, []):
+                    if sec_img_col and col_1_based != sec_img_col:
+                        continue
+                    data_uri = _image_to_data_uri(raw, ext)
+                    if data_uri:
+                        secondary_images_map[key].append(data_uri)
+
+    rows = []
+    groups_map = defaultdict(list)
+    groups_order = []
+    q = (search or '').strip().lower()
+
+    def _cell_text(row_idx, key):
+        col = header_to_col.get(key)
+        if not col:
+            return ''
+        value = ws.cell(row=row_idx, column=col).value
+        return str(value).strip() if value is not None else ''
+
+    for row_idx in range(header_row + 1, ws.max_row + 1):
+        categoria_text = _cell_text(row_idx, 'categoria')
+        producto_text = _cell_text(row_idx, 'producto')
+
+        if not producto_text or categoria_text.lower().startswith('categoria:'):
+            continue
+
+        main_image = ''
+        if image_col and row_idx in main_images_by_row:
+            for col_1_based, raw, ext in main_images_by_row[row_idx]:
+                if col_1_based != image_col:
+                    continue
+                main_image = _image_to_data_uri(raw, ext)
+                if main_image:
+                    break
+
+        key = (categoria_text.lower(), producto_text.lower())
+        secondary_imgs = secondary_images_map.get(key, [])
+
+        row_data = {
+            'Categoria': categoria_text,
+            'Producto': producto_text,
+            'Descripcion': _cell_text(row_idx, 'descripcion'),
+            'Unidad': _cell_text(row_idx, 'unidad'),
+            'Ubicacion': _cell_text(row_idx, 'ubicacion'),
+            'Tipo': _cell_text(row_idx, 'tipo'),
+            'Subcategorias': _cell_text(row_idx, 'subcategorias'),
+            'Stock': _cell_text(row_idx, 'stock'),
+            'Cantidad': _cell_text(row_idx, 'cantidad'),
+            'MainImage': main_image,
+            'SecondaryImages': secondary_imgs[:4],
+            'SecondaryCount': len(secondary_imgs),
+        }
+
+        searchable = ' '.join([
+            row_data['Categoria'],
+            row_data['Producto'],
+            row_data['Descripcion'],
+            row_data['Unidad'],
+            row_data['Ubicacion'],
+            row_data['Tipo'],
+            row_data['Subcategorias'],
+            row_data['Stock'],
+            row_data['Cantidad'],
+        ]).lower()
+        if q and q not in searchable:
+            continue
+
+        rows.append(row_data)
+        if categoria_text not in groups_map:
+            groups_order.append(categoria_text)
+        groups_map[categoria_text].append(row_data)
+
+        if len(rows) >= 300:
+            break
+
+    groups = [
+        {
+            'categoria': categoria,
+            'items': groups_map.get(categoria, []),
+        }
+        for categoria in groups_order
+    ]
+
+    return {
+        'groups': groups,
+        'rows': rows,
+        'error': '',
+    }
+
+
+def _save_temp_excel(uploaded_file):
+    uploads_dir = os.path.join(settings.MEDIA_ROOT, 'tmp', 'imports_excel')
+    os.makedirs(uploads_dir, exist_ok=True)
+    token = secrets.token_urlsafe(16)
+    ext = os.path.splitext(uploaded_file.name or '')[1].lower() or '.xlsx'
+    file_name = f'inventario_import_{timezone.localtime().strftime("%Y%m%d_%H%M%S")}_{token}{ext}'
+    temp_path = os.path.join(uploads_dir, file_name)
+
+    with open(temp_path, 'wb') as dst:
+        for chunk in uploaded_file.chunks():
+            dst.write(chunk)
+
+    return temp_path
+
+
+def _importar_excel_inventario(temp_path, request):
+    from django.core.files.base import ContentFile
+    from django.db import transaction
+    from django.db.models import Q
+
+    try:
+        from openpyxl import load_workbook
+    except Exception as exc:
+        return {'ok': False, 'message': f'No se pudo importar: {exc}'}
+
+    wb = load_workbook(temp_path, data_only=True)
+    ws = wb['Inventario'] if 'Inventario' in wb.sheetnames else wb.active
+
+    required = {'categoria', 'producto'}
+    header_row = _find_header_row(ws, required)
+    if not header_row:
+        return {'ok': False, 'message': 'No se encontró una tabla válida de inventario en el archivo.'}
+
+    header_to_col = {}
+    for col in range(1, ws.max_column + 1):
+        value = ws.cell(row=header_row, column=col).value
+        if value is None:
+            continue
+        key = _header_key(str(value))
+        if key:
+            header_to_col[key] = col
+
+    image_col = header_to_col.get('imagen')
+    main_images_by_row = _extract_images_by_row(ws)
+
+    created = 0
+    updated = 0
+    imported_main_images = 0
+    imported_secondary_images = 0
+    total_rows = 0
+    errors = []
+    product_key_map = {}
+
+    def _cell_value(row_idx, key):
+        col = header_to_col.get(key)
+        if not col:
+            return ''
+        value = ws.cell(row=row_idx, column=col).value
+        return str(value).strip() if value is not None else ''
+
+    with transaction.atomic():
+        for row_idx in range(header_row + 1, ws.max_row + 1):
+            categoria = _cell_value(row_idx, 'categoria')
+            nombre = _cell_value(row_idx, 'producto')
+
+            if not nombre or categoria.lower().startswith('categoria:'):
+                continue
+
+            total_rows += 1
+
+            catalogo, _ = Catalogo.objects.get_or_create(
+                nombre_catalogo=categoria,
+                defaults={'fch_registro': timezone.now(), 'fch_ult_act': timezone.now()},
+            )
+
+            producto = (
+                Producto.objects
+                .filter(id_cat_fk=catalogo)
+                .filter(Q(nombre_producto__iexact=nombre) | Q(nombre_producto=nombre))
+                .first()
+            )
+            is_created = producto is None
+            if is_created:
+                producto = Producto(id_cat_fk=catalogo, fch_registro=timezone.now())
+
+            unidad = _cell_value(row_idx, 'unidad') or 'Unidad'
+            unidad_map = {k.lower(): k for k, _ in Producto.UNIDAD_MEDIDA_CHOICES}
+            unidad_display_map = {v.lower(): k for k, v in Producto.UNIDAD_MEDIDA_CHOICES}
+            unidad_key = unidad_map.get(unidad.lower()) or unidad_display_map.get(unidad.lower()) or 'unidad'
+
+            tipo = _cell_value(row_idx, 'tipo') or 'Devolutivo'
+            tipo_map = {k.lower(): k for k, _ in Producto.TIPO_BIEN_CHOICES}
+            tipo_display_map = {v.lower(): k for k, v in Producto.TIPO_BIEN_CHOICES}
+            tipo_key = tipo_map.get(tipo.lower()) or tipo_display_map.get(tipo.lower()) or 'devolutivo'
+
+            producto.nombre_producto = nombre
+            producto.descripcion = _cell_value(row_idx, 'descripcion')
+            producto.unidad_medida = unidad_key
+            producto.ubicacion = _cell_value(row_idx, 'ubicacion') or 'Pendiente por asignar'
+            producto.tipo_bien = tipo_key
+            producto.numero_placa = _cell_value(row_idx, 'placa') if tipo_key == 'devolutivo' else ''
+            producto.cuentadante = _cell_value(row_idx, 'cuentadante') if tipo_key == 'devolutivo' else ''
+            producto.id_cat_fk = catalogo
+            producto.fch_ult_act = timezone.now()
+            producto.save()
+
+            if is_created:
+                created += 1
+            else:
+                updated += 1
+
+            key = (categoria.lower(), nombre.lower())
+            product_key_map[key] = producto
+
+            subcats_raw = _cell_value(row_idx, 'subcategorias')
+            subcats = [s.strip() for s in subcats_raw.replace('/', ',').split(',') if s.strip()]
+            selected_subcats = []
+            for sub_name in subcats:
+                sub_obj, _ = Subcategoria.objects.get_or_create(
+                    id_cat_fk=catalogo,
+                    nombre_subcategoria=sub_name,
+                    defaults={'fch_registro': timezone.now(), 'fch_ult_act': timezone.now()},
+                )
+                selected_subcats.append(sub_obj)
+            if selected_subcats:
+                producto.subcategorias.set(selected_subcats)
+
+            stock_txt = _cell_value(row_idx, 'stock')
+            cantidad_txt = _cell_value(row_idx, 'cantidad')
+            detalle_txt = _cell_value(row_idx, 'detalle')
+            try:
+                stock = int(float(stock_txt or 0))
+            except Exception:
+                stock = 0
+            try:
+                cantidad = int(float(cantidad_txt or 0))
+            except Exception:
+                cantidad = 0
+
+            disponibilidad = Disponibilidad.objects.filter(id_prod_fk=producto).order_by('-id_disp').first()
+            if not disponibilidad:
+                disponibilidad = Disponibilidad(id_prod_fk=producto, fch_registro=timezone.now())
+            disponibilidad.stock = stock
+            disponibilidad.cantidad = cantidad
+            disponibilidad.descr_dispo = detalle_txt
+            disponibilidad.fch_ult_act = timezone.now()
+            disponibilidad.save()
+
+            if image_col and row_idx in main_images_by_row:
+                for col_1_based, raw, ext in main_images_by_row[row_idx]:
+                    if col_1_based != image_col:
+                        continue
+                    try:
+                        main_name = f'producto_import_{producto.id_prod}_{row_idx}.{ext}'
+                        producto.fot_prod.save(main_name, ContentFile(raw), save=True)
+                        imported_main_images += 1
+                        break
+                    except Exception as exc:
+                        errors.append(f'Imagen principal {nombre}: {exc}')
+
+        if 'Imagenes Secundarias' in wb.sheetnames:
+            sec_ws = wb['Imagenes Secundarias']
+            sec_required = {'categoria', 'producto', 'orden'}
+            sec_header_row = _find_header_row(sec_ws, sec_required, max_scan_rows=20)
+            if sec_header_row:
+                sec_header_to_col = {}
+                for col in range(1, sec_ws.max_column + 1):
+                    value = sec_ws.cell(row=sec_header_row, column=col).value
+                    if value is None:
+                        continue
+                    sec_header_to_col[_header_key(str(value))] = col
+
+                sec_image_col = sec_header_to_col.get('imagen')
+                sec_images_by_row = _extract_images_by_row(sec_ws)
+                cleared_products = set()
+
+                for row_idx in range(sec_header_row + 1, sec_ws.max_row + 1):
+                    categoria = str(sec_ws.cell(row=row_idx, column=sec_header_to_col.get('categoria', 1)).value or '').strip()
+                    nombre = str(sec_ws.cell(row=row_idx, column=sec_header_to_col.get('producto', 1)).value or '').strip()
+                    if not categoria or not nombre:
+                        continue
+
+                    orden_txt = str(sec_ws.cell(row=row_idx, column=sec_header_to_col.get('orden', 1)).value or '').strip()
+                    try:
+                        orden = int(float(orden_txt or 0))
+                    except Exception:
+                        orden = 0
+
+                    producto = product_key_map.get((categoria.lower(), nombre.lower()))
+                    if not producto:
+                        continue
+
+                    if sec_image_col and row_idx in sec_images_by_row:
+                        if producto.id_prod not in cleared_products:
+                            producto.fotos.all().delete()
+                            cleared_products.add(producto.id_prod)
+
+                        for col_1_based, raw, ext in sec_images_by_row[row_idx]:
+                            if col_1_based != sec_image_col:
+                                continue
+                            try:
+                                sec_name = f'producto_sec_import_{producto.id_prod}_{row_idx}_{orden}.{ext}'
+                                foto_obj = ProductoFoto(id_prod_fk=producto, orden=orden)
+                                foto_obj.foto.save(sec_name, ContentFile(raw), save=True)
+                                imported_secondary_images += 1
+                            except Exception as exc:
+                                errors.append(f'Imagen secundaria {nombre}: {exc}')
+
+    estado = 'ok' if not errors else 'ok_parcial'
+    resumen = (
+        f'Productos procesados: {total_rows}. '
+        f'Creados: {created}. Actualizados: {updated}. '
+        f'Imágenes principales: {imported_main_images}. '
+        f'Imágenes secundarias: {imported_secondary_images}. '
+        f'Errores: {len(errors)}.'
+    )
+
+    ImportacionInventarioLog.objects.create(
+        id_usuario_fk=request.user if request.user.is_authenticated else None,
+        nombre_archivo=os.path.basename(temp_path),
+        estado=estado,
+        total_productos=total_rows,
+        total_creados=created,
+        total_actualizados=updated,
+        total_imagenes_principales=imported_main_images,
+        total_imagenes_secundarias=imported_secondary_images,
+        total_errores=len(errors),
+        resumen=resumen + (f' Detalles: {" | ".join(errors[:5])}' if errors else ''),
+    )
+
+    _registrar_auditoria(
+        request,
+        accion='actualizar',
+        entidad='inventario_importacion',
+        entidad_id='excel',
+        descripcion=resumen,
+    )
+
+    return {
+        'ok': True,
+        'message': resumen,
+        'errors': errors,
+    }
+
+
+@login_required
+def importar_inventario_panel(request):
+    if not _is_admin_or_almacenista(request):
+        return redirect('panel_usuario')
+
+    logs = list(ImportacionInventarioLog.objects.select_related('id_usuario_fk')[:30])
+    return render(
+        request,
+        'inventario/dashboard/importar_inventario_panel.html',
+        {
+            'logs_importacion': logs,
+        },
+    )
+
+
+@login_required
+def importar_inventario_carga(request):
+    if not _is_admin_or_almacenista(request):
+        return redirect('panel_usuario')
+
+    session_file_key = 'inventario_import_temp_path'
+    session_name_key = 'inventario_import_file_name'
+
+    if request.method == 'POST':
+        action = (request.POST.get('action') or '').strip().lower()
+
+        if action == 'preview':
+            file_obj = request.FILES.get('excel_file')
+            if not file_obj:
+                messages.error(request, 'Selecciona un archivo Excel para continuar.')
+            elif not file_obj.name.lower().endswith('.xlsx'):
+                messages.error(request, 'El archivo debe ser .xlsx')
+            else:
+                old_path = request.session.get(session_file_key)
+                if old_path and os.path.exists(old_path):
+                    try:
+                        os.remove(old_path)
+                    except Exception:
+                        pass
+
+                temp_path = _save_temp_excel(file_obj)
+                request.session[session_file_key] = temp_path
+                request.session[session_name_key] = file_obj.name
+                messages.success(request, 'Archivo cargado. Revisa la visualización antes de subir a la base de datos.')
+
+        elif action == 'import':
+            temp_path = request.session.get(session_file_key)
+            if not temp_path or not os.path.exists(temp_path):
+                messages.error(request, 'No hay un archivo cargado para importar. Primero usa "Cargar y visualizar".')
+            else:
+                result = _importar_excel_inventario(temp_path, request)
+                if result.get('ok'):
+                    messages.success(request, result.get('message') or 'Importación completada.')
+                else:
+                    messages.error(request, result.get('message') or 'No fue posible completar la importación.')
+
+                try:
+                    os.remove(temp_path)
+                except Exception:
+                    pass
+                request.session.pop(session_file_key, None)
+                request.session.pop(session_name_key, None)
+
+        elif action == 'cancel':
+            temp_path = request.session.get(session_file_key)
+            if temp_path and os.path.exists(temp_path):
+                try:
+                    os.remove(temp_path)
+                except Exception:
+                    pass
+            request.session.pop(session_file_key, None)
+            request.session.pop(session_name_key, None)
+            messages.info(request, 'Previsualización cancelada. Puedes seleccionar otro archivo.')
+            return redirect('importar_inventario_panel')
+
+        return redirect('importar_inventario_carga')
+
+    q = (request.GET.get('q') or '').strip()
+    temp_path = request.session.get(session_file_key)
+    preview = {'groups': [], 'rows': [], 'error': ''}
+    active_file_name = request.session.get(session_name_key, '')
+
+    if temp_path and os.path.exists(temp_path):
+        preview = _build_preview_from_excel(temp_path, q)
+    else:
+        request.session.pop(session_file_key, None)
+        request.session.pop(session_name_key, None)
+
+    return render(
+        request,
+        'inventario/dashboard/importar_inventario.html',
+        {
+            'preview_groups': preview.get('groups', []),
+            'preview_rows': preview.get('rows', []),
+            'preview_error': preview.get('error', ''),
+            'preview_search': q,
+            'active_file_name': active_file_name,
+        },
+    )
 
 
 @login_required
@@ -2565,18 +3549,39 @@ def pedido_confirmar_entrega_codigo(request, pedido_id):
                 for archivo in evidencias_subidas
             ])
 
-        pedido.estado = 'entregado'
+        detalles_entregables = list(
+            DetallePedido.objects
+            .select_related('id_prod_fk')
+            .filter(id_pedido_fk=pedido)
+            .exclude(estado_detalle__in=['no_disponible', 'rechazado', 'cancelado'])
+        )
+        detalles_consumo_ids = [
+            d.id_det_pedido
+            for d in detalles_entregables
+            if d.id_prod_fk and d.id_prod_fk.tipo_bien == 'consumo'
+        ]
+        detalles_devolutivos_ids = [
+            d.id_det_pedido
+            for d in detalles_entregables
+            if not d.id_prod_fk or d.id_prod_fk.tipo_bien != 'consumo'
+        ]
+
+        if detalles_devolutivos_ids:
+            DetallePedido.objects.filter(id_det_pedido__in=detalles_devolutivos_ids).update(
+                estado_detalle='entregado',
+                fch_ult_act=now,
+            )
+        if detalles_consumo_ids:
+            DetallePedido.objects.filter(id_det_pedido__in=detalles_consumo_ids).update(
+                estado_detalle='devuelto',
+                fch_ult_act=now,
+            )
+
+        pedido.estado = 'entregado' if detalles_devolutivos_ids else 'devuelto'
         pedido.codigo_entrega = None
         pedido.codigo_expira_en = None
         pedido.fch_ult_act = now
         pedido.save(update_fields=['estado', 'codigo_entrega', 'codigo_expira_en', 'fch_ult_act'])
-
-        DetallePedido.objects.filter(id_pedido_fk=pedido).exclude(
-            estado_detalle__in=['no_disponible', 'rechazado', 'cancelado']
-        ).update(
-            estado_detalle='entregado',
-            fch_ult_act=now,
-        )
 
     _registrar_auditoria(
         request,
@@ -2585,13 +3590,23 @@ def pedido_confirmar_entrega_codigo(request, pedido_id):
         entidad_id=pedido.id_pedido,
         descripcion=f'Pedido #{pedido.id_pedido} fue confirmado como entregado en almacén.',
     )
-    messages.success(request, f'Pedido #{pedido.id_pedido} marcado como entregado.')
+    messages.success(
+        request,
+        (
+            f'Pedido #{pedido.id_pedido} marcado como entregado.'
+            if pedido.estado == 'entregado'
+            else f'Pedido #{pedido.id_pedido} entregado como consumo (sin devolución obligatoria).'
+        ),
+    )
     _crear_notificacion(
         usuario=pedido.id_usuario_fk,
         tipo='entregado',
         titulo='Pedido entregado',
-        mensaje=f'Tu pedido #{pedido.id_pedido} fue entregado correctamente. '
-                f'Recuerda devolver los materiales en la fecha acordada.',
+        mensaje=(
+            f'Tu pedido #{pedido.id_pedido} fue entregado correctamente. Recuerda devolver los materiales en la fecha acordada.'
+            if pedido.estado == 'entregado'
+            else f'Tu pedido #{pedido.id_pedido} fue entregado y corresponde a material de consumo, no requiere devolución.'
+        ),
         pedido_id=pedido.id_pedido,
     )
     _notificar_staff(
@@ -2647,11 +3662,15 @@ def pedido_marcar_devuelto(request, pedido_id):
             .select_for_update()
             .select_related('id_prod_fk')
             .filter(id_pedido_fk=pedido)
-            .exclude(estado_detalle__in=['no_disponible', 'rechazado', 'cancelado'])
+            .filter(estado_detalle='entregado')
         )
 
+        restaurados = 0
         for detalle in detalles_entregados:
+            if detalle.id_prod_fk and detalle.id_prod_fk.tipo_bien == 'consumo':
+                continue
             _sumar_stock_disponibilidad(detalle, now)
+            restaurados += 1
 
         pedido.estado = 'devuelto'
         pedido.codigo_entrega = None
@@ -2659,9 +3678,7 @@ def pedido_marcar_devuelto(request, pedido_id):
         pedido.fch_ult_act = now
         pedido.save(update_fields=['estado', 'codigo_entrega', 'codigo_expira_en', 'fch_ult_act'])
 
-        DetallePedido.objects.filter(id_pedido_fk=pedido).exclude(
-            estado_detalle__in=['no_disponible', 'rechazado', 'cancelado']
-        ).update(
+        DetallePedido.objects.filter(id_pedido_fk=pedido, estado_detalle='entregado').update(
             estado_detalle='devuelto',
             fch_ult_act=now,
         )
@@ -2673,7 +3690,10 @@ def pedido_marcar_devuelto(request, pedido_id):
         entidad_id=pedido.id_pedido,
         descripcion=f'Préstamo #{pedido.id_pedido} recibido en devolución y stock restaurado.',
     )
-    messages.success(request, f'Préstamo #{pedido.id_pedido} marcado como devuelto y el stock fue restaurado.')
+    if restaurados > 0:
+        messages.success(request, f'Préstamo #{pedido.id_pedido} marcado como devuelto y el stock fue restaurado.')
+    else:
+        messages.success(request, f'Pedido #{pedido.id_pedido} cerrado. No hubo ítems devolutivos para restaurar stock.')
     return redirect('prestamos_panel')
 
 

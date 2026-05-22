@@ -78,6 +78,7 @@
                     <div class="product-tile__chips">
                         <span class="cat-card__count"><ion-icon name="layers-outline"></ion-icon>Cantidad: {{ p.cantidad_total|default:'0' }}</span>
                         <span class="cat-card__count"><ion-icon name="archive-outline"></ion-icon>Stock: {{ p.stock_actual|default:'0' }}</span>
+                        <span class="cat-card__count"><ion-icon name="cube-outline"></ion-icon>{{ p.get_tipo_bien_display }}</span>
                     </div>
                 </div>
             </button>
@@ -155,7 +156,41 @@
                             <p class="product-detail-label">Cantidad actual</p>
                             <p class="product-detail-value">{{ p.cantidad_total|default:'0' }}</p>
                         </div>
+                        <div>
+                            <p class="product-detail-label">Unidad de medida</p>
+                            <p class="product-detail-value">{{ p.get_unidad_medida_display }}</p>
+                        </div>
+                        <div>
+                            <p class="product-detail-label">Ubicación</p>
+                            <p class="product-detail-value">{{ p.ubicacion|default:'Sin ubicación' }}</p>
+                        </div>
+                        <div>
+                            <p class="product-detail-label">Tipo de bien</p>
+                            <p class="product-detail-value">{{ p.get_tipo_bien_display }}</p>
+                        </div>
                     </div>
+                    {% if p.subcategorias.all %}
+                    <div class="product-detail-block">
+                        <p class="product-detail-label">Subcategorías</p>
+                        <div class="subcats-chip-wrap">
+                            {% for sub in p.subcategorias.all %}
+                            <span class="subcats-chip">{{ sub.nombre_subcategoria }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if p.tipo_bien == 'devolutivo' %}
+                    <div class="product-detail-grid">
+                        <div>
+                            <p class="product-detail-label">Número de placa</p>
+                            <p class="product-detail-value">{{ p.numero_placa|default:'-' }}</p>
+                        </div>
+                        <div>
+                            <p class="product-detail-label">Cuentadante</p>
+                            <p class="product-detail-value">{{ p.cuentadante|default:'-' }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
                     <div class="product-detail-block">
                         <p class="product-detail-label">Descripción del producto</p>
                         <p class="product-detail-value product-detail-value--preserve">{% if p.descripcion %}{{ p.descripcion }}{% else %}Sin descripción.{% endif %}</p>

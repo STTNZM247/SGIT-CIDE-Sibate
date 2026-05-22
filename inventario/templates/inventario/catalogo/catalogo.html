@@ -209,6 +209,49 @@
             </div>
             <div class="mf-row">
                 <div class="mf-group">
+                    <label for="{{ prod_form.unidad_medida.id_for_label }}" class="mf-label">
+                        {{ prod_form.unidad_medida.label }} <span class="mf-required">*</span>
+                    </label>
+                    {{ prod_form.unidad_medida }}
+                </div>
+                <div class="mf-group">
+                    <label for="{{ prod_form.ubicacion.id_for_label }}" class="mf-label">
+                        {{ prod_form.ubicacion.label }} <span class="mf-required">*</span>
+                    </label>
+                    {{ prod_form.ubicacion }}
+                    <small class="mf-hint">Indica estante, zona o ubicación exacta del elemento.</small>
+                </div>
+            </div>
+            <div class="mf-row">
+                <div class="mf-group">
+                    <label for="{{ prod_form.tipo_bien.id_for_label }}" class="mf-label">
+                        {{ prod_form.tipo_bien.label }} <span class="mf-required">*</span>
+                    </label>
+                    {{ prod_form.tipo_bien }}
+                </div>
+                <div class="mf-group mf-group--stack">
+                    <label for="{{ prod_form.subcategorias.id_for_label }}" class="mf-label">Subcategorías</label>
+                    {{ prod_form.subcategorias }}
+                    <small class="mf-hint">Puedes seleccionar varias subcategorías.</small>
+                </div>
+            </div>
+            <div class="mf-group">
+                <label for="{{ prod_form.nuevas_subcategorias.id_for_label }}" class="mf-label">Nuevas subcategorías</label>
+                {{ prod_form.nuevas_subcategorias }}
+                <small class="mf-hint">Ejemplo: Cajas y tableros / Accesorios / Bornera 4mm</small>
+            </div>
+            <div class="mf-row" id="devolutivo-fields-create">
+                <div class="mf-group">
+                    <label for="{{ prod_form.numero_placa.id_for_label }}" class="mf-label">{{ prod_form.numero_placa.label }}</label>
+                    {{ prod_form.numero_placa }}
+                </div>
+                <div class="mf-group">
+                    <label for="{{ prod_form.cuentadante.id_for_label }}" class="mf-label">{{ prod_form.cuentadante.label }}</label>
+                    {{ prod_form.cuentadante }}
+                </div>
+            </div>
+            <div class="mf-row">
+                <div class="mf-group">
                     <label for="{{ prod_form.stock_inicial.id_for_label }}" class="mf-label">
                         {{ prod_form.stock_inicial.label }} <span class="mf-required">*</span>
                     </label>
@@ -251,6 +294,30 @@
 <script data-page-script="true">
 (() => {
 const initCatalogoPage = () => {
+    const tipoBienSelect = document.querySelector('#modal-producto select[name="tipo_bien"]');
+    const placaInput = document.querySelector('#modal-producto input[name="numero_placa"]');
+    const cuentadanteInput = document.querySelector('#modal-producto input[name="cuentadante"]');
+    const devolutivoWrap = document.getElementById('devolutivo-fields-create');
+
+    const toggleDevolutivoFields = () => {
+        if (!tipoBienSelect || !placaInput || !cuentadanteInput) return;
+        const esDevolutivo = tipoBienSelect.value === 'devolutivo';
+        placaInput.required = esDevolutivo;
+        cuentadanteInput.required = esDevolutivo;
+        if (!esDevolutivo) {
+            placaInput.value = '';
+            cuentadanteInput.value = '';
+        }
+        if (devolutivoWrap) {
+            devolutivoWrap.style.opacity = esDevolutivo ? '1' : '.55';
+        }
+    };
+
+    if (tipoBienSelect) {
+        tipoBienSelect.addEventListener('change', toggleDevolutivoFields);
+        toggleDevolutivoFields();
+    }
+
 
     /* ---- Helpers ---------------------------------------- */
     const openModal  = id => {

@@ -1,0 +1,138 @@
+{% extends 'inventario/shared/base.html' %}
+{% load static %}
+
+{% block title %}Panel de carga de inventario{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventario/dashboard/css/dashboard.css' %}" data-page-style="true">
+<style data-page-style="true">
+.import-shell {
+    display: grid;
+    gap: 1rem;
+}
+.import-card {
+    border: 1px solid #d8e4f1;
+    background: #fff;
+    border-radius: 14px;
+    padding: 1rem;
+}
+.import-card h2 {
+    margin: 0 0 .35rem;
+    color: #123024;
+}
+.import-card p {
+    margin: 0;
+    color: #4a6278;
+}
+.import-card__actions {
+    margin-top: .9rem;
+    display: flex;
+    gap: .6rem;
+    flex-wrap: wrap;
+}
+.import-btn {
+    text-decoration: none;
+    border: none;
+    border-radius: 10px;
+    height: 40px;
+    padding: 0 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: #1f6fda;
+    color: #fff;
+}
+.import-table-wrap {
+    margin-top: .8rem;
+    overflow: auto;
+    border: 1px solid #dce8d8;
+    border-radius: 12px;
+}
+.import-history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.import-history-table th,
+.import-history-table td {
+    border-bottom: 1px solid #edf3ee;
+    padding: .52rem .6rem;
+    text-align: left;
+    font-size: .89rem;
+}
+.import-badge {
+    display: inline-flex;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: .78rem;
+    font-weight: 700;
+    background: #e8f5e8;
+    color: #1f6d2d;
+}
+.import-badge--warn {
+    background: #fff3cd;
+    color: #8a6d1f;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="import-shell">
+    <article class="import-card">
+        <h2>Cargar inventario desde Excel</h2>
+        <p>Desde aquí puedes revisar el historial de importaciones y abrir la pantalla de carga de archivo para alimentar el inventario.</p>
+        <div class="import-card__actions">
+            <a href="{% url 'importar_inventario_carga' %}" class="import-btn">
+                <ion-icon name="cloud-upload-outline"></ion-icon>
+                Ir a cargar archivo Excel
+            </a>
+        </div>
+    </article>
+
+    <article class="import-card">
+        <h2>Historial de subidas</h2>
+        <p>Bitácora de las últimas importaciones ejecutadas desde este módulo.</p>
+        <div class="import-table-wrap">
+            <table class="import-history-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Archivo</th>
+                        <th>Estado</th>
+                        <th>Productos</th>
+                        <th>Creados</th>
+                        <th>Actualizados</th>
+                        <th>Imgs Ppal</th>
+                        <th>Imgs Sec</th>
+                        <th>Errores</th>
+                        <th>Resumen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs_importacion %}
+                    <tr>
+                        <td>{{ log.fch_registro|date:'d/m/Y H:i' }}</td>
+                        <td>{{ log.nombre_archivo }}</td>
+                        <td>
+                            <span class="import-badge {% if log.estado != 'ok' %}import-badge--warn{% endif %}">{{ log.estado }}</span>
+                        </td>
+                        <td>{{ log.total_productos }}</td>
+                        <td>{{ log.total_creados }}</td>
+                        <td>{{ log.total_actualizados }}</td>
+                        <td>{{ log.total_imagenes_principales }}</td>
+                        <td>{{ log.total_imagenes_secundarias }}</td>
+                        <td>{{ log.total_errores }}</td>
+                        <td>{{ log.resumen|default:'-' }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10">Aún no hay historial de importaciones.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
+{% endblock %}

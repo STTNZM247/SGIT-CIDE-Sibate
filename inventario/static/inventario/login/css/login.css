@@ -4,7 +4,140 @@ body, html {
     margin: 0;
     padding: 0;
     background: linear-gradient(135deg, #6dd746 0%, #5bc236 20%, #4da932 40%, #39A900 60%, #4da932 80%, #5bc236 100%);
+    background-size: 200% 200%;
     background-attachment: fixed;
+    animation: login-bg-shift 26s ease-in-out infinite alternate;
+}
+
+body {
+    position: relative;
+    overflow-x: hidden;
+}
+
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    inset: -30vmax;
+    pointer-events: none;
+    z-index: 0;
+    will-change: transform, opacity;
+    mix-blend-mode: soft-light;
+}
+
+body::before {
+    background:
+        radial-gradient(56% 38% at 14% 24%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 72%),
+        radial-gradient(48% 34% at 72% 20%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 72%),
+        radial-gradient(54% 36% at 36% 74%, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 76%);
+    opacity: 0.56;
+    filter: blur(1.8px);
+    animation: login-waves-drift-a 18s ease-in-out infinite alternate;
+}
+
+body::after {
+    background:
+        radial-gradient(50% 32% at 84% 70%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 74%),
+        radial-gradient(44% 30% at 24% 56%, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 74%);
+    opacity: 0.48;
+    filter: blur(2.2px);
+    animation: login-waves-drift-b 24s ease-in-out infinite alternate;
+}
+
+@keyframes login-bg-shift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 55% 45%;
+    }
+    100% {
+        background-position: 100% 50%;
+    }
+}
+
+@keyframes login-waves-drift-a {
+    0% {
+        transform: translate3d(-5%, -1%, 0) scale(1);
+        opacity: 0.34;
+    }
+    50% {
+        transform: translate3d(4%, -3%, 0) scale(1.08);
+        opacity: 0.58;
+    }
+    100% {
+        transform: translate3d(9%, 2%, 0) scale(1.13);
+        opacity: 0.42;
+    }
+}
+
+@keyframes login-waves-drift-b {
+    0% {
+        transform: translate3d(4%, 3%, 0) scale(1.03);
+        opacity: 0.28;
+    }
+    50% {
+        transform: translate3d(-5%, -3%, 0) scale(1.12);
+        opacity: 0.5;
+    }
+    100% {
+        transform: translate3d(-10%, -5%, 0) scale(1.16);
+        opacity: 0.36;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body,
+    html {
+        animation: none;
+    }
+
+    body::before,
+    body::after {
+        animation: none;
+    }
+}
+
+.login-sena-signature {
+    position: fixed;
+    left: 14px;
+    top: 14px;
+    z-index: 25;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+}
+
+.login-sena-signature__logo {
+    width: 18px;
+    height: 18px;
+    background-color: #ffffff;
+    -webkit-mask-image: url('/static/inventario/img/Logo%20SENA.svg');
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+    mask-image: url('/static/inventario/img/Logo%20SENA.svg');
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    flex-shrink: 0;
+}
+
+.login-sena-signature__text {
+    color: #ffffff;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    text-transform: uppercase;
 }
 
 .app-shell, .app-content, .app-main, .app-container {
@@ -23,6 +156,8 @@ body, html {
     justify-content: center;
     padding: 24px 16px;
     box-sizing: border-box;
+    position: relative;
+    z-index: 1;
 }
 
 .login-card {
@@ -625,6 +760,16 @@ body, html {
 
     .registro-grid--double {
         grid-template-columns: 1fr;
+    }
+
+    .login-sena-signature {
+        left: 10px;
+        top: 10px;
+        padding: 6px 10px;
+    }
+
+    .login-sena-signature__text {
+        font-size: 0.72rem;
     }
 }
 

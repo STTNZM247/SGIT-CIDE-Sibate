@@ -83,7 +83,41 @@
                 <p class="product-detail-label">Cantidad actual</p>
                 <p class="product-detail-value">{{ disponibilidad.cantidad|default:'0' }}</p>
             </div>
+            <div>
+                <p class="product-detail-label">Unidad de medida</p>
+                <p class="product-detail-value">{{ producto.get_unidad_medida_display }}</p>
+            </div>
+            <div>
+                <p class="product-detail-label">Ubicación</p>
+                <p class="product-detail-value">{{ producto.ubicacion|default:'Sin ubicación' }}</p>
+            </div>
+            <div>
+                <p class="product-detail-label">Tipo de bien</p>
+                <p class="product-detail-value">{{ producto.get_tipo_bien_display }}</p>
+            </div>
         </div>
+        {% if producto.subcategorias.all %}
+        <div class="product-detail-block">
+            <p class="product-detail-label">Subcategorías</p>
+            <div class="subcats-chip-wrap">
+                {% for sub in producto.subcategorias.all %}
+                <span class="subcats-chip">{{ sub.nombre_subcategoria }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% if producto.tipo_bien == 'devolutivo' %}
+        <div class="product-detail-grid">
+            <div>
+                <p class="product-detail-label">Número de placa</p>
+                <p class="product-detail-value">{{ producto.numero_placa|default:'-' }}</p>
+            </div>
+            <div>
+                <p class="product-detail-label">Cuentadante</p>
+                <p class="product-detail-value">{{ producto.cuentadante|default:'-' }}</p>
+            </div>
+        </div>
+        {% endif %}
         <div class="product-detail-block">
             <p class="product-detail-label">Descripción del producto</p>
             <p class="product-detail-value product-detail-value--preserve">{% if producto.descripcion %}{{ producto.descripcion }}{% else %}Sin descripción.{% endif %}</p>
