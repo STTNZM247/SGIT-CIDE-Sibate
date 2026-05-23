@@ -25,6 +25,7 @@ from .forms import ProductoForm
 
 DEVOLUCION_CODIGO_SEGUNDOS = 60
 VALIDACION_MANUAL_VENCE_HORAS = 4
+SUBCAT_MAX_WORD_LENGTH = 20
 
 
 def _expirar_solicitudes_validacion_manual():
@@ -329,6 +330,16 @@ def _parse_subcategorias_text(raw_text):
     return unique
 
 
+def _validar_palabras_subcategoria(nombre):
+    for palabra in re.findall(r'\S+', (nombre or '').strip()):
+        if len(palabra) > SUBCAT_MAX_WORD_LENGTH:
+            return (
+                f'Cada palabra del nombre de la subcategoria debe tener '
+                f'maximo {SUBCAT_MAX_WORD_LENGTH} caracteres.'
+            )
+    return None
+
+
 def _sync_subcategorias_producto(producto, catalogo_id, selected_ids=None, raw_new=''):
     selected_ids = selected_ids or []
     selected_qs = Subcategoria.objects.filter(pk__in=selected_ids)
@@ -434,11 +445,16 @@ def subcategoria_crear_rapida(request, cat_id):
     if not nombre:
         return JsonResponse({'ok': False, 'error': 'Debes escribir un nombre.'}, status=400)
 
+    ruta = [segmento.strip() for segmento in nombre.split('/') if segmento.strip()]
+    for segmento in ruta:
+        long_word_error = _validar_palabras_subcategoria(segmento)
+        if long_word_error:
+            return JsonResponse({'ok': False, 'error': long_word_error}, status=400)
+
     parent = None
     if parent_id:
         parent = get_object_or_404(Subcategoria, pk=parent_id, id_cat_fk=catalogo)
 
-    ruta = [segmento.strip() for segmento in nombre.split('/') if segmento.strip()]
     before_ids = set(
         Subcategoria.objects
         .filter(id_cat_fk=catalogo)
@@ -496,6 +512,10 @@ def subcategoria_renombrar(request, cat_id, subcat_id):
 
     if not nuevo_nombre:
         return JsonResponse({'ok': False, 'error': 'Debes escribir un nombre.'}, status=400)
+
+    long_word_error = _validar_palabras_subcategoria(nuevo_nombre)
+    if long_word_error:
+        return JsonResponse({'ok': False, 'error': long_word_error}, status=400)
 
     old_name = subcategoria.nombre_subcategoria
     old_route = subcategoria.ruta_completa

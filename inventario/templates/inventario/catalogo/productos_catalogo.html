@@ -276,6 +276,7 @@ const initProductosCatalogoPage = () => {
     const moveProductUrlTemplate = workspace ? (workspace.dataset.moveProductUrlTemplate || '') : '';
     const restoreProductUrlTemplate = workspace ? (workspace.dataset.restoreProductUrlTemplate || '') : '';
     const currentSubcatId = workspace ? (workspace.dataset.currentSubcatId || '') : '';
+    const subcatWordMaxLength = 20;
     let currentComposer = null;
     let currentContextParentId = '';
     let currentContextNodeId = '';
@@ -295,6 +296,56 @@ const initProductosCatalogoPage = () => {
         cleanupFns.push(() => target.removeEventListener(eventName, handler, options));
     };
 
+    const normalizeSpaces = (value) => String(value || '').replace(/\s+/g, ' ').trim();
+
+    const hasTooLongWord = (value) => {
+        const normalized = normalizeSpaces(value);
+        if (!normalized) return false;
+        return normalized.split(' ').some((word) => word.length > subcatWordMaxLength);
+    };
+
+    const formatSubcatName = (value) => {
+        const fullName = normalizeSpaces(value);
+        if (!fullName) {
+            return {
+                fullName: '',
+                displayName: '',
+                truncated: false,
+            };
+        }
+
+        const displayName = fullName
+            .split(' ')
+            .map((word) => (word.length > subcatWordMaxLength ? `${word.slice(0, subcatWordMaxLength)}...` : word))
+            .join(' ');
+
+        return {
+            fullName,
+            displayName,
+            truncated: displayName !== fullName,
+        };
+    };
+
+    const applySubcatName = (nameEl, rawValue) => {
+        if (!nameEl) return;
+        const formatted = formatSubcatName(rawValue);
+        nameEl.textContent = formatted.displayName;
+        nameEl.dataset.fullName = formatted.fullName;
+        if (formatted.fullName) {
+            nameEl.title = formatted.fullName;
+        } else {
+            nameEl.removeAttribute('title');
+        }
+        nameEl.classList.toggle('subcat-node__name--truncated', formatted.truncated);
+    };
+
+    const syncExistingSubcatNames = () => {
+        if (!subcatRoot) return;
+        subcatRoot.querySelectorAll('.subcat-node__name').forEach((nameEl) => {
+            applySubcatName(nameEl, nameEl.dataset.fullName || nameEl.textContent || '');
+        });
+    };
+
     window.__subcatContextCleanup = () => {
         while (cleanupFns.length) {
             const fn = cleanupFns.pop();
@@ -304,6 +355,8 @@ const initProductosCatalogoPage = () => {
             window.__subcatContextCleanup = null;
         }
     };
+
+    syncExistingSubcatNames();
 
     const getCsrfToken = () => {
         const fromInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
@@ -515,6 +568,35 @@ const initProductosCatalogoPage = () => {
         const productTiles = Array.from(document.querySelectorAll('[data-product-tile][data-product-id]'));
         if (!productTiles.length) return;
 
+        const dragScrollEdge = 96;
+        const dragScrollSpeed = 18;
+        let dragScrollRaf = null;
+        let dragScrollDelta = 0;
+
+        const stopViewportAutoScroll = () => {
+            dragScrollDelta = 0;
+            if (dragScrollRaf) {
+                window.cancelAnimationFrame(dragScrollRaf);
+                dragScrollRaf = null;
+            }
+        };
+
+        const startViewportAutoScroll = (delta) => {
+            dragScrollDelta = delta;
+            if (dragScrollRaf) return;
+
+            const tick = () => {
+                if (!dragPayload || !dragScrollDelta) {
+                    dragScrollRaf = null;
+                    return;
+                }
+                window.scrollBy({ top: dragScrollDelta, left: 0, behavior: 'auto' });
+                dragScrollRaf = window.requestAnimationFrame(tick);
+            };
+
+            dragScrollRaf = window.requestAnimationFrame(tick);
+        };
+
         const setDropHighlight = (row, on) => {
             if (!row) return;
             row.classList.toggle('is-drop-target', !!on);
@@ -597,8 +679,32 @@ const initProductosCatalogoPage = () => {
             bind(tile, 'dragend', () => {
                 tile.classList.remove('is-dragging-product');
                 dragPayload = null;
+                stopViewportAutoScroll();
                 subcatRoot.querySelectorAll('[data-subcat-node-row]').forEach((row) => setDropHighlight(row, false));
             });
+        });
+
+        bind(document, 'dragover', (event) => {
+            if (!dragPayload) return;
+
+            const pointerY = event.clientY;
+            if (pointerY <= dragScrollEdge) {
+                event.preventDefault();
+                startViewportAutoScroll(-dragScrollSpeed);
+                return;
+            }
+
+            if (pointerY >= window.innerHeight - dragScrollEdge) {
+                event.preventDefault();
+                startViewportAutoScroll(dragScrollSpeed);
+                return;
+            }
+
+            stopViewportAutoScroll();
+        });
+
+        bind(document, 'drop', () => {
+            stopViewportAutoScroll();
         });
 
         bind(subcatRoot, 'dragover', (event) => {
@@ -623,6 +729,7 @@ const initProductosCatalogoPage = () => {
             if (!row || !node || !dragPayload) return;
 
             event.preventDefault();
+            stopViewportAutoScroll();
             setDropHighlight(row, false);
 
             const destinationSubcatId = node.dataset.subcatId || '';
@@ -666,6 +773,7 @@ const initProductosCatalogoPage = () => {
                 if (!target || !dragPayload) return;
 
                 event.preventDefault();
+                stopViewportAutoScroll();
                 setCrumbDropHighlight(target, false);
 
                 const destinationSubcatId = (target.dataset.subcatId || '').trim();
@@ -759,7 +867,7 @@ const initProductosCatalogoPage = () => {
 
         const name = document.createElement('span');
         name.className = 'subcat-node__name';
-        name.textContent = subcat.nombre;
+        applySubcatName(name, subcat.nombre);
 
         row.appendChild(icon);
         row.appendChild(name);
@@ -825,6 +933,13 @@ const initProductosCatalogoPage = () => {
             const value = input.value.trim();
             if (!value || composer.dataset.saving === 'true') {
                 if (!value) clearComposer();
+                return;
+            }
+
+            if (hasTooLongWord(value)) {
+                window.alert(`Cada palabra debe tener maximo ${subcatWordMaxLength} caracteres.`);
+                input.focus();
+                input.select();
                 return;
             }
 
@@ -923,7 +1038,7 @@ const initProductosCatalogoPage = () => {
             return;
         }
 
-        const oldName = (nameEl.textContent || '').trim();
+        const oldName = normalizeSpaces(nameEl.dataset.fullName || nameEl.textContent || '');
         nameEl.hidden = true;
 
         const input = document.createElement('input');
@@ -945,6 +1060,14 @@ const initProductosCatalogoPage = () => {
                 rollback();
                 return;
             }
+
+            if (hasTooLongWord(newName)) {
+                window.alert(`Cada palabra debe tener maximo ${subcatWordMaxLength} caracteres.`);
+                input.focus();
+                input.select();
+                return;
+            }
+
             if (newName === oldName) {
                 rollback();
                 return;
@@ -975,7 +1098,7 @@ const initProductosCatalogoPage = () => {
                     throw new Error(payload.error || 'No fue posible cambiar el nombre.');
                 }
 
-                nameEl.textContent = payload.subcategoria?.nombre || newName;
+                applySubcatName(nameEl, payload.subcategoria?.nombre || newName);
                 rollback();
             } catch (error) {
                 window.alert(error.message || 'No fue posible cambiar el nombre.');
