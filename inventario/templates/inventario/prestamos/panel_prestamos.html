@@ -109,31 +109,6 @@ html[data-theme="dark"] .prestamo-dias--ok {
         {% endif %}
     </div>
 
-    <div class="prestamos-stats">
-        <div class="prestamos-stat-tile">
-            <span><ion-icon name="albums-outline"></ion-icon>Préstamos activos</span>
-            <strong>{{ total_activos }}</strong>
-        </div>
-        <div class="prestamos-stat-tile prestamos-stat-tile--vencido">
-            <span><ion-icon name="warning-outline"></ion-icon>Vencidos</span>
-            <strong>{{ total_vencidos }}</strong>
-        </div>
-        <div class="prestamos-stat-tile">
-            <span><ion-icon name="sparkles-outline"></ion-icon>Al día</span>
-            <strong>{{ total_al_dia }}</strong>
-        </div>
-        <div class="prestamos-stat-tile prestamos-stat-tile--devuelto">
-            <span><ion-icon name="checkmark-done-outline"></ion-icon>Devueltos</span>
-            <strong>{{ total_devueltos }}</strong>
-        </div>
-        {% if total_cancelados > 0 %}
-        <div class="prestamos-stat-tile prestamos-stat-tile--cancelado">
-            <span><ion-icon name="close-circle-outline"></ion-icon>Cancelados</span>
-            <strong>{{ total_cancelados }}</strong>
-        </div>
-        {% endif %}
-    </div>
-
     <form method="get" class="prestamos-search-form" aria-label="Buscar y filtrar préstamos">
         <input type="hidden" name="filtro" value="{{ filtro_activo }}">
         <div class="prestamos-search-box">
