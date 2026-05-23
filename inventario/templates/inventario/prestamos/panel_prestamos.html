@@ -111,48 +111,78 @@ html[data-theme="dark"] .prestamo-dias--ok {
 
     <div class="prestamos-stats">
         <div class="prestamos-stat-tile">
-            <span>Préstamos activos</span>
+            <span><ion-icon name="albums-outline"></ion-icon>Préstamos activos</span>
             <strong>{{ total_activos }}</strong>
         </div>
         <div class="prestamos-stat-tile prestamos-stat-tile--vencido">
-            <span>Vencidos</span>
+            <span><ion-icon name="warning-outline"></ion-icon>Vencidos</span>
             <strong>{{ total_vencidos }}</strong>
         </div>
         <div class="prestamos-stat-tile">
-            <span>Al día</span>
+            <span><ion-icon name="sparkles-outline"></ion-icon>Al día</span>
             <strong>{{ total_al_dia }}</strong>
         </div>
         <div class="prestamos-stat-tile prestamos-stat-tile--devuelto">
-            <span>Devueltos</span>
+            <span><ion-icon name="checkmark-done-outline"></ion-icon>Devueltos</span>
             <strong>{{ total_devueltos }}</strong>
         </div>
         {% if total_cancelados > 0 %}
         <div class="prestamos-stat-tile prestamos-stat-tile--cancelado">
-            <span>Cancelados</span>
+            <span><ion-icon name="close-circle-outline"></ion-icon>Cancelados</span>
             <strong>{{ total_cancelados }}</strong>
         </div>
         {% endif %}
     </div>
 
-    {% if prestamos or filtro_activo != 'todos' %}
+    <form method="get" class="prestamos-search-form" aria-label="Buscar y filtrar préstamos">
+        <input type="hidden" name="filtro" value="{{ filtro_activo }}">
+        <div class="prestamos-search-box">
+            <ion-icon name="search-outline"></ion-icon>
+            <input
+                type="search"
+                name="q"
+                value="{{ q_busqueda }}"
+                placeholder="Buscar por CC, nombre, fecha, tipo, producto o catálogo"
+            >
+        </div>
+        <div class="prestamos-date-filters">
+            <label>
+                Desde
+                <input type="date" name="fecha_desde" value="{{ fecha_desde }}">
+            </label>
+            <label>
+                Hasta
+                <input type="date" name="fecha_hasta" value="{{ fecha_hasta }}">
+            </label>
+            <button type="submit" class="prestamos-search-btn">
+                <ion-icon name="funnel-outline"></ion-icon>
+                Filtrar
+            </button>
+            {% if q_busqueda or fecha_desde or fecha_hasta %}
+            <a href="?filtro={{ filtro_activo }}" class="prestamos-search-reset">Limpiar</a>
+            {% endif %}
+        </div>
+    </form>
+
+    {% if prestamos or filtro_activo != 'todos' or q_busqueda or fecha_desde or fecha_hasta %}
     <nav class="prestamos-filtros" aria-label="Filtrar préstamos">
-        <a href="?filtro=todos" class="prestamos-filtro {% if filtro_activo == 'todos' %}is-active{% endif %}">
+        <a href="?filtro=todos{% if q_busqueda %}&q={{ q_busqueda|urlencode }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}" class="prestamos-filtro {% if filtro_activo == 'todos' %}is-active{% endif %}">
             <span>Todos</span>
             <strong>{{ total_activos|add:total_cancelados }}</strong>
         </a>
-        <a href="?filtro=al-dia" class="prestamos-filtro {% if filtro_activo == 'al-dia' %}is-active{% endif %}">
+        <a href="?filtro=al-dia{% if q_busqueda %}&q={{ q_busqueda|urlencode }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}" class="prestamos-filtro {% if filtro_activo == 'al-dia' %}is-active{% endif %}">
             <span>Al día</span>
             <strong>{{ total_al_dia }}</strong>
         </a>
-        <a href="?filtro=vencido" class="prestamos-filtro prestamos-filtro--vencido {% if filtro_activo == 'vencido' %}is-active{% endif %}">
+        <a href="?filtro=vencido{% if q_busqueda %}&q={{ q_busqueda|urlencode }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}" class="prestamos-filtro prestamos-filtro--vencido {% if filtro_activo == 'vencido' %}is-active{% endif %}">
             <span>Vencidos</span>
             <strong>{{ total_vencidos }}</strong>
         </a>
-        <a href="?filtro=devuelto" class="prestamos-filtro prestamos-filtro--devuelto {% if filtro_activo == 'devuelto' %}is-active{% endif %}">
+        <a href="?filtro=devuelto{% if q_busqueda %}&q={{ q_busqueda|urlencode }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}" class="prestamos-filtro prestamos-filtro--devuelto {% if filtro_activo == 'devuelto' %}is-active{% endif %}">
             <span>Devueltos</span>
             <strong>{{ total_devueltos }}</strong>
         </a>
-        <a href="?filtro=cancelado" class="prestamos-filtro prestamos-filtro--cancelado {% if filtro_activo == 'cancelado' %}is-active{% endif %}">
+        <a href="?filtro=cancelado{% if q_busqueda %}&q={{ q_busqueda|urlencode }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}" class="prestamos-filtro prestamos-filtro--cancelado {% if filtro_activo == 'cancelado' %}is-active{% endif %}">
             <span>Cancelados</span>
             <strong>{{ total_cancelados }}</strong>
         </a>

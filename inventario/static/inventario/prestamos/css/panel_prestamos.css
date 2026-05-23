@@ -97,18 +97,33 @@
 .prestamos-stat-tile {
   border-radius: 18px;
   border: 1px solid #dde8d8;
-  background: #fff;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfef9 100%);
   padding: 16px 18px;
   display: grid;
   gap: 4px;
+  box-shadow: 0 8px 18px rgba(34, 58, 40, 0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.prestamos-stat-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(34, 58, 40, 0.12);
 }
 
 .prestamos-stat-tile span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #667068;
+}
+
+.prestamos-stat-tile span ion-icon {
+  font-size: 0.95rem;
+  color: #3d7a1a;
 }
 
 .prestamos-stat-tile strong {
@@ -127,12 +142,20 @@
   color: #b43a3a;
 }
 
+.prestamos-stat-tile--vencido span ion-icon {
+  color: #b43a3a;
+}
+
 .prestamos-stat-tile--devuelto {
   border-color: #b7e0c1;
   background: #eef9f1;
 }
 
 .prestamos-stat-tile--devuelto strong {
+  color: #217244;
+}
+
+.prestamos-stat-tile--devuelto span ion-icon {
   color: #217244;
 }
 
@@ -143,6 +166,99 @@
 
 .prestamos-stat-tile--cancelado strong {
   color: #9a2020;
+}
+
+.prestamos-stat-tile--cancelado span ion-icon {
+  color: #9a2020;
+}
+
+.prestamos-search-form {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) auto;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.prestamos-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #dce7d7;
+  border-radius: 14px;
+  background: #fff;
+  padding: 0 12px;
+  box-shadow: 0 8px 20px rgba(57, 169, 0, 0.08);
+}
+
+.prestamos-search-box ion-icon {
+  color: #39a900;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.prestamos-search-box input {
+  width: 100%;
+  height: 44px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #263229;
+  font-size: 0.92rem;
+}
+
+.prestamos-date-filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.prestamos-date-filters label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #58675d;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.prestamos-date-filters input[type="date"] {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #d2dfd2;
+  background: #fff;
+  color: #2c3a2f;
+  padding: 0 10px;
+  font-size: 0.85rem;
+}
+
+.prestamos-search-btn {
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #2f8500;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.prestamos-search-reset {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #d8e4d8;
+  color: #3c4d41;
+  background: #fff;
+  padding: 0 12px;
+  text-decoration: none;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
 }
 
 /* Lista de préstamos */
@@ -483,7 +599,11 @@
   transition: opacity 0.2s, transform 0.15s;
 }
 
-.prestamo-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.prestamo-btn:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(22, 34, 24, 0.16);
+}
 
 .prestamo-btn--detail {
   background: #f0f8ea;
@@ -804,6 +924,18 @@
 @media (max-width: 860px) {
   .prestamos-list-header { display: none; }
   .prestamos-filtros { grid-template-columns: 1fr 1fr; }
+  .prestamos-search-form { grid-template-columns: 1fr; }
+  .prestamos-date-filters {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .prestamos-search-btn,
+  .prestamos-search-reset {
+    justify-content: center;
+  }
 
   .prestamos-page {
     padding-bottom: 108px;
@@ -910,6 +1042,10 @@ html[data-theme="dark"] .prestamos-stat-tile span {
   color: #8ea88e !important;
 }
 
+html[data-theme="dark"] .prestamos-stat-tile span ion-icon {
+  color: #8ecb96 !important;
+}
+
 html[data-theme="dark"] .prestamos-stat-tile strong {
   color: #e2ede2 !important;
 }
@@ -942,6 +1078,40 @@ html[data-theme="dark"] .prestamos-stat-tile--cancelado strong {
 }
 
 html[data-theme="dark"] .prestamos-filtro {
+  background: #141b14 !important;
+  border-color: #253025 !important;
+  color: #c8dcc8 !important;
+}
+
+html[data-theme="dark"] .prestamos-search-box {
+  background: #141b14 !important;
+  border-color: #253025 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .prestamos-search-box ion-icon {
+  color: #7dd87d !important;
+}
+
+html[data-theme="dark"] .prestamos-search-box input {
+  color: #d9ead9 !important;
+}
+
+html[data-theme="dark"] .prestamos-date-filters label {
+  color: #8ea88e !important;
+}
+
+html[data-theme="dark"] .prestamos-date-filters input[type="date"] {
+  background: #141b14 !important;
+  border-color: #253025 !important;
+  color: #d9ead9 !important;
+}
+
+html[data-theme="dark"] .prestamos-search-btn {
+  background: #1f5f00 !important;
+}
+
+html[data-theme="dark"] .prestamos-search-reset {
   background: #141b14 !important;
   border-color: #253025 !important;
   color: #c8dcc8 !important;

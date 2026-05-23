@@ -2,8 +2,10 @@ import base64
 import csv
 import io
 import os
+import re
 import secrets
 import textwrap
+import unicodedata
 from collections import defaultdict
 from datetime import date, timedelta
 
@@ -3784,16 +3786,117 @@ def prestamos_panel(request):
         -(p.fecha_cierre_display.timestamp()) if p.fecha_cierre_display else 0,
     ))
 
-    total_cancelados = sum(1 for p in prestamos if p.estado == 'rechazado')
-    total_devueltos = sum(1 for p in prestamos if p.estado == 'devuelto')
-    total_vencidos = sum(1 for p in prestamos if p.estado == 'vencido' or (p.estado == 'entregado' and p.es_vencido))
-    total_activos = sum(1 for p in prestamos if p.estado in ('entregado', 'vencido'))
+    q_busqueda = (request.GET.get('q') or '').strip()
+    fecha_desde_raw = (request.GET.get('fecha_desde') or '').strip()
+    fecha_hasta_raw = (request.GET.get('fecha_hasta') or '').strip()
+
+    fecha_desde = None
+    fecha_hasta = None
+    try:
+        if fecha_desde_raw:
+            fecha_desde = date.fromisoformat(fecha_desde_raw)
+    except ValueError:
+        fecha_desde = None
+    try:
+        if fecha_hasta_raw:
+            fecha_hasta = date.fromisoformat(fecha_hasta_raw)
+    except ValueError:
+        fecha_hasta = None
+
+    if fecha_desde and fecha_hasta and fecha_desde > fecha_hasta:
+        fecha_desde, fecha_hasta = fecha_hasta, fecha_desde
+
+    def _normalize_search_text(value):
+        text = str(value or '').strip().lower()
+        text = unicodedata.normalize('NFKD', text)
+        text = ''.join(ch for ch in text if not unicodedata.combining(ch))
+        text = re.sub(r'[^a-z0-9]+', '', text)
+        return text
+
+    normalized_query = _normalize_search_text(q_busqueda)
+
+    def _tipo_devolucion_label(tipo):
+        if tipo == 'individual':
+            return 'individual'
+        if tipo == 'mismo_dia':
+            return 'mismo dia'
+        if tipo == 'por_dias':
+            return 'por dias'
+        return 'global'
+
+    def _estado_label(prestamo):
+        if prestamo.estado == 'rechazado':
+            return 'cancelado'
+        if prestamo.estado == 'devuelto':
+            return 'devuelto'
+        if prestamo.estado == 'vencido' or (prestamo.estado == 'entregado' and prestamo.es_vencido):
+            return 'vencido'
+        if prestamo.estado == 'entregado':
+            return 'al dia'
+        return prestamo.estado or ''
+
+    prestamos_filtrables = []
+    for prestamo in prestamos:
+        fecha_registro_local = timezone.localtime(prestamo.fch_registro) if prestamo.fch_registro else None
+        fecha_registro_date = fecha_registro_local.date() if fecha_registro_local else None
+
+        if fecha_desde and (not fecha_registro_date or fecha_registro_date < fecha_desde):
+            continue
+        if fecha_hasta and (not fecha_registro_date or fecha_registro_date > fecha_hasta):
+            continue
+
+        if normalized_query:
+            usuario = prestamo.id_usuario_fk
+            detalle_textos = []
+            for det in prestamo.detalles_entregados:
+                detalle_textos.extend([
+                    det.nombre_producto,
+                    det.nombre_catalogo,
+                ])
+
+            estado_texto = _estado_label(prestamo)
+            tipo_texto = _tipo_devolucion_label(prestamo.tipo_devolucion)
+            fecha_devolucion = prestamo.fecha_devolucion_display
+            fecha_cierre = prestamo.fecha_cierre_display
+
+            search_fields = [
+                prestamo.id_pedido,
+                usuario.cc if usuario else '',
+                usuario.nombre if usuario else '',
+                usuario.apellido if usuario else '',
+                f'{(usuario.nombre or "") if usuario else ""} {(usuario.apellido or "") if usuario else ""}',
+                usuario.correo if usuario else '',
+                prestamo.area_ubicacion,
+                prestamo.estado,
+                estado_texto,
+                tipo_texto,
+                fecha_registro_local.strftime('%d/%m/%Y %H:%M') if fecha_registro_local else '',
+                fecha_registro_local.strftime('%Y-%m-%d') if fecha_registro_local else '',
+                fecha_devolucion.strftime('%d/%m/%Y %H:%M') if fecha_devolucion else '',
+                fecha_devolucion.strftime('%Y-%m-%d') if fecha_devolucion else '',
+                fecha_cierre.strftime('%d/%m/%Y %H:%M') if fecha_cierre else '',
+                fecha_cierre.strftime('%Y-%m-%d') if fecha_cierre else '',
+                'prestamo',
+                'pedido',
+            ] + detalle_textos
+
+            joined = _normalize_search_text(' '.join(str(x or '') for x in search_fields))
+            if normalized_query not in joined:
+                continue
+
+        prestamos_filtrables.append(prestamo)
+
+    total_cancelados = sum(1 for p in prestamos_filtrables if p.estado == 'rechazado')
+    total_devueltos = sum(1 for p in prestamos_filtrables if p.estado == 'devuelto')
+    total_vencidos = sum(1 for p in prestamos_filtrables if p.estado == 'vencido' or (p.estado == 'entregado' and p.es_vencido))
+    total_activos = sum(1 for p in prestamos_filtrables if p.estado in ('entregado', 'vencido'))
     total_al_dia = total_activos - total_vencidos
 
     filtro = (request.GET.get('filtro') or 'todos').strip().lower()
     if filtro not in {'todos', 'vencido', 'al-dia', 'devuelto', 'cancelado'}:
         filtro = 'todos'
 
+    prestamos = list(prestamos_filtrables)
     if filtro == 'vencido':
         prestamos = [p for p in prestamos if p.estado == 'vencido' or (p.estado == 'entregado' and p.es_vencido)]
     elif filtro == 'al-dia':
@@ -3812,6 +3915,9 @@ def prestamos_panel(request):
         'total_devueltos': total_devueltos,
         'total_activos': total_activos,
         'ahora': ahora,
+        'q_busqueda': q_busqueda,
+        'fecha_desde': fecha_desde.isoformat() if fecha_desde else '',
+        'fecha_hasta': fecha_hasta.isoformat() if fecha_hasta else '',
     })
 
 @login_required
