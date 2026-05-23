@@ -27,6 +27,11 @@
     .product-detail-routes{display:flex;flex-wrap:wrap;gap:8px;}
     .product-route-chip{display:inline-flex;align-items:center;max-width:100%;padding:8px 10px;border-radius:999px;background:#eef8ef;color:#1e5f2a;font-size:.78rem;font-weight:700;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none;transition:background .14s ease, box-shadow .14s ease, transform .14s ease;}
     .product-route-chip:hover{background:#e3f3e5;box-shadow:0 0 0 2px rgba(57,169,0,.12);transform:translateY(-1px);}
+    .inventario-toolbar{z-index:60;}
+    .inventario-categoria-form{z-index:70;}
+    .custom-select{z-index:80;}
+    .custom-select.is-open{z-index:1200;}
+    .custom-select__options{z-index:1300;}
     </style>
 {% endblock %}
 
@@ -193,28 +198,32 @@
 
 {% block extra_js %}
     <script src="{% static 'inventario/dashboard/js/dashboard.js' %}" defer></script>
-    <script src="{% static 'inventario/dashboard/js/custom_select.js' %}" defer></script>
     <script data-page-script="true">
     (() => {
         // Inicializar custom select de catálogo (re-init en navegación PJAX)
-        (function initCustomSelect() {
+        function initCustomSelect() {
             var sel = document.getElementById('customCatalogSelect');
             if (!sel || sel._pjaxInited) return;
-            sel._pjaxInited = true;
             var selectedBtn = document.getElementById('customSelectSelected');
             var selectedText = document.getElementById('customSelectText');
             var optsContainer = document.getElementById('customSelectOptions');
             var input = document.getElementById('categoriaInput');
             var form = sel.closest('form');
+            if (!selectedBtn || !selectedText || !optsContainer || !input) return;
+
+            sel._pjaxInited = true;
+
             function setOpen(open) {
                 sel.classList.toggle('is-open', open);
                 sel.setAttribute('aria-expanded', open ? 'true' : 'false');
             }
-            if (selectedBtn) selectedBtn.addEventListener('click', function(e) {
+
+            selectedBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 setOpen(!sel.classList.contains('is-open'));
             });
-            if (optsContainer) optsContainer.querySelectorAll('.custom-select__option').forEach(function(opt) {
+
+            optsContainer.querySelectorAll('.custom-select__option').forEach(function(opt) {
                 opt.addEventListener('click', function() {
                     var val = this.getAttribute('data-value') || '';
                     if (input) input.value = val;
@@ -232,7 +241,11 @@
             document.addEventListener('click', function(e) {
                 if (!sel.contains(e.target)) setOpen(false);
             });
-        })();
+        }
+
+        initCustomSelect();
+        document.addEventListener('DOMContentLoaded', initCustomSelect);
+        document.addEventListener('pjax:success', initCustomSelect);
 
         const openButtons = document.querySelectorAll('[data-open-modal]');
         const closeButtons = document.querySelectorAll('[data-close-modal]');
