@@ -208,7 +208,7 @@ html[data-theme='oscuro'] .subcats-chip {
           <p class="usuario-product-detail-label">Subcategorías</p>
           <div class="subcats-chip-wrap">
             {% for sub in producto.subcategorias.all %}
-            <span class="subcats-chip">{{ sub.nombre_subcategoria }}</span>
+            <span class="subcats-chip">{{ sub.ruta_completa }}</span>
             {% endfor %}
           </div>
         </div>

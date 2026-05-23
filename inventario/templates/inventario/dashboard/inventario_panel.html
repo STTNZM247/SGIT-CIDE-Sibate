@@ -20,6 +20,13 @@
     .mini-carousel__dots{display:flex;justify-content:center;gap:5px;margin-top:8px;flex-wrap:wrap;}
     .mini-carousel__dot{width:7px;height:7px;border-radius:50%;background:var(--color-border,#e5e7eb);border:none;cursor:pointer;padding:0;transition:background .2s;flex-shrink:0;}
     .mini-carousel__dot.is-active{background:var(--color-primary,#39b54a);}
+    .temu-card__trace{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+    .temu-card__trace-chip{display:inline-flex;align-items:center;max-width:100%;padding:4px 8px;border-radius:999px;background:rgba(57,169,0,.10);color:#1e5f2a;font-size:.72rem;font-weight:600;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none;transition:background .14s ease, box-shadow .14s ease, transform .14s ease;}
+    .temu-card__trace-chip:hover{background:rgba(57,169,0,.16);box-shadow:0 0 0 2px rgba(57,169,0,.12);transform:translateY(-1px);}
+    .temu-card__trace-empty{margin:10px 0 0;color:#7b857f;font-size:.76rem;}
+    .product-detail-routes{display:flex;flex-wrap:wrap;gap:8px;}
+    .product-route-chip{display:inline-flex;align-items:center;max-width:100%;padding:8px 10px;border-radius:999px;background:#eef8ef;color:#1e5f2a;font-size:.78rem;font-weight:700;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none;transition:background .14s ease, box-shadow .14s ease, transform .14s ease;}
+    .product-route-chip:hover{background:#e3f3e5;box-shadow:0 0 0 2px rgba(57,169,0,.12);transform:translateY(-1px);}
     </style>
 {% endblock %}
 
@@ -89,6 +96,15 @@
             <span class="temu-card__body">
                 <h3 class="temu-card__name">{{ p.nombre_producto }}</h3>
                 <p class="temu-card__cat">{{ p.id_cat_fk.nombre_catalogo }}</p>
+                {% if p.subcategoria_trazas %}
+                <div class="temu-card__trace" aria-label="Trazabilidad en subcategorías">
+                    {% for trace in p.subcategoria_trazas %}
+                    <a class="temu-card__trace-chip" href="{% url 'productos_catalogo' p.id_cat_fk.id_cat %}?subcat={{ trace.id }}" title="Ir a {{ trace.ruta }}">{{ trace.ruta }}</a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="temu-card__trace-empty">Raíz del catálogo</p>
+                {% endif %}
                 <p class="temu-card__desc">{% if p.descripcion %}{{ p.descripcion|truncatechars:70 }}{% else %}Sin descripción registrada.{% endif %}</p>
                 <span class="temu-card__meta">
                     <span><ion-icon name="archive-outline"></ion-icon> Stock: {{ p.stock_actual|default:'0' }}</span>
@@ -146,6 +162,18 @@
                             <span class="product-detail-quick__label">Catálogo</span>
                             <span class="product-detail-quick__value">{{ p.id_cat_fk.nombre_catalogo }}</span>
                         </div>
+                    </div>
+                    <div class="product-detail-block">
+                        <p class="product-detail-label">Trazabilidad en subcategorías</p>
+                        {% if p.subcategoria_trazas %}
+                        <div class="product-detail-routes">
+                            {% for trace in p.subcategoria_trazas %}
+                            <a class="product-route-chip" href="{% url 'productos_catalogo' p.id_cat_fk.id_cat %}?subcat={{ trace.id }}" title="Ir a {{ trace.ruta }}">{{ trace.ruta }}</a>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="product-detail-value">Este producto está en la raíz del catálogo.</p>
+                        {% endif %}
                     </div>
                     <div class="product-detail-block">
                         <p class="product-detail-label">Descripción del producto</p>

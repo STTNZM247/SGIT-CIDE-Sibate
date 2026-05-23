@@ -136,7 +136,7 @@ html[data-theme="dark"] .edit-float-bar{
                             <select name="subcategorias" class="form-input form-select form-select-multiple" multiple size="6">
                                 {% for sub in subcategorias %}
                                 <option value="{{ sub.id_subcat }}" {% if sub in producto.subcategorias.all %}selected{% endif %}>
-                                    {{ sub.id_cat_fk.nombre_catalogo }} / {{ sub.nombre_subcategoria }}
+                                    {{ sub.ruta_completa }}
                                 </option>
                                 {% endfor %}
                             </select>

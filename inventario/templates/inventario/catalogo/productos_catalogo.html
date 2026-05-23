@@ -20,6 +20,7 @@
 {% endblock %}
 
 {% block content %}
+<meta name="csrf-token" content="{{ csrf_token }}">
 {% if messages %}
 <div class="catalogo-messages" role="alert">
     {% for msg in messages %}
@@ -45,11 +46,51 @@
     </div>
 </header>
 
+<nav class="subcat-breadcrumb" aria-label="Ruta de subcategorías" data-subcat-breadcrumb>
+    <a class="subcat-breadcrumb__link" data-subcat-drop-target data-subcat-id="" href="{% url 'productos_catalogo' catalogo.id_cat %}">{{ catalogo.nombre_catalogo }}</a>
+    {% for crumb in breadcrumb_subcats %}
+    <span class="subcat-breadcrumb__sep">/</span>
+    {% if not forloop.last %}
+    <a class="subcat-breadcrumb__link" data-subcat-drop-target data-subcat-id="{{ crumb.id_subcat }}" href="{% url 'productos_catalogo' catalogo.id_cat %}?subcat={{ crumb.id_subcat }}">{{ crumb.nombre_subcategoria }}</a>
+    {% else %}
+    <span class="subcat-breadcrumb__current" data-subcat-drop-target data-subcat-id="{{ crumb.id_subcat }}">{{ crumb.nombre_subcategoria }}</span>
+    {% endif %}
+    {% endfor %}
+</nav>
+
+{% if puede_gestionar_catalogo %}
+<section class="subcat-workspace{% if not subcategoria_tree and productos %} subcat-workspace--compact{% endif %}" data-subcat-workspace data-current-subcat-id="{{ selected_subcat_id|default:'' }}" data-create-url="{% url 'subcategoria_crear_rapida' catalogo.id_cat %}" data-rename-url-template="{% url 'subcategoria_renombrar' catalogo.id_cat 0 %}" data-delete-state-url-template="{% url 'subcategoria_delete_estado' catalogo.id_cat 0 %}" data-delete-url-template="{% url 'subcategoria_eliminar' catalogo.id_cat 0 %}" data-move-product-url-template="{% url 'producto_mover_subcategoria' catalogo.id_cat 0 %}" data-restore-product-url-template="{% url 'producto_restaurar_subcategorias' catalogo.id_cat 0 %}">
+    <div class="subcat-tree" data-subcat-root>
+        {% if subcategoria_tree %}
+            {% include "inventario/catalogo/_subcategoria_tree.html" with nodes=subcategoria_tree %}
+        {% else %}
+            {% if not productos %}
+            <p class="subcat-tree__placeholder">Clic derecho en el fondo para crear tu primera subcategoría.</p>
+            {% endif %}
+        {% endif %}
+    </div>
+    <div class="subcat-context-menu" data-subcat-context-menu hidden>
+        <button type="button" class="subcat-context-menu__item" data-create-subcat>
+            <ion-icon name="folder-add-outline"></ion-icon>
+            Crear subcategoría
+        </button>
+        <button type="button" class="subcat-context-menu__item" data-rename-subcat hidden>
+            <ion-icon name="create-outline"></ion-icon>
+            Cambiar nombre
+        </button>
+        <button type="button" class="subcat-context-menu__item subcat-context-menu__item--danger" data-delete-subcat hidden>
+            <ion-icon name="trash-outline"></ion-icon>
+            Eliminar subcategoría
+        </button>
+    </div>
+</section>
+{% endif %}
+
 {% if productos %}
 <section class="cat-grid-section">
     <div class="cat-grid cat-grid--productos">
         {% for p in productos %}
-        <article class="cat-card product-tile">
+        <article class="cat-card product-tile" data-product-tile data-product-id="{{ p.id_prod }}" data-product-subcats="{% for sc in p.subcategorias.all %}{{ sc.id_subcat }}{% if not forloop.last %},{% endif %}{% endfor %}" draggable="{% if puede_gestionar_catalogo %}true{% else %}false{% endif %}">
             {% if puede_gestionar_catalogo %}
             <form
                 class="product-tile__delete-form"
@@ -174,7 +215,7 @@
                         <p class="product-detail-label">Subcategorías</p>
                         <div class="subcats-chip-wrap">
                             {% for sub in p.subcategorias.all %}
-                            <span class="subcats-chip">{{ sub.nombre_subcategoria }}</span>
+                            <span class="subcats-chip">{{ sub.ruta_completa }}</span>
                             {% endfor %}
                         </div>
                     </div>
@@ -222,6 +263,881 @@
 const initProductosCatalogoPage = () => {
     const openButtons = document.querySelectorAll('[data-open-modal]');
     const closeButtons = document.querySelectorAll('[data-close-modal]');
+    const workspace = document.querySelector('[data-subcat-workspace]');
+    const breadcrumb = document.querySelector('[data-subcat-breadcrumb]');
+    const subcatRoot = workspace ? workspace.querySelector('[data-subcat-root]') : null;
+    const contextMenu = workspace ? workspace.querySelector('[data-subcat-context-menu]') : null;
+    const renameBtn = contextMenu ? contextMenu.querySelector('[data-rename-subcat]') : null;
+    const deleteBtn = contextMenu ? contextMenu.querySelector('[data-delete-subcat]') : null;
+    const createUrl = workspace ? workspace.dataset.createUrl : '';
+    const renameUrlTemplate = workspace ? (workspace.dataset.renameUrlTemplate || '') : '';
+    const deleteStateUrlTemplate = workspace ? (workspace.dataset.deleteStateUrlTemplate || '') : '';
+    const deleteUrlTemplate = workspace ? (workspace.dataset.deleteUrlTemplate || '') : '';
+    const moveProductUrlTemplate = workspace ? (workspace.dataset.moveProductUrlTemplate || '') : '';
+    const restoreProductUrlTemplate = workspace ? (workspace.dataset.restoreProductUrlTemplate || '') : '';
+    const currentSubcatId = workspace ? (workspace.dataset.currentSubcatId || '') : '';
+    let currentComposer = null;
+    let currentContextParentId = '';
+    let currentContextNodeId = '';
+    let currentContextNodeDeleteAllowed = false;
+    let currentContextDeleteReason = '';
+    let dragPayload = null;
+    const cleanupFns = [];
+    const undoStackKey = `catalogo-subcat-undo:${window.location.pathname.split('?')[0]}`;
+
+    if (typeof window.__subcatContextCleanup === 'function') {
+        window.__subcatContextCleanup();
+    }
+
+    const bind = (target, eventName, handler, options) => {
+        if (!target) return;
+        target.addEventListener(eventName, handler, options);
+        cleanupFns.push(() => target.removeEventListener(eventName, handler, options));
+    };
+
+    window.__subcatContextCleanup = () => {
+        while (cleanupFns.length) {
+            const fn = cleanupFns.pop();
+            try { fn(); } catch (_) {}
+        }
+        if (window.__subcatContextCleanup) {
+            window.__subcatContextCleanup = null;
+        }
+    };
+
+    const getCsrfToken = () => {
+        const fromInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (fromInput && fromInput.value) {
+            return fromInput.value;
+        }
+
+        const fromMeta = document.querySelector('meta[name="csrf-token"]');
+        if (fromMeta && fromMeta.content) {
+            return fromMeta.content;
+        }
+
+        const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : '';
+    };
+
+    const hideContextMenu = () => {
+        if (!contextMenu) return;
+        contextMenu.hidden = true;
+        contextMenu.style.left = '';
+        contextMenu.style.top = '';
+        currentContextNodeId = '';
+        currentContextNodeDeleteAllowed = false;
+        currentContextDeleteReason = '';
+    };
+
+    const buildRenameUrl = (subcatId) => {
+        if (!renameUrlTemplate) return '';
+        return renameUrlTemplate.replace('/0/renombrar/', `/${subcatId}/renombrar/`);
+    };
+
+    const buildDeleteUrl = (subcatId) => {
+        if (!deleteUrlTemplate) return '';
+        return deleteUrlTemplate.replace('/0/eliminar/', `/${subcatId}/eliminar/`);
+    };
+
+    const buildDeleteStateUrl = (subcatId) => {
+        if (!deleteStateUrlTemplate) return '';
+        return deleteStateUrlTemplate.replace('/0/delete-estado/', `/${subcatId}/delete-estado/`);
+    };
+
+    const buildMoveProductUrl = (prodId) => {
+        if (!moveProductUrlTemplate) return '';
+        return moveProductUrlTemplate.replace('/0/mover-subcategoria/', `/${prodId}/mover-subcategoria/`);
+    };
+
+    const buildRestoreProductUrl = (prodId) => {
+        if (!restoreProductUrlTemplate) return '';
+        return restoreProductUrlTemplate.replace('/0/restaurar-subcategorias/', `/${prodId}/restaurar-subcategorias/`);
+    };
+
+    const loadUndoStack = () => {
+        try {
+            const raw = window.sessionStorage.getItem(undoStackKey);
+            const parsed = raw ? JSON.parse(raw) : [];
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (_) {
+            return [];
+        }
+    };
+
+    const saveUndoStack = (stack) => {
+        try {
+            window.sessionStorage.setItem(undoStackKey, JSON.stringify(stack));
+        } catch (_) {}
+    };
+
+    const pushUndoAction = (action) => {
+        const stack = loadUndoStack();
+        stack.push(action);
+        if (stack.length > 100) {
+            stack.splice(0, stack.length - 100);
+        }
+        saveUndoStack(stack);
+    };
+
+    const syncContextMenuActions = (node) => {
+        const showNodeActions = !!node;
+        if (renameBtn) {
+            renameBtn.hidden = !showNodeActions;
+            renameBtn.style.display = showNodeActions ? '' : 'none';
+        }
+        if (deleteBtn) {
+            deleteBtn.hidden = !showNodeActions;
+            deleteBtn.style.display = showNodeActions ? '' : 'none';
+            deleteBtn.disabled = true;
+            deleteBtn.title = '';
+        }
+    };
+
+    const refreshDeleteActionAvailability = async (nodeId) => {
+        if (!deleteBtn) return;
+        if (!nodeId) {
+            deleteBtn.hidden = true;
+            deleteBtn.style.display = 'none';
+            return;
+        }
+
+        const stateUrl = buildDeleteStateUrl(nodeId);
+        if (!stateUrl) {
+            deleteBtn.hidden = true;
+            deleteBtn.style.display = 'none';
+            return;
+        }
+
+        deleteBtn.disabled = true;
+        deleteBtn.title = '';
+
+        try {
+            const response = await fetch(stateUrl, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (nodeId !== currentContextNodeId) {
+                return;
+            }
+
+            if (!response.ok || !payload.ok) {
+                currentContextNodeDeleteAllowed = false;
+                currentContextDeleteReason = payload.error || 'No fue posible validar la eliminación.';
+                deleteBtn.hidden = true;
+                deleteBtn.style.display = 'none';
+                return;
+            }
+
+            currentContextNodeDeleteAllowed = !!payload.can_delete;
+            currentContextDeleteReason = payload.reason || '';
+            deleteBtn.hidden = !payload.can_delete;
+            deleteBtn.style.display = payload.can_delete ? '' : 'none';
+            deleteBtn.disabled = !payload.can_delete;
+            if (!payload.can_delete && payload.reason) {
+                deleteBtn.title = payload.reason;
+            }
+        } catch (_) {
+            if (nodeId !== currentContextNodeId) {
+                return;
+            }
+            currentContextNodeDeleteAllowed = false;
+            currentContextDeleteReason = 'No fue posible validar la eliminación.';
+            deleteBtn.hidden = true;
+            deleteBtn.style.display = 'none';
+        }
+    };
+
+    const clearComposer = () => {
+        if (currentComposer && currentComposer.parentNode) {
+            currentComposer.parentNode.removeChild(currentComposer);
+        }
+        currentComposer = null;
+    };
+
+    const resolveNodeChildren = (nodeEl) => {
+        if (!nodeEl) return subcatRoot;
+        return nodeEl.querySelector('.subcat-node__children') || subcatRoot;
+    };
+
+    const removeEmptyState = () => {
+        if (!subcatRoot) return;
+        const empty = subcatRoot.querySelector('.subcat-tree__placeholder');
+        if (empty) empty.remove();
+        if (workspace) {
+            workspace.classList.remove('subcat-workspace--compact');
+        }
+    };
+
+    const ensureEmptyState = () => {
+        if (!subcatRoot) return;
+        const hasNodes = !!subcatRoot.querySelector('.subcat-node');
+        if (hasNodes) return;
+        if (subcatRoot.querySelector('.subcat-tree__placeholder')) return;
+        const hasProducts = !!document.querySelector('[data-product-tile]');
+        if (workspace && hasProducts) {
+            workspace.classList.add('subcat-workspace--compact');
+            return;
+        }
+        const empty = document.createElement('p');
+        empty.className = 'subcat-tree__placeholder';
+        empty.textContent = 'Clic derecho en el fondo para crear tu primera subcategoría.';
+        subcatRoot.appendChild(empty);
+    };
+
+    const parseSubcatIds = (rawValue) => {
+        if (!rawValue) return [];
+        return rawValue
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean)
+            .map((item) => Number(item))
+            .filter((item) => Number.isInteger(item) && item > 0);
+    };
+
+    const removeProductTileFromDom = (tile) => {
+        if (!tile || !tile.parentNode) return;
+        tile.style.transition = 'opacity .2s ease, transform .2s ease';
+        tile.style.opacity = '.25';
+        tile.style.transform = 'scale(.98)';
+        window.setTimeout(() => {
+            if (tile.parentNode) {
+                tile.parentNode.removeChild(tile);
+            }
+        }, 220);
+    };
+
+    const initProductDragAndDrop = () => {
+        if (!workspace || !subcatRoot) return;
+        const productTiles = Array.from(document.querySelectorAll('[data-product-tile][data-product-id]'));
+        if (!productTiles.length) return;
+
+        const setDropHighlight = (row, on) => {
+            if (!row) return;
+            row.classList.toggle('is-drop-target', !!on);
+        };
+
+        const setCrumbDropHighlight = (target, on) => {
+            if (!target) return;
+            target.classList.toggle('is-drop-target', !!on);
+        };
+
+        const moveProductToSubcategory = async (productId, destinationSubcatId, tile, sourceSubcatIds, sourceUrl, targetEl) => {
+            const moveUrl = buildMoveProductUrl(productId);
+            if (!moveUrl) return;
+
+            if (targetEl) targetEl.classList.add('is-drop-loading');
+            try {
+                const response = await fetch(moveUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    },
+                    body: new URLSearchParams({
+                        subcategoria_destino_id: destinationSubcatId || '',
+                    }),
+                });
+
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok || !payload.ok) {
+                    throw new Error(payload.error || 'No fue posible mover el producto.');
+                }
+
+                const prevIds = Array.isArray(payload.product?.prev_subcategoria_ids)
+                    ? payload.product.prev_subcategoria_ids
+                    : sourceSubcatIds;
+
+                pushUndoAction({
+                    type: 'move_product',
+                    productId: Number(productId),
+                    prevSubcatIds: prevIds,
+                    restoreUrl: sourceUrl,
+                    createdAt: Date.now(),
+                });
+
+                if (tile) {
+                    tile.dataset.productSubcats = destinationSubcatId ? String(destinationSubcatId) : '';
+                    removeProductTileFromDom(tile);
+                }
+            } catch (error) {
+                window.alert(error.message || 'No fue posible mover el producto.');
+            } finally {
+                if (targetEl) targetEl.classList.remove('is-drop-loading');
+            }
+        };
+
+        productTiles.forEach((tile) => {
+            bind(tile, 'dragstart', (event) => {
+                const productId = tile.dataset.productId || '';
+                if (!productId) {
+                    event.preventDefault();
+                    return;
+                }
+
+                const sourceIds = parseSubcatIds(tile.dataset.productSubcats || '');
+                dragPayload = {
+                    productId,
+                    sourceSubcatIds: sourceIds,
+                    sourceUrl: window.location.href,
+                    tile,
+                };
+
+                tile.classList.add('is-dragging-product');
+                if (event.dataTransfer) {
+                    event.dataTransfer.effectAllowed = 'move';
+                    event.dataTransfer.setData('text/plain', String(productId));
+                }
+            });
+
+            bind(tile, 'dragend', () => {
+                tile.classList.remove('is-dragging-product');
+                dragPayload = null;
+                subcatRoot.querySelectorAll('[data-subcat-node-row]').forEach((row) => setDropHighlight(row, false));
+            });
+        });
+
+        bind(subcatRoot, 'dragover', (event) => {
+            const row = event.target.closest('[data-subcat-node-row]');
+            if (!row || !dragPayload) return;
+            event.preventDefault();
+            if (event.dataTransfer) {
+                event.dataTransfer.dropEffect = 'move';
+            }
+            setDropHighlight(row, true);
+        });
+
+        bind(subcatRoot, 'dragleave', (event) => {
+            const row = event.target.closest('[data-subcat-node-row]');
+            if (!row) return;
+            setDropHighlight(row, false);
+        });
+
+        bind(subcatRoot, 'drop', async (event) => {
+            const row = event.target.closest('[data-subcat-node-row]');
+            const node = row ? row.closest('.subcat-node') : null;
+            if (!row || !node || !dragPayload) return;
+
+            event.preventDefault();
+            setDropHighlight(row, false);
+
+            const destinationSubcatId = node.dataset.subcatId || '';
+            const productId = dragPayload.productId;
+            const tile = dragPayload.tile;
+            const sourceSubcatIds = Array.isArray(dragPayload.sourceSubcatIds)
+                ? [...dragPayload.sourceSubcatIds]
+                : [];
+            const sourceUrl = dragPayload.sourceUrl || window.location.href;
+            if (!destinationSubcatId || !productId) return;
+
+            await moveProductToSubcategory(
+                productId,
+                destinationSubcatId,
+                tile,
+                sourceSubcatIds,
+                sourceUrl,
+                row,
+            );
+        });
+
+        if (breadcrumb) {
+            bind(breadcrumb, 'dragover', (event) => {
+                const target = event.target.closest('[data-subcat-drop-target]');
+                if (!target || !dragPayload) return;
+                event.preventDefault();
+                if (event.dataTransfer) {
+                    event.dataTransfer.dropEffect = 'move';
+                }
+                setCrumbDropHighlight(target, true);
+            });
+
+            bind(breadcrumb, 'dragleave', (event) => {
+                const target = event.target.closest('[data-subcat-drop-target]');
+                if (!target) return;
+                setCrumbDropHighlight(target, false);
+            });
+
+            bind(breadcrumb, 'drop', async (event) => {
+                const target = event.target.closest('[data-subcat-drop-target]');
+                if (!target || !dragPayload) return;
+
+                event.preventDefault();
+                setCrumbDropHighlight(target, false);
+
+                const destinationSubcatId = (target.dataset.subcatId || '').trim();
+                const productId = dragPayload.productId;
+                const tile = dragPayload.tile;
+                const sourceSubcatIds = Array.isArray(dragPayload.sourceSubcatIds)
+                    ? [...dragPayload.sourceSubcatIds]
+                    : [];
+                const sourceUrl = dragPayload.sourceUrl || window.location.href;
+                if (!productId) return;
+
+                await moveProductToSubcategory(
+                    productId,
+                    destinationSubcatId,
+                    tile,
+                    sourceSubcatIds,
+                    sourceUrl,
+                    target,
+                );
+            });
+        }
+    };
+
+    const initKeyboardUndo = () => {
+        bind(document, 'keydown', async (event) => {
+            if (!event.ctrlKey || String(event.key).toLowerCase() !== 'z') return;
+
+            const active = document.activeElement;
+            const tagName = active ? (active.tagName || '').toLowerCase() : '';
+            if (tagName === 'input' || tagName === 'textarea' || (active && active.isContentEditable)) {
+                return;
+            }
+
+            const stack = loadUndoStack();
+            if (!stack.length) return;
+            const lastAction = stack.pop();
+            saveUndoStack(stack);
+
+            if (!lastAction || lastAction.type !== 'move_product') return;
+
+            event.preventDefault();
+
+            const restoreUrl = buildRestoreProductUrl(lastAction.productId);
+            if (!restoreUrl) {
+                window.alert('No fue posible preparar el Ctrl+Z.');
+                return;
+            }
+
+            try {
+                const response = await fetch(restoreUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    },
+                    body: new URLSearchParams({
+                        subcategoria_ids: Array.isArray(lastAction.prevSubcatIds) ? lastAction.prevSubcatIds.join(',') : '',
+                    }),
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok || !payload.ok) {
+                    throw new Error(payload.error || 'No fue posible deshacer el movimiento.');
+                }
+
+                if (lastAction.restoreUrl) {
+                    window.location.assign(lastAction.restoreUrl);
+                    return;
+                }
+                window.location.reload();
+            } catch (error) {
+                window.alert(error.message || 'No fue posible deshacer el movimiento.');
+            }
+        });
+    };
+
+    const buildSubcatNode = (subcat) => {
+        const node = document.createElement('div');
+        node.className = 'subcat-node';
+        node.dataset.subcatId = String(subcat.id);
+        node.dataset.parentId = subcat.padre_id ? String(subcat.padre_id) : '';
+
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'subcat-node__row';
+        row.dataset.subcatNodeRow = 'true';
+        row.dataset.subcatId = String(subcat.id);
+
+        const icon = document.createElement('ion-icon');
+        icon.name = 'folder-outline';
+
+        const name = document.createElement('span');
+        name.className = 'subcat-node__name';
+        name.textContent = subcat.nombre;
+
+        row.appendChild(icon);
+        row.appendChild(name);
+
+        const children = document.createElement('div');
+        children.className = 'subcat-node__children';
+
+        node.appendChild(row);
+        node.appendChild(children);
+        return node;
+    };
+
+    const insertSubcatNode = (subcat) => {
+        if (!subcatRoot) return;
+        const normalizedCurrent = String(currentSubcatId || '');
+        const normalizedParent = subcat.padre_id ? String(subcat.padre_id) : '';
+        if (normalizedParent !== normalizedCurrent) {
+            return;
+        }
+        removeEmptyState();
+        const node = buildSubcatNode(subcat);
+        const parentNode = null;
+        const container = resolveNodeChildren(parentNode);
+        container.appendChild(node);
+    };
+
+    const openComposer = (parentNode, parentIdOverride = '') => {
+        if (!subcatRoot) return;
+        clearComposer();
+
+        const composer = document.createElement('div');
+        composer.className = 'subcat-composer';
+        if (parentIdOverride) {
+            composer.dataset.parentId = String(parentIdOverride);
+        } else {
+            composer.dataset.parentId = parentNode ? String(parentNode.dataset.subcatId || '') : '';
+        }
+
+        const icon = document.createElement('ion-icon');
+        icon.name = 'create-outline';
+        icon.className = 'subcat-composer__icon';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'subcat-composer__input';
+        input.placeholder = 'Nombre de la nueva carpeta';
+        input.autocomplete = 'off';
+        input.spellcheck = false;
+
+        const hint = document.createElement('span');
+        hint.className = 'subcat-composer__hint';
+        hint.textContent = 'Enter o salir para guardar';
+
+        composer.appendChild(icon);
+        composer.appendChild(input);
+        composer.appendChild(hint);
+
+        const container = resolveNodeChildren(parentNode);
+        container.insertBefore(composer, container.firstChild);
+        currentComposer = composer;
+
+        const commitComposer = async () => {
+            const value = input.value.trim();
+            if (!value || composer.dataset.saving === 'true') {
+                if (!value) clearComposer();
+                return;
+            }
+
+            composer.dataset.saving = 'true';
+            composer.classList.add('subcat-composer--saving');
+
+            try {
+                const response = await fetch(createUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    },
+                    body: new URLSearchParams({
+                        nombre_subcategoria: value,
+                        subcategoria_padre_id: composer.dataset.parentId || '',
+                    }),
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (response.status === 400) {
+                    const message400 = payload.error || 'Se ha alcanzado el límite máximo de 12 niveles de profundidad.';
+                    clearComposer();
+                    window.alert(message400);
+                    return;
+                }
+
+                if (!response.ok || !payload.ok) {
+                    throw new Error(payload.error || 'No fue posible guardar la subcategoría.');
+                }
+
+                if (value.includes('/')) {
+                    window.location.reload();
+                    return;
+                }
+
+                insertSubcatNode(payload.subcategoria);
+                clearComposer();
+            } catch (error) {
+                composer.classList.remove('subcat-composer--saving');
+                delete composer.dataset.saving;
+                window.alert(error.message || 'No fue posible guardar la subcategoría.');
+                input.focus();
+            }
+        };
+
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                commitComposer();
+            }
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                clearComposer();
+            }
+        });
+
+        input.addEventListener('blur', () => {
+            window.setTimeout(() => {
+                if (document.activeElement !== input) {
+                    commitComposer();
+                }
+            }, 120);
+        });
+
+        window.setTimeout(() => input.focus(), 20);
+    };
+
+    const openContextMenu = (clientX, clientY, parentNode) => {
+        if (!contextMenu) return;
+        currentContextParentId = parentNode ? String(parentNode.dataset.subcatId || '') : String(currentSubcatId || '');
+        currentContextNodeId = parentNode ? String(parentNode.dataset.subcatId || '') : '';
+        currentContextNodeDeleteAllowed = false;
+        currentContextDeleteReason = '';
+        syncContextMenuActions(parentNode);
+        const maxX = window.innerWidth - 240;
+        const maxY = window.innerHeight - 90;
+        contextMenu.hidden = false;
+        contextMenu.style.left = Math.max(12, Math.min(clientX, maxX)) + 'px';
+        contextMenu.style.top = Math.max(12, Math.min(clientY, maxY)) + 'px';
+        if (currentContextNodeId) {
+            refreshDeleteActionAvailability(currentContextNodeId);
+        }
+    };
+
+    const openRenameComposer = (node) => {
+        if (!node) return;
+        const row = node.querySelector('[data-subcat-node-row]');
+        const nameEl = node.querySelector('.subcat-node__name');
+        if (!row || !nameEl) return;
+
+        const existing = row.querySelector('input.subcat-rename-input');
+        if (existing) {
+            existing.focus();
+            existing.select();
+            return;
+        }
+
+        const oldName = (nameEl.textContent || '').trim();
+        nameEl.hidden = true;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'subcat-rename-input';
+        input.value = oldName;
+        input.autocomplete = 'off';
+        input.spellcheck = false;
+        row.appendChild(input);
+
+        const rollback = () => {
+            if (input.parentNode) input.parentNode.removeChild(input);
+            nameEl.hidden = false;
+        };
+
+        const commitRename = async () => {
+            const newName = input.value.trim();
+            if (!newName) {
+                rollback();
+                return;
+            }
+            if (newName === oldName) {
+                rollback();
+                return;
+            }
+
+            const subcatId = node.dataset.subcatId;
+            const renameUrl = buildRenameUrl(subcatId);
+            if (!renameUrl) {
+                rollback();
+                return;
+            }
+
+            try {
+                const response = await fetch(renameUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    },
+                    body: new URLSearchParams({
+                        nombre_subcategoria: newName,
+                    }),
+                });
+
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok || !payload.ok) {
+                    throw new Error(payload.error || 'No fue posible cambiar el nombre.');
+                }
+
+                nameEl.textContent = payload.subcategoria?.nombre || newName;
+                rollback();
+            } catch (error) {
+                window.alert(error.message || 'No fue posible cambiar el nombre.');
+                rollback();
+            }
+        };
+
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                commitRename();
+            }
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                rollback();
+            }
+        });
+
+        input.addEventListener('blur', () => {
+            window.setTimeout(() => {
+                if (document.activeElement !== input) {
+                    commitRename();
+                }
+            }, 120);
+        });
+
+        window.setTimeout(() => {
+            input.focus();
+            input.select();
+        }, 20);
+    };
+
+    const navigateToSubcategory = (subcatId) => {
+        if (!subcatId) return;
+        const url = new URL(window.location.href);
+        url.searchParams.set('subcat', String(subcatId));
+        window.location.assign(url.toString());
+    };
+
+    const shouldIgnoreContextMenu = (target) => {
+        if (!workspace || !target) return true;
+        const insideWorkspace = workspace.contains(target);
+        if (insideWorkspace) return false;
+
+        const interactiveBlock = target.closest(
+            '.product-tile, .product-modal-backdrop, .product-modal, .modal-backdrop, .navigation, .nav-notif-btn, .cat-btn, .cat-header__actions, button, a, input, textarea, select, form, [role="dialog"], .subcat-context-menu'
+        );
+        if (interactiveBlock) return true;
+
+        const insideApp = !!target.closest('.app-container');
+        return !insideApp;
+    };
+
+    bind(document, 'contextmenu', (event) => {
+        if (!workspace || !subcatRoot || !contextMenu) return;
+        if (shouldIgnoreContextMenu(event.target)) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const nodeRow = event.target.closest('[data-subcat-node-row]');
+        const rawNode = nodeRow ? nodeRow.closest('.subcat-node') : null;
+        const node = nodeRow && rawNode && rawNode.contains(nodeRow) ? rawNode : null;
+        openContextMenu(event.clientX, event.clientY, node);
+    });
+
+    if (workspace && subcatRoot) {
+        bind(workspace, 'click', (event) => {
+            if (event.target.closest('[data-subcat-context-menu]')) return;
+            hideContextMenu();
+        });
+
+        bind(subcatRoot, 'dblclick', (event) => {
+            const nodeRow = event.target.closest('[data-subcat-node-row]');
+            const node = nodeRow ? nodeRow.closest('.subcat-node') : null;
+            if (!node) return;
+            navigateToSubcategory(node.dataset.subcatId);
+        });
+    }
+
+    if (contextMenu) {
+        bind(contextMenu, 'click', (event) => {
+            const actionBtn = event.target.closest('[data-create-subcat]');
+            const renameActionBtn = event.target.closest('[data-rename-subcat]');
+            const deleteActionBtn = event.target.closest('[data-delete-subcat]');
+
+            if (actionBtn) {
+                const parentNode = currentContextParentId
+                    ? subcatRoot.querySelector(`.subcat-node[data-subcat-id="${currentContextParentId}"]`)
+                    : null;
+                hideContextMenu();
+                openComposer(parentNode, currentContextParentId || '');
+                return;
+            }
+
+            if (renameActionBtn) {
+                const targetNode = currentContextNodeId
+                    ? subcatRoot.querySelector(`.subcat-node[data-subcat-id="${currentContextNodeId}"]`)
+                    : null;
+                hideContextMenu();
+                openRenameComposer(targetNode);
+                return;
+            }
+
+            if (deleteActionBtn) {
+                const targetNode = currentContextNodeId
+                    ? subcatRoot.querySelector(`.subcat-node[data-subcat-id="${currentContextNodeId}"]`)
+                    : null;
+                if (!targetNode) {
+                    hideContextMenu();
+                    return;
+                }
+
+                if (!currentContextNodeDeleteAllowed) {
+                    hideContextMenu();
+                    if (currentContextDeleteReason) {
+                        window.alert(currentContextDeleteReason);
+                    }
+                    return;
+                }
+
+                const deleteUrl = buildDeleteUrl(currentContextNodeId);
+                if (!deleteUrl) {
+                    hideContextMenu();
+                    return;
+                }
+
+                hideContextMenu();
+                const ok = window.confirm('¿Seguro que deseas eliminar esta subcategoría y su contenido hijo?');
+                if (!ok) {
+                    return;
+                }
+
+                fetch(deleteUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                })
+                    .then(async (response) => {
+                        const payload = await response.json().catch(() => ({}));
+                        if (!response.ok || !payload.ok) {
+                            throw new Error(payload.error || 'No fue posible eliminar la subcategoría.');
+                        }
+                        targetNode.remove();
+                        ensureEmptyState();
+                    })
+                    .catch((error) => {
+                        window.alert(error.message || 'No fue posible eliminar la subcategoría.');
+                    });
+            }
+        });
+    }
+
+    bind(document, 'click', (event) => {
+        if (!contextMenu || contextMenu.hidden) return;
+        if (contextMenu.contains(event.target)) return;
+        hideContextMenu();
+    });
+
+    bind(window, 'resize', hideContextMenu);
 
     const closeAll = () => {
         document.querySelectorAll('.product-modal-backdrop').forEach(m => {
@@ -295,6 +1211,9 @@ const initProductosCatalogoPage = () => {
     document.querySelectorAll('.flash__close').forEach(btn => {
         btn.addEventListener('click', () => btn.closest('.flash').remove());
     });
+
+    initProductDragAndDrop();
+    initKeyboardUndo();
 };
 
 if (document.readyState === 'loading') {

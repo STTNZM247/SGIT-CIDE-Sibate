@@ -426,8 +426,28 @@
   color: #1d3925;
   padding: 12px 13px;
   font-weight: 700;
-  cursor: default;
+  cursor: pointer;
   text-align: left;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease;
+}
+
+.perfil-quick-item:hover {
+  border-color: #cfe2d2;
+  background: #f3fbf3;
+  box-shadow: 0 8px 18px rgba(57, 169, 0, 0.12);
+}
+
+.perfil-quick-item:active {
+  transform: translateY(1px);
+}
+
+.perfil-quick-item--link {
+  text-decoration: none;
+}
+
+.perfil-quick-item--link:hover {
+  border-color: #cfe2d2;
+  background: #f3fbf3;
 }
 
 .perfil-quick-item ion-icon {
@@ -568,6 +588,116 @@
   background: #eee;
 }
 
+.perfil-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 22, 14, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  z-index: 9999;
+}
+
+.perfil-modal.is-open {
+  display: flex;
+}
+
+.perfil-modal__dialog {
+  width: min(560px, 100%);
+  max-height: min(88vh, 780px);
+  overflow: auto;
+  background: #ffffff;
+  border: 1px solid #dce8de;
+  border-radius: 18px;
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.25);
+  padding: 18px;
+}
+
+.perfil-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.perfil-modal__head h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #163622;
+}
+
+.perfil-modal__close {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid #d4e4d7;
+  background: #f8fcf8;
+  color: #1f3928;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.perfil-modal__hint {
+  margin: 0 0 16px;
+  font-size: 0.9rem;
+  color: #567062;
+}
+
+.perfil-password-form {
+  display: grid;
+  gap: 10px;
+}
+
+.perfil-password-shell {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  border: 1px solid #d7e7d9;
+  border-radius: 12px;
+  background: #fbfffb;
+  overflow: hidden;
+}
+
+.perfil-password-shell .form-control {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent;
+}
+
+.perfil-password-shell:focus-within {
+  border-color: #39A900;
+  box-shadow: 0 0 0 3px rgba(57, 169, 0, 0.18);
+}
+
+.perfil-password-toggle {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: transparent;
+  color: #39A900;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.perfil-password-toggle:hover {
+  background: rgba(57, 169, 0, 0.12);
+}
+
+.perfil-modal__actions {
+  margin-top: 6px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .perfil-cover-picker-upload {
   display: flex;
   align-items: center;
@@ -682,6 +812,52 @@ html[data-theme="dark"] .perfil-field .form-control::placeholder {
 html[data-theme="dark"] .perfil-field .form-control:focus {
   border-color: #42a5f5 !important;
   box-shadow: 0 0 0 3px rgba(66,165,245,.22) !important;
+}
+
+html[data-theme="dark"] .perfil-quick-item--link:hover {
+  border-color: #2a3856 !important;
+  background: #162133 !important;
+}
+
+html[data-theme="dark"] .perfil-modal {
+  background: rgba(7, 12, 18, 0.62) !important;
+}
+
+html[data-theme="dark"] .perfil-modal__dialog {
+  background: #121a22 !important;
+  border-color: #213146 !important;
+}
+
+html[data-theme="dark"] .perfil-modal__head h3 {
+  color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .perfil-modal__hint {
+  color: #8ea88e !important;
+}
+
+html[data-theme="dark"] .perfil-modal__close {
+  background: #1a2430 !important;
+  border-color: #2a3856 !important;
+  color: #9ec6ee !important;
+}
+
+html[data-theme="dark"] .perfil-password-shell {
+  border-color: #2a3856 !important;
+  background: #18222f !important;
+}
+
+html[data-theme="dark"] .perfil-password-shell:focus-within {
+  border-color: #42a5f5 !important;
+  box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.22) !important;
+}
+
+html[data-theme="dark"] .perfil-password-toggle {
+  color: #42a5f5 !important;
+}
+
+html[data-theme="dark"] .perfil-password-toggle:hover {
+  background: rgba(66, 165, 245, 0.18) !important;
 }
 
 /* Labels */

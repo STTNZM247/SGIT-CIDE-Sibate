@@ -1,0 +1,17 @@
+{% for node in nodes %}
+<div class="subcat-node" data-subcat-id="{{ node.id }}" data-parent-id="{{ node.padre_id|default:'' }}">
+    <button type="button" class="subcat-node__row" data-subcat-node-row>
+        <span class="subcat-node__tip" aria-hidden="true">
+            <ion-icon name="return-down-forward-outline"></ion-icon>
+            Doble clic para entrar
+        </span>
+        <ion-icon class="subcat-node__icon" name="folder-outline"></ion-icon>
+        <span class="subcat-node__name">{{ node.nombre }}</span>
+    </button>
+    <div class="subcat-node__children">
+        {% if node.children %}
+            {% include "inventario/catalogo/_subcategoria_tree.html" with nodes=node.children %}
+        {% endif %}
+    </div>
+</div>
+{% endfor %}

@@ -9,6 +9,8 @@ from datetime import date, timedelta
 
 from django.conf import settings
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.db.models import Exists, OuterRef
 from django.http import Http404, HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -308,7 +310,7 @@ def _renovar_codigo_devolucion(pedido, now):
 
 
 def _parse_subcategorias_text(raw_text):
-    text = (raw_text or '').replace('\n', ',').replace('/', ',').replace(';', ',')
+    text = (raw_text or '').replace('\n', ',').replace(';', ',')
     values = []
     for part in text.split(','):
         item = (part or '').strip()
@@ -334,18 +336,422 @@ def _sync_subcategorias_producto(producto, catalogo_id, selected_ids=None, raw_n
     for nombre in _parse_subcategorias_text(raw_new):
         if not catalogo:
             continue
-        subcat, _ = Subcategoria.objects.get_or_create(
-            id_cat_fk=catalogo,
-            nombre_subcategoria=nombre,
-            defaults={
-                'fch_registro': timezone.now(),
-                'fch_ult_act': timezone.now(),
-            },
-        )
+        ruta = [segmento.strip() for segmento in nombre.split('/') if segmento.strip()]
+        subcat = Subcategoria.ensure_path(catalogo, ruta)
         related.append(subcat)
 
     dedup = list({s.pk: s for s in related}.values())
     producto.subcategorias.set(dedup)
+
+
+def _build_subcategoria_tree(subcategorias_qs):
+    nodes = {}
+    roots = []
+
+    for subcategoria in subcategorias_qs:
+        nodes[subcategoria.id_subcat] = {
+            'id': subcategoria.id_subcat,
+            'nombre': subcategoria.nombre_subcategoria,
+            'ruta': subcategoria.ruta_completa,
+            'padre_id': subcategoria.subcategoria_padre_id,
+            'children': [],
+        }
+
+    for subcategoria in subcategorias_qs:
+        node = nodes[subcategoria.id_subcat]
+        padre_id = subcategoria.subcategoria_padre_id
+        if padre_id and padre_id in nodes:
+            nodes[padre_id]['children'].append(node)
+        else:
+            roots.append(node)
+
+    def _sort(node_list):
+        node_list.sort(key=lambda item: item['nombre'].lower())
+        for item in node_list:
+            _sort(item['children'])
+
+    _sort(roots)
+    return roots
+
+
+def _subcategoria_descendants_ids(root_subcat):
+    ids = [root_subcat.id_subcat]
+    frontier = [root_subcat.id_subcat]
+
+    while frontier:
+        children = list(
+            Subcategoria.objects
+            .filter(subcategoria_padre_id__in=frontier)
+            .values_list('id_subcat', flat=True)
+        )
+        if not children:
+            break
+        ids.extend(children)
+        frontier = children
+
+    return ids
+
+
+def _subcategoria_delete_state(subcategoria):
+    child_count = Subcategoria.objects.filter(subcategoria_padre=subcategoria).count()
+    descendants_ids = _subcategoria_descendants_ids(subcategoria)
+    products_count = (
+        Producto.objects
+        .filter(subcategorias__id_subcat__in=descendants_ids)
+        .distinct()
+        .count()
+    )
+
+    can_delete = child_count == 0 and products_count == 0
+    reason = ''
+    if child_count > 0:
+        reason = 'No se puede eliminar porque tiene subcategorías hijas.'
+    elif products_count > 0:
+        reason = 'No se puede eliminar porque tiene productos asociados.'
+
+    return {
+        'can_delete': can_delete,
+        'children_count': child_count,
+        'products_count': products_count,
+        'reason': reason,
+    }
+
+
+@login_required
+def subcategoria_crear_rapida(request, cat_id):
+    if not _is_admin(request):
+        return JsonResponse({'ok': False, 'error': 'No autorizado.'}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'Método no permitido.'}, status=405)
+
+    catalogo = get_object_or_404(Catalogo, pk=cat_id)
+    nombre = (request.POST.get('nombre_subcategoria') or '').strip()
+    parent_id = (request.POST.get('subcategoria_padre_id') or '').strip()
+
+    if not nombre:
+        return JsonResponse({'ok': False, 'error': 'Debes escribir un nombre.'}, status=400)
+
+    parent = None
+    if parent_id:
+        parent = get_object_or_404(Subcategoria, pk=parent_id, id_cat_fk=catalogo)
+
+    ruta = [segmento.strip() for segmento in nombre.split('/') if segmento.strip()]
+    before_ids = set(
+        Subcategoria.objects
+        .filter(id_cat_fk=catalogo)
+        .values_list('id_subcat', flat=True)
+    )
+    try:
+        leaf = Subcategoria.ensure_path(catalogo, ruta, parent=parent)
+    except ValidationError as exc:
+        error_msg = 'Se ha alcanzado el límite máximo de 12 niveles de profundidad.'
+        if hasattr(exc, 'messages') and exc.messages:
+            error_msg = exc.messages[0]
+        return JsonResponse({'ok': False, 'error': error_msg}, status=400)
+
+    after_ids = set(
+        Subcategoria.objects
+        .filter(id_cat_fk=catalogo)
+        .values_list('id_subcat', flat=True)
+    )
+    created_count = len(after_ids - before_ids)
+    if created_count > 0:
+        _registrar_auditoria(
+            request,
+            accion='crear',
+            entidad='subcategoria',
+            entidad_id=leaf.id_subcat,
+            descripcion=(
+                f'Se creó la subcategoría "{leaf.nombre_subcategoria}" '
+                f'en catálogo "{catalogo.nombre_catalogo}". '
+                f'Ruta: {leaf.ruta_completa}. Nodos creados: {created_count}.'
+            ),
+        )
+
+    return JsonResponse({
+        'ok': True,
+        'subcategoria': {
+            'id': leaf.id_subcat,
+            'nombre': leaf.nombre_subcategoria,
+            'ruta': leaf.ruta_completa,
+            'padre_id': leaf.subcategoria_padre_id,
+        },
+    })
+
+
+@login_required
+def subcategoria_renombrar(request, cat_id, subcat_id):
+    if not _is_admin(request):
+        return JsonResponse({'ok': False, 'error': 'No autorizado.'}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'Método no permitido.'}, status=405)
+
+    catalogo = get_object_or_404(Catalogo, pk=cat_id)
+    subcategoria = get_object_or_404(Subcategoria, pk=subcat_id, id_cat_fk=catalogo)
+    nuevo_nombre = (request.POST.get('nombre_subcategoria') or '').strip()
+
+    if not nuevo_nombre:
+        return JsonResponse({'ok': False, 'error': 'Debes escribir un nombre.'}, status=400)
+
+    old_name = subcategoria.nombre_subcategoria
+    old_route = subcategoria.ruta_completa
+    subcategoria.nombre_subcategoria = nuevo_nombre
+    subcategoria.fch_ult_act = timezone.now()
+
+    try:
+        subcategoria.full_clean()
+        subcategoria.save(update_fields=['nombre_subcategoria', 'fch_ult_act'])
+    except ValidationError as exc:
+        error_msg = 'No fue posible actualizar el nombre de la subcategoría.'
+        if hasattr(exc, 'messages') and exc.messages:
+            error_msg = exc.messages[0]
+        return JsonResponse({'ok': False, 'error': error_msg}, status=400)
+    except IntegrityError:
+        return JsonResponse(
+            {'ok': False, 'error': 'Ya existe una subcategoría con ese nombre en este nivel.'},
+            status=400,
+        )
+
+    _registrar_auditoria(
+        request,
+        accion='actualizar',
+        entidad='subcategoria',
+        entidad_id=subcategoria.id_subcat,
+        descripcion=(
+            f'Se renombró subcategoría de "{old_name}" a "{subcategoria.nombre_subcategoria}" '
+            f'en catálogo "{catalogo.nombre_catalogo}". '
+            f'Ruta anterior: {old_route}. Ruta nueva: {subcategoria.ruta_completa}.'
+        ),
+    )
+
+    return JsonResponse({
+        'ok': True,
+        'subcategoria': {
+            'id': subcategoria.id_subcat,
+            'nombre': subcategoria.nombre_subcategoria,
+            'ruta': subcategoria.ruta_completa,
+            'padre_id': subcategoria.subcategoria_padre_id,
+        },
+    })
+
+
+@login_required
+def subcategoria_delete_estado(request, cat_id, subcat_id):
+    if not _is_admin(request):
+        return JsonResponse({'ok': False, 'error': 'No autorizado.'}, status=403)
+
+    if request.method != 'GET':
+        return JsonResponse({'ok': False, 'error': 'Método no permitido.'}, status=405)
+
+    catalogo = get_object_or_404(Catalogo, pk=cat_id)
+    subcategoria = get_object_or_404(Subcategoria, pk=subcat_id, id_cat_fk=catalogo)
+    state = _subcategoria_delete_state(subcategoria)
+    return JsonResponse({'ok': True, **state})
+
+
+@login_required
+def subcategoria_eliminar(request, cat_id, subcat_id):
+    if not _is_admin(request):
+        return JsonResponse({'ok': False, 'error': 'No autorizado.'}, status=403)
+
+    if request.method not in ['POST', 'DELETE']:
+        return JsonResponse({'ok': False, 'error': 'Método no permitido.'}, status=405)
+
+    catalogo = get_object_or_404(Catalogo, pk=cat_id)
+    subcategoria = get_object_or_404(Subcategoria, pk=subcat_id, id_cat_fk=catalogo)
+
+    state = _subcategoria_delete_state(subcategoria)
+    if not state['can_delete']:
+        return JsonResponse({'ok': False, 'error': state['reason']}, status=400)
+
+    deleted_id = subcategoria.id_subcat
+    deleted_name = subcategoria.nombre_subcategoria
+    deleted_route = subcategoria.ruta_completa
+    subcategoria.delete()
+
+    _registrar_auditoria(
+        request,
+        accion='eliminar',
+        entidad='subcategoria',
+        entidad_id=deleted_id,
+        descripcion=(
+            f'Se eliminó subcategoría "{deleted_name}" en catálogo "{catalogo.nombre_catalogo}". '
+            f'Ruta eliminada: {deleted_route}.'
+        ),
+    )
+
+    return JsonResponse({
+        'ok': True,
+        'subcategoria': {
+            'id': deleted_id,
+            'nombre': deleted_name,
+        },
+    })
+
+
+@login_required
+def producto_mover_subcategoria(request, cat_id, prod_id):
+    if not _is_admin(request):
+        return JsonResponse({'ok': False, 'error': 'No autorizado.'}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'Método no permitido.'}, status=405)
+
+    catalogo = get_object_or_404(Catalogo, pk=cat_id)
+    producto = get_object_or_404(Producto, pk=prod_id, id_cat_fk=catalogo)
+
+    prev_ids = list(producto.subcategorias.values_list('id_subcat', flat=True))
+    prev_rutas = list(
+        Subcategoria.objects
+        .filter(id_cat_fk=catalogo, id_subcat__in=prev_ids)
+        .order_by('nombre_subcategoria')
+        .values_list('nombre_subcategoria', flat=True)
+    )
+    destino_raw = (request.POST.get('subcategoria_destino_id') or '').strip()
+    if not destino_raw:
+        # Permite soltar sobre la ruta raíz del catálogo (sin subcategoría).
+        producto.subcategorias.clear()
+        _registrar_auditoria(
+            request,
+            accion='actualizar',
+            entidad='producto',
+            entidad_id=producto.id_prod,
+            descripcion=(
+                f'Se movió producto "{producto.nombre_producto}" a raíz del catálogo '
+                f'"{catalogo.nombre_catalogo}". '
+                f'Subcategorías anteriores: {", ".join(prev_rutas) if prev_rutas else "ninguna"}.'
+            ),
+        )
+        return JsonResponse({
+            'ok': True,
+            'producto': {
+                'id': producto.id_prod,
+                'prev_subcategoria_ids': prev_ids,
+                'new_subcategoria_ids': [],
+            },
+            'destino': {
+                'id': None,
+                'ruta': catalogo.nombre_catalogo,
+            },
+        })
+
+    try:
+        destino_id = int(destino_raw)
+    except ValueError:
+        return JsonResponse({'ok': False, 'error': 'Subcategoría destino inválida.'}, status=400)
+
+    destino = get_object_or_404(Subcategoria, pk=destino_id, id_cat_fk=catalogo)
+    producto.subcategorias.set([destino])
+
+    _registrar_auditoria(
+        request,
+        accion='actualizar',
+        entidad='producto',
+        entidad_id=producto.id_prod,
+        descripcion=(
+            f'Se movió producto "{producto.nombre_producto}" a subcategoría "{destino.nombre_subcategoria}" '
+            f'en catálogo "{catalogo.nombre_catalogo}". '
+            f'Ruta destino: {destino.ruta_completa}. '
+            f'Subcategorías anteriores: {", ".join(prev_rutas) if prev_rutas else "ninguna"}.'
+        ),
+    )
+
+    return JsonResponse({
+        'ok': True,
+        'producto': {
+            'id': producto.id_prod,
+            'prev_subcategoria_ids': prev_ids,
+            'new_subcategoria_ids': [destino.id_subcat],
+        },
+        'destino': {
+            'id': destino.id_subcat,
+            'ruta': destino.ruta_completa,
+        },
+    })
+
+
+@login_required
+def producto_restaurar_subcategorias(request, cat_id, prod_id):
+    if not _is_admin(request):
+        return JsonResponse({'ok': False, 'error': 'No autorizado.'}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'Método no permitido.'}, status=405)
+
+    catalogo = get_object_or_404(Catalogo, pk=cat_id)
+    producto = get_object_or_404(Producto, pk=prod_id, id_cat_fk=catalogo)
+    prev_ids = list(producto.subcategorias.values_list('id_subcat', flat=True))
+
+    raw_ids = (request.POST.get('subcategoria_ids') or '').strip()
+    if not raw_ids:
+        producto.subcategorias.clear()
+        _registrar_auditoria(
+            request,
+            accion='actualizar',
+            entidad='producto',
+            entidad_id=producto.id_prod,
+            descripcion=(
+                f'Se restauró (Ctrl+Z) producto "{producto.nombre_producto}" a raíz del catálogo '
+                f'"{catalogo.nombre_catalogo}". IDs anteriores: {prev_ids}.'
+            ),
+        )
+        return JsonResponse({'ok': True, 'producto': {'id': producto.id_prod, 'subcategoria_ids': []}})
+
+    parsed_ids = []
+    for part in raw_ids.split(','):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            parsed_ids.append(int(part))
+        except ValueError:
+            return JsonResponse({'ok': False, 'error': 'Lista de subcategorías inválida.'}, status=400)
+
+    valid_ids = list(
+        Subcategoria.objects
+        .filter(id_cat_fk=catalogo, id_subcat__in=parsed_ids)
+        .values_list('id_subcat', flat=True)
+    )
+    valid_set = set(valid_ids)
+    if len(valid_set) != len(set(parsed_ids)):
+        return JsonResponse({'ok': False, 'error': 'Hay subcategorías inválidas para restaurar.'}, status=400)
+
+    ordered_unique_ids = []
+    seen = set()
+    for item in parsed_ids:
+        if item in seen:
+            continue
+        seen.add(item)
+        ordered_unique_ids.append(item)
+
+    producto.subcategorias.set(ordered_unique_ids)
+    restored_rutas = list(
+        Subcategoria.objects
+        .filter(id_cat_fk=catalogo, id_subcat__in=ordered_unique_ids)
+        .order_by('nombre_subcategoria')
+        .values_list('nombre_subcategoria', flat=True)
+    )
+    _registrar_auditoria(
+        request,
+        accion='actualizar',
+        entidad='producto',
+        entidad_id=producto.id_prod,
+        descripcion=(
+            f'Se restauró (Ctrl+Z) producto "{producto.nombre_producto}" en catálogo '
+            f'"{catalogo.nombre_catalogo}". IDs anteriores: {prev_ids}. '
+            f'IDs restaurados: {ordered_unique_ids}. '
+            f'Subcategorías restauradas: {", ".join(restored_rutas) if restored_rutas else "ninguna"}.'
+        ),
+    )
+    return JsonResponse({
+        'ok': True,
+        'producto': {
+            'id': producto.id_prod,
+            'subcategoria_ids': ordered_unique_ids,
+        },
+    })
 
 
 @login_required
@@ -498,6 +904,7 @@ def panel_almacenista(request):
         return redirect('panel_usuario')
     return redirect('inventario_panel')
 from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.db import models
 from django.db import transaction
@@ -507,7 +914,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .db_compat import usuario_supports_tipo_doc
-from .forms import CatalogoForm, ProductoForm, UsuarioPerfilForm
+from .forms import CambioPasswordPerfilForm, CatalogoForm, ProductoForm, UsuarioPerfilForm
 from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Pedido, PedidoEvidencia, Producto, ProductoFoto, Subcategoria, Usuario, Rol, VerificacionSenaToken
 
 
@@ -679,8 +1086,16 @@ def productos_catalogo(request, cat_id):
         return redirect('dashboard')
 
     catalogo = get_object_or_404(Catalogo, pk=cat_id)
+    selected_subcat_id = (request.GET.get('subcat') or '').strip()
+    selected_subcat = None
+    if selected_subcat_id:
+        try:
+            selected_subcat = Subcategoria.objects.get(pk=int(selected_subcat_id), id_cat_fk=catalogo)
+        except (ValueError, Subcategoria.DoesNotExist):
+            selected_subcat = None
+
     disp_qs = Disponibilidad.objects.filter(id_prod_fk=OuterRef('pk')).order_by('-id_disp')
-    productos = (
+    productos_qs = (
         Producto.objects
         .filter(id_cat_fk=catalogo)
         .annotate(
@@ -691,12 +1106,53 @@ def productos_catalogo(request, cat_id):
         .order_by('nombre_producto')
         .prefetch_related('fotos', 'subcategorias')
     )
+
+    if selected_subcat:
+        # Muestra solo productos del nivel actual para evitar que el padre
+        # replique visualmente los productos de hijas/descendientes.
+        productos = productos_qs.filter(subcategorias=selected_subcat).distinct()
+    else:
+        # En raíz solo se listan productos sin subcategoría para que el movimiento
+        # a carpetas sea real (no se vea como copia).
+        productos = productos_qs.filter(subcategorias__isnull=True).distinct()
+
+    # Renderiza solo el nivel actual: raíz (sin padre) o hijas directas del nodo seleccionado.
+    subcats_for_level = (
+        Subcategoria.objects
+        .filter(
+            id_cat_fk=catalogo,
+            subcategoria_padre=selected_subcat,
+        )
+        .select_related('id_cat_fk', 'subcategoria_padre')
+        .order_by('nombre_subcategoria')
+    )
+    subcategoria_tree = [
+        {
+            'id': subcat.id_subcat,
+            'nombre': subcat.nombre_subcategoria,
+            'ruta': subcat.ruta_completa,
+            'padre_id': subcat.subcategoria_padre_id,
+            'children': [],
+        }
+        for subcat in subcats_for_level
+    ]
+    breadcrumb_subcats = []
+    if selected_subcat:
+        node = selected_subcat
+        while node:
+            breadcrumb_subcats.append(node)
+            node = node.subcategoria_padre
+        breadcrumb_subcats.reverse()
+
     return render(
         request,
         'inventario/catalogo/productos_catalogo.html',
         {
             'catalogo': catalogo,
             'productos': productos,
+            'subcategoria_tree': subcategoria_tree,
+            'selected_subcat_id': selected_subcat.id_subcat if selected_subcat else None,
+            'breadcrumb_subcats': breadcrumb_subcats,
             'puede_gestionar_catalogo': _is_admin(request),
         },
     )
@@ -1292,7 +1748,7 @@ def inventario_panel(request):
     productos_qs = (
         Producto.objects
         .select_related('id_cat_fk')
-        .prefetch_related('fotos')
+        .prefetch_related('fotos', 'subcategorias')
         .annotate(
             stock_actual=Subquery(disp_qs.values('stock')[:1]),
             cantidad_actual=Subquery(disp_qs.values('cantidad')[:1]),
@@ -1312,6 +1768,39 @@ def inventario_panel(request):
         productos_qs = productos_qs.filter(stock_actual__lte=5)
 
     productos = list(productos_qs.order_by('-fch_registro', '-id_prod'))
+
+    catalogo_ids_en_resultado = sorted({prod.id_cat_fk_id for prod in productos if prod.id_cat_fk_id})
+    subcat_map = {}
+    if catalogo_ids_en_resultado:
+        for subcat in (
+            Subcategoria.objects
+            .filter(id_cat_fk_id__in=catalogo_ids_en_resultado)
+            .values('id_subcat', 'nombre_subcategoria', 'subcategoria_padre_id', 'id_cat_fk_id')
+        ):
+            subcat_map[subcat['id_subcat']] = subcat
+
+    def _ruta_subcategoria(subcat_id):
+        partes = []
+        visited = set()
+        current = subcat_map.get(subcat_id)
+        while current and current['id_subcat'] not in visited:
+            visited.add(current['id_subcat'])
+            partes.append(current['nombre_subcategoria'])
+            current = subcat_map.get(current['subcategoria_padre_id'])
+        return ' / '.join(reversed(partes))
+
+    for prod in productos:
+        trazas = []
+        for subcat in prod.subcategorias.all():
+            ruta = _ruta_subcategoria(subcat.id_subcat)
+            trazas.append({
+                'id': subcat.id_subcat,
+                'nombre': subcat.nombre_subcategoria,
+                'ruta': ruta or subcat.nombre_subcategoria,
+            })
+        trazas.sort(key=lambda item: item['ruta'].lower())
+        prod.subcategoria_trazas = trazas
+        prod.subcategoria_ruta_resumen = ' | '.join(item['ruta'] for item in trazas) if trazas else 'Raíz del catálogo'
 
     catalogos = (
         Catalogo.objects.annotate(
@@ -1773,7 +2262,7 @@ def exportar_inventario_excel(request):
                     producto.get_tipo_bien_display(),
                     producto.numero_placa or '',
                     producto.cuentadante or '',
-                    ', '.join(sub.nombre_subcategoria for sub in producto.subcategorias.all()),
+                    ' | '.join(sub.ruta_completa for sub in producto.subcategorias.all()),
                     int(producto.stock_actual or 0),
                     int(producto.cantidad_actual or 0),
                     (producto.descr_dispo_actual or '').replace(';', ','),
@@ -1929,7 +2418,7 @@ def exportar_inventario_excel(request):
             row += 1
             ws.row_dimensions[row].height = 92
 
-            subcategorias = ', '.join(sub.nombre_subcategoria for sub in producto.subcategorias.all())
+            subcategorias = ' | '.join(sub.ruta_completa for sub in producto.subcategorias.all())
             image_name = ''
             if producto.fot_prod:
                 image_name = os.path.basename(getattr(producto.fot_prod, 'name', '') or '')
@@ -2082,6 +2571,23 @@ def _header_key(value):
     text = (value or '').strip().lower()
     text = text.replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u')
     return ' '.join(text.split())
+
+
+def _parse_excel_subcategorias(raw_text):
+    """Parsea subcategorías desde Excel soportando |, coma, ; y salto de línea."""
+    text = (raw_text or '').replace('\n', '|').replace(';', '|').replace(',', '|')
+    values = []
+    seen = set()
+    for part in text.split('|'):
+        item = (part or '').strip()
+        if not item:
+            continue
+        key = item.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        values.append(item)
+    return values
 
 
 def _find_header_row(sheet, required_keys, max_scan_rows=60):
@@ -2386,17 +2892,15 @@ def _importar_excel_inventario(temp_path, request):
             product_key_map[key] = producto
 
             subcats_raw = _cell_value(row_idx, 'subcategorias')
-            subcats = [s.strip() for s in subcats_raw.replace('/', ',').split(',') if s.strip()]
+            subcats = _parse_excel_subcategorias(subcats_raw)
             selected_subcats = []
             for sub_name in subcats:
-                sub_obj, _ = Subcategoria.objects.get_or_create(
-                    id_cat_fk=catalogo,
-                    nombre_subcategoria=sub_name,
-                    defaults={'fch_registro': timezone.now(), 'fch_ult_act': timezone.now()},
-                )
+                ruta = [segmento.strip() for segmento in sub_name.split('/') if segmento.strip()]
+                if not ruta:
+                    continue
+                sub_obj = Subcategoria.ensure_path(catalogo, ruta)
                 selected_subcats.append(sub_obj)
-            if selected_subcats:
-                producto.subcategorias.set(selected_subcats)
+            producto.subcategorias.set(selected_subcats)
 
             stock_txt = _cell_value(row_idx, 'stock')
             cantidad_txt = _cell_value(row_idx, 'cantidad')
@@ -3108,10 +3612,48 @@ def perfil_usuario(request):
 
     return render(request, 'inventario/usuario/perfil_usuario.html', {
         'form': form,
+        'password_form': CambioPasswordPerfilForm(usuario),
         'usuario': usuario,
         'tipo_doc_habilitado': tipo_doc_habilitado,
         'pedido_stats': pedido_stats,
         'pedidos_recientes': pedidos_recientes,
+    })
+
+
+@login_required
+def perfil_cambiar_password(request):
+    if request.method != 'POST':
+        return redirect('perfil_usuario')
+
+    form = CambioPasswordPerfilForm(request.user, request.POST)
+    if form.is_valid():
+        form.save()
+        update_session_auth_hash(request, request.user)
+        _registrar_auditoria(
+            request,
+            accion='actualizar',
+            entidad='usuario',
+            entidad_id=request.user.pk,
+            descripcion='Cambio de contraseña desde perfil de usuario.',
+        )
+        messages.success(request, 'Tu contraseña se actualizó correctamente.')
+    else:
+        errors = []
+        for field_errors in form.errors.values():
+            errors.extend(field_errors)
+        if errors:
+            messages.error(request, ' '.join(str(err) for err in errors))
+        else:
+            messages.error(request, 'No fue posible cambiar la contraseña. Intenta de nuevo.')
+
+    return redirect('perfil_usuario')
+
+
+@login_required
+def manual_usuario(request):
+    rol = _user_role(request) or 'usuario'
+    return render(request, 'inventario/usuario/manual_usuario.html', {
+        'rol_manual': rol,
     })
 
 

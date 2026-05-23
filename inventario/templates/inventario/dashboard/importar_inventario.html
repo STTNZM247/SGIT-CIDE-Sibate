@@ -239,7 +239,7 @@
     <article class="import-card">
         <h2>Cargar archivo Excel</h2>
         <p>Selecciona el archivo de respaldo, revisa la previsualización y luego cárgalo para actualizar la base de datos.</p>
-        <p class="import-note">Recuerda: usa el formato generado por el botón <strong>Exportar todo el inventario</strong> (hojas Inventario e Imágenes Secundarias).</p>
+        <p class="import-note">Recuerda: usa el formato generado por el botón <strong>Exportar todo el inventario</strong> (hojas Inventario e Imágenes Secundarias). En la columna <strong>Subcategorias</strong> usa rutas jerárquicas tipo <strong>Madre / Hija / Nieta</strong> y, si hay varias, sepáralas con <strong>|</strong>.</p>
 
         <form method="post" enctype="multipart/form-data" class="import-actions">
             {% csrf_token %}

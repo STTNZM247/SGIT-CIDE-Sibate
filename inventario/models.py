@@ -2,6 +2,7 @@ import secrets
 from datetime import timedelta
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -294,19 +295,75 @@ class Subcategoria(models.Model):
         db_column='id_cat_fk',
         related_name='subcategorias',
     )
+    subcategoria_padre = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='hijas',
+    )
     nombre_subcategoria = models.CharField(max_length=255)
     fch_registro = models.DateTimeField(null=True, blank=True)
     fch_ult_act = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'subcategoria'
-        ordering = ['id_cat_fk_id', 'nombre_subcategoria']
+        ordering = ['id_cat_fk_id', 'subcategoria_padre_id', 'nombre_subcategoria']
         constraints = [
-            models.UniqueConstraint(fields=['id_cat_fk', 'nombre_subcategoria'], name='uq_subcat_catalogo_nombre'),
+            models.UniqueConstraint(fields=['id_cat_fk', 'subcategoria_padre', 'nombre_subcategoria'], name='uq_subcat_catalogo_padre_nombre'),
         ]
 
     def __str__(self):
+        if self.subcategoria_padre:
+            return f'{self.subcategoria_padre} / {self.nombre_subcategoria}'
         return f'{self.id_cat_fk.nombre_catalogo} / {self.nombre_subcategoria}'
+
+    def save(self, *args, **kwargs):
+        depth = 1
+        parent = self.subcategoria_padre
+        visited = set()
+
+        while parent:
+            if parent.pk in visited:
+                raise ValidationError('Se detectó una referencia circular en la jerarquía de subcategorías.')
+            visited.add(parent.pk)
+            depth += 1
+            if depth > 12:
+                raise ValidationError('Se ha alcanzado el límite máximo de 12 niveles de profundidad.')
+            parent = parent.subcategoria_padre
+
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def ensure_path(cls, catalogo, ruta, parent=None):
+        segmentos = ruta if isinstance(ruta, (list, tuple)) else [ruta]
+        actual = parent
+        leaf = None
+        for segmento in segmentos:
+            nombre = (segmento or '').strip()
+            if not nombre:
+                continue
+            leaf, _ = cls.objects.get_or_create(
+                id_cat_fk=catalogo,
+                subcategoria_padre=actual,
+                nombre_subcategoria=nombre,
+                defaults={
+                    'fch_registro': timezone.now(),
+                    'fch_ult_act': timezone.now(),
+                },
+            )
+            actual = leaf
+        return leaf
+
+    @property
+    def ruta_completa(self):
+        partes = []
+        nodo = self
+        while nodo:
+            partes.append(nodo.nombre_subcategoria)
+            nodo = nodo.subcategoria_padre
+        partes.reverse()
+        return ' / '.join(partes)
 
 
 class ProductoFoto(models.Model):

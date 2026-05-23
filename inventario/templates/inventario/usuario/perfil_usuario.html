@@ -231,10 +231,15 @@ html[data-theme="dark"] #perfil-cover-trigger * {
             Sub-menú rápido
           </h2>
           <div class="perfil-quick-menu">
-            <button type="button" class="perfil-quick-item"><ion-icon name="lock-closed-outline"></ion-icon><span>Cambiar contraseña</span></button>
-            <button type="button" class="perfil-quick-item"><ion-icon name="notifications-outline"></ion-icon><span>Configurar notificaciones</span></button>
-            <button type="button" class="perfil-quick-item"><ion-icon name="document-text-outline"></ion-icon><span>Manual de usuario</span></button>
-            <button type="button" class="perfil-quick-item"><ion-icon name="headset-outline"></ion-icon><span>Soporte técnico</span></button>
+            <button type="button" class="perfil-quick-item" id="perfil-open-password-modal">
+              <ion-icon name="lock-closed-outline"></ion-icon><span>Cambiar contraseña</span>
+            </button>
+            <a href="{% url 'manual_usuario' %}" class="perfil-quick-item perfil-quick-item--link">
+              <ion-icon name="document-text-outline"></ion-icon><span>Manual de usuario</span>
+            </a>
+            <a href="mailto:soporte.inventario@sena.edu.co?subject=Soporte%20Inventario%20SENA" class="perfil-quick-item perfil-quick-item--link">
+              <ion-icon name="headset-outline"></ion-icon><span>Soporte técnico</span>
+            </a>
           </div>
 
           {# ── Preferencias de aspecto ───────────────────────── #}
@@ -309,6 +314,56 @@ html[data-theme="dark"] #perfil-cover-trigger * {
     </div>
   </form>
 
+  <div class="perfil-modal" id="perfil-password-modal" aria-hidden="true">
+    <div class="perfil-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="perfil-password-modal-title">
+      <div class="perfil-modal__head">
+        <h3 id="perfil-password-modal-title">Cambiar contraseña</h3>
+        <button type="button" class="perfil-modal__close" id="perfil-close-password-modal" aria-label="Cerrar ventana">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+      <p class="perfil-modal__hint">Actualiza tu clave de acceso y mantén tu cuenta protegida.</p>
+
+      <form method="post" action="{% url 'perfil_cambiar_password' %}" class="perfil-password-form" autocomplete="off">
+        {% csrf_token %}
+        <div class="perfil-field perfil-field--full">
+          <label for="id_password_actual"><ion-icon name="key-outline"></ion-icon>Contraseña actual</label>
+          <div class="perfil-password-shell">
+            <input type="password" class="form-control" id="id_password_actual" name="password_actual" placeholder="Ingresa tu contraseña actual" autocomplete="current-password" required>
+            <button type="button" class="perfil-password-toggle" data-password-toggle="id_password_actual" aria-label="Mostrar u ocultar contraseña">
+              <ion-icon name="eye-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="perfil-field perfil-field--full">
+          <label for="id_password_nueva"><ion-icon name="lock-closed-outline"></ion-icon>Nueva contraseña</label>
+          <div class="perfil-password-shell">
+            <input type="password" class="form-control" id="id_password_nueva" name="password_nueva" placeholder="Ingresa una nueva contraseña" autocomplete="new-password" required>
+            <button type="button" class="perfil-password-toggle" data-password-toggle="id_password_nueva" aria-label="Mostrar u ocultar contraseña">
+              <ion-icon name="eye-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="perfil-field perfil-field--full">
+          <label for="id_password_confirmacion"><ion-icon name="shield-checkmark-outline"></ion-icon>Confirmar nueva contraseña</label>
+          <div class="perfil-password-shell">
+            <input type="password" class="form-control" id="id_password_confirmacion" name="password_confirmacion" placeholder="Confirma la nueva contraseña" autocomplete="new-password" required>
+            <button type="button" class="perfil-password-toggle" data-password-toggle="id_password_confirmacion" aria-label="Mostrar u ocultar contraseña">
+              <ion-icon name="eye-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="perfil-modal__actions">
+          <button type="button" class="perfil-btn perfil-btn--logout" id="perfil-cancel-password-modal">Cancelar</button>
+          <button type="submit" class="perfil-btn perfil-btn--save">Actualizar contraseña</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div class="perfil-cover-picker" id="perfil-cover-picker">
     <p class="perfil-cover-picker-title">Elige un color</p>
     <div class="perfil-cover-picker-colors">
@@ -334,6 +389,53 @@ html[data-theme="dark"] #perfil-cover-trigger * {
 {% block extra_js %}
 <script data-page-script="true">
 (function () {
+  var openPasswordBtn = document.getElementById('perfil-open-password-modal');
+  var closePasswordBtn = document.getElementById('perfil-close-password-modal');
+  var cancelPasswordBtn = document.getElementById('perfil-cancel-password-modal');
+  var passwordModal = document.getElementById('perfil-password-modal');
+
+  function openPasswordModal() {
+    if (!passwordModal) return;
+    passwordModal.classList.add('is-open');
+    passwordModal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closePasswordModal() {
+    if (!passwordModal) return;
+    passwordModal.classList.remove('is-open');
+    passwordModal.setAttribute('aria-hidden', 'true');
+  }
+
+  if (openPasswordBtn) {
+    openPasswordBtn.addEventListener('click', openPasswordModal);
+  }
+  if (closePasswordBtn) {
+    closePasswordBtn.addEventListener('click', closePasswordModal);
+  }
+  if (cancelPasswordBtn) {
+    cancelPasswordBtn.addEventListener('click', closePasswordModal);
+  }
+  if (passwordModal) {
+    passwordModal.addEventListener('click', function (event) {
+      if (event.target === passwordModal) {
+        closePasswordModal();
+      }
+    });
+  }
+
+  document.querySelectorAll('[data-password-toggle]').forEach(function (button) {
+    var targetId = button.getAttribute('data-password-toggle');
+    var input = targetId ? document.getElementById(targetId) : null;
+    var icon = button.querySelector('ion-icon');
+    if (!input || !icon) return;
+
+    button.addEventListener('click', function () {
+      var isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      icon.name = isPassword ? 'eye-off-outline' : 'eye-outline';
+    });
+  });
+
   var avatarTrigger  = document.getElementById('perfil-avatar-trigger');
   var avatarInput    = document.getElementById('id_fot_usu');
   var avatarPreview  = document.getElementById('perfil-avatar-preview');

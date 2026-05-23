@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
 
 from .db_compat import usuario_missing_optional_fields, usuario_supports_tipo_doc
@@ -215,6 +216,70 @@ class RestablecerPasswordForm(forms.Form):
         return usuario
 
 
+class CambioPasswordPerfilForm(forms.Form):
+    password_actual = forms.CharField(
+        label='Contraseña actual',
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ingresa tu contraseña actual',
+            'autocomplete': 'current-password',
+            'id': 'id_password_actual',
+        }),
+    )
+    password_nueva = forms.CharField(
+        label='Nueva contraseña',
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ingresa una nueva contraseña',
+            'autocomplete': 'new-password',
+            'id': 'id_password_nueva',
+        }),
+    )
+    password_confirmacion = forms.CharField(
+        label='Confirmar nueva contraseña',
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirma la nueva contraseña',
+            'autocomplete': 'new-password',
+            'id': 'id_password_confirmacion',
+        }),
+    )
+
+    def __init__(self, usuario, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.usuario = usuario
+
+    def clean_password_actual(self):
+        password_actual = self.cleaned_data.get('password_actual') or ''
+        if not self.usuario.check_password(password_actual):
+            raise forms.ValidationError('La contraseña actual no es correcta.')
+        return password_actual
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password_nueva = cleaned_data.get('password_nueva') or ''
+        password_confirmacion = cleaned_data.get('password_confirmacion') or ''
+
+        if password_nueva and password_confirmacion and password_nueva != password_confirmacion:
+            self.add_error('password_confirmacion', 'Las contraseñas no coinciden.')
+
+        if password_nueva and self.usuario.check_password(password_nueva):
+            self.add_error('password_nueva', 'La nueva contraseña debe ser diferente a la actual.')
+
+        if password_nueva:
+            validate_password(password_nueva, user=self.usuario)
+
+        return cleaned_data
+
+    def save(self):
+        self.usuario.set_password(self.cleaned_data['password_nueva'])
+        self.usuario.save(update_fields=['password'])
+        return self.usuario
+
+
 class CatalogoForm(forms.ModelForm):
     def clean_nombre_catalogo(self):
         nombre = (self.cleaned_data.get('nombre_catalogo') or '').strip()
@@ -287,8 +352,9 @@ class ProductoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['subcategorias'].queryset = Subcategoria.objects.select_related('id_cat_fk').order_by(
+        self.fields['subcategorias'].queryset = Subcategoria.objects.select_related('id_cat_fk', 'subcategoria_padre').order_by(
             'id_cat_fk__nombre_catalogo',
+            'subcategoria_padre_id',
             'nombre_subcategoria',
         )
 
@@ -311,7 +377,7 @@ class ProductoForm(forms.ModelForm):
 
     @staticmethod
     def _parse_subcategorias_text(raw_text):
-        text = (raw_text or '').replace('\n', ',').replace('/', ',').replace(';', ',')
+        text = (raw_text or '').replace('\n', ',').replace(';', ',')
         items = []
         for part in text.split(','):
             value = part.strip()
@@ -340,14 +406,8 @@ class ProductoForm(forms.ModelForm):
 
         if catalogo and nuevas:
             for nombre in nuevas:
-                subcat, _ = Subcategoria.objects.get_or_create(
-                    id_cat_fk=catalogo,
-                    nombre_subcategoria=nombre,
-                    defaults={
-                        'fch_registro': timezone.now(),
-                        'fch_ult_act': timezone.now(),
-                    },
-                )
+                ruta = [segment.strip() for segment in nombre.split('/') if segment.strip()]
+                subcat = Subcategoria.ensure_path(catalogo, ruta)
                 seleccionadas.append(subcat)
 
         if seleccionadas:

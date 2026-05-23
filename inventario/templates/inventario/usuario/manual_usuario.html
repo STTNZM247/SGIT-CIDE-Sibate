@@ -1,0 +1,197 @@
+{% extends 'inventario/shared/base.html' %}
+
+{% block title %}Manual de usuario{% endblock %}
+
+{% block content %}
+<section class="manual-page">
+  <header class="manual-head">
+    <h1>Manual del sistema</h1>
+    <p>
+      {% if rol_manual == 'admin' %}
+        Guía para administración integral: catálogos, inventario, pedidos, préstamos, auditoría y usuarios.
+      {% elif rol_manual == 'almacenista' %}
+        Guía para operación de almacén: inventario, pedidos y préstamos.
+      {% else %}
+        Guía para uso del portal de usuario: catálogo, carrito, pedidos y perfil.
+      {% endif %}
+    </p>
+  </header>
+
+  {% if rol_manual == 'admin' %}
+  <article class="manual-card">
+    <h2>1. Gestión del catálogo</h2>
+    <ol>
+      <li>Ingresa a Catálogo y crea categorías principales.</li>
+      <li>Usa subcategorías para organizar por niveles según el tipo de material.</li>
+      <li>Mueve productos entre subcategorías con arrastrar y soltar.</li>
+      <li>Si te equivocas en un movimiento, usa Ctrl+Z para revertir.</li>
+    </ol>
+  </article>
+
+  <article class="manual-card">
+    <h2>2. Inventario y trazabilidad</h2>
+    <ol>
+      <li>En Inventario revisa stock, ubicación y estado de productos.</li>
+      <li>Consulta la trazabilidad para ver en qué ruta de subcategorías está cada producto.</li>
+      <li>Usa los enlaces de trazabilidad para abrir directamente el contexto en Catálogo.</li>
+    </ol>
+  </article>
+
+  <article class="manual-card">
+    <h2>3. Pedidos, préstamos y auditoría</h2>
+    <ol>
+      <li>Aprueba o rechaza pedidos según disponibilidad real.</li>
+      <li>Registra entregas y devoluciones para mantener consistencia de stock.</li>
+      <li>Usa Auditoría para rastrear cambios críticos (crear, mover, eliminar y restaurar).</li>
+    </ol>
+  </article>
+
+  <article class="manual-card">
+    <h2>4. Usuarios</h2>
+    <ol>
+      <li>Crea usuarios nuevos con rol inicial correcto.</li>
+      <li>Gestiona estados (activo/inactivo) y cambios de rol según permisos.</li>
+      <li>Verifica solicitudes de validación SENA cuando aplique.</li>
+    </ol>
+  </article>
+  {% elif rol_manual == 'almacenista' %}
+  <article class="manual-card">
+    <h2>1. Inventario operativo</h2>
+    <ol>
+      <li>Revisa stock y cantidades antes de confirmar entregas.</li>
+      <li>Actualiza ubicaciones y datos del producto cuando cambien físicamente.</li>
+      <li>Usa Catálogo para ubicar rápido elementos por subcategoría.</li>
+    </ol>
+  </article>
+
+  <article class="manual-card">
+    <h2>2. Gestión de pedidos</h2>
+    <ol>
+      <li>Abre Pedidos para validar cada solicitud.</li>
+      <li>Marca productos no disponibles cuando no haya existencias reales.</li>
+      <li>Confirma entrega con código para dejar trazabilidad de despacho.</li>
+    </ol>
+  </article>
+
+  <article class="manual-card">
+    <h2>3. Préstamos y devoluciones</h2>
+    <ol>
+      <li>Consulta fechas de devolución en panel de préstamos.</li>
+      <li>Registra devoluciones para restituir stock automáticamente.</li>
+      <li>Monitorea vencidos y coordina recuperación de elementos pendientes.</li>
+    </ol>
+  </article>
+  {% else %}
+  <article class="manual-card">
+    <h2>1. Consultar productos</h2>
+    <ol>
+      <li>Desde el panel de usuario revisa disponibilidad por producto.</li>
+      <li>Abre el detalle para confirmar descripción y cantidad existente.</li>
+      <li>Agrega al carrito solo los productos que realmente necesitas.</li>
+    </ol>
+  </article>
+
+  <article class="manual-card">
+    <h2>2. Solicitar pedidos</h2>
+    <ol>
+      <li>En carrito ajusta cantidades antes de enviar.</li>
+      <li>Confirma ubicación/área para facilitar la entrega.</li>
+      <li>Revisa notificaciones del sistema para conocer estado del pedido.</li>
+    </ol>
+  </article>
+
+  <article class="manual-card">
+    <h2>3. Perfil y seguridad</h2>
+    <ol>
+      <li>Actualiza teléfono, programa y centro en Perfil.</li>
+      <li>Usa la opción Cambiar contraseña para reforzar tu acceso.</li>
+      <li>No compartas tu contraseña ni códigos de entrega.</li>
+    </ol>
+  </article>
+  {% endif %}
+
+  <article class="manual-card manual-card--tips">
+    <h2>Buenas prácticas</h2>
+    <ul>
+      <li>Mantén la información actualizada para evitar errores de inventario.</li>
+      <li>Trabaja siempre desde tu cuenta, sin compartir credenciales.</li>
+      <li>Reporta cualquier inconsistencia al equipo de soporte.</li>
+    </ul>
+  </article>
+</section>
+
+<style data-page-style="true">
+.manual-page {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 14px;
+}
+
+.manual-head {
+  background: #ffffff;
+  border: 1px solid #dce8de;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.manual-head h1 {
+  margin: 0 0 8px;
+  color: #173a24;
+}
+
+.manual-head p {
+  margin: 0;
+  color: #567062;
+}
+
+.manual-card {
+  background: #ffffff;
+  border: 1px solid #dce8de;
+  border-radius: 16px;
+  padding: 16px 18px;
+}
+
+.manual-card h2 {
+  margin: 0 0 10px;
+  font-size: 1.08rem;
+  color: #1d3f29;
+}
+
+.manual-card ol,
+.manual-card ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #2f4337;
+}
+
+.manual-card li + li {
+  margin-top: 6px;
+}
+
+.manual-card--tips {
+  border-left: 5px solid #39A900;
+}
+
+html[data-theme="dark"] .manual-head,
+html[data-theme="dark"] .manual-card {
+  background: #121a22 !important;
+  border-color: #213146 !important;
+}
+
+html[data-theme="dark"] .manual-head h1,
+html[data-theme="dark"] .manual-card h2 {
+  color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .manual-head p,
+html[data-theme="dark"] .manual-card ol,
+html[data-theme="dark"] .manual-card ul {
+  color: #8ea88e !important;
+}
+
+html[data-theme="dark"] .manual-card--tips {
+  border-left-color: #42a5f5 !important;
+}
+</style>
+{% endblock %}
