@@ -269,6 +269,10 @@ def _auto_marcar_prestamos_vencidos():
 
 
 def _sumar_stock_disponibilidad(detalle, now):
+    _ajustar_stock_disponibilidad(detalle, now, detalle.cantidad_solicitada)
+
+
+def _ajustar_stock_disponibilidad(detalle, now, delta):
     if not detalle.id_prod_fk_id:
         return
 
@@ -281,25 +285,30 @@ def _sumar_stock_disponibilidad(detalle, now):
     )
 
     if not disp:
+        if delta <= 0:
+            return
         Disponibilidad.objects.create(
             id_prod_fk=detalle.id_prod_fk,
-            cantidad=detalle.cantidad_solicitada,
-            stock=detalle.cantidad_solicitada,
+            cantidad=delta,
+            stock=delta,
             descr_dispo='Stock restaurado por devolución de préstamo.',
             fch_registro=now,
             fch_ult_act=now,
         )
         return
 
+    update_fields = ['fch_ult_act']
+
     if disp.cantidad is not None:
-        disp.cantidad += detalle.cantidad_solicitada
-        update_fields = ['cantidad', 'fch_ult_act']
-    elif disp.stock is not None:
-        disp.stock += detalle.cantidad_solicitada
-        update_fields = ['stock', 'fch_ult_act']
-    else:
-        disp.cantidad = detalle.cantidad_solicitada
-        update_fields = ['cantidad', 'fch_ult_act']
+        disp.cantidad = max((disp.cantidad or 0) + delta, 0)
+        update_fields.append('cantidad')
+    if disp.stock is not None:
+        disp.stock = max((disp.stock or 0) + delta, 0)
+        update_fields.append('stock')
+    if disp.cantidad is None and disp.stock is None and delta > 0:
+        disp.cantidad = delta
+        disp.stock = delta
+        update_fields.extend(['cantidad', 'stock'])
 
     disp.fch_ult_act = now
     disp.save(update_fields=update_fields)
@@ -801,8 +810,6 @@ def producto_editar(request, prod_id):
         tipo_bien = request.POST.get('tipo_bien', 'devolutivo').strip() or 'devolutivo'
         numero_placa = request.POST.get('numero_placa', '').strip()
         cuentadante = request.POST.get('cuentadante', '').strip()
-        subcategorias_ids = request.POST.getlist('subcategorias')
-        nuevas_subcategorias = request.POST.get('nuevas_subcategorias', '')
         stock = request.POST.get('stock')
         cantidad = request.POST.get('cantidad')
         descr_dispo = request.POST.get('descr_dispo', '').strip()
@@ -835,7 +842,6 @@ def producto_editar(request, prod_id):
 
             producto.fch_ult_act = timezone.now()
             producto.save()
-            _sync_subcategorias_producto(producto, id_cat_fk, subcategorias_ids, nuevas_subcategorias)
 
             # Fotos adicionales nuevas (respetando máximo de 5 total)
             fotos_nuevas = request.FILES.getlist('fotos_nuevas')
@@ -4060,11 +4066,7 @@ def pedido_marcar_esperando_entrega(request, pedido_id):
             if not disp:
                 continue
 
-            solicitado = detalle.cantidad_solicitada
-            if disp.cantidad is not None:
-                disp.cantidad = max(disp.cantidad - solicitado, 0)
-            disp.fch_ult_act = now
-            disp.save(update_fields=['cantidad', 'fch_ult_act'])
+            _ajustar_stock_disponibilidad(detalle, now, -int(detalle.cantidad_solicitada or 0))
 
             detalle.estado_detalle = 'esperando entrega'
             detalle.fch_ult_act = now

@@ -139,6 +139,14 @@ def _build_carrito_context(request):
         not item['supera_stock'] and (item['producto'].stock_actual or 0) > 0
         for item in carrito_items_pedido
     )
+    solo_consumo_pedido = bool(carrito_items_pedido) and all(
+        getattr(item['producto'], 'tipo_bien', 'devolutivo') == 'consumo'
+        for item in carrito_items_pedido
+    )
+    tiene_productos_consumo = any(
+        getattr(item['producto'], 'tipo_bien', 'devolutivo') == 'consumo'
+        for item in carrito_items_pedido
+    )
 
     return {
         'carrito_items': carrito_items,
@@ -148,6 +156,8 @@ def _build_carrito_context(request):
         'productos_disponibles': productos_disponibles,
         'productos_sin_stock': productos_sin_stock,
         'carrito_valido': carrito_valido,
+        'solo_consumo_pedido': solo_consumo_pedido,
+        'tiene_productos_consumo': tiene_productos_consumo,
         'requiere_validacion_sena': not _usuario_tiene_validacion_sena(request.user),
         'verificacion_sena_estado': getattr(request.user, 'verificacion_sena_estado', 'pendiente'),
     }
@@ -552,6 +562,16 @@ def pedidos_usuario(request):
     VENTANA_CANCELACION = timedelta(minutes=10)
 
     for pedido in pedidos:
+        detalles_pedido = list(pedido.detalles.all())
+        if pedido.estado in ('entregado', 'vencido'):
+            pedido.detalles_usuario = [
+                detalle for detalle in detalles_pedido
+                if not (detalle.id_prod_fk and detalle.id_prod_fk.tipo_bien == 'consumo')
+            ]
+        else:
+            pedido.detalles_usuario = detalles_pedido
+        pedido.detalles_usuario_count = len(pedido.detalles_usuario)
+
         if pedido.estado == 'esperando entrega':
             codigo_vigente = bool(
                 pedido.codigo_entrega

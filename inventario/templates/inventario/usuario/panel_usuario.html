@@ -64,6 +64,8 @@ html[data-theme='dark'] .usuario-busqueda-bar input.usuario-busqueda-input:not([
                 type="button"
                 class="usuario-megamenu__tab{% if cat_sel and cat_sel.id_cat == item_menu.catalogo.id_cat %} is-active{% endif %}"
                 data-cat="{{ item_menu.catalogo.id_cat }}"
+                data-url="{% url 'panel_usuario' %}?cat={{ item_menu.catalogo.id_cat }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}"
+                title="Clic: ver subcategorías · Doble clic: ver todo el catálogo"
             >
                 {{ item_menu.catalogo.nombre_catalogo }}
             </button>
@@ -76,6 +78,15 @@ html[data-theme='dark'] .usuario-busqueda-bar input.usuario-busqueda-input:not([
             </a>
             {% endif %}
             {% endfor %}
+
+            <div class="usuario-megamenu__help" id="usuarioMegaHelp">
+                <button type="button" class="usuario-megamenu__help-btn" id="usuarioMegaHelpBtn" aria-label="Ayuda del menú" aria-expanded="false">
+                    <ion-icon name="help-outline"></ion-icon>
+                </button>
+                <span class="usuario-megamenu__help-tip" id="usuarioMegaHelpTip" role="tooltip">
+                    Clic en una categoría para desplegar subcategorías. Doble clic para ver todos los productos de esa categoría.
+                </span>
+            </div>
         </div>
 
         {% for item_menu in menu_catalogos %}
@@ -247,6 +258,7 @@ html[data-theme='dark'] .usuario-busqueda-bar input.usuario-busqueda-input:not([
 
     tabs.forEach(function (tab) {
         var catId = tab.getAttribute('data-cat');
+        var catUrl = tab.getAttribute('data-url');
         tab.setAttribute('aria-expanded', tab.classList.contains('is-active') ? 'true' : 'false');
 
         tab.addEventListener('click', function (event) {
@@ -254,6 +266,42 @@ html[data-theme='dark'] .usuario-busqueda-bar input.usuario-busqueda-input:not([
             openPanel(catId, true);
             tab.blur();
         });
+
+        tab.addEventListener('dblclick', function (event) {
+            event.preventDefault();
+            if (catUrl) {
+                window.location.href = catUrl;
+            }
+        });
+    });
+})();
+</script>
+<script data-page-script="true">
+(function () {
+    var helpWrap = document.getElementById('usuarioMegaHelp');
+    var helpBtn = document.getElementById('usuarioMegaHelpBtn');
+    if (!helpWrap || !helpBtn) return;
+
+    function setOpen(open) {
+        helpWrap.classList.toggle('is-open', !!open);
+        helpBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    helpBtn.addEventListener('click', function (event) {
+        event.stopPropagation();
+        setOpen(!helpWrap.classList.contains('is-open'));
+    });
+
+    document.addEventListener('click', function (event) {
+        if (!helpWrap.contains(event.target)) {
+            setOpen(false);
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            setOpen(false);
+        }
     });
 })();
 </script>

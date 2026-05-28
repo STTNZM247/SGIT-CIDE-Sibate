@@ -182,7 +182,7 @@
             </div>
         </div>
 
-        <form method="post" action="{% url 'usuario_realizar_pedido' %}" id="prestamo-form">
+        <form method="post" action="{% url 'usuario_realizar_pedido' %}" id="prestamo-form" data-solo-consumo="{% if solo_consumo_pedido %}true{% else %}false{% endif %}">
             {% csrf_token %}
 
             <!-- Área / Ambiente -->
@@ -195,6 +195,19 @@
                     placeholder="Ej: Aula 301, Laboratorio de redes, Taller eléctrico..."></textarea>
             </div>
 
+            {% if solo_consumo_pedido %}
+            <input type="hidden" name="tipo_devolucion" value="consumo">
+            <div class="prestamo-field">
+                <label>
+                    <ion-icon name="leaf-outline"></ion-icon>
+                    Pedido de consumo
+                </label>
+                <p class="prestamo-devolucion-hint">
+                    <ion-icon name="checkmark-circle-outline"></ion-icon>
+                    Este pedido contiene solo productos de consumo, por lo tanto no requiere fecha de devolución.
+                </p>
+            </div>
+            {% else %}
             <!-- Fecha de devolución -->
             <div class="prestamo-field">
                 <label>
@@ -233,6 +246,7 @@
                            class="prestamo-date-input">
                 </div>
             </div>
+            {% endif %}
 
             <button type="submit" class="prestamo-submit-btn" id="prestamo-submit-btn" disabled>
                 <ion-icon name="paper-plane-outline"></ion-icon>
@@ -250,7 +264,9 @@
     var openBtn    = document.getElementById('prestamo-open-btn');
     var closeBtn   = document.getElementById('prestamo-modal-close');
     var submitBtn  = document.getElementById('prestamo-submit-btn');
+    var form       = document.getElementById('prestamo-form');
     var areaInput  = document.getElementById('area_ubicacion');
+    var soloConsumo = form && form.getAttribute('data-solo-consumo') === 'true';
 
     var radioDia  = document.getElementById('tipo-mismo-dia');
     var radioDias = document.getElementById('tipo-por-dias');
@@ -309,6 +325,7 @@
 
     /* ── Toggle paneles de fecha ── */
     function showPanel(tipo) {
+        if (!panelDia || !panelDias) return;
         panelDia.style.display  = tipo === 'mismo_dia'  ? '' : 'none';
         panelDias.style.display = tipo === 'por_dias'   ? '' : 'none';
         // Limpiar el otro campo para que no se envíe vacío de forma errónea
@@ -327,8 +344,8 @@
     function checkForm() {
         var areaOk   = areaInput  && areaInput.value.trim().length > 0;
 
-        var fechaOk = false;
-        if (radioDia && radioDia.checked && horaInput && horaInput.value) {
+        var fechaOk = soloConsumo;
+        if (!soloConsumo && radioDia && radioDia.checked && horaInput && horaInput.value) {
             actualizarMinHoraActual();
             var ahora = new Date();
             var minutosActuales = (ahora.getHours() * 60) + ahora.getMinutes();
@@ -340,7 +357,7 @@
         } else if (horaInput) {
             horaInput.setCustomValidity('');
         }
-        if (radioDias && radioDias.checked && fechaInput && fechaInput.value) fechaOk = true;
+        if (!soloConsumo && radioDias && radioDias.checked && fechaInput && fechaInput.value) fechaOk = true;
 
         if (submitBtn) {
             submitBtn.disabled = !(areaOk && fechaOk);
@@ -352,7 +369,7 @@
         horaInput.addEventListener('focus', actualizarMinHoraActual);
     }
     setInterval(function () {
-        if (radioDia && radioDia.checked) {
+        if (!soloConsumo && radioDia && radioDia.checked) {
             actualizarMinHoraActual();
             checkForm();
         }

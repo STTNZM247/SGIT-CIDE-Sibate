@@ -1019,12 +1019,13 @@
 }
 
 .usuario-megamenu {
+  position: relative;
   border: 1px solid #dde7da;
   border-radius: 20px;
   background: #fff;
   box-shadow: 0 12px 30px rgba(46, 91, 32, 0.08);
   margin: 8px 0 14px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .usuario-megamenu__tabs {
@@ -1034,6 +1035,7 @@
   padding: 10px;
   background: #f6faf4;
   border-bottom: 1px solid #e6efe1;
+  align-items: center;
 }
 
 .usuario-megamenu__tab {
@@ -1054,6 +1056,73 @@
 .usuario-megamenu__tab:focus,
 .usuario-megamenu__tab:visited {
   text-decoration: none;
+}
+
+.usuario-megamenu__hint {
+  margin: 0;
+  padding: 0 12px 10px;
+  font-size: 0.78rem;
+  color: #5c6b5e;
+  font-weight: 600;
+}
+
+.usuario-megamenu__help {
+  position: relative;
+  margin-left: auto;
+  z-index: 16;
+}
+
+.usuario-megamenu__help-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid #97a59a;
+  background: #f2f6f1;
+  color: #1f2520;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.usuario-megamenu__help-btn ion-icon {
+  font-size: 0.85rem;
+}
+
+.usuario-megamenu__help-btn:hover {
+  transform: translateY(-1px);
+  border-color: #6e7f73;
+  background: #e7eee4;
+}
+
+.usuario-megamenu__help-tip {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  bottom: auto;
+  width: min(420px, 80vw);
+  background: #ffffff;
+  border: 1px solid #d6e2d5;
+  border-radius: 10px;
+  padding: 9px 11px;
+  color: #3f5141;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  box-shadow: 0 8px 20px rgba(32, 55, 37, 0.14);
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.16s, transform 0.16s;
+}
+
+.usuario-megamenu__help:hover .usuario-megamenu__help-tip,
+.usuario-megamenu__help:focus-within .usuario-megamenu__help-tip,
+.usuario-megamenu__help.is-open .usuario-megamenu__help-tip {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
 .usuario-megamenu__tab.is-active {
@@ -1495,6 +1564,24 @@ html[data-theme="dark"] .usuario-megamenu {
 html[data-theme="dark"] .usuario-megamenu__tabs {
   background: #1d2b1f;
   border-bottom-color: #2b3e2d;
+}
+html[data-theme="dark"] .usuario-megamenu__hint {
+  color: #8ea58f;
+}
+html[data-theme="dark"] .usuario-megamenu__help-btn {
+  background: #1d2a1e;
+  border-color: #5e7162;
+  color: #d9e8d8;
+}
+html[data-theme="dark"] .usuario-megamenu__help-btn:hover {
+  background: #263428;
+  border-color: #7b9380;
+}
+html[data-theme="dark"] .usuario-megamenu__help-tip {
+  background: #172218;
+  border-color: #304534;
+  color: #c3d5c4;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.38);
 }
 html[data-theme="dark"] .usuario-megamenu__tab {
   color: #a8bca9;

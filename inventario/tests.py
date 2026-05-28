@@ -17,7 +17,7 @@ from PIL import Image
 from .auth_backends import CompatibleModelBackend
 from .forms import ProductoForm
 from .middleware import ActiveUserRequiredMiddleware
-from .models import CarritoItem, Catalogo, Disponibilidad, Notificacion, PasswordResetToken, Producto, Rol, TipoDoc, Usuario, VerificacionSenaToken
+from .models import CarritoItem, Catalogo, DetallePedido, Disponibilidad, Notificacion, PasswordResetToken, Pedido, Producto, Rol, TipoDoc, Usuario, VerificacionSenaToken
 from .validacion_sena import intentar_validacion_automatica
 from .views_login import RolRedirectLoginView
 from .views_usuario import panel_usuario
@@ -305,6 +305,113 @@ class GestionEstadoUsuarioTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn('/validacion-sena/manual/', mail.outbox[0].body)
         self.assertEqual(VerificacionSenaToken.objects.filter(usuario=self.usuario, usado_en__isnull=True).count(), 1)
+
+    def test_consumo_only_order_skips_return_date_and_syncs_stock_fields(self):
+        self.usuario.verificacion_sena_estado = 'validado'
+        self.usuario.save(update_fields=['verificacion_sena_estado'])
+        self.client.force_login(self.usuario)
+
+        catalogo = Catalogo.objects.create(nombre_catalogo='Consumibles')
+        producto = Producto.objects.create(
+            nombre_producto='Guantes de latex',
+            id_cat_fk=catalogo,
+            tipo_bien='consumo',
+        )
+        Disponibilidad.objects.create(id_prod_fk=producto, cantidad=5, stock=5)
+        CarritoItem.objects.create(id_usuario_fk=self.usuario, id_prod_fk=producto, cantidad=2)
+
+        with patch('inventario.views_usuario.render', return_value=HttpResponse('ok')) as render_mock:
+            carrito_response = self.client.get(reverse('carrito_usuario'))
+        self.assertEqual(carrito_response.status_code, 200)
+        carrito_context = render_mock.call_args.args[2]
+        self.assertTrue(carrito_context['solo_consumo_pedido'])
+
+        response = self.client.post(reverse('usuario_realizar_pedido'), {
+            'area_ubicacion': 'Laboratorio de química',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        pedido = Pedido.objects.get(id_usuario_fk=self.usuario)
+        self.assertEqual(pedido.tipo_devolucion, 'consumo')
+        self.assertIsNone(pedido.fecha_devolucion)
+
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse('pedido_marcar_esperando_entrega', args=[pedido.id_pedido]))
+        self.assertEqual(response.status_code, 302)
+
+        pedido.refresh_from_db()
+        disp = Disponibilidad.objects.get(id_prod_fk=producto)
+        self.assertEqual(disp.cantidad, 3)
+        self.assertEqual(disp.stock, 3)
+
+        response = self.client.post(reverse('pedido_confirmar_entrega_codigo', args=[pedido.id_pedido]), {
+            'codigo_entrega': pedido.codigo_entrega,
+        })
+        self.assertEqual(response.status_code, 302)
+
+        pedido.refresh_from_db()
+        detalle = DetallePedido.objects.get(id_pedido_fk=pedido)
+        self.assertEqual(pedido.estado, 'devuelto')
+        self.assertEqual(detalle.estado_detalle, 'devuelto')
+
+    def test_mixed_order_hides_consumo_items_from_user_return_panel(self):
+        self.usuario.verificacion_sena_estado = 'validado'
+        self.usuario.save(update_fields=['verificacion_sena_estado'])
+        self.client.force_login(self.usuario)
+
+        catalogo = Catalogo.objects.create(nombre_catalogo='Mixto')
+        producto_consumo = Producto.objects.create(
+            nombre_producto='Cinta aislante',
+            id_cat_fk=catalogo,
+            tipo_bien='consumo',
+        )
+        producto_devolutivo = Producto.objects.create(
+            nombre_producto='Taladro',
+            id_cat_fk=catalogo,
+            tipo_bien='devolutivo',
+        )
+        Disponibilidad.objects.create(id_prod_fk=producto_consumo, cantidad=4, stock=4)
+        Disponibilidad.objects.create(id_prod_fk=producto_devolutivo, cantidad=3, stock=3)
+        CarritoItem.objects.create(id_usuario_fk=self.usuario, id_prod_fk=producto_consumo, cantidad=1)
+        CarritoItem.objects.create(id_usuario_fk=self.usuario, id_prod_fk=producto_devolutivo, cantidad=1)
+
+        response = self.client.post(reverse('usuario_realizar_pedido'), {
+            'area_ubicacion': 'Taller 2',
+            'tipo_devolucion': 'por_dias',
+            'fecha_devolucion_dias': (timezone.localdate() + timedelta(days=2)).isoformat(),
+        })
+        self.assertEqual(response.status_code, 302)
+
+        pedido = Pedido.objects.get(id_usuario_fk=self.usuario)
+
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse('pedido_marcar_esperando_entrega', args=[pedido.id_pedido]))
+        self.assertEqual(response.status_code, 302)
+        pedido.refresh_from_db()
+
+        disp_consumo = Disponibilidad.objects.get(id_prod_fk=producto_consumo)
+        disp_devolutivo = Disponibilidad.objects.get(id_prod_fk=producto_devolutivo)
+        self.assertEqual(disp_consumo.cantidad, 3)
+        self.assertEqual(disp_consumo.stock, 3)
+        self.assertEqual(disp_devolutivo.cantidad, 2)
+        self.assertEqual(disp_devolutivo.stock, 2)
+
+        response = self.client.post(reverse('pedido_confirmar_entrega_codigo', args=[pedido.id_pedido]), {
+            'codigo_entrega': pedido.codigo_entrega,
+        })
+        self.assertEqual(response.status_code, 302)
+
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.estado, 'entregado')
+        self.client.force_login(self.usuario)
+        with patch('inventario.views_usuario.render', return_value=HttpResponse('ok')) as render_mock:
+            pedidos_response = self.client.get(reverse('pedidos_usuario'))
+        self.assertEqual(pedidos_response.status_code, 200)
+        pedidos_context = render_mock.call_args.args[2]
+        pedidos_renderizados = pedidos_context['pedidos']
+        self.assertEqual(len(pedidos_renderizados), 1)
+        detalles_visibles = pedidos_renderizados[0].detalles_usuario
+        self.assertEqual([d.nombre_producto for d in detalles_visibles], ['Taladro'])
 
     @patch('django.core.mail.EmailMultiAlternatives.send', side_effect=Exception('smtp down'))
     def test_admin_send_manual_link_email_failure_keeps_request_pending(self, _send_mock):

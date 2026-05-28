@@ -131,22 +131,6 @@ html[data-theme="dark"] .edit-float-bar{
                                 <option value="consumo" {% if producto.tipo_bien == 'consumo' %}selected{% endif %}>Consumo</option>
                             </select>
                         </div>
-                        <div class="mf-group mf-group--stack">
-                            <label class="mf-label">Subcategorías</label>
-                            <select name="subcategorias" class="form-input form-select form-select-multiple" multiple size="6">
-                                {% for sub in subcategorias %}
-                                <option value="{{ sub.id_subcat }}" {% if sub in producto.subcategorias.all %}selected{% endif %}>
-                                    {{ sub.ruta_completa }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                            <small class="mf-hint">Puedes seleccionar varias.</small>
-                        </div>
-                    </div>
-
-                    <div class="mf-group">
-                        <label class="mf-label">Nuevas subcategorías</label>
-                        <textarea name="nuevas_subcategorias" class="form-input form-textarea" rows="2" placeholder="Ej: Cajas y tableros / Accesorios / Bornera 4mm"></textarea>
                     </div>
 
                     <div class="mf-row" id="devolutivo-fields-edit">

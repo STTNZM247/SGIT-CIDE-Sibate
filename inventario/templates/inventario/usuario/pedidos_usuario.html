@@ -272,11 +272,11 @@
             <details class="pedidos-usuario-products-toggle">
                 <summary>
                     <span>Ver productos del pedido</span>
-                    <strong>{{ pedido.detalles.count }}</strong>
+                    <strong>{{ pedido.detalles_usuario_count }}</strong>
                 </summary>
 
                     <div class="pedidos-usuario-products">
-                    {% for detalle in pedido.detalles.all %}
+                    {% for detalle in pedido.detalles_usuario %}
                     <div class="pedidos-usuario-product-item {% if detalle.estado_detalle == 'no_disponible' or detalle.estado_detalle == 'rechazado' %}pedidos-usuario-product-item--no-disponible{% endif %}">
                         <div class="pedidos-usuario-product-item__media">
                             {% if detalle.id_prod_fk and detalle.id_prod_fk.fot_prod %}
