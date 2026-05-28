@@ -189,33 +189,32 @@
 
     var tabs = Array.prototype.slice.call(menu.querySelectorAll('.usuario-megamenu__tab[data-cat]'));
     var panels = Array.prototype.slice.call(menu.querySelectorAll('.usuario-megamenu__panel'));
-    var openTimer = null;
+    function openPanel(catId, allowCollapse) {
+        var activeNow = menu.querySelector('.usuario-megamenu__tab.is-active[data-cat]');
+        var shouldCollapse = !!(allowCollapse && activeNow && activeNow.getAttribute('data-cat') === catId);
 
-    function openPanel(catId) {
         tabs.forEach(function (tab) {
-            tab.classList.toggle('is-active', tab.getAttribute('data-cat') === catId);
+            var isTarget = tab.getAttribute('data-cat') === catId;
+            var isOpen = !shouldCollapse && isTarget;
+            tab.classList.toggle('is-active', isOpen);
+            tab.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         });
         panels.forEach(function (panel) {
-            panel.classList.toggle('is-open', panel.getAttribute('data-panel') === catId);
+            var isTargetPanel = panel.getAttribute('data-panel') === catId;
+            panel.classList.toggle('is-open', !shouldCollapse && isTargetPanel);
         });
     }
 
     tabs.forEach(function (tab) {
         var catId = tab.getAttribute('data-cat');
-        tab.addEventListener('mouseenter', function () {
-            if (window.innerWidth < 992) return;
-            clearTimeout(openTimer);
-            openTimer = setTimeout(function () { openPanel(catId); }, 80);
-        });
-        tab.addEventListener('click', function () {
-            openPanel(catId);
+        tab.setAttribute('aria-expanded', tab.classList.contains('is-active') ? 'true' : 'false');
+
+        tab.addEventListener('click', function (event) {
+            event.preventDefault();
+            openPanel(catId, true);
+            tab.blur();
         });
     });
-
-    var active = menu.querySelector('.usuario-megamenu__tab.is-active[data-cat]');
-    if (!active && tabs.length) {
-        openPanel(tabs[0].getAttribute('data-cat'));
-    }
 })();
 </script>
 {% endblock %}

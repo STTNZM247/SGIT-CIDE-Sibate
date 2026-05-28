@@ -980,11 +980,18 @@
   text-decoration: none;
 }
 
-.usuario-megamenu__tab:hover,
 .usuario-megamenu__tab.is-active {
   background: #eaf5e4;
   color: #2f740d;
   border-color: #cce4bf;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .usuario-megamenu__tab:hover {
+    background: #eaf5e4;
+    color: #2f740d;
+    border-color: #cce4bf;
+  }
 }
 
 .usuario-megamenu__panel {
