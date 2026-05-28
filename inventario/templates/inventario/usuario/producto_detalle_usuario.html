@@ -147,7 +147,20 @@ html[data-theme='oscuro'] .subcats-chip {
 
 {% block content %}
 <div class="usuario-product-detail-page">
-    <a class="usuario-btn-volver" href="{% url 'panel_usuario' %}">
+  <nav class="usuario-breadcrumb" aria-label="Trazabilidad de ruta" style="margin-bottom:10px;">
+    {% for crumb in breadcrumb %}
+      {% if crumb.url %}
+      <a href="{{ crumb.url }}">{{ crumb.label }}</a>
+      {% else %}
+      <span aria-current="page">{{ crumb.label }}</span>
+      {% endif %}
+      {% if not forloop.last %}
+      <ion-icon name="chevron-forward-outline"></ion-icon>
+      {% endif %}
+    {% endfor %}
+  </nav>
+
+  <a class="usuario-btn-volver" href="{{ panel_url_ctx|default:request.META.HTTP_REFERER|default:'/' }}">
         <ion-icon name="arrow-back-outline"></ion-icon>
         Volver a inventario
     </a>

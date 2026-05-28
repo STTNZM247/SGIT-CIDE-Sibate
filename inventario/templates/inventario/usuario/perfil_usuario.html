@@ -301,18 +301,21 @@ html[data-theme="dark"] #perfil-cover-trigger * {
         </section>
       </div>
 
-      <div class="perfil-actions">
-        <button type="submit" class="perfil-btn perfil-btn--save">
-          <ion-icon name="save-outline"></ion-icon>
-          Guardar cambios
-        </button>
-        <a href="{% url 'logout' %}" class="perfil-btn perfil-btn--logout">
-          <ion-icon name="log-out-outline"></ion-icon>
-          Cerrar sesión
-        </a>
-      </div>
     </div>
   </form>
+
+  <div class="perfil-action-dock" role="region" aria-label="Acciones rápidas del perfil">
+    <div class="perfil-action-dock__inner">
+      <button type="submit" form="perfil-form" class="perfil-btn perfil-btn--save perfil-action-dock__btn" id="perfil-dock-save-btn" disabled aria-disabled="true">
+        <ion-icon name="save-outline"></ion-icon>
+        Guardar cambios
+      </button>
+      <a href="{% url 'logout' %}" class="perfil-btn perfil-btn--logout perfil-action-dock__btn">
+        <ion-icon name="log-out-outline"></ion-icon>
+        Cerrar sesión
+      </a>
+    </div>
+  </div>
 
   <div class="perfil-modal" id="perfil-password-modal" aria-hidden="true">
     <div class="perfil-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="perfil-password-modal-title">
@@ -721,6 +724,61 @@ html[data-theme="dark"] #perfil-cover-trigger * {
   });
 
   aplicarFormato();
+})();
+</script>
+
+<script data-page-script="true">
+/* ── Botón guardar (dock): gris hasta detectar cambios reales ───────────── */
+(function () {
+  var form = document.getElementById('perfil-form');
+  var saveBtn = document.getElementById('perfil-dock-save-btn');
+  if (!form || !saveBtn) return;
+
+  var fields = Array.prototype.slice.call(
+    form.querySelectorAll('input, select, textarea')
+  ).filter(function (el) {
+    if (!el.name) return false;
+    if (el.name === 'csrfmiddlewaretoken') return false;
+    if (el.type === 'hidden') return false;
+    return true;
+  });
+
+  function fieldValue(el) {
+    if (el.type === 'file') {
+      return el.files && el.files.length ? 'file:' + el.files.length : '';
+    }
+    if (el.type === 'checkbox' || el.type === 'radio') {
+      return el.checked ? '1' : '0';
+    }
+    return (el.value || '').trim();
+  }
+
+  var snapshot = fields.map(function (el) {
+    return (el.name + '=' + fieldValue(el));
+  }).join('|');
+
+  function setEnabled(enabled) {
+    saveBtn.disabled = !enabled;
+    saveBtn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+  }
+
+  function checkDirty() {
+    var current = fields.map(function (el) {
+      return (el.name + '=' + fieldValue(el));
+    }).join('|');
+    setEnabled(current !== snapshot);
+  }
+
+  fields.forEach(function (el) {
+    el.addEventListener('input', checkDirty);
+    el.addEventListener('change', checkDirty);
+  });
+
+  form.addEventListener('submit', function () {
+    setEnabled(false);
+  });
+
+  setEnabled(false);
 })();
 </script>
 {% endblock %}

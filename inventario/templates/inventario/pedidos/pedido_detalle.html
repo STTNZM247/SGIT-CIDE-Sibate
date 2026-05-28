@@ -63,7 +63,7 @@
                     <span class="pps-item__body">
                         <span class="pps-item__cat">{{ detalle.nombre_catalogo|default:'Sin catálogo' }}</span>
                         <strong class="pps-item__name">{{ detalle.nombre_producto }}</strong>
-                        <span class="pps-item__qty"><ion-icon name="layers-outline"></ion-icon> {{ detalle.cantidad_solicitada }} ud.</span>
+                        <span class="pps-item__qty"><ion-icon name="layers-outline"></ion-icon> El usuario pidió {{ detalle.cantidad_solicitada }} producto{{ detalle.cantidad_solicitada|pluralize }}</span>
                     </span>
                     <ion-icon name="chevron-forward-outline" class="pps-item__arrow"></ion-icon>
                 </button>

@@ -38,7 +38,7 @@
             </div>
 
             {% for item in carrito_items %}
-            <article class="usuario-carrito-card {% if item.supera_stock %}usuario-carrito-card--warning{% endif %}">
+            <article class="usuario-carrito-card {% if item.supera_stock %}usuario-carrito-card--warning{% endif %}{% if item.cantidad == 0 %} usuario-carrito-card--inactive{% endif %}">
                 <div class="usuario-carrito-card__media">
                     {% if item.producto.fot_prod %}
                     <img src="{{ item.producto.fot_prod.url }}" alt="{{ item.producto.nombre_producto }}">
@@ -74,12 +74,18 @@
                     <div class="usuario-carrito-card__meta">
                         <div class="usuario-carrito-meta-box">
                             <span class="usuario-carrito-meta-box__label">Cantidad solicitada</span>
-                            <strong>{{ item.cantidad }}</strong>
+                            <form method="post" action="{% url 'usuario_actualizar_cantidad_carrito' item.producto.id_prod %}" class="usuario-carrito-cantidad-form">
+                                {% csrf_token %}
+                                <input type="number" name="cantidad" value="{{ item.cantidad }}" min="0" max="999" class="usuario-carrito-cantidad-input" aria-label="Cantidad solicitada de {{ item.producto.nombre_producto }}" onchange="this.form.submit()">
+                                <small>Si dejas 0, este producto no se incluirá en el pedido.</small>
+                            </form>
                         </div>
-                        <div class="usuario-carrito-meta-box usuario-carrito-meta-box--status {% if item.supera_stock or item.producto.stock_actual|default:0 == 0 %}is-warning{% else %}is-ok{% endif %}">
+                        <div class="usuario-carrito-meta-box usuario-carrito-meta-box--status {% if item.cantidad == 0 or item.supera_stock or item.producto.stock_actual|default:0 == 0 %}is-warning{% else %}is-ok{% endif %}">
                             <span class="usuario-carrito-meta-box__label">Estado</span>
                             <strong>
-                                {% if item.producto.stock_actual|default:0 == 0 %}
+                                {% if item.cantidad == 0 %}
+                                    En pausa (0)
+                                {% elif item.producto.stock_actual|default:0 == 0 %}
                                     Sin stock
                                 {% elif item.supera_stock %}
                                     Ajustar cantidad

@@ -59,7 +59,7 @@ from .views import (
     notificaciones_marcar_todas_leidas,
 )
 
-from .views_usuario import carrito_usuario, panel_usuario, pedido_cancelar_usuario, pedido_codigo_devolucion, pedido_extender_plazo, pedidos_usuario, producto_detalle_usuario, solicitar_validacion_manual, usuario_agregar_carrito, usuario_eliminar_carrito, usuario_realizar_pedido, validacion_sena, validacion_sena_carga_manual
+from .views_usuario import carrito_usuario, panel_usuario, pedido_cancelar_usuario, pedido_codigo_devolucion, pedido_extender_plazo, pedidos_usuario, producto_detalle_usuario, solicitar_validacion_manual, usuario_actualizar_cantidad_carrito, usuario_agregar_carrito, usuario_eliminar_carrito, usuario_realizar_pedido, validacion_sena, validacion_sena_carga_manual
 
 urlpatterns = [
     path(
@@ -134,6 +134,7 @@ urlpatterns = [
     path('usuario/producto/<int:prod_id>/', producto_detalle_usuario, name='producto_detalle_usuario'),
     path('usuario/carrito/agregar/<int:prod_id>/', usuario_agregar_carrito, name='usuario_agregar_carrito'),
     path('usuario/carrito/', carrito_usuario, name='carrito_usuario'),
+    path('usuario/carrito/actualizar/<int:prod_id>/', usuario_actualizar_cantidad_carrito, name='usuario_actualizar_cantidad_carrito'),
     path('usuario/carrito/eliminar/<int:prod_id>/', usuario_eliminar_carrito, name='usuario_eliminar_carrito'),
     path('usuario/carrito/realizar-pedido/', usuario_realizar_pedido, name='usuario_realizar_pedido'),
     path('usuario/validacion-sena/', validacion_sena, name='validacion_sena'),

@@ -12,7 +12,7 @@ from datetime import timedelta
 import secrets
 
 from .db_compat import get_safe_usuario_value, get_usuario_model_from_instance, usuario_supports_verificacion_sena
-from .models import CarritoItem, DetallePedido, Disponibilidad, Notificacion, Pedido, Producto, VerificacionSenaToken
+from .models import CarritoItem, Catalogo, DetallePedido, Disponibilidad, Notificacion, Pedido, Producto, Subcategoria, VerificacionSenaToken
 from .validacion_sena import cargar_captura_desde_data_url
 from .views import _auto_cancelar_pedidos_pendientes_vencidos, _crear_notificacion, _expirar_solicitudes_validacion_manual, _notificar_staff, _reabrir_solicitudes_con_enlace_vencido, _registrar_auditoria
 
@@ -98,6 +98,7 @@ def _build_carrito_context(request):
     _migrar_carrito_sesion_a_bd(request)
 
     carrito_items = []
+    carrito_items_pedido = []
     total_unidades = 0
     productos_disponibles = 0
     productos_sin_stock = 0
@@ -117,26 +118,32 @@ def _build_carrito_context(request):
         producto.stock_actual = (disp.cantidad if disp and disp.cantidad is not None else (disp.stock if disp else 0))
         supera_stock = cantidad > (producto.stock_actual or 0)
 
-        total_unidades += cantidad
+        if cantidad > 0:
+            total_unidades += cantidad
         if producto.stock_actual and producto.stock_actual > 0:
             productos_disponibles += 1
         else:
             productos_sin_stock += 1
 
-        carrito_items.append({
+        item_data = {
             'producto': producto,
             'cantidad': cantidad,
             'supera_stock': supera_stock,
-        })
+        }
+        carrito_items.append(item_data)
 
-    carrito_valido = bool(carrito_items) and all(
-        item['cantidad'] > 0 and not item['supera_stock'] and (item['producto'].stock_actual or 0) > 0
-        for item in carrito_items
+        if cantidad > 0:
+            carrito_items_pedido.append(item_data)
+
+    carrito_valido = bool(carrito_items_pedido) and all(
+        not item['supera_stock'] and (item['producto'].stock_actual or 0) > 0
+        for item in carrito_items_pedido
     )
 
     return {
         'carrito_items': carrito_items,
-        'total_productos': len(carrito_items),
+        'carrito_items_pedido': carrito_items_pedido,
+        'total_productos': len(carrito_items_pedido),
         'total_unidades': total_unidades,
         'productos_disponibles': productos_disponibles,
         'productos_sin_stock': productos_sin_stock,
@@ -304,12 +311,39 @@ def usuario_eliminar_carrito(request, prod_id):
 
 @login_required
 @require_POST
+def usuario_actualizar_cantidad_carrito(request, prod_id):
+    if not _usuario_cliente(request):
+        return redirect('dashboard')
+
+    item = CarritoItem.objects.filter(id_usuario_fk=request.user, id_prod_fk_id=prod_id).first()
+    if not item:
+        messages.error(request, 'No se encontró el producto en tu carrito.')
+        return redirect('carrito_usuario')
+
+    try:
+        cantidad = int(request.POST.get('cantidad', item.cantidad))
+    except (TypeError, ValueError):
+        cantidad = item.cantidad
+
+    cantidad = max(0, cantidad)
+    if cantidad > 999:
+        cantidad = 999
+
+    item.cantidad = cantidad
+    item.fch_ult_act = timezone.now()
+    item.save(update_fields=['cantidad', 'fch_ult_act'])
+
+    return redirect('carrito_usuario')
+
+
+@login_required
+@require_POST
 def usuario_realizar_pedido(request):
     if not _usuario_cliente(request):
         return redirect('dashboard')
 
     context = _build_carrito_context(request)
-    carrito_items = context['carrito_items']
+    carrito_items = context['carrito_items_pedido']
 
     if not carrito_items:
         messages.error(request, 'No hay productos en el carrito para generar un pedido.')
@@ -708,16 +742,144 @@ def panel_usuario(request):
     # Solo usuarios, aprendices e instructores
     if not _usuario_cliente(request):
         return redirect('dashboard')
+
     disp_qs = Disponibilidad.objects.filter(id_prod_fk=OuterRef('pk')).order_by('-id_disp')
-    productos_qs = Producto.objects.select_related('id_cat_fk').annotate(stock_actual=Subquery(disp_qs.values('cantidad')[:1]))
+    productos_qs = (
+        Producto.objects
+        .select_related('id_cat_fk')
+        .prefetch_related('fotos', 'subcategorias')
+        .annotate(stock_actual=Subquery(disp_qs.values('cantidad')[:1]))
+    )
+
     q = request.GET.get('q', '').strip()
     if q:
         from django.db.models import Q
         productos_qs = productos_qs.filter(
             Q(nombre_producto__icontains=q) | Q(descripcion__icontains=q)
         )
-    productos = productos_qs.order_by('nombre_producto')
-    return render(request, 'inventario/usuario/panel_usuario.html', {'productos': productos})
+
+    cat_id = request.GET.get('cat', '').strip()
+    sub_id = request.GET.get('sub', '').strip()
+
+    catalogos = list(Catalogo.objects.order_by('nombre_catalogo'))
+    subcategorias = list(
+        Subcategoria.objects
+        .select_related('id_cat_fk', 'subcategoria_padre')
+        .order_by('id_cat_fk_id', 'subcategoria_padre_id', 'nombre_subcategoria')
+    )
+
+    cat_sel = None
+    sub_sel = None
+
+    if cat_id.isdigit():
+        cat_sel = next((c for c in catalogos if c.id_cat == int(cat_id)), None)
+        if cat_sel:
+            productos_qs = productos_qs.filter(id_cat_fk=cat_sel)
+
+    if sub_id.isdigit():
+        sub_sel = next((s for s in subcategorias if s.id_subcat == int(sub_id)), None)
+        if sub_sel:
+            # Si llega subcat sin cat, inferir catálogo.
+            if not cat_sel:
+                cat_sel = sub_sel.id_cat_fk
+                productos_qs = productos_qs.filter(id_cat_fk=cat_sel)
+            productos_qs = productos_qs.filter(subcategorias=sub_sel)
+
+    productos = list(productos_qs.order_by('nombre_producto').distinct())
+
+    for producto in productos:
+        rutas_sub = sorted(
+            [sub.ruta_completa for sub in producto.subcategorias.all() if getattr(sub, 'ruta_completa', None)]
+        )
+        if rutas_sub:
+            producto.trazabilidad_busqueda = f"{producto.id_cat_fk.nombre_catalogo} / " + " / ".join(rutas_sub)
+        else:
+            producto.trazabilidad_busqueda = producto.id_cat_fk.nombre_catalogo
+
+    subcats_by_cat = {}
+    menu_catalogos = []
+    for cat in catalogos:
+        cat_subs = [s for s in subcategorias if s.id_cat_fk_id == cat.id_cat]
+        padres = [s for s in cat_subs if s.subcategoria_padre_id is None]
+        hijos_map = {}
+        columnas = []
+        for p in padres:
+            hijos = [h for h in cat_subs if h.subcategoria_padre_id == p.id_subcat]
+            hijos_map[p.id_subcat] = hijos
+            columnas.append({
+                'padre': p,
+                'hijas': hijos,
+            })
+        subcats_by_cat[cat.id_cat] = {
+            'padres': padres,
+            'hijos_map': hijos_map,
+        }
+        menu_catalogos.append({
+            'catalogo': cat,
+            'columnas': columnas,
+        })
+
+    breadcrumb = [
+        {'label': 'Inicio', 'url': reverse('panel_usuario')},
+        {'label': 'Inventario', 'url': reverse('panel_usuario')},
+    ]
+    resultado_pertenece = ''
+    if cat_sel:
+        breadcrumb.append({
+            'label': cat_sel.nombre_catalogo,
+            'url': f"{reverse('panel_usuario')}?cat={cat_sel.id_cat}",
+        })
+    if sub_sel:
+        ruta = []
+        node = sub_sel
+        while node:
+            ruta.append(node)
+            node = node.subcategoria_padre
+        for i, node in enumerate(reversed(ruta)):
+            if i == len(ruta) - 1:
+                breadcrumb.append({'label': node.nombre_subcategoria, 'url': None})
+            else:
+                breadcrumb.append({
+                    'label': node.nombre_subcategoria,
+                    'url': f"{reverse('panel_usuario')}?cat={cat_sel.id_cat}&sub={node.id_subcat}",
+                })
+
+    if q:
+        breadcrumb.append({
+            'label': f'Resultados: "{q}"',
+            'url': None,
+        })
+
+        if sub_sel:
+            madre = sub_sel
+            while madre and madre.subcategoria_padre:
+                madre = madre.subcategoria_padre
+            if madre:
+                resultado_pertenece = f'Subcategoría madre: {madre.nombre_subcategoria}'
+        else:
+            categorias = sorted({
+                (p.id_cat_fk.nombre_catalogo or '').strip()
+                for p in productos
+                if getattr(p, 'id_cat_fk', None)
+            })
+            categorias = [c for c in categorias if c]
+            if categorias:
+                max_items = 8
+                resumen = ' / '.join(categorias[:max_items])
+                if len(categorias) > max_items:
+                    resumen += ' / ...'
+                resultado_pertenece = f'Pertenece a: {resumen}'
+
+    return render(request, 'inventario/usuario/panel_usuario.html', {
+        'productos': productos,
+        'catalogos': catalogos,
+        'menu_catalogos': menu_catalogos,
+        'subcats_by_cat': subcats_by_cat,
+        'cat_sel': cat_sel,
+        'sub_sel': sub_sel,
+        'breadcrumb': breadcrumb,
+        'resultado_pertenece': resultado_pertenece,
+    })
 
 @login_required
 def producto_detalle_usuario(request, prod_id):
@@ -738,9 +900,61 @@ def producto_detalle_usuario(request, prod_id):
         .exclude(id_prod=producto.id_prod)
         .order_by('?')[:6]
     )
+
+    cat_id = request.GET.get('cat', '').strip()
+    sub_id = request.GET.get('sub', '').strip()
+    q = request.GET.get('q', '').strip()
+
+    cat_sel = None
+    sub_sel = None
+    if cat_id.isdigit():
+        cat_sel = Catalogo.objects.filter(pk=int(cat_id)).first()
+    if sub_id.isdigit():
+        sub_sel = Subcategoria.objects.select_related('subcategoria_padre').filter(pk=int(sub_id)).first()
+
+    if not cat_sel:
+        cat_sel = producto.id_cat_fk
+
+    panel_url = reverse('panel_usuario')
+    panel_qs = []
+    if cat_sel:
+        panel_qs.append(f'cat={cat_sel.id_cat}')
+    if sub_sel:
+        panel_qs.append(f'sub={sub_sel.id_subcat}')
+    if q:
+        panel_qs.append(f'q={q}')
+    panel_url_ctx = f"{panel_url}?{'&'.join(panel_qs)}" if panel_qs else panel_url
+
+    breadcrumb = [
+        {'label': 'Inicio', 'url': reverse('panel_usuario')},
+        {'label': 'Inventario', 'url': panel_url_ctx},
+    ]
+
+    if cat_sel:
+        breadcrumb.append({
+            'label': cat_sel.nombre_catalogo,
+            'url': f"{reverse('panel_usuario')}?cat={cat_sel.id_cat}{f'&q={q}' if q else ''}",
+        })
+
+    if sub_sel:
+        ruta = []
+        nodo = sub_sel
+        while nodo:
+            ruta.append(nodo)
+            nodo = nodo.subcategoria_padre
+        for node in reversed(ruta):
+            breadcrumb.append({
+                'label': node.nombre_subcategoria,
+                'url': f"{reverse('panel_usuario')}?cat={cat_sel.id_cat}&sub={node.id_subcat}{f'&q={q}' if q else ''}",
+            })
+
+    breadcrumb.append({'label': producto.nombre_producto or f'Producto {producto.id_prod}', 'url': None})
+
     return render(request, 'inventario/usuario/producto_detalle_usuario.html', {
         'producto': producto,
         'sugerencias': sugerencias,
+        'panel_url_ctx': panel_url_ctx,
+        'breadcrumb': breadcrumb,
     })
 
 

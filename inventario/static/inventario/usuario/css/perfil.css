@@ -510,6 +510,72 @@
   padding: 0 20px 22px;
 }
 
+.perfil-action-dock {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 12px;
+  z-index: 1200;
+  width: min(760px, calc(100% - 24px));
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  border: 1px solid #dce8de;
+  border-radius: 999px;
+  box-shadow: 0 10px 28px rgba(24, 46, 29, 0.18);
+}
+
+.perfil-action-dock__inner {
+  width: 100%;
+  margin: 0;
+  display: flex;
+  gap: 0;
+}
+
+.perfil-action-dock__btn {
+  flex: 1;
+  min-height: 42px;
+  border-radius: 0;
+  font-size: 0.9rem;
+}
+
+.perfil-action-dock__inner > .perfil-action-dock__btn:first-child {
+  border-top-left-radius: 999px;
+  border-bottom-left-radius: 999px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.perfil-action-dock__inner > .perfil-action-dock__btn:last-child {
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.perfil-action-dock .perfil-btn--save {
+  box-shadow: none;
+}
+
+.perfil-action-dock .perfil-btn--save:disabled,
+.perfil-action-dock .perfil-btn--save[aria-disabled="true"] {
+  background: #c8d2c9 !important;
+  color: #f8fbf9 !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+  opacity: 0.78;
+}
+
+.perfil-action-dock .perfil-btn--save:not(:disabled) {
+  background: linear-gradient(135deg, #39A900, #2f8500) !important;
+  color: #fff !important;
+  opacity: 1;
+}
+
+.perfil-action-dock .perfil-btn--logout {
+  background: #f5f9f6;
+}
+
 .perfil-btn {
   flex: 1;
   display: inline-flex;
@@ -757,6 +823,26 @@
   .perfil-actions {
     flex-direction: column;
   }
+
+  .perfil-action-dock {
+    width: calc(100% - 14px);
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    border-radius: 999px;
+    padding: 6px;
+  }
+
+  .perfil-action-dock__inner {
+    flex-direction: row;
+    gap: 0;
+  }
+
+  .perfil-action-dock__btn {
+    width: auto;
+    min-height: 40px;
+    padding: 11px 10px;
+    font-size: 0.84rem;
+    border-radius: 0;
+  }
 }
 
 /* ══════════════════════════════════════════════
@@ -919,6 +1005,22 @@ html[data-theme="dark"] .perfil-btn--logout {
   background: #161e16 !important;
   color: #a8c4aa !important;
   border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .perfil-action-dock {
+  background: rgba(13, 18, 13, 0.92) !important;
+  border-color: #253025 !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45) !important;
+}
+
+html[data-theme="dark"] .perfil-action-dock .perfil-btn--save:disabled,
+html[data-theme="dark"] .perfil-action-dock .perfil-btn--save[aria-disabled="true"] {
+  background: #435247 !important;
+  color: #d3ddd5 !important;
+}
+
+html[data-theme="dark"] .perfil-action-dock .perfil-btn--logout {
+  background: #1a251c !important;
 }
 
 /* Color picker */
