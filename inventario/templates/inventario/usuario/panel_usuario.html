@@ -16,6 +16,22 @@
 .usuario-busqueda-input {
   color: #e2ede2 !important;
   outline: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    border: none !important;
+    border-color: transparent !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+}
+html[data-theme='dark'] .usuario-busqueda-bar input.usuario-busqueda-input:not([type='file']):not([type='checkbox']):not([type='radio']) {
+    background: transparent !important;
+    border: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
 }
 .usuario-busqueda-input::placeholder {
   color: #5a6e5a !important;
@@ -28,9 +44,12 @@
 <section class="panel-simple">
     <form method="get" action="" class="usuario-busqueda-form">
         <div class="usuario-busqueda-bar">
-            <input type="text" name="q" class="usuario-busqueda-input" placeholder="Busca tus elementos o productos" value="{{ request.GET.q|default:'' }}">
+            <input type="text" name="q" class="usuario-busqueda-input" id="usuario-busqueda-input" placeholder="Busca tus elementos o productos" value="{{ request.GET.q|default:'' }}">
             {% if cat_sel %}<input type="hidden" name="cat" value="{{ cat_sel.id_cat }}">{% endif %}
             {% if sub_sel %}<input type="hidden" name="sub" value="{{ sub_sel.id_subcat }}">{% endif %}
+            <button type="button" class="usuario-busqueda-clear{% if not request.GET.q %} is-hidden{% endif %}" id="usuario-busqueda-clear" aria-label="Limpiar búsqueda" title="Limpiar búsqueda">
+                <ion-icon name="close-outline"></ion-icon>
+            </button>
             <button type="submit" class="usuario-busqueda-btn" aria-label="Buscar productos">
                 <ion-icon name="search-outline"></ion-icon>
             </button>
@@ -182,6 +201,27 @@
 {% endblock %}
 
 {% block extra_js %}
+<script data-page-script="true">
+(function () {
+    var form = document.querySelector('.usuario-busqueda-form');
+    var input = document.getElementById('usuario-busqueda-input');
+    var clearBtn = document.getElementById('usuario-busqueda-clear');
+    if (!form || !input || !clearBtn) return;
+
+    function syncClearButton() {
+        clearBtn.classList.toggle('is-hidden', !input.value.trim());
+    }
+
+    clearBtn.addEventListener('click', function () {
+        input.value = '';
+        syncClearButton();
+        form.submit();
+    });
+
+    input.addEventListener('input', syncClearButton);
+    syncClearButton();
+})();
+</script>
 <script data-page-script="true">
 (function () {
     var menu = document.getElementById('usuarioMegaMenu');

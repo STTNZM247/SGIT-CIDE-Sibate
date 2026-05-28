@@ -489,7 +489,7 @@ class UsuarioPerfilForm(forms.ModelForm):
     class Meta:
         model = Usuario
         fields = [
-            'cc', 'nombre', 'apellido', 'correo', 'telefono',
+            'cc', 'nombre', 'apellido', 'id_tipo_doc_fk', 'correo', 'telefono',
             'programa_formacion', 'centro_desarrollo', 'fot_usu', 'banner_usu'
         ]
         widgets = {
