@@ -29,46 +29,94 @@
         <span class="pedidos-estado pedidos-estado--{{ pedido.estado|slugify }} pedidos-estado--lg">{{ pedido.estado|title }}</span>
     </header>
 
-    <!-- Info general -->
-    <div class="detalle-info-col">
-        <div class="detalle-info-header">
-            <h2 class="detalle-section-title"><ion-icon name="information-circle-outline"></ion-icon> Información general</h2>
-            {% with estado_sena=pedido.id_usuario_fk.verificacion_sena_estado %}
-            <span class="detalle-user-badge {% if estado_sena == 'validado' %}detalle-user-badge--ok{% else %}detalle-user-badge--pending{% endif %}">
-                <ion-icon name="{% if estado_sena == 'validado' %}shield-checkmark-outline{% else %}person-outline{% endif %}"></ion-icon>
-                {% if estado_sena == 'validado' %}Verificado SENA{% else %}Sin verificar{% endif %}
-            </span>
-            {% endwith %}
-        </div>
-        <div class="detalle-info-tiles">
-            <div class="detalle-tile">
-                <span><ion-icon name="layers-outline"></ion-icon> Unidades solicitadas</span>
-                <strong>{{ pedido.total_unidades }}</strong>
-            </div>
-            <div class="detalle-tile">
-                <span><ion-icon name="calendar-outline"></ion-icon> Fecha de solicitud</span>
-                <strong>{{ pedido.fch_registro|date:'d/m/Y H:i' }}</strong>
-            </div>
-            {% if pedido.fecha_devolucion %}
-            <div class="detalle-tile detalle-tile--devolucion">
-                <span><ion-icon name="arrow-undo-outline"></ion-icon> Fecha de devolución</span>
-                <strong>{{ pedido.fecha_devolucion|date:'d/m/Y H:i' }}</strong>
-            </div>
-            {% endif %}
-            {% if pedido.tipo_devolucion == 'individual' %}
-            <div class="detalle-tile detalle-tile--devolucion">
-                <span><ion-icon name="arrow-undo-outline"></ion-icon> Tipo de devolución</span>
-                <strong>Individual por producto</strong>
-            </div>
-            {% endif %}
-        </div>
+    <!-- LAYOUT PRINCIPAL: sidebar + info -->
+    <div class="detalle-main-layout">
 
-        {% if pedido.area_ubicacion %}
-        <div class="detalle-area-box">
-            <span><ion-icon name="location-outline"></ion-icon> Área / Ambiente de uso</span>
-            <p>{{ pedido.area_ubicacion }}</p>
+        <!-- Sidebar izquierdo: lista de productos -->
+        <aside class="detalle-sidebar">
+            <div class="detalle-sidebar__header">
+                <h2 class="detalle-section-title"><ion-icon name="cube-outline"></ion-icon> Productos</h2>
+                <span class="detalle-section-count">{{ pedido.total_productos }} prod.</span>
+            </div>
+            {% if pedido.detalles.all %}
+            <div class="detalle-sidebar__list">
+                {% for detalle in pedido.detalles.all %}
+                <button type="button"
+                    class="pps-item{% if detalle.estado_detalle == 'no_disponible' or detalle.estado_detalle == 'rechazado' %} pps-item--unavail{% endif %}"
+                    data-name="{{ detalle.nombre_producto }}"
+                    data-catalogo="{{ detalle.nombre_catalogo|default:'Sin catálogo' }}"
+                    data-qty="{{ detalle.cantidad_solicitada }}"
+                    data-stock="{{ detalle.cantidad_disponible_actual|default:'0' }}"
+                    data-foto="{% if detalle.id_prod_fk and detalle.id_prod_fk.fot_prod %}{{ detalle.id_prod_fk.fot_prod.url }}{% endif %}"
+                    data-descripcion="{{ detalle.id_prod_fk.descripcion|default:'Sin descripción'|truncatechars:300 }}"
+                    data-prod-id="{% if detalle.id_prod_fk %}{{ detalle.id_prod_fk.id_prod }}{% endif %}"
+                    data-devolucion="{% if detalle.fecha_devolucion %}{{ detalle.fecha_devolucion|date:'d/m/Y H:i' }}{% endif %}"
+                    data-estado="{{ detalle.estado_detalle|default:'' }}"
+                >
+                    <span class="pps-item__thumb">
+                        {% if detalle.id_prod_fk and detalle.id_prod_fk.fot_prod %}
+                        <img src="{{ detalle.id_prod_fk.fot_prod.url }}" alt="{{ detalle.nombre_producto }}">
+                        {% else %}
+                        <ion-icon name="cube-outline"></ion-icon>
+                        {% endif %}
+                    </span>
+                    <span class="pps-item__body">
+                        <span class="pps-item__cat">{{ detalle.nombre_catalogo|default:'Sin catálogo' }}</span>
+                        <strong class="pps-item__name">{{ detalle.nombre_producto }}</strong>
+                        <span class="pps-item__qty"><ion-icon name="layers-outline"></ion-icon> {{ detalle.cantidad_solicitada }} ud.</span>
+                    </span>
+                    <ion-icon name="chevron-forward-outline" class="pps-item__arrow"></ion-icon>
+                </button>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="pps-empty">
+                <ion-icon name="file-tray-outline"></ion-icon>
+                <p>Sin productos registrados</p>
+            </div>
+            {% endif %}
+        </aside>
+
+        <!-- Columna derecha: Info general -->
+        <div class="detalle-info-col">
+            <div class="detalle-info-header">
+                <h2 class="detalle-section-title"><ion-icon name="information-circle-outline"></ion-icon> Información general</h2>
+                {% with estado_sena=pedido.id_usuario_fk.verificacion_sena_estado %}
+                <span class="detalle-user-badge {% if estado_sena == 'validado' %}detalle-user-badge--ok{% else %}detalle-user-badge--pending{% endif %}">
+                    <ion-icon name="{% if estado_sena == 'validado' %}shield-checkmark-outline{% else %}person-outline{% endif %}"></ion-icon>
+                    {% if estado_sena == 'validado' %}Verificado SENA{% else %}Sin verificar{% endif %}
+                </span>
+                {% endwith %}
+            </div>
+            <div class="detalle-info-tiles">
+                <div class="detalle-tile">
+                    <span><ion-icon name="layers-outline"></ion-icon> Unidades solicitadas</span>
+                    <strong>{{ pedido.total_unidades }}</strong>
+                </div>
+                <div class="detalle-tile">
+                    <span><ion-icon name="calendar-outline"></ion-icon> Fecha de solicitud</span>
+                    <strong>{{ pedido.fch_registro|date:'d/m/Y H:i' }}</strong>
+                </div>
+                {% if pedido.fecha_devolucion %}
+                <div class="detalle-tile detalle-tile--devolucion">
+                    <span><ion-icon name="arrow-undo-outline"></ion-icon> Fecha de devolución</span>
+                    <strong>{{ pedido.fecha_devolucion|date:'d/m/Y H:i' }}</strong>
+                </div>
+                {% endif %}
+                {% if pedido.tipo_devolucion == 'individual' %}
+                <div class="detalle-tile detalle-tile--devolucion">
+                    <span><ion-icon name="arrow-undo-outline"></ion-icon> Tipo de devolución</span>
+                    <strong>Individual por producto</strong>
+                </div>
+                {% endif %}
+            </div>
+            {% if pedido.area_ubicacion %}
+            <div class="detalle-area-box">
+                <span><ion-icon name="location-outline"></ion-icon> Área / Ambiente de uso</span>
+                <p>{{ pedido.area_ubicacion }}</p>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 
     <!-- ACCIONES -->
@@ -120,14 +168,12 @@
         {% endif %}
     </div>
 
-    <!-- PRODUCTOS -->
-    {% if pedido.detalles.all %}
+    <!-- Para estado PENDIENTE: marcar no disponibles -->
+    {% if pedido.estado == 'pendiente' and pedido.detalles.all %}
     <div class="detalle-section-header">
-        <h2 class="detalle-section-title"><ion-icon name="cube-outline"></ion-icon> Productos solicitados</h2>
-        <span class="detalle-section-count">{{ pedido.total_productos }} producto{{ pedido.total_productos|pluralize }} &middot; {{ pedido.total_unidades }} unidad{{ pedido.total_unidades|pluralize }} en total</span>
+        <h2 class="detalle-section-title"><ion-icon name="warning-outline"></ion-icon> Gestionar disponibilidad</h2>
+        <span class="detalle-section-count">Marca los no disponibles</span>
     </div>
-
-    {% if pedido.estado == 'pendiente' %}
     <form method="post" action="{% url 'pedido_marcar_no_disponibles' pedido.id_pedido %}" id="form-no-disponibles">
         {% csrf_token %}
         <div class="pedido-product-grid">
@@ -143,22 +189,10 @@
                 <div class="pedido-product-card__body">
                     <p class="pedido-product-card__catalogo">{{ detalle.nombre_catalogo|default:'Sin catálogo' }}</p>
                     <h3>{{ detalle.nombre_producto }}</h3>
-                    <div class="ppc-request-row">
-                        <ion-icon name="person-outline"></ion-icon>
-                        <span>El cliente pidió</span>
-                        <strong class="ppc-request-qty">{{ detalle.cantidad_solicitada }}</strong>
-                        <span>unidad{% if detalle.cantidad_solicitada != 1 %}es{% endif %}</span>
-                    </div>
                     <div class="ppc-chips">
-                        <span class="ppc-chip ppc-chip--id"><ion-icon name="pricetag-outline"></ion-icon> {% if detalle.id_prod_fk %}#{{ detalle.id_prod_fk.id_prod }}{% else %}N/D{% endif %}</span>
                         <span class="ppc-chip ppc-chip--stock"><ion-icon name="archive-outline"></ion-icon> Stock: {{ detalle.cantidad_disponible_actual|default:'0' }}</span>
+                        <span class="ppc-chip ppc-chip--id"><ion-icon name="layers-outline"></ion-icon> {{ detalle.cantidad_solicitada }} solicitada{{ detalle.cantidad_solicitada|pluralize }}</span>
                     </div>
-                    {% if detalle.fecha_devolucion %}
-                    <div class="ppc-devolucion">
-                        <ion-icon name="arrow-undo-outline"></ion-icon>
-                        Devolver antes del <strong>{{ detalle.fecha_devolucion|date:'d/m/Y H:i' }}</strong>
-                    </div>
-                    {% endif %}
                     <label class="pedido-product-card__no-disp-label">
                         <input type="checkbox" name="detalle_no_disponible" value="{{ detalle.id_det_pedido }}" class="pedido-product-card__no-disp-check" {% if detalle.estado_detalle == 'no_disponible' %}checked{% endif %}>
                         <span><ion-icon name="ban-outline"></ion-icon> No disponible</span>
@@ -168,58 +202,56 @@
             {% endfor %}
         </div>
         <div class="detalle-no-disp-submit">
-            <p><ion-icon name="information-circle-outline"></ion-icon> Marca los productos que no puedes entregar. Los marcados quedarán visibles para el usuario y serán excluidos al aprobar el pedido.</p>
+            <p><ion-icon name="information-circle-outline"></ion-icon> Marca los productos que no puedes entregar. Los marcados serán excluidos al aprobar el pedido.</p>
             <button type="submit" class="pedido-action-btn pedido-action-btn--no-disp">
                 <ion-icon name="warning-outline"></ion-icon>
                 Guardar productos no disponibles
             </button>
         </div>
     </form>
-    {% else %}
-    <div class="pedido-product-grid">
-        {% for detalle in pedido.detalles.all %}
-        <article class="pedido-product-card {% if detalle.estado_detalle == 'no_disponible' %}pedido-product-card--no-disponible{% elif detalle.estado_detalle == 'rechazado' %}pedido-product-card--no-disponible{% endif %}">
-            <div class="pedido-product-card__media">
-                {% if detalle.id_prod_fk and detalle.id_prod_fk.fot_prod %}
-                <img src="{{ detalle.id_prod_fk.fot_prod.url }}" alt="{{ detalle.nombre_producto }}">
-                {% else %}
-                <span class="pedido-product-card__placeholder"><ion-icon name="cube-outline"></ion-icon></span>
-                {% endif %}
-            </div>
-            <div class="pedido-product-card__body">
-                <p class="pedido-product-card__catalogo">{{ detalle.nombre_catalogo|default:'Sin catálogo' }}</p>
-                <h3>{{ detalle.nombre_producto }}</h3>
-                {% if detalle.estado_detalle == 'no_disponible' %}
-                <span class="pedido-product-card__no-disp-badge"><ion-icon name="ban-outline"></ion-icon> No disponible</span>
-                {% endif %}
-                <div class="ppc-request-row">
-                    <ion-icon name="person-outline"></ion-icon>
-                    <span>El cliente pidió</span>
-                    <strong class="ppc-request-qty">{{ detalle.cantidad_solicitada }}</strong>
-                    <span>unidad{% if detalle.cantidad_solicitada != 1 %}es{% endif %}</span>
-                </div>
-                <div class="ppc-chips">
-                    <span class="ppc-chip ppc-chip--id"><ion-icon name="pricetag-outline"></ion-icon> {% if detalle.id_prod_fk %}#{{ detalle.id_prod_fk.id_prod }}{% else %}N/D{% endif %}</span>
-                    <span class="ppc-chip ppc-chip--stock"><ion-icon name="archive-outline"></ion-icon> Stock: {{ detalle.cantidad_disponible_actual|default:'0' }}</span>
-                </div>
-                {% if detalle.fecha_devolucion %}
-                <div class="ppc-devolucion">
-                    <ion-icon name="arrow-undo-outline"></ion-icon>
-                    Devolver antes del <strong>{{ detalle.fecha_devolucion|date:'d/m/Y H:i' }}</strong>
-                </div>
-                {% endif %}
-            </div>
-        </article>
-        {% endfor %}
-    </div>
     {% endif %}
 
-    {% else %}
-    <section class="pedidos-empty">
-        <div class="pedidos-empty__icon"><ion-icon name="file-tray-outline"></ion-icon></div>
-        <h2>Este pedido no tiene productos registrados</h2>
-    </section>
-    {% endif %}
+    <!-- Modal detalle de producto -->
+    <div id="prodModal" class="prod-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="prodModalNombre">
+        <div class="prod-modal__dialog">
+            <button type="button" class="prod-modal__close" id="prodModalClose" aria-label="Cerrar">&times;</button>
+            <div class="prod-modal__media" id="prodModalMedia">
+                <img id="prodModalImg" src="" alt="" style="display:none;">
+                <span class="prod-modal__placeholder" id="prodModalPlaceholder"><ion-icon name="cube-outline"></ion-icon></span>
+            </div>
+            <div class="prod-modal__body">
+                <p class="prod-modal__cat" id="prodModalCat"></p>
+                <h3 class="prod-modal__name" id="prodModalNombre"></h3>
+                <p class="prod-modal__desc" id="prodModalDesc"></p>
+                <div class="prod-modal__meta">
+                    <div class="prod-modal__meta-item prod-modal__meta-item--request">
+                        <ion-icon name="person-outline"></ion-icon>
+                        <span>El cliente pidió</span>
+                        <strong id="prodModalQty"></strong>
+                        <span id="prodModalQtyLabel"></span>
+                    </div>
+                    <div class="prod-modal__meta-item prod-modal__meta-item--stock">
+                        <ion-icon name="archive-outline"></ion-icon>
+                        <span>Stock disponible</span>
+                        <strong id="prodModalStock"></strong>
+                    </div>
+                    <div class="prod-modal__meta-item prod-modal__meta-item--dev" id="prodModalDevRow" style="display:none;">
+                        <ion-icon name="arrow-undo-outline"></ion-icon>
+                        <span>Devolver antes del</span>
+                        <strong id="prodModalDev"></strong>
+                    </div>
+                    <div class="prod-modal__meta-item prod-modal__meta-item--unavail" id="prodModalUnavailRow" style="display:none;">
+                        <ion-icon name="ban-outline"></ion-icon>
+                        <span id="prodModalUnavailLabel"></span>
+                    </div>
+                </div>
+                <a id="prodModalVerBtn" href="#" class="pedido-action-btn pedido-action-btn--approve prod-modal__cta" target="_blank" rel="noopener">
+                    <ion-icon name="open-outline"></ion-icon>
+                    Ver producto en inventario
+                </a>
+            </div>
+        </div>
+    </div>
 
     <!-- EVIDENCIAS -->
     {% if pedido.evidencias.all %}
@@ -240,6 +272,74 @@
 {% endblock %}
 
 {% block extra_js %}
+<script data-page-script="true">
+(function () {
+    var modal = document.getElementById('prodModal');
+    var closeBtn = document.getElementById('prodModalClose');
+    if (!modal) return;
+
+    function openProdModal(btn) {
+        var d = btn.dataset;
+        var img = document.getElementById('prodModalImg');
+        var placeholder = document.getElementById('prodModalPlaceholder');
+        document.getElementById('prodModalCat').textContent = d.catalogo || '';
+        document.getElementById('prodModalNombre').textContent = d.name || '';
+        document.getElementById('prodModalDesc').textContent = d.descripcion || 'Sin descripción disponible.';
+        document.getElementById('prodModalQty').textContent = d.qty || '0';
+        document.getElementById('prodModalQtyLabel').textContent = parseInt(d.qty) === 1 ? 'unidad' : 'unidades';
+        document.getElementById('prodModalStock').textContent = d.stock || '0';
+        var devRow = document.getElementById('prodModalDevRow');
+        if (d.devolucion) {
+            document.getElementById('prodModalDev').textContent = d.devolucion;
+            devRow.style.display = '';
+        } else {
+            devRow.style.display = 'none';
+        }
+        var unavailRow = document.getElementById('prodModalUnavailRow');
+        if (d.estado === 'no_disponible') {
+            document.getElementById('prodModalUnavailLabel').textContent = 'Marcado como no disponible';
+            unavailRow.style.display = '';
+        } else if (d.estado === 'rechazado') {
+            document.getElementById('prodModalUnavailLabel').textContent = 'Producto rechazado';
+            unavailRow.style.display = '';
+        } else {
+            unavailRow.style.display = 'none';
+        }
+        if (d.foto) {
+            img.src = d.foto;
+            img.alt = d.name || '';
+            img.style.display = '';
+            placeholder.style.display = 'none';
+        } else {
+            img.style.display = 'none';
+            placeholder.style.display = '';
+        }
+        var verBtn = document.getElementById('prodModalVerBtn');
+        if (d.prodId) {
+            verBtn.href = '/producto/' + d.prodId + '/';
+            verBtn.style.display = '';
+        } else {
+            verBtn.style.display = 'none';
+        }
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+    }
+
+    function closeProdModal() {
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+    }
+
+    document.querySelectorAll('.pps-item').forEach(function (btn) {
+        btn.addEventListener('click', function () { openProdModal(btn); });
+    });
+    closeBtn.addEventListener('click', closeProdModal);
+    modal.addEventListener('click', function (e) { if (e.target === modal) closeProdModal(); });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') closeProdModal();
+    });
+})();
+</script>
 {% if pedido.estado == 'pendiente' %}
 <div id="pedidoRejectModal" class="pedido-reject-modal" aria-hidden="true">
     <div class="pedido-reject-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="pedidoRejectModalTitle" aria-describedby="pedidoRejectModalText">
