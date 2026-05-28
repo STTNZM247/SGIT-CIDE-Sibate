@@ -769,6 +769,118 @@
   font-size: 0.9rem;
 }
 
+/* -- Nuevo diseño de tarjeta de producto -- */
+.ppc-request-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  background: #eef6ff;
+  border: 1px solid #c2d9f8;
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin: 0 0 10px;
+  font-size: 0.84rem;
+  color: #2e5fa0;
+  line-height: 1.4;
+}
+
+.ppc-request-row ion-icon {
+  font-size: 1rem;
+  color: #2e5fa0;
+  flex-shrink: 0;
+}
+
+.ppc-request-qty {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #1a3b80;
+  margin: 0 1px;
+  line-height: 1;
+}
+
+.ppc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.ppc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.ppc-chip ion-icon {
+  font-size: 0.9rem;
+}
+
+.ppc-chip--id {
+  background: #f0f4f0;
+  color: #4a5e4a;
+  border: 1px solid #d0dcc8;
+}
+
+.ppc-chip--stock {
+  background: #edf7e7;
+  color: #2b7600;
+  border: 1px solid #b8e0a8;
+}
+
+.ppc-devolucion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  background: #f0f6fe;
+  border: 1px solid #cadeff;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  color: #2e63b8;
+  margin-top: 2px;
+}
+
+.ppc-devolucion ion-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.ppc-devolucion strong {
+  color: #1a3b80;
+  font-weight: 800;
+}
+
+/* Dark theme */
+html[data-theme="dark"] .ppc-request-row {
+  background: rgba(46, 95, 160, 0.18);
+  border-color: #3a6090;
+  color: #8dbcf5;
+}
+html[data-theme="dark"] .ppc-request-row ion-icon { color: #8dbcf5; }
+html[data-theme="dark"] .ppc-request-qty { color: #c5deff; }
+html[data-theme="dark"] .ppc-chip--id {
+  background: rgba(255,255,255,0.06);
+  color: #b0c4b0;
+  border-color: #3d503d;
+}
+html[data-theme="dark"] .ppc-chip--stock {
+  background: rgba(57,169,0,0.15);
+  color: #7dd560;
+  border-color: #3d6030;
+}
+html[data-theme="dark"] .ppc-devolucion {
+  background: rgba(46, 99, 184, 0.15);
+  border-color: #3a5e9a;
+  color: #90b8f0;
+}
+html[data-theme="dark"] .ppc-devolucion strong { color: #b8d0f8; }
+
 /* Evidencias */
 .pedido-evidencias {
   margin-top: 30px;

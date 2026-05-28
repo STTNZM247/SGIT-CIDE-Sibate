@@ -124,7 +124,7 @@
     {% if pedido.detalles.all %}
     <div class="detalle-section-header">
         <h2 class="detalle-section-title"><ion-icon name="cube-outline"></ion-icon> Productos solicitados</h2>
-        <span class="detalle-section-count">{{ pedido.total_productos }} producto{{ pedido.total_productos|pluralize }}</span>
+        <span class="detalle-section-count">{{ pedido.total_productos }} producto{{ pedido.total_productos|pluralize }} &middot; {{ pedido.total_unidades }} unidad{{ pedido.total_unidades|pluralize }} en total</span>
     </div>
 
     {% if pedido.estado == 'pendiente' %}
@@ -143,26 +143,22 @@
                 <div class="pedido-product-card__body">
                     <p class="pedido-product-card__catalogo">{{ detalle.nombre_catalogo|default:'Sin catálogo' }}</p>
                     <h3>{{ detalle.nombre_producto }}</h3>
-                    <div class="pedido-product-card__meta">
-                        <div>
-                            <span>ID</span>
-                            <strong>{% if detalle.id_prod_fk %}#{{ detalle.id_prod_fk.id_prod }}{% else %}N/D{% endif %}</strong>
-                        </div>
-                        <div>
-                            <span>A entregar</span>
-                            <strong>{{ detalle.cantidad_solicitada }}</strong>
-                        </div>
-                        <div>
-                            <span>Disponible</span>
-                            <strong>{{ detalle.cantidad_disponible_actual|default:'0' }}</strong>
-                        </div>
-                        {% if detalle.fecha_devolucion %}
-                        <div class="pedido-product-card__meta-devolucion">
-                            <span><ion-icon name="arrow-undo-outline"></ion-icon> Devolver antes del</span>
-                            <strong>{{ detalle.fecha_devolucion|date:'d/m/Y H:i' }}</strong>
-                        </div>
-                        {% endif %}
+                    <div class="ppc-request-row">
+                        <ion-icon name="person-outline"></ion-icon>
+                        <span>El cliente pidió</span>
+                        <strong class="ppc-request-qty">{{ detalle.cantidad_solicitada }}</strong>
+                        <span>unidad{% if detalle.cantidad_solicitada != 1 %}es{% endif %}</span>
                     </div>
+                    <div class="ppc-chips">
+                        <span class="ppc-chip ppc-chip--id"><ion-icon name="pricetag-outline"></ion-icon> {% if detalle.id_prod_fk %}#{{ detalle.id_prod_fk.id_prod }}{% else %}N/D{% endif %}</span>
+                        <span class="ppc-chip ppc-chip--stock"><ion-icon name="archive-outline"></ion-icon> Stock: {{ detalle.cantidad_disponible_actual|default:'0' }}</span>
+                    </div>
+                    {% if detalle.fecha_devolucion %}
+                    <div class="ppc-devolucion">
+                        <ion-icon name="arrow-undo-outline"></ion-icon>
+                        Devolver antes del <strong>{{ detalle.fecha_devolucion|date:'d/m/Y H:i' }}</strong>
+                    </div>
+                    {% endif %}
                     <label class="pedido-product-card__no-disp-label">
                         <input type="checkbox" name="detalle_no_disponible" value="{{ detalle.id_det_pedido }}" class="pedido-product-card__no-disp-check" {% if detalle.estado_detalle == 'no_disponible' %}checked{% endif %}>
                         <span><ion-icon name="ban-outline"></ion-icon> No disponible</span>
@@ -196,26 +192,22 @@
                 {% if detalle.estado_detalle == 'no_disponible' %}
                 <span class="pedido-product-card__no-disp-badge"><ion-icon name="ban-outline"></ion-icon> No disponible</span>
                 {% endif %}
-                <div class="pedido-product-card__meta">
-                    <div>
-                        <span>ID</span>
-                        <strong>{% if detalle.id_prod_fk %}#{{ detalle.id_prod_fk.id_prod }}{% else %}N/D{% endif %}</strong>
-                    </div>
-                    <div>
-                        <span>A entregar</span>
-                        <strong>{{ detalle.cantidad_solicitada }}</strong>
-                    </div>
-                    <div>
-                        <span>Disponible</span>
-                        <strong>{{ detalle.cantidad_disponible_actual|default:'0' }}</strong>
-                    </div>
-                    {% if detalle.fecha_devolucion %}
-                    <div class="pedido-product-card__meta-devolucion">
-                        <span><ion-icon name="arrow-undo-outline"></ion-icon> Devolver antes del</span>
-                        <strong>{{ detalle.fecha_devolucion|date:'d/m/Y H:i' }}</strong>
-                    </div>
-                    {% endif %}
+                <div class="ppc-request-row">
+                    <ion-icon name="person-outline"></ion-icon>
+                    <span>El cliente pidió</span>
+                    <strong class="ppc-request-qty">{{ detalle.cantidad_solicitada }}</strong>
+                    <span>unidad{% if detalle.cantidad_solicitada != 1 %}es{% endif %}</span>
                 </div>
+                <div class="ppc-chips">
+                    <span class="ppc-chip ppc-chip--id"><ion-icon name="pricetag-outline"></ion-icon> {% if detalle.id_prod_fk %}#{{ detalle.id_prod_fk.id_prod }}{% else %}N/D{% endif %}</span>
+                    <span class="ppc-chip ppc-chip--stock"><ion-icon name="archive-outline"></ion-icon> Stock: {{ detalle.cantidad_disponible_actual|default:'0' }}</span>
+                </div>
+                {% if detalle.fecha_devolucion %}
+                <div class="ppc-devolucion">
+                    <ion-icon name="arrow-undo-outline"></ion-icon>
+                    Devolver antes del <strong>{{ detalle.fecha_devolucion|date:'d/m/Y H:i' }}</strong>
+                </div>
+                {% endif %}
             </div>
         </article>
         {% endfor %}
