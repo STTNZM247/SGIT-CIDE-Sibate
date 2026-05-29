@@ -3,7 +3,7 @@
 
 {% block title %}Mis Pedidos{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'inventario/usuario/css/pedidos_usuario.css' %}" data-page-style="true">
+<link rel="stylesheet" href="{% static 'inventario/css/usuario/pedidos_usuario.css' %}" data-page-style="true">
 <style data-page-style="true">
 /* ── Bloque vencimiento inline ── */
 .pu-vencido-card {
@@ -83,11 +83,11 @@
             <span>Todos</span>
             <strong>{{ conteos_estado.todos|default:0 }}</strong>
         </a>
-        <a href="?estado=pendiente" class="pedidos-usuario-filtro {% if estado_activo == 'pendiente' %}is-active{% endif %}">
+        <a href="?estado=pendiente" class="pedidos-usuario-filtro pedidos-usuario-filtro--pendiente {% if estado_activo == 'pendiente' %}is-active{% endif %}">
             <span>Pendiente</span>
             <strong>{{ conteos_estado.pendiente|default:0 }}</strong>
         </a>
-        <a href="?estado=esperando-entrega" class="pedidos-usuario-filtro {% if estado_activo == 'esperando-entrega' %}is-active{% endif %}">
+        <a href="?estado=esperando-entrega" class="pedidos-usuario-filtro pedidos-usuario-filtro--esperando-entrega {% if estado_activo == 'esperando-entrega' %}is-active{% endif %}">
             <span>En espera de entrega</span>
             <strong>{{ conteos_estado.esperando_entrega|default:0 }}</strong>
         </a>
@@ -127,7 +127,7 @@
                 <ion-icon name="close-circle-outline"></ion-icon>
                 <div>
                     <strong>Pedido rechazado</strong>
-                    <p>Tu solicitud fue rechazada por el almacenista. Si tienes dudas, comunícate con el personal del inventario.</p>
+                    <p>{{ pedido.motivo_rechazo|default:'El pedido fue rechazado por no disponibilidad.' }}</p>
                 </div>
             </div>
             {% endif %}

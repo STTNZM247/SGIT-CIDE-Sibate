@@ -4,7 +4,7 @@
 {% block title %}Detalle de Producto | {{ producto.nombre_producto }}{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'inventario/dashboard/css/dashboard.css' %}" data-page-style="true">
-<link rel="stylesheet" href="{% static 'inventario/usuario/css/panel_usuario.css' %}" data-page-style="true">
+<link rel="stylesheet" href="{% static 'inventario/css/usuario/panel_usuario.css' %}" data-page-style="true">
 {% if request.user.tema == 'oscuro' %}
 <style data-page-style="true">
 .usuario-product-detail-page {

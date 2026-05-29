@@ -3973,12 +3973,13 @@ def pedido_detalle_panel(request, pedido_id):
     _auto_cancelar_pedidos_pendientes_vencidos()
 
     pedido = get_object_or_404(
-        Pedido.objects.select_related('id_usuario_fk').prefetch_related('detalles__id_prod_fk', 'evidencias'),
+        Pedido.objects.select_related('id_usuario_fk').prefetch_related('detalles__id_prod_fk__subcategorias', 'evidencias'),
         pk=pedido_id,
     )
 
     for detalle in pedido.detalles.all():
         detalle.cantidad_disponible_actual = 0
+        detalle.subcategorias_lista = []
         if detalle.id_prod_fk_id:
             disp_actual = (
                 Disponibilidad.objects
@@ -3990,9 +3991,48 @@ def pedido_detalle_panel(request, pedido_id):
                 detalle.cantidad_disponible_actual = (
                     disp_actual.cantidad if disp_actual.cantidad is not None else (disp_actual.stock or 0)
                 )
+            detalle.subcategorias_lista = [
+                subcat.nombre_subcategoria
+                for subcat in detalle.id_prod_fk.subcategorias.all()
+                if getattr(subcat, 'nombre_subcategoria', None)
+            ]
+
+    consumo_total = 0
+    devolutivo_total = 0
+    for detalle in pedido.detalles.all():
+        cantidad = detalle.cantidad_solicitada or 0
+        tipo_bien = getattr(detalle.id_prod_fk, 'tipo_bien', '') if detalle.id_prod_fk else ''
+        if tipo_bien == 'consumo':
+            consumo_total += cantidad
+        else:
+            devolutivo_total += cantidad
+
+    tipo_solicitud_items = []
+    if consumo_total:
+        tipo_solicitud_items.append({
+            'cantidad': consumo_total,
+            'texto': 'producto de consumo' if consumo_total == 1 else 'productos de consumo',
+        })
+    if devolutivo_total:
+        tipo_solicitud_items.append({
+            'cantidad': devolutivo_total,
+            'texto': 'producto devolvible' if devolutivo_total == 1 else 'productos devolvibles',
+        })
+
+    if consumo_total and not devolutivo_total:
+        tipo_solicitud_ayuda = 'Este producto es para un solo uso y no es devolvible.'
+    elif devolutivo_total and not consumo_total:
+        tipo_solicitud_ayuda = 'Este producto es devolvible y debe retornarse después de su uso.'
+    else:
+        tipo_solicitud_ayuda = (
+            'Producto de consumo: es para un solo uso y no es devolvible. '
+            'Producto devolvible: debe retornarse después de su uso.'
+        )
 
     return render(request, 'inventario/pedidos/pedido_detalle.html', {
         'pedido': pedido,
+        'tipo_solicitud_items': tipo_solicitud_items,
+        'tipo_solicitud_ayuda': tipo_solicitud_ayuda,
     })
 
 
@@ -4002,6 +4042,14 @@ def pedido_marcar_esperando_entrega(request, pedido_id):
         return redirect('dashboard')
 
     if request.method != 'POST':
+        return redirect('pedido_detalle_panel', pedido_id=pedido_id)
+
+    detalle_ids_raw = request.POST.getlist('detalle_no_disponible')
+    motivo_no_disponible = (request.POST.get('motivo_no_disponible') or '').strip()
+    try:
+        detalle_ids_no_disponibles = sorted({int(d) for d in detalle_ids_raw if str(d).strip()})
+    except (ValueError, TypeError):
+        messages.error(request, 'La selección de productos no disponibles es inválida.')
         return redirect('pedido_detalle_panel', pedido_id=pedido_id)
 
     with transaction.atomic():
@@ -4014,12 +4062,41 @@ def pedido_marcar_esperando_entrega(request, pedido_id):
             messages.error(request, 'Este pedido ya fue procesado previamente.')
             return redirect('pedido_detalle_panel', pedido_id=pedido_id)
 
+        ids_validos = set(
+            DetallePedido.objects
+            .filter(id_pedido_fk=pedido)
+            .values_list('id_det_pedido', flat=True)
+        )
+        if not set(detalle_ids_no_disponibles).issubset(ids_validos):
+            messages.error(request, 'Hay productos no disponibles seleccionados que no pertenecen al pedido.')
+            return redirect('pedido_detalle_panel', pedido_id=pedido_id)
+
+        now = timezone.now()
+
+        # Revertir marcas previas antiguas para que la selección actual sea la única fuente de verdad.
+        DetallePedido.objects.filter(
+            id_pedido_fk=pedido,
+            estado_detalle='no_disponible',
+        ).exclude(id_det_pedido__in=detalle_ids_no_disponibles).update(
+            estado_detalle='pendiente',
+            fch_ult_act=now,
+        )
+
+        if detalle_ids_no_disponibles:
+            DetallePedido.objects.filter(
+                id_pedido_fk=pedido,
+                id_det_pedido__in=detalle_ids_no_disponibles,
+            ).update(
+                estado_detalle='no_disponible',
+                fch_ult_act=now,
+            )
+
         detalles = list(
             DetallePedido.objects
             .select_for_update()
             .select_related('id_prod_fk')
             .filter(id_pedido_fk=pedido)
-            .exclude(estado_detalle='no_disponible')
+            .exclude(estado_detalle__in=['no_disponible', 'rechazado', 'cancelado'])
             .order_by('id_det_pedido')
         )
 
@@ -4060,7 +4137,6 @@ def pedido_marcar_esperando_entrega(request, pedido_id):
             messages.error(request, 'No se pudo procesar el pedido: ' + ' '.join(errores))
             return redirect('pedido_detalle_panel', pedido_id=pedido_id)
 
-        now = timezone.now()
         for detalle in detalles:
             disp = disponibilidad_por_detalle.get(detalle.id_det_pedido)
             if not disp:
@@ -4076,8 +4152,9 @@ def pedido_marcar_esperando_entrega(request, pedido_id):
         pedido.estado = 'esperando entrega'
         pedido.codigo_entrega = codigo_entrega
         pedido.codigo_expira_en = now + timedelta(hours=2)
+        pedido.motivo_rechazo = None
         pedido.fch_ult_act = now
-        pedido.save(update_fields=['estado', 'codigo_entrega', 'codigo_expira_en', 'fch_ult_act'])
+        pedido.save(update_fields=['estado', 'codigo_entrega', 'codigo_expira_en', 'motivo_rechazo', 'fch_ult_act'])
 
     _registrar_auditoria(
         request,
@@ -4095,6 +4172,23 @@ def pedido_marcar_esperando_entrega(request, pedido_id):
                 f'Dirígete al almacén con tu código de entrega.',
         pedido_id=pedido.id_pedido,
     )
+
+    if detalle_ids_no_disponibles:
+        mensaje_no_disp = (
+            f'En tu pedido #{pedido.id_pedido}, {len(detalle_ids_no_disponibles)} '
+            + ('productos no están disponibles. ' if len(detalle_ids_no_disponibles) != 1 else 'producto no está disponible. ')
+            + 'El resto del pedido continúa en proceso.'
+        )
+        if motivo_no_disponible:
+            mensaje_no_disp += f' Motivo informado: {motivo_no_disponible}'
+
+        _crear_notificacion(
+            usuario=pedido.id_usuario_fk,
+            tipo='no_disponible',
+            titulo='Algunos productos no están disponibles',
+            mensaje=mensaje_no_disp,
+            pedido_id=pedido.id_pedido,
+        )
 
     # ── Correo: pedido listo para recoger ────────────────────────────────
     try:
@@ -4375,6 +4469,9 @@ def pedido_rechazar(request, pedido_id):
     if request.method != 'POST':
         return redirect('pedido_detalle_panel', pedido_id=pedido_id)
 
+    motivo_rechazo = (request.POST.get('motivo_rechazo') or '').strip()
+    motivo_guardado = motivo_rechazo or 'El pedido fue rechazado por no disponibilidad.'
+
     with transaction.atomic():
         pedido = get_object_or_404(Pedido.objects.select_for_update(), pk=pedido_id)
 
@@ -4384,8 +4481,9 @@ def pedido_rechazar(request, pedido_id):
 
         now = timezone.now()
         pedido.estado = 'rechazado'
+        pedido.motivo_rechazo = motivo_guardado
         pedido.fch_ult_act = now
-        pedido.save(update_fields=['estado', 'fch_ult_act'])
+        pedido.save(update_fields=['estado', 'motivo_rechazo', 'fch_ult_act'])
 
         DetallePedido.objects.filter(id_pedido_fk=pedido).update(
             estado_detalle='rechazado',
@@ -4397,85 +4495,19 @@ def pedido_rechazar(request, pedido_id):
         accion='actualizar',
         entidad='pedido',
         entidad_id=pedido.id_pedido,
-        descripcion=f'Pedido #{pedido.id_pedido} fue cancelado/rechazado por personal de almacén.',
+        descripcion=f'Pedido #{pedido.id_pedido} fue rechazado por personal de almacén. Motivo: {motivo_guardado}',
     )
     messages.success(request, f'Pedido #{pedido_id} rechazado correctamente.')
     _crear_notificacion(
         usuario=pedido.id_usuario_fk,
         tipo='rechazado',
         titulo='Pedido rechazado',
-        mensaje=f'Tu pedido #{pedido.id_pedido} fue rechazado por el almacenista. '
-                f'Si tienes dudas, comunícate con el área de almacén.',
+        mensaje=(
+            f'Tu pedido #{pedido.id_pedido} fue rechazado por el almacenista. '
+            f'Motivo: {motivo_guardado}'
+        ),
         pedido_id=pedido.id_pedido,
     )
-    return redirect('pedido_detalle_panel', pedido_id=pedido_id)
-
-
-@login_required
-def pedido_marcar_no_disponibles(request, pedido_id):
-    if not request.user.id_rol_fk or request.user.id_rol_fk.nombre_rol not in ['admin', 'almacenista']:
-        return redirect('dashboard')
-
-    if request.method != 'POST':
-        return redirect('pedido_detalle_panel', pedido_id=pedido_id)
-
-    detalle_ids_raw = request.POST.getlist('detalle_no_disponible')
-    try:
-        detalle_ids = [int(d) for d in detalle_ids_raw]
-    except (ValueError, TypeError):
-        messages.error(request, 'Seleccion de productos invalida.')
-        return redirect('pedido_detalle_panel', pedido_id=pedido_id)
-
-    with transaction.atomic():
-        pedido = get_object_or_404(Pedido.objects.select_for_update(), pk=pedido_id)
-
-        if pedido.estado != 'pendiente':
-            messages.error(request, 'Solo se pueden modificar detalles en pedidos pendientes.')
-            return redirect('pedido_detalle_panel', pedido_id=pedido_id)
-
-        now = timezone.now()
-
-        # Restaurar a 'pendiente' los que ya habian sido marcados no_disponible pero no se checkaron
-        DetallePedido.objects.filter(
-            id_pedido_fk=pedido,
-            estado_detalle='no_disponible',
-        ).exclude(id_det_pedido__in=detalle_ids).update(
-            estado_detalle='pendiente',
-            fch_ult_act=now,
-        )
-
-        if detalle_ids:
-            DetallePedido.objects.filter(
-                id_pedido_fk=pedido,
-                id_det_pedido__in=detalle_ids,
-            ).update(
-                estado_detalle='no_disponible',
-                fch_ult_act=now,
-            )
-
-    total = len(detalle_ids)
-    if total:
-        _registrar_auditoria(
-            request,
-            accion='actualizar',
-            entidad='pedido',
-            entidad_id=pedido.id_pedido,
-            descripcion=f'Pedido #{pedido.id_pedido}: {total} producto(s) marcado(s) como no disponible.',
-        )
-        messages.success(request, f'{total} producto{"s" if total != 1 else ""} marcado{"s" if total != 1 else ""} como no disponible.')
-        _crear_notificacion(
-            usuario=pedido.id_usuario_fk,
-            tipo='no_disponible',
-            titulo='Algunos productos no están disponibles',
-            mensaje=(
-                f'En tu pedido #{pedido.id_pedido}, {total} '
-                + ('productos no están disponibles. ' if total != 1 else 'producto no está disponible. ')
-                + 'El resto del pedido continúa en proceso.'
-            ),
-            pedido_id=pedido.id_pedido,
-        )
-    else:
-        messages.success(request, 'Se restauraron todos los productos a estado pendiente.')
     return redirect('pedido_detalle_panel', pedido_id=pedido_id)
 
 

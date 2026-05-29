@@ -1,0 +1,25 @@
+html[data-theme="dark"] .pedidos-usuario-card {
+  background: #111611 !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .pedidos-usuario-filtro {
+  background: #182018 !important;
+  border-color: #2a3b2b !important;
+  color: #c8e4c8 !important;
+}
+
+html[data-theme="dark"] .pedidos-usuario-products-toggle {
+  background: #111611 !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .pedidos-usuario-product-item {
+  background: #182018 !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .pu-vencido-card {
+  background: linear-gradient(135deg, #2a2112 60%, #241b10) !important;
+  border-color: #9a6d12 !important;
+}

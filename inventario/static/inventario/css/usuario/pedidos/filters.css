@@ -1,0 +1,60 @@
+.pedidos-usuario-filtros {
+  margin: 0 0 14px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pedidos-usuario-filtro {
+  border: 1px solid #dce7d7;
+  border-radius: 14px;
+  background: #fff;
+  text-decoration: none;
+  color: #2a342c;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-weight: 700;
+}
+
+.pedidos-usuario-filtro strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #eef7e8;
+  color: #2b7600;
+  font-size: 0.8rem;
+}
+
+.pedidos-usuario-filtro.is-active {
+  border-color: #4ba41f;
+  background: #eef8e7;
+  color: #1f5c00;
+}
+
+.pedidos-usuario-filtro--pendiente {
+  border-color: #ffd7ab;
+  color: #a85c03;
+}
+
+.pedidos-usuario-filtro--esperando-entrega {
+  border-color: #cadeff;
+  color: #24539d;
+}
+
+.pedidos-usuario-filtro--devuelto {
+  border-color: #cae8d2;
+  color: #1b6a3a;
+}
+
+.pedidos-usuario-filtro--rechazado,
+.pedidos-usuario-filtro--cancelado {
+  border-color: #f5c5c5;
+  color: #892020;
+}

@@ -2,7 +2,7 @@
 {% load static %}
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'inventario/shared/css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'inventario/pedidos/css/panel_pedidos.css' %}" data-page-style="true">
+    <link rel="stylesheet" href="{% static 'inventario/css/pedidos/panel_pedidos.css' %}" data-page-style="true">
 {% endblock %}
 {% block title %}Detalle Pedido #{{ pedido.id_pedido }} | Inventario SENA{% endblock %}
 {% block content %}
@@ -24,10 +24,34 @@
         <div>
             <p class="pedidos-page__eyebrow">Detalle del pedido</p>
             <h1>Pedido #{{ pedido.id_pedido }}</h1>
-            <p>{{ pedido.id_usuario_fk.nombre }} {{ pedido.id_usuario_fk.apellido }}{% if pedido.id_usuario_fk.cc %} · CC {{ pedido.id_usuario_fk.cc }}{% endif %} · {{ pedido.id_usuario_fk.correo }}</p>
         </div>
-        <span class="pedidos-estado pedidos-estado--{{ pedido.estado|slugify }} pedidos-estado--lg">{{ pedido.estado|title }}</span>
     </header>
+
+    <section class="detalle-usuario-box">
+        <div class="detalle-usuario-box__identity">
+            <span class="detalle-usuario-box__avatar">
+                {% if pedido.id_usuario_fk.fot_usu %}
+                <img src="{{ pedido.id_usuario_fk.fot_usu.url }}" alt="{{ pedido.id_usuario_fk.nombre }} {{ pedido.id_usuario_fk.apellido }}">
+                {% else %}
+                <ion-icon name="person-outline"></ion-icon>
+                {% endif %}
+            </span>
+            <div class="detalle-usuario-box__data">
+                <h2>{{ pedido.id_usuario_fk.nombre }} {{ pedido.id_usuario_fk.apellido }}</h2>
+                <p><ion-icon name="card-outline"></ion-icon> CC {{ pedido.id_usuario_fk.cc|default:'Sin documento' }}</p>
+                <p><ion-icon name="mail-outline"></ion-icon> {{ pedido.id_usuario_fk.correo }}</p>
+            </div>
+        </div>
+        <div class="detalle-usuario-box__badges">
+            <span class="pedidos-estado pedidos-estado--{{ pedido.estado|slugify }} detalle-usuario-box__estado">{{ pedido.estado|title }}</span>
+            {% with estado_sena=pedido.id_usuario_fk.verificacion_sena_estado %}
+            <span class="detalle-user-badge {% if estado_sena == 'validado' %}detalle-user-badge--ok{% else %}detalle-user-badge--pending{% endif %}">
+                <ion-icon name="{% if estado_sena == 'validado' %}shield-checkmark-outline{% else %}shield-outline{% endif %}"></ion-icon>
+                {% if estado_sena == 'validado' %}Verificado{% else %}Sin verificar{% endif %}
+            </span>
+            {% endwith %}
+        </div>
+    </section>
 
     <!-- LAYOUT PRINCIPAL: sidebar + info -->
     <div class="detalle-main-layout">
@@ -43,6 +67,7 @@
                 {% for detalle in pedido.detalles.all %}
                 <button type="button"
                     class="pps-item{% if detalle.estado_detalle == 'no_disponible' or detalle.estado_detalle == 'rechazado' %} pps-item--unavail{% endif %}"
+                    data-detalle-id="{{ detalle.id_det_pedido }}"
                     data-name="{{ detalle.nombre_producto }}"
                     data-catalogo="{{ detalle.nombre_catalogo|default:'Sin catálogo' }}"
                     data-qty="{{ detalle.cantidad_solicitada }}"
@@ -65,6 +90,9 @@
                         <strong class="pps-item__name">{{ detalle.nombre_producto }}</strong>
                         <span class="pps-item__qty"><ion-icon name="layers-outline"></ion-icon> El usuario pidió {{ detalle.cantidad_solicitada }} producto{{ detalle.cantidad_solicitada|pluralize }}</span>
                     </span>
+                    <span class="pps-item__selector" aria-hidden="true">
+                        <input type="checkbox" class="pps-item__check" name="detalle_no_disponible" value="{{ detalle.id_det_pedido }}" form="pedidoApproveForm" disabled>
+                    </span>
                     <ion-icon name="chevron-forward-outline" class="pps-item__arrow"></ion-icon>
                 </button>
                 {% endfor %}
@@ -81,22 +109,48 @@
         <div class="detalle-info-col">
             <div class="detalle-info-header">
                 <h2 class="detalle-section-title"><ion-icon name="information-circle-outline"></ion-icon> Información general</h2>
-                {% with estado_sena=pedido.id_usuario_fk.verificacion_sena_estado %}
-                <span class="detalle-user-badge {% if estado_sena == 'validado' %}detalle-user-badge--ok{% else %}detalle-user-badge--pending{% endif %}">
-                    <ion-icon name="{% if estado_sena == 'validado' %}shield-checkmark-outline{% else %}person-outline{% endif %}"></ion-icon>
-                    {% if estado_sena == 'validado' %}Verificado SENA{% else %}Sin verificar{% endif %}
-                </span>
-                {% endwith %}
             </div>
             <div class="detalle-info-tiles">
-                <div class="detalle-tile">
-                    <span><ion-icon name="layers-outline"></ion-icon> Unidades solicitadas</span>
-                    <strong>{{ pedido.total_unidades }}</strong>
+                <div class="detalle-tile detalle-tile--tipo-solicitud">
+                    <div class="detalle-tile__label-row">
+                        <span><ion-icon name="flame-outline"></ion-icon> Tipo de solicitud</span>
+                        <button type="button" class="detalle-tile__hint" id="tipoSolicitudHintBtn" aria-label="Ver ayuda sobre tipo de solicitud" aria-expanded="false">
+                            <ion-icon name="help-circle-outline"></ion-icon>
+                        </button>
+                        <div class="detalle-tile__tooltip" id="tipoSolicitudHint" data-open="false" role="status" aria-live="polite">
+                            {{ tipo_solicitud_ayuda }}
+                        </div>
+                    </div>
+                    <strong class="detalle-tile__value-list">
+                        {% if tipo_solicitud_items|length > 1 %}
+                            {% for item in tipo_solicitud_items %}
+                            <span class="detalle-tile__value-line">- {{ item.cantidad }} {{ item.texto }}</span>
+                            {% endfor %}
+                        {% elif tipo_solicitud_items and tipo_solicitud_items.0.texto == 'producto de consumo' %}
+                            <span class="detalle-tile__value-line">Producto de consumo</span>
+                        {% elif tipo_solicitud_items and tipo_solicitud_items.0.texto == 'productos de consumo' %}
+                            <span class="detalle-tile__value-line">{{ tipo_solicitud_items.0.cantidad }} productos de consumo</span>
+                        {% elif tipo_solicitud_items and tipo_solicitud_items.0.texto == 'producto devolvible' %}
+                            <span class="detalle-tile__value-line">Fecha y hora de devolución</span>
+                            <span class="detalle-tile__value-line detalle-tile__value-line--secondary">{{ pedido.fecha_devolucion|date:'d/m/Y h:i A'|default:'Pendiente por definir' }}</span>
+                        {% elif tipo_solicitud_items and tipo_solicitud_items.0.texto == 'productos devolvibles' %}
+                            <span class="detalle-tile__value-line">Fecha y hora de devolución</span>
+                            <span class="detalle-tile__value-line detalle-tile__value-line--secondary">{{ pedido.fecha_devolucion|date:'d/m/Y h:i A'|default:'Pendiente por definir' }}</span>
+                        {% else %}
+                            <span class="detalle-tile__value-line">Sin productos registrados</span>
+                        {% endif %}
+                    </strong>
                 </div>
                 <div class="detalle-tile">
                     <span><ion-icon name="calendar-outline"></ion-icon> Fecha de solicitud</span>
-                    <strong>{{ pedido.fch_registro|date:'d/m/Y H:i' }}</strong>
+                    <strong>{{ pedido.fch_registro|date:'d/m/Y h:i A' }}</strong>
                 </div>
+                {% if pedido.area_ubicacion %}
+                <div class="detalle-tile detalle-tile--ambiente">
+                    <span><ion-icon name="location-outline"></ion-icon> Ambiente solicitado</span>
+                    <strong>{{ pedido.area_ubicacion }}</strong>
+                </div>
+                {% endif %}
                 {% if pedido.fecha_devolucion %}
                 <div class="detalle-tile detalle-tile--devolucion">
                     <span><ion-icon name="arrow-undo-outline"></ion-icon> Fecha de devolución</span>
@@ -110,106 +164,145 @@
                 </div>
                 {% endif %}
             </div>
-            {% if pedido.area_ubicacion %}
-            <div class="detalle-area-box">
-                <span><ion-icon name="location-outline"></ion-icon> Área / Ambiente de uso</span>
-                <p>{{ pedido.area_ubicacion }}</p>
-            </div>
-            {% endif %}
-        </div>
-    </div>
+            <!-- ACCIONES -->
+            <div class="detalle-actions-box">
+                {% if pedido.estado == 'pendiente' %}
+                <div class="detalle-actions-row detalle-actions-row--fixed">
+                    <button type="button" class="pedido-action-btn pedido-action-btn--toggle-no-disp" id="toggleNoDisponibleBtn" aria-pressed="false">
+                        <ion-icon name="list-outline"></ion-icon>
+                        Productos no disponibles
+                    </button>
 
-    <!-- ACCIONES -->
-    <div class="detalle-actions-box">
-        {% if pedido.estado == 'pendiente' %}
-        <div class="detalle-actions-row">
-            <form method="post" action="{% url 'pedido_marcar_esperando_entrega' pedido.id_pedido %}">
-                {% csrf_token %}
-                <button type="submit" class="pedido-action-btn pedido-action-btn--approve">
-                    <ion-icon name="checkmark-done-outline"></ion-icon>
-                    Aprobar y marcar como esperando entrega
-                </button>
-            </form>
-            <form method="post" action="{% url 'pedido_rechazar' pedido.id_pedido %}" id="pedidoRejectForm">
-                {% csrf_token %}
-                <button type="button" class="pedido-action-btn pedido-action-btn--reject" id="openRejectPedidoModalBtn">
-                    <ion-icon name="close-circle-outline"></ion-icon>
-                    Rechazar pedido
-                </button>
-            </form>
-        </div>
+                    <form method="post" action="{% url 'pedido_rechazar' pedido.id_pedido %}" id="pedidoRejectForm" class="detalle-actions-reject-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="motivo_rechazo" id="pedidoRejectReasonInput">
+                        <button type="button" class="pedido-action-btn pedido-action-btn--reject" id="openRejectPedidoModalBtn">
+                            <ion-icon name="close-circle-outline"></ion-icon>
+                            Cancelar pedido
+                        </button>
+                    </form>
 
-        {% elif pedido.estado == 'esperando entrega' %}
-        <div class="detalle-codigo-layout">
-            <div class="pedido-codigo-box">
-                <p><ion-icon name="key-outline"></ion-icon> Código de entrega activo</p>
-                <strong>{{ pedido.codigo_entrega|default:'------' }}</strong>
-                <small>Vence: {{ pedido.codigo_expira_en|date:'d/m/Y H:i' }}</small>
-            </div>
-
-            <form method="post" action="{% url 'pedido_confirmar_entrega_codigo' pedido.id_pedido %}" class="pedido-codigo-form" enctype="multipart/form-data">
-                {% csrf_token %}
-                <label for="codigo_entrega"><ion-icon name="keypad-outline"></ion-icon> Código entregado por el usuario</label>
-                <input id="codigo_entrega" name="codigo_entrega" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" minlength="6" placeholder="000000" required>
-                <label for="evidencias_entrega"><ion-icon name="camera-outline"></ion-icon> Fotos de evidencia <span>(opcional, máx. 8)</span></label>
-                <input id="evidencias_entrega" name="evidencias_entrega" type="file" accept="image/*" multiple>
-                <button type="submit" class="pedido-action-btn pedido-action-btn--deliver">
-                    <ion-icon name="bag-check-outline"></ion-icon>
-                    Confirmar entrega
-                </button>
-            </form>
-        </div>
-
-        {% else %}
-        <span class="pedido-action-info">
-            <ion-icon name="checkmark-circle-outline"></ion-icon>
-            Este pedido ya está en estado: <strong>{{ pedido.estado }}</strong>
-        </span>
-        {% endif %}
-    </div>
-
-    <!-- Para estado PENDIENTE: marcar no disponibles -->
-    {% if pedido.estado == 'pendiente' and pedido.detalles.all %}
-    <div class="detalle-section-header">
-        <h2 class="detalle-section-title"><ion-icon name="warning-outline"></ion-icon> Gestionar disponibilidad</h2>
-        <span class="detalle-section-count">Marca los no disponibles</span>
-    </div>
-    <form method="post" action="{% url 'pedido_marcar_no_disponibles' pedido.id_pedido %}" id="form-no-disponibles">
-        {% csrf_token %}
-        <div class="pedido-product-grid">
-            {% for detalle in pedido.detalles.all %}
-            <article class="pedido-product-card {% if detalle.estado_detalle == 'no_disponible' %}pedido-product-card--no-disponible{% endif %}">
-                <div class="pedido-product-card__media">
-                    {% if detalle.id_prod_fk and detalle.id_prod_fk.fot_prod %}
-                    <img src="{{ detalle.id_prod_fk.fot_prod.url }}" alt="{{ detalle.nombre_producto }}">
-                    {% else %}
-                    <span class="pedido-product-card__placeholder"><ion-icon name="cube-outline"></ion-icon></span>
-                    {% endif %}
+                    <form method="post" action="{% url 'pedido_marcar_esperando_entrega' pedido.id_pedido %}" id="pedidoApproveForm" class="detalle-actions-approve-form">
+                        {% csrf_token %}
+                        <button type="submit" class="pedido-action-btn pedido-action-btn--approve">
+                            <ion-icon name="checkmark-done-outline"></ion-icon>
+                            Aprobar pedido
+                        </button>
+                    </form>
                 </div>
-                <div class="pedido-product-card__body">
-                    <p class="pedido-product-card__catalogo">{{ detalle.nombre_catalogo|default:'Sin catálogo' }}</p>
-                    <h3>{{ detalle.nombre_producto }}</h3>
-                    <div class="ppc-chips">
-                        <span class="ppc-chip ppc-chip--stock"><ion-icon name="archive-outline"></ion-icon> Stock: {{ detalle.cantidad_disponible_actual|default:'0' }}</span>
-                        <span class="ppc-chip ppc-chip--id"><ion-icon name="layers-outline"></ion-icon> {{ detalle.cantidad_solicitada }} solicitada{{ detalle.cantidad_solicitada|pluralize }}</span>
+
+                <div class="detalle-no-disp-panel" id="noDisponiblePanel" hidden>
+                    <textarea name="motivo_no_disponible" id="motivoNoDisponibleInput" form="pedidoApproveForm" rows="3" maxlength="500" placeholder="Motivo opcional de no disponibilidad..."></textarea>
+                </div>
+
+                {% elif pedido.estado == 'esperando entrega' %}
+                <div class="detalle-codigo-layout">
+                    <div class="pedido-codigo-box">
+                        <p><ion-icon name="key-outline"></ion-icon> Código de entrega activo</p>
+                        <strong>{{ pedido.codigo_entrega|default:'------' }}</strong>
+                        <small>Vence: {{ pedido.codigo_expira_en|date:'d/m/Y H:i' }}</small>
                     </div>
-                    <label class="pedido-product-card__no-disp-label">
-                        <input type="checkbox" name="detalle_no_disponible" value="{{ detalle.id_det_pedido }}" class="pedido-product-card__no-disp-check" {% if detalle.estado_detalle == 'no_disponible' %}checked{% endif %}>
-                        <span><ion-icon name="ban-outline"></ion-icon> No disponible</span>
-                    </label>
+
+                    <form method="post" action="{% url 'pedido_confirmar_entrega_codigo' pedido.id_pedido %}" class="pedido-codigo-form" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <label for="codigo_entrega"><ion-icon name="keypad-outline"></ion-icon> Código entregado por el usuario</label>
+                        <input id="codigo_entrega" name="codigo_entrega" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" minlength="6" placeholder="000000" required>
+                        <label for="evidencias_entrega"><ion-icon name="camera-outline"></ion-icon> Fotos de evidencia <span>(opcional, máx. 8)</span></label>
+                        <input id="evidencias_entrega" name="evidencias_entrega" type="file" accept="image/*" multiple>
+                        <button type="submit" class="pedido-action-btn pedido-action-btn--deliver">
+                            <ion-icon name="bag-check-outline"></ion-icon>
+                            Confirmar entrega
+                        </button>
+                    </form>
                 </div>
-            </article>
-            {% endfor %}
+
+                {% else %}
+                <span class="pedido-action-info">
+                    <ion-icon name="checkmark-circle-outline"></ion-icon>
+                    Este pedido ya está en estado: <strong>{{ pedido.estado }}</strong>
+                </span>
+                {% endif %}
+            </div>
         </div>
-        <div class="detalle-no-disp-submit">
-            <p><ion-icon name="information-circle-outline"></ion-icon> Marca los productos que no puedes entregar. Los marcados serán excluidos al aprobar el pedido.</p>
-            <button type="submit" class="pedido-action-btn pedido-action-btn--no-disp">
-                <ion-icon name="warning-outline"></ion-icon>
-                Guardar productos no disponibles
-            </button>
+    </div>
+
+    <section class="detalle-productos-resumen">
+        <div class="detalle-productos-resumen__header">
+            <h2 class="detalle-section-title"><ion-icon name="list-outline"></ion-icon> Productos solicitados</h2>
+            <span class="detalle-section-count">{{ pedido.total_productos }} items</span>
         </div>
-    </form>
-    {% endif %}
+
+        {% if pedido.detalles.all %}
+        <div class="detalle-productos-tabla-wrap">
+            <div class="detalle-productos-tabla" role="table" aria-label="Resumen de productos solicitados">
+                <div class="detalle-productos-tabla__head" role="row">
+                    <span role="columnheader">ID</span>
+                    <span role="columnheader">Nombre</span>
+                    <span role="columnheader">Disponibles</span>
+                    <span role="columnheader">Descripción</span>
+                    <span role="columnheader">Catálogo</span>
+                    <span role="columnheader">Subcategorías</span>
+                    <span role="columnheader">Ver</span>
+                </div>
+
+                {% for detalle in pedido.detalles.all %}
+                <div class="detalle-productos-tabla__row{% if detalle.estado_detalle == 'no_disponible' or detalle.estado_detalle == 'rechazado' %} detalle-productos-tabla__row--unavail{% endif %}" role="row">
+                    <span class="detalle-productos-tabla__cell detalle-productos-tabla__cell--id" role="cell">
+                        {% if detalle.id_prod_fk %}{{ detalle.id_prod_fk.id_prod }}{% else %}--{% endif %}
+                    </span>
+                    <span class="detalle-productos-tabla__cell detalle-productos-tabla__cell--name" role="cell">
+                        {{ detalle.nombre_producto }}
+                    </span>
+                    <span class="detalle-productos-tabla__cell" role="cell">
+                        {{ detalle.cantidad_disponible_actual|default:'0' }}
+                    </span>
+                    <span class="detalle-productos-tabla__cell detalle-productos-tabla__cell--desc" role="cell">
+                        {{ detalle.id_prod_fk.descripcion|default:'Sin descripción'|truncatechars:120 }}
+                    </span>
+                    <span class="detalle-productos-tabla__cell" role="cell">
+                        {{ detalle.nombre_catalogo|default:'Sin catálogo' }}
+                    </span>
+                    <span class="detalle-productos-tabla__cell detalle-productos-tabla__cell--subs" role="cell">
+                        {% if detalle.subcategorias_lista %}
+                            {{ detalle.subcategorias_lista|join:', ' }}
+                        {% else %}
+                            Sin subcategorías
+                        {% endif %}
+                    </span>
+                    <span class="detalle-productos-tabla__cell detalle-productos-tabla__cell--action" role="cell">
+                        {% if detalle.id_prod_fk %}
+                        <button
+                            type="button"
+                            class="detalle-productos-tabla__ver-btn"
+                            data-open-product-modal="true"
+                            data-name="{{ detalle.nombre_producto }}"
+                            data-catalogo="{{ detalle.nombre_catalogo|default:'Sin catálogo' }}"
+                            data-qty="{{ detalle.cantidad_solicitada }}"
+                            data-stock="{{ detalle.cantidad_disponible_actual|default:'0' }}"
+                            data-foto="{% if detalle.id_prod_fk and detalle.id_prod_fk.fot_prod %}{{ detalle.id_prod_fk.fot_prod.url }}{% endif %}"
+                            data-descripcion="{{ detalle.id_prod_fk.descripcion|default:'Sin descripción'|truncatechars:300 }}"
+                            data-prod-id="{% if detalle.id_prod_fk %}{{ detalle.id_prod_fk.id_prod }}{% endif %}"
+                            data-devolucion="{% if detalle.fecha_devolucion %}{{ detalle.fecha_devolucion|date:'d/m/Y H:i' }}{% endif %}"
+                            data-estado="{{ detalle.estado_detalle|default:'' }}"
+                        >
+                            <ion-icon name="open-outline"></ion-icon>
+                            Ver
+                        </button>
+                        {% else %}
+                        <span class="detalle-productos-tabla__ver-btn detalle-productos-tabla__ver-btn--disabled">--</span>
+                        {% endif %}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="detalle-productos-vacio">
+            <ion-icon name="list-outline"></ion-icon>
+            <p>No hay productos para mostrar.</p>
+        </div>
+        {% endif %}
+    </section>
 
     <!-- Modal detalle de producto -->
     <div id="prodModal" class="prod-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="prodModalNombre">
@@ -276,6 +369,12 @@
 (function () {
     var modal = document.getElementById('prodModal');
     var closeBtn = document.getElementById('prodModalClose');
+    var toggleNoDispBtn = document.getElementById('toggleNoDisponibleBtn');
+    var noDispPanel = document.getElementById('noDisponiblePanel');
+    var motivoNoDispInput = document.getElementById('motivoNoDisponibleInput');
+    var tipoSolicitudHintBtn = document.getElementById('tipoSolicitudHintBtn');
+    var tipoSolicitudHint = document.getElementById('tipoSolicitudHint');
+    var sidebarList = document.querySelector('.detalle-sidebar__list');
     if (!modal) return;
 
     function openProdModal(btn) {
@@ -330,9 +429,79 @@
         document.body.classList.remove('modal-open');
     }
 
+    function setSelectMode(active) {
+        if (sidebarList) {
+            sidebarList.classList.toggle('is-select-mode', active);
+        }
+        if (toggleNoDispBtn) {
+            toggleNoDispBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+            toggleNoDispBtn.classList.toggle('is-active', active);
+        }
+        if (noDispPanel) {
+            noDispPanel.hidden = !active;
+        }
+        if (!active && motivoNoDispInput) {
+            motivoNoDispInput.value = '';
+        }
+        document.querySelectorAll('.pps-item__check').forEach(function (check) {
+            check.disabled = !active;
+            if (!active) {
+                check.checked = false;
+            }
+        });
+        document.querySelectorAll('.pps-item').forEach(function (item) {
+            if (!active) {
+                item.classList.remove('pps-item--selected');
+            }
+        });
+    }
+
+    if (toggleNoDispBtn) {
+        toggleNoDispBtn.addEventListener('click', function () {
+            var nextActive = toggleNoDispBtn.getAttribute('aria-pressed') !== 'true';
+            setSelectMode(nextActive);
+        });
+    }
+
+    if (tipoSolicitudHintBtn && tipoSolicitudHint) {
+        tipoSolicitudHintBtn.addEventListener('click', function (event) {
+            event.stopPropagation();
+            var open = tipoSolicitudHintBtn.getAttribute('aria-expanded') === 'true';
+            tipoSolicitudHintBtn.setAttribute('aria-expanded', open ? 'false' : 'true');
+            tipoSolicitudHint.dataset.open = open ? 'false' : 'true';
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!tipoSolicitudHint.contains(event.target) && event.target !== tipoSolicitudHintBtn) {
+                tipoSolicitudHintBtn.setAttribute('aria-expanded', 'false');
+                tipoSolicitudHint.dataset.open = 'false';
+            }
+        });
+    }
+
     document.querySelectorAll('.pps-item').forEach(function (btn) {
-        btn.addEventListener('click', function () { openProdModal(btn); });
+        btn.addEventListener('click', function (event) {
+            var isSelectMode = sidebarList && sidebarList.classList.contains('is-select-mode');
+            if (isSelectMode) {
+                var check = btn.querySelector('.pps-item__check');
+                if (check && !check.disabled) {
+                    if (event.target !== check) {
+                        check.checked = !check.checked;
+                    }
+                    btn.classList.toggle('pps-item--selected', check.checked);
+                }
+                return;
+            }
+            openProdModal(btn);
+        });
     });
+
+    document.querySelectorAll('[data-open-product-modal="true"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            openProdModal(btn);
+        });
+    });
+
     closeBtn.addEventListener('click', closeProdModal);
     modal.addEventListener('click', function (e) { if (e.target === modal) closeProdModal(); });
     document.addEventListener('keydown', function (e) {
@@ -349,6 +518,8 @@
         </div>
         <h3 id="pedidoRejectModalTitle">Confirmar rechazo de pedido</h3>
         <p id="pedidoRejectModalText">¿Seguro que deseas rechazar el pedido #{{ pedido.id_pedido }}? Esta acción no se puede deshacer.</p>
+        <label class="pedido-reject-modal__label" for="pedidoRejectReasonTextarea">Motivo del rechazo (opcional)</label>
+        <textarea id="pedidoRejectReasonTextarea" class="pedido-reject-modal__textarea" rows="3" maxlength="500" placeholder="Ej: no hay existencias suficientes para este pedido."></textarea>
         <div class="pedido-reject-modal__actions">
             <button type="button" class="pedido-reject-modal__btn pedido-reject-modal__btn--ghost" id="cancelRejectPedidoBtn">Cancelar</button>
             <button type="button" class="pedido-reject-modal__btn pedido-reject-modal__btn--danger" id="confirmRejectPedidoBtn">Sí, rechazar pedido</button>
@@ -364,8 +535,10 @@
     var cancelBtn = document.getElementById('cancelRejectPedidoBtn');
     var confirmBtn = document.getElementById('confirmRejectPedidoBtn');
     var form = document.getElementById('pedidoRejectForm');
+    var reasonTextarea = document.getElementById('pedidoRejectReasonTextarea');
+    var reasonInput = document.getElementById('pedidoRejectReasonInput');
 
-    if (!openBtn || !modal || !closeBtn || !cancelBtn || !confirmBtn || !form) {
+    if (!openBtn || !modal || !closeBtn || !cancelBtn || !confirmBtn || !form || !reasonTextarea || !reasonInput) {
         return;
     }
 
@@ -396,6 +569,7 @@
     });
 
     confirmBtn.addEventListener('click', function () {
+        reasonInput.value = (reasonTextarea.value || '').trim();
         form.submit();
     });
 })();

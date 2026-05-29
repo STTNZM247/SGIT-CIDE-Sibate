@@ -503,6 +503,7 @@ class Pedido(models.Model):
     codigo_entrega = models.CharField(max_length=6, null=True, blank=True)
     codigo_expira_en = models.DateTimeField(null=True, blank=True)
     area_ubicacion = models.TextField(null=True, blank=True)
+    motivo_rechazo = models.TextField(null=True, blank=True)
     foto_carnet = models.ImageField(upload_to='pedidos/carnets/', null=True, blank=True)
     tipo_devolucion = models.CharField(max_length=10, default='global', null=True, blank=True)
     fecha_devolucion = models.DateTimeField(null=True, blank=True)

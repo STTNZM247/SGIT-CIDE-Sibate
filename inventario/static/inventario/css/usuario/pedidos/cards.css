@@ -1,0 +1,90 @@
+.pedidos-usuario-card {
+  border: 1px solid var(--pu-border);
+  border-radius: 22px;
+  background: var(--pu-surface);
+  box-shadow: 0 14px 28px rgba(57, 169, 0, 0.08);
+  padding: 16px;
+}
+
+.pedidos-usuario-card--pendiente {
+  border-left: 5px solid #d88711;
+  background: linear-gradient(180deg, #fffdf9 0%, #ffffff 100%);
+}
+
+.pedidos-usuario-card--esperando-entrega {
+  border-left: 5px solid #3e73c2;
+}
+
+.pedidos-usuario-card--entregado {
+  border-left: 5px solid #2e8f50;
+}
+
+.pedidos-usuario-card--devuelto {
+  border-left: 5px solid #1f7a43;
+}
+
+.pedidos-usuario-card--cancelado,
+.pedidos-usuario-card--rechazado {
+  border-left: 5px solid #c0392b;
+}
+
+.pedidos-usuario-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.pedidos-usuario-card__id {
+  margin: 0;
+  color: var(--pu-text);
+  font-weight: 800;
+}
+
+.pedidos-usuario-card__date {
+  margin: 4px 0 0;
+  color: #657064;
+  font-size: 0.9rem;
+}
+
+.pedidos-usuario-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: capitalize;
+  border: 1px solid transparent;
+}
+
+.pedidos-usuario-status--pendiente { background: #fff6e8; color: #c96a00; border-color: #ffd7ab; }
+.pedidos-usuario-status--esperando-entrega { background: #eef5ff; color: #2e63b8; border-color: #cadeff; }
+.pedidos-usuario-status--entregado { background: #e9f8ee; color: #1f7a43; border-color: #cdebd8; }
+.pedidos-usuario-status--devuelto { background: #edf8f0; color: #1b6a3a; border-color: #cae8d2; }
+.pedidos-usuario-status--rechazado,
+.pedidos-usuario-status--cancelado { background: #ffecec; color: #b43a3a; border-color: #ffcece; }
+
+.pedidos-usuario-card__stats {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pedidos-usuario-card__stats div {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #f4f8f1;
+  border: 1px solid #dce8d5;
+}
+
+.pedidos-usuario-alert {
+  margin-top: 12px;
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}

@@ -74,6 +74,38 @@
   color: #1f5c00;
 }
 
+.pedidos-usuario-filtro--pendiente {
+  border-color: #ffd7ab;
+  color: #a85c03;
+}
+
+.pedidos-usuario-filtro--pendiente strong {
+  background: #fff6e8 !important;
+  color: #c96a00 !important;
+}
+
+.pedidos-usuario-filtro--pendiente.is-active {
+  background: #fff4e4;
+  border-color: #f0bf86 !important;
+  color: #9a5400;
+}
+
+.pedidos-usuario-filtro--esperando-entrega {
+  border-color: #cadeff;
+  color: #24539d;
+}
+
+.pedidos-usuario-filtro--esperando-entrega strong {
+  background: #eef5ff !important;
+  color: #2e63b8 !important;
+}
+
+.pedidos-usuario-filtro--esperando-entrega.is-active {
+  background: #e9f2ff;
+  border-color: #9fc0f3 !important;
+  color: #1e4b90;
+}
+
 .pedidos-usuario-card {
   border: 1px solid #e1eadc;
   border-radius: 22px;
@@ -84,10 +116,12 @@
 
 .pedidos-usuario-card--pendiente {
   border-left: 5px solid #d88711;
+  background: linear-gradient(180deg, #fffdf9 0%, #ffffff 100%);
 }
 
 .pedidos-usuario-card--esperando-entrega {
   border-left: 5px solid #3e73c2;
+  background: linear-gradient(180deg, #fbfdff 0%, #ffffff 100%);
 }
 
 .pedidos-usuario-card--entregado {
@@ -1027,6 +1061,32 @@ html[data-theme="dark"] .pedidos-usuario-filtro.is-active {
   border-color: #42a5f5 !important;
   color: #90caf9 !important;
 }
+html[data-theme="dark"] .pedidos-usuario-filtro--pendiente {
+  border-color: #5a3a10 !important;
+  color: #ffcc80 !important;
+}
+html[data-theme="dark"] .pedidos-usuario-filtro--pendiente strong {
+  background: #2b1b09 !important;
+  color: #ffb74d !important;
+}
+html[data-theme="dark"] .pedidos-usuario-filtro--pendiente.is-active {
+  background: #2b1b09 !important;
+  border-color: #ffb74d !important;
+  color: #ffd79a !important;
+}
+html[data-theme="dark"] .pedidos-usuario-filtro--esperando-entrega {
+  border-color: #1e3b63 !important;
+  color: #9ec8ff !important;
+}
+html[data-theme="dark"] .pedidos-usuario-filtro--esperando-entrega strong {
+  background: #10233c !important;
+  color: #7bb3ff !important;
+}
+html[data-theme="dark"] .pedidos-usuario-filtro--esperando-entrega.is-active {
+  background: #10233c !important;
+  border-color: #6ea8f7 !important;
+  color: #b7d8ff !important;
+}
 html[data-theme="dark"] .pedidos-usuario-filtro--rechazado { color: #e57373 !important; }
 html[data-theme="dark"] .pedidos-usuario-filtro--rechazado strong { background: #2a1010 !important; color: #ef9a9a !important; }
 html[data-theme="dark"] .pedidos-usuario-filtro--rechazado.is-active { background: #2a1010 !important; border-color: #ef5350 !important; color: #ef9a9a !important; }
@@ -1040,6 +1100,12 @@ html[data-theme="dark"] .pedidos-usuario-card {
   background: #111611 !important;
   border-color: #253025 !important;
   box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+}
+html[data-theme="dark"] .pedidos-usuario-card--pendiente {
+  border-left-color: #ffb74d;
+}
+html[data-theme="dark"] .pedidos-usuario-card--esperando-entrega {
+  border-left-color: #6ea8f7;
 }
 html[data-theme="dark"] .pedidos-usuario-card__id   { color: #e2ede2 !important; }
 html[data-theme="dark"] .pedidos-usuario-card__date { color: #7a9a7a !important; }
@@ -1083,6 +1149,17 @@ html[data-theme="dark"] .pedidos-usuario-codigo--expired {
 }
 html[data-theme="dark"] .pedidos-usuario-codigo span  { color: #7a9aaa !important; }
 html[data-theme="dark"] .pedidos-usuario-codigo small { color: #7a9aaa !important; }
+
+html[data-theme="dark"] .pedidos-usuario-status--pendiente {
+  background: #2b1b09;
+  color: #ffb74d;
+  border-color: #5a3a10;
+}
+html[data-theme="dark"] .pedidos-usuario-status--esperando-entrega {
+  background: #10233c;
+  color: #7bb3ff;
+  border-color: #1e3b63;
+}
 
 /* Toggle productos */
 html[data-theme="dark"] .pedidos-usuario-products-toggle {

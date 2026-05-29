@@ -1,0 +1,94 @@
+.pu-vencido-card {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-top: 14px;
+  background: linear-gradient(135deg, #fff8e1 60%, #fff3cd);
+  border: 2px solid #fbbf24;
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 12px rgba(251, 191, 36, 0.13);
+}
+
+.pu-vencido-card__icon-wrap {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  background: #fbbf24;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pu-vencido-card__title {
+  font-size: 1em;
+  font-weight: 800;
+  color: #92400e;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+}
+
+.pu-vencido-card__desc {
+  font-size: 0.93em;
+  color: #78350f;
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.pu-vencido-card__extensiones {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.pu-vencido-ext-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  border: 2px solid #d1d5db;
+  display: inline-block;
+}
+
+.pu-vencido-ext-dot--used {
+  background: #f59e0b;
+  border-color: #d97706;
+}
+
+.pu-vencido-btn-extender {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #39a900;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  font-size: 0.97em;
+  font-weight: 700;
+  padding: 11px 22px;
+  cursor: pointer;
+}
+
+.pedidos-usuario-devolucion-box {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #c9e8d3;
+  background: #f3fbf6;
+  border-radius: 16px;
+  padding: 12px 14px;
+}
+
+.pedidos-usuario-devolucion-ring {
+  --progress: 1;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(#2e8f50 calc(var(--progress) * 1turn), #d6e5d9 0);
+}
