@@ -1,0 +1,10 @@
+/* Modular index: panel_pedidos.css */
+@import url('./panel_pedidos/base-lista.css');
+@import url('./panel_pedidos/detalle-info.css');
+@import url('./panel_pedidos/detalle-productos.css');
+@import url('./panel_pedidos/detalle-productos-dark-responsive.css');
+@import url('./panel_pedidos/product-selector-modal.css');
+@import url('./panel_pedidos/product-selector-dark-grid.css');
+@import url('./panel_pedidos/acciones-rechazo.css');
+@import url('./panel_pedidos/responsive-dark-general.css');
+@import url('./panel_pedidos/dark-codigo-entrega.css');

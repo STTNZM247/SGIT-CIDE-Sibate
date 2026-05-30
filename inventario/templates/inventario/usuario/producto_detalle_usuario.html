@@ -1,10 +1,10 @@
 {% extends 'inventario/shared/base.html' %}
-{% load static %}
+{% load static assets %}
 
 {% block title %}Detalle de Producto | {{ producto.nombre_producto }}{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'inventario/dashboard/css/dashboard.css' %}" data-page-style="true">
-<link rel="stylesheet" href="{% static 'inventario/css/usuario/panel_usuario.css' %}" data-page-style="true">
+<link rel="stylesheet" href="{% css_asset 'inventario/css/dashboard/dashboard.css' %}" data-page-style="true">
+<link rel="stylesheet" href="{% css_asset 'inventario/css/user/panel/panel_usuario.css' %}" data-page-style="true">
 {% if request.user.tema == 'oscuro' %}
 <style data-page-style="true">
 .usuario-product-detail-page {
@@ -105,7 +105,7 @@
   .usuario-product-detail-info .usuario-carrito-form input[type="number"] {
     width: 64px !important;
   }
-  .usuario-btn-carrito-temu {
+  .usuario-btn-carrito-inventario {
     max-width: 100% !important;
     width: 100% !important;
     font-size: 1.05em !important;
@@ -178,7 +178,7 @@ html[data-theme='oscuro'] .subcats-chip {
                 {% csrf_token %}
                 <label for="cantidad-{{ producto.id_prod }}">Cantidad:</label>
                 <input type="number" min="1" max="{{ producto.stock_actual|default:'1' }}" name="cantidad" id="cantidad-{{ producto.id_prod }}" value="1" required>
-                <button type="submit" class="usuario-btn-carrito-temu" title="Agregar al carrito">
+                <button type="submit" class="usuario-btn-carrito-inventario" title="Agregar al carrito">
                     <ion-icon name="cart-outline"></ion-icon>
                     Agregar al carrito
                 </button>

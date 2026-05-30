@@ -1,0 +1,320 @@
+}
+
+/* --- Acciones del form ---------------------------------- */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* --- Página editar producto ---------------------------- */
+.product-edit-page {
+    padding: 1.2rem 1rem 2rem;
+}
+
+.product-edit-page__topbar {
+    margin-bottom: 1rem;
+}
+
+.product-edit-shell {
+    background: linear-gradient(180deg, #fbfefb 0%, #ffffff 100%);
+    border: 1px solid #e8efe8;
+    border-radius: 22px;
+    box-shadow: 0 20px 50px rgba(18, 36, 24, .08);
+    overflow: hidden;
+}
+
+.product-edit-shell__header {
+    padding: 1.35rem 1.4rem 1rem;
+    border-bottom: 1px solid #eef3ee;
+    background:
+        radial-gradient(circle at top right, rgba(57,169,0,.09), transparent 0 30%),
+        linear-gradient(180deg, #f9fcf9 0%, #ffffff 100%);
+}
+
+.product-edit-shell__eyebrow {
+    margin: 0 0 .3rem;
+    font-size: .76rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #39A900;
+}
+
+.product-edit-shell__title {
+    margin: 0;
+    font-size: clamp(1.35rem, 2.6vw, 2rem);
+    color: #172617;
+}
+
+.product-edit-shell__subtitle {
+    margin: .35rem 0 0;
+    color: #617461;
+    font-size: .92rem;
+}
+
+.product-edit-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) 320px;
+    gap: 1rem;
+    padding: 1rem;
+    align-items: start;
+}
+
+.product-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.product-edit-card {
+    background: #ffffff;
+    border: 1px solid #e8efe8;
+    border-radius: 18px;
+    padding: 1rem;
+    box-shadow: 0 8px 24px rgba(20, 34, 20, .04);
+}
+
+.product-edit-card__head {
+    margin-bottom: .9rem;
+}
+
+.product-edit-card__head h2 {
+    margin: 0;
+    font-size: 1rem;
+    color: #17311f;
+}
+
+.product-edit-card--aside {
+    position: sticky;
+    top: 1rem;
+}
+
+.product-edit-preview {
+    background: #f5f8f5;
+    border: 1px solid #e3ebe3;
+    border-radius: 16px;
+    min-height: 240px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    margin-bottom: .9rem;
+}
+
+.product-edit-preview__img {
+    display: block;
+    width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    background: #fff;
+}
+
+.product-edit-preview__placeholder {
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+    color: #7b8d7b;
+}
+
+.product-edit-preview__placeholder ion-icon {
+    font-size: 2.2rem;
+    color: #39A900;
+}
+
+.product-edit-upload-zone {
+    margin-bottom: .8rem;
+}
+
+.product-edit-note {
+    display: flex;
+    align-items: flex-start;
+    gap: .45rem;
+    padding: .8rem .9rem;
+    border-radius: 12px;
+    background: #f4faf4;
+    border: 1px solid #dcebdc;
+    color: #5a6d5a;
+    font-size: .82rem;
+}
+
+.product-edit-note ion-icon {
+    color: #39A900;
+    font-size: 1rem;
+    margin-top: 1px;
+    flex-shrink: 0;
+}
+
+.product-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: .55rem;
+}
+
+@media (max-width: 980px) {
+    .product-edit-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .product-edit-card--aside {
+        position: static;
+    }
+}
+
+@media (max-width: 640px) {
+    .product-edit-page {
+        padding: .8rem .35rem 1.4rem;
+    }
+
+    .product-edit-shell__header,
+    .product-edit-layout,
+    .product-edit-card {
+        padding: .9rem;
+    }
+
+    .product-edit-actions {
+        flex-direction: column-reverse;
+    }
+
+    .product-edit-actions .cat-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+.form-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .9rem;
+    padding: 9px 18px;
+}
+
+/* --- Sección carrusel ------------------------------------ */
+.carousel-section {
+    padding: 1rem 0 2.5rem;
+}
+
+.carousel-section__label {
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #39A900;
+    margin: 0 0 1.2rem 1rem;
+}
+
+/* --- Contenedor ------------------------------------------ */
+.carousel {
+    display: flex;
+    overflow: hidden;
+    width: 100%;
+    user-select: none;
+    mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 8%,
+        black 92%,
+        transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 8%,
+        black 92%,
+        transparent 100%
+    );
+}
+
+.carousel::-webkit-scrollbar { display: none; }
+
+/* --- Grupo ----------------------------------------------- */
+.grupo {
+    display: flex;
+    align-items: stretch;
+    gap: 1.2em;
+    padding: 1rem .5rem;
+    flex-shrink: 0;
+    animation: spin-carousel 18s infinite linear;
+}
+
+.carousel:hover .grupo {
+    animation-play-state: paused;
+}
+
+@keyframes spin-carousel {
+    from { translate: 0; }
+    to   { translate: -100%; }
+}
+
+/* --- Tarjeta --------------------------------------------- */
+.card {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    flex-shrink: 0;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+    overflow: hidden;
+    transition: box-shadow .25s, translate .25s;
+    cursor: default;
+}
+
+.card:hover {
+    box-shadow: 0 6px 24px rgba(57, 169, 0, .18);
+    translate: 0 -4px;
+}
+
+.card__thumb {
+    height: 130px;
+    background: linear-gradient(135deg, #39A900 0%, #2d8600 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 3rem;
+}
+
+.card__body {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    padding: .85rem 1rem 1rem;
+}
+
+.card__name {
+    font-size: .92rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    white-space: normal;
+    line-height: 1.24;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: normal;
+    overflow-wrap: break-word;
+    text-wrap: pretty;
+}
+
+.card__count {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .78rem;
+    color: #777;
+}
+
+.card__count ion-icon {
+    font-size: .85rem;
+    color: #39A900;
+    flex-shrink: 0;
+}
+
+/* --- Estado vacío --------------------------------------- */
+.catalogo-empty {
+    display: flex;
+    flex-direction: column;

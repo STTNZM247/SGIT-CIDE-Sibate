@@ -1,0 +1,108 @@
+html[data-theme="dark"] .perfil-nombre {
+  color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .perfil-subtitle {
+  color: #42a5f5 !important;
+}
+
+html[data-theme="dark"] .perfil-center-text,
+html[data-theme="dark"] .perfil-stat-box span,
+html[data-theme="dark"] .perfil-history-main small,
+html[data-theme="dark"] .perfil-history-main p,
+html[data-theme="dark"] .perfil-empty {
+  color: #7a9a7a !important;
+}
+
+html[data-theme="dark"] .perfil-stat-box strong,
+html[data-theme="dark"] .perfil-history-main strong,
+html[data-theme="dark"] .perfil-quick-item span,
+html[data-theme="dark"] .perfil-section-title {
+  color: #e2ede2 !important;
+}
+
+/* Badges */
+html[data-theme="dark"] .perfil-status-badge,
+html[data-theme="dark"] .perfil-rol-badge {
+  background: #0d2538 !important;
+  color: #42a5f5 !important;
+  border-color: #1a3a5c !important;
+}
+
+html[data-theme="dark"] .perfil-mini-badge {
+  background: #0d2538 !important;
+  color: #42a5f5 !important;
+}
+
+/* Botón guardar → azul */
+html[data-theme="dark"] .perfil-btn--save {
+  background: linear-gradient(135deg, #1565c0, #0d47a1) !important;
+  box-shadow: 0 8px 18px rgba(21,101,192,.3) !important;
+}
+
+/* Botón cerrar sesión */
+html[data-theme="dark"] .perfil-btn--logout {
+  background: #161e16 !important;
+  color: #a8c4aa !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .perfil-action-dock {
+  background: rgba(13, 18, 13, 0.92) !important;
+  border-color: #253025 !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45) !important;
+}
+
+html[data-theme="dark"] .perfil-action-dock .perfil-btn--save:disabled,
+html[data-theme="dark"] .perfil-action-dock .perfil-btn--save[aria-disabled="true"] {
+  background: #435247 !important;
+  color: #d3ddd5 !important;
+}
+
+html[data-theme="dark"] .perfil-action-dock .perfil-btn--logout {
+  background: #1a251c !important;
+}
+
+/* Color picker */
+html[data-theme="dark"] .perfil-cover-picker {
+  background: #161e16 !important;
+  border: 1px solid #253025 !important;
+}
+
+html[data-theme="dark"] .perfil-cover-picker-title {
+  color: #7a9a7a !important;
+}
+
+html[data-theme="dark"] .perfil-cover-picker-divider {
+  background: #253025 !important;
+}
+
+html[data-theme="dark"] .perfil-cover-picker-upload {
+  background: #0d2538 !important;
+  color: #d0e8ff !important;
+}
+
+/* Avatar border */
+html[data-theme="dark"] .perfil-avatar-ring {
+  background: linear-gradient(135deg, #39A900 0%, #003d12 100%) !important;
+  box-shadow: 0 4px 20px rgba(57,169,0,.25), 0 0 0 3px #111611 !important;
+}
+
+/* Botón "Cambiar portada" — fondo blanco, texto azul oscuro bien visible */
+html[data-theme="dark"] .perfil-cover-btn,
+html[data-theme="dark"] .perfil-cover-btn:hover {
+  background: #ffffff !important;
+  color: #0d2745 !important;
+  border-color: rgba(13,39,69,.25) !important;
+}
+html[data-theme="dark"] .perfil-cover-btn > span,
+html[data-theme="dark"] .perfil-cover-btn > ion-icon,
+html[data-theme="dark"] .perfil-cover-btn * {
+  color: #0d2745 !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="dark"] .perfil-status-dot {
+  border-color: #111611 !important;
+}
+

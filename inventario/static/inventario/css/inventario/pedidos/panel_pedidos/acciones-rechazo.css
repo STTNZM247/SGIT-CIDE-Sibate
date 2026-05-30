@@ -1,0 +1,343 @@
+/* -- Reject / No disponibles -- */
+.detalle-actions-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.detalle-actions-row--fixed {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  align-items: stretch;
+}
+
+.detalle-actions-approve-form,
+.detalle-actions-reject-form {
+  display: flex;
+  justify-content: stretch;
+  width: 100%;
+  margin: 0;
+  min-width: 0;
+}
+
+.detalle-actions-row--fixed > .pedido-action-btn,
+.detalle-actions-row--fixed .detalle-actions-reject-form .pedido-action-btn,
+.detalle-actions-row--fixed .detalle-actions-approve-form .pedido-action-btn {
+  width: 100%;
+  justify-content: center;
+  border-radius: 0;
+}
+
+.detalle-actions-row--fixed > .pedido-action-btn {
+  border-top-left-radius: 14px;
+  border-bottom-left-radius: 14px;
+}
+
+.detalle-actions-row--fixed .detalle-actions-approve-form .pedido-action-btn {
+  border-top-right-radius: 14px;
+  border-bottom-right-radius: 14px;
+}
+
+.pedido-action-btn--reject {
+  background: linear-gradient(135deg, #c0392b, #a8241a);
+}
+
+.pedido-action-btn--toggle-no-disp {
+  background: linear-gradient(135deg, #c47c00, #a86400);
+}
+
+.pedido-action-btn--toggle-no-disp.is-active {
+  box-shadow: 0 0 0 3px rgba(212,130,10,0.22);
+}
+
+.detalle-no-disp-panel {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.detalle-no-disp-panel textarea {
+  width: 100%;
+  border: 1px solid #e1dfd8;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #2c2f2a;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 12px 14px;
+  resize: vertical;
+  min-height: 84px;
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.03);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.detalle-no-disp-panel textarea:focus {
+  outline: none;
+  border-color: #c47c00;
+  box-shadow: 0 0 0 3px rgba(196, 124, 0, 0.16);
+}
+
+@media (max-width: 980px) {
+  .detalle-actions-row--fixed {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .detalle-actions-approve-form,
+  .detalle-actions-reject-form {
+    justify-content: stretch;
+  }
+
+  .detalle-actions-row--fixed .pedido-action-btn {
+    width: 100%;
+    justify-content: center;
+    border-radius: 14px;
+  }
+}
+
+/* Modal rechazo de pedido */
+.pedido-reject-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(15, 23, 15, 0.55);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.pedido-reject-modal[aria-hidden="false"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pedido-reject-modal__dialog {
+  width: min(460px, 100%);
+  border-radius: 18px;
+  border: 1px solid #e8ddd6;
+  background: linear-gradient(180deg, #fffefd, #fff7f4);
+  box-shadow: 0 22px 52px rgba(40, 19, 10, 0.3);
+  padding: 20px 20px 18px;
+  position: relative;
+}
+
+.pedido-reject-modal__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #efdfd6;
+  background: #fff;
+  color: #8f4b3a;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.pedido-reject-modal__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 10px;
+  background: #ffecec;
+  color: #c0392b;
+  font-size: 1.5rem;
+}
+
+.pedido-reject-modal__dialog h3 {
+  margin: 0;
+  color: #2b1e1b;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.pedido-reject-modal__dialog p {
+  margin: 10px 0 0;
+  color: #6d5049;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.pedido-reject-modal__label {
+  display: block;
+  margin-top: 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #68463d;
+}
+
+.pedido-reject-modal__textarea {
+  width: 100%;
+  margin-top: 6px;
+  border: 1.5px solid #efd8cf;
+  border-radius: 10px;
+  background: #fff;
+  color: #503731;
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 10px 12px;
+  resize: vertical;
+  min-height: 84px;
+}
+
+.pedido-reject-modal__textarea:focus {
+  outline: none;
+  border-color: #c0392b;
+}
+
+.pedido-reject-modal__actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.pedido-reject-modal__btn {
+  border: 0;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.pedido-reject-modal__btn--ghost {
+  background: #efe9e6;
+  color: #6d5049;
+}
+
+.pedido-reject-modal__btn--danger {
+  background: linear-gradient(135deg, #c0392b, #8e1a11);
+  color: #fff;
+}
+
+/* Producto no disponible - checkboxes (estado pendiente) */
+.pedido-product-card__no-disp-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #e4d0c0;
+  background: #fffaf5;
+  color: #8a4600;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+
+.pedido-product-card__no-disp-label:has(input:checked) {
+  background: #ffedec;
+  border-color: #f5b8b5;
+  color: #b43a3a;
+}
+
+.pedido-product-card__no-disp-check {
+  accent-color: #c0392b;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Card marcada como no disponible */
+.pedido-product-card--no-disponible {
+  opacity: 0.68;
+  filter: grayscale(40%);
+  border-color: #f5c5c5;
+}
+
+.pedido-product-card--no-disponible .pedido-product-card__media {
+  background: #fdf3f3;
+}
+
+/* Badge no disponible visible (estados no-pendiente) */
+.pedido-product-card__no-disp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #ffecec;
+  color: #b43a3a;
+  border: 1px solid #ffcece;
+  font-size: 0.78rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+/* Submit de no disponibles */
+.detalle-no-disp-submit {
+  margin-top: 18px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: #fff8f0;
+  border: 1px solid #f5dab8;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.detalle-no-disp-submit p {
+  margin: 0;
+  color: #7a4a00;
+  font-size: 0.88rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  flex: 1;
+  min-width: 200px;
+}
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+@media (max-width: 1100px) {
+  .pedido-row {
+    grid-template-columns: minmax(180px, 1.4fr) 110px minmax(180px, 1.2fr) 100px auto;
+  }
+}
+
+@media (max-width: 860px) {
+  .pedido-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  .pedido-row__usuario  { grid-column: 1 / -1; border-left: none !important; border-bottom: 1px solid #f0f4ed; }
+  .pedido-row__estado   { grid-column: 1; }
+  .pedido-row__prestamo { grid-column: 2; }
+  .pedido-row__carnet   { grid-column: 1; }
+  .pedido-row__actions  { grid-column: 2; justify-content: flex-end; }
+
+  .detalle-codigo-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .pedido-evidencias-preview {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .pedidos-page__hero { flex-direction: column; align-items: flex-start; }
+
+  .detalle-usuario-box {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .detalle-usuario-box__avatar {
+    width: 56px;
+    height: 56px;

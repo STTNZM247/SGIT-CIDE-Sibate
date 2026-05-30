@@ -1,10 +1,10 @@
 {% extends "inventario/shared/base.html" %}
-{% load static %}
+{% load static assets %}
 
 {% block title %}Catálogo | SENA Sibate{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'inventario/css/catalogo/catalogo.css' %}" data-page-style="true">
+<link rel="stylesheet" href="{% css_asset 'inventario/css/inventario/catalogo/catalogo.css' %}" data-page-style="true">
 {% endblock %}
 
 {% block content %}
@@ -29,6 +29,10 @@
     </div>
     {% if puede_gestionar_catalogo %}
     <div class="cat-header__actions">
+        <button class="cat-btn cat-btn--ghost" type="button" data-modal="modal-ubicacion">
+            <ion-icon name="location-outline"></ion-icon>
+            Ubicaciones de productos
+        </button>
         <button class="cat-btn cat-btn--secondary" type="button" data-modal="modal-catalogo">
             <ion-icon name="albums-outline"></ion-icon>
             Nuevo catálogo
@@ -158,6 +162,17 @@
                 <label for="{{ cat_form.descripcion.id_for_label }}" class="mf-label">Descripción</label>
                 {{ cat_form.descripcion }}
             </div>
+            <div class="mf-group mf-group--stack" id="catalogo-ubicacion-group">
+                <label for="{{ cat_form.id_ubicacion_fk.id_for_label }}" class="mf-label">
+                    Agregar ubicación <span class="mf-required">*</span>
+                </label>
+                {{ cat_form.id_ubicacion_fk }}
+                <div id="catalogo-ubicacion-picker" class="subcat-folder-picker" role="listbox" aria-multiselectable="false"></div>
+                <small class="mf-hint" id="catalogo-ubicacion-hint">Selecciona la ubicación predeterminada de este catálogo.</small>
+                {% if cat_form.id_ubicacion_fk.errors %}
+                <span class="mf-error">{{ cat_form.id_ubicacion_fk.errors|join:", " }}</span>
+                {% endif %}
+            </div>
             <div class="modal__actions">
                 <button type="button" class="cat-btn cat-btn--ghost" data-modal-close>Cancelar</button>
                 <button type="submit" class="cat-btn cat-btn--primary">
@@ -170,10 +185,44 @@
 </div>
 
 <!-- ====================================================
+     MODAL: Registrar ubicación de productos
+     ==================================================== -->
+<div class="modal-backdrop" id="modal-ubicacion" role="dialog" aria-modal="true" aria-labelledby="modal-ubicacion-title" aria-hidden="true">
+    <div class="modal modal--small">
+        <div class="modal__header">
+            <span class="modal__icon"><ion-icon name="location-outline"></ion-icon></span>
+            <h2 class="modal__title" id="modal-ubicacion-title">Ubicaciones de productos</h2>
+            <button class="modal__close" type="button" data-modal-close aria-label="Cerrar">
+                <ion-icon name="close-outline"></ion-icon>
+            </button>
+        </div>
+        <form method="post" action="{% url 'registrar_ubicacion_producto' %}" class="modal__form">
+            {% csrf_token %}
+            <div class="mf-group">
+                <label for="{{ ubi_form.nombre.id_for_label }}" class="mf-label">
+                    {{ ubi_form.nombre.label }} <span class="mf-required">*</span>
+                </label>
+                {{ ubi_form.nombre }}
+                {% if ubi_form.nombre.errors %}
+                <span class="mf-error">{{ ubi_form.nombre.errors|join:", " }}</span>
+                {% endif %}
+            </div>
+            <div class="modal__actions">
+                <button type="button" class="cat-btn cat-btn--ghost" data-modal-close>Cancelar</button>
+                <button type="submit" class="cat-btn cat-btn--primary">
+                    <ion-icon name="save-outline"></ion-icon>
+                    Guardar ubicación
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ====================================================
      MODAL: Registrar producto
      ==================================================== -->
 <div class="modal-backdrop" id="modal-producto" role="dialog" aria-modal="true" aria-labelledby="modal-prod-title" aria-hidden="true">
-    <div class="modal">
+    <div class="modal modal--producto">
         <div class="modal__header">
             <span class="modal__icon modal__icon--prod"><ion-icon name="cube-outline"></ion-icon></span>
             <h2 class="modal__title" id="modal-prod-title">Nuevo producto</h2>
@@ -181,7 +230,7 @@
                 <ion-icon name="close-outline"></ion-icon>
             </button>
         </div>
-        <form method="post" action="{% url 'registrar_producto' %}" enctype="multipart/form-data" class="modal__form">
+        <form method="post" action="{% url 'registrar_producto' %}" enctype="multipart/form-data" class="modal__form modal__form--producto">
             {% csrf_token %}
             <div class="mf-row">
                 <div class="mf-group">
@@ -207,7 +256,7 @@
                 <label for="{{ prod_form.descripcion.id_for_label }}" class="mf-label">Descripción</label>
                 {{ prod_form.descripcion }}
             </div>
-            <div class="mf-row">
+            <div class="mf-row mf-row--unidad-ubicacion">
                 <div class="mf-group">
                     <label for="{{ prod_form.unidad_medida.id_for_label }}" class="mf-label">
                         {{ prod_form.unidad_medida.label }} <span class="mf-required">*</span>
@@ -219,26 +268,40 @@
                         {{ prod_form.ubicacion.label }} <span class="mf-required">*</span>
                     </label>
                     {{ prod_form.ubicacion }}
-                    <small class="mf-hint">Indica estante, zona o ubicación exacta del elemento.</small>
+                    <small class="mf-hint">Se completa automáticamente con la ubicación predeterminada del catálogo.</small>
                 </div>
             </div>
-            <div class="mf-row">
+            <div class="mf-row mf-row--tipo-subcat" id="tipo-subcat-row">
                 <div class="mf-group">
                     <label for="{{ prod_form.tipo_bien.id_for_label }}" class="mf-label">
                         {{ prod_form.tipo_bien.label }} <span class="mf-required">*</span>
                     </label>
                     {{ prod_form.tipo_bien }}
                 </div>
-                <div class="mf-group mf-group--stack">
+                <div class="mf-group mf-group--stack" id="subcategorias-group">
                     <label for="{{ prod_form.subcategorias.id_for_label }}" class="mf-label">Subcategorías</label>
-                    {{ prod_form.subcategorias }}
-                    <small class="mf-hint">Puedes seleccionar varias subcategorías.</small>
+                    <select
+                        name="subcategorias"
+                        id="{{ prod_form.subcategorias.id_for_label }}"
+                        class="form-input form-select form-select-multiple subcat-native-select"
+                        multiple
+                        size="7"
+                    >
+                        {% with selected_subcats=prod_form.subcategorias.value %}
+                            {% for sc in prod_form.subcategorias.field.queryset %}
+                                <option
+                                    value="{{ sc.pk }}"
+                                    data-cat-id="{{ sc.id_cat_fk_id }}"
+                                    {% if selected_subcats and sc.pk|stringformat:"s" in selected_subcats %}selected{% endif %}
+                                >
+                                    {{ sc.ruta_completa }}
+                                </option>
+                            {% endfor %}
+                        {% endwith %}
+                    </select>
+                    <div id="subcategorias-picker" class="subcat-folder-picker" role="listbox" aria-multiselectable="true"></div>
+                    <small class="mf-hint" id="subcategorias-hint">Puedes seleccionar varias subcategorías existentes del catálogo elegido.</small>
                 </div>
-            </div>
-            <div class="mf-group">
-                <label for="{{ prod_form.nuevas_subcategorias.id_for_label }}" class="mf-label">Nuevas subcategorías</label>
-                {{ prod_form.nuevas_subcategorias }}
-                <small class="mf-hint">Ejemplo: Cajas y tableros / Accesorios / Bornera 4mm</small>
             </div>
             <div class="mf-row" id="devolutivo-fields-create">
                 <div class="mf-group">
@@ -288,16 +351,183 @@
 </div>
 {% endif %}
 
+{{ catalogo_ubicaciones_map|json_script:"catalogo-ubicaciones-map" }}
+
 {% endblock %}
 
 {% block extra_js %}
 <script data-page-script="true">
 (() => {
 const initCatalogoPage = () => {
+    const catalogoUbicacionesMap = (() => {
+        const node = document.getElementById('catalogo-ubicaciones-map');
+        if (!node) return {};
+        try {
+            return JSON.parse(node.textContent || '{}');
+        } catch (err) {
+            return {};
+        }
+    })();
+
     const tipoBienSelect = document.querySelector('#modal-producto select[name="tipo_bien"]');
+    const catalogoSelect = document.querySelector('#modal-producto select[name="id_cat_fk"]');
+    const ubicacionProductoInput = document.querySelector('#modal-producto input[name="ubicacion"]');
+    const subcategoriasSelect = document.querySelector('#modal-producto select[name="subcategorias"]');
+    const subcategoriasPicker = document.getElementById('subcategorias-picker');
+    const subcategoriasGroup = document.getElementById('subcategorias-group');
+    const tipoSubcatRow = document.getElementById('tipo-subcat-row');
+    const subcategoriasHint = document.getElementById('subcategorias-hint');
+    const catalogoUbicacionSelect = document.querySelector('#modal-catalogo select[name="id_ubicacion_fk"]');
+    const catalogoUbicacionPicker = document.getElementById('catalogo-ubicacion-picker');
+    const catalogoUbicacionHint = document.getElementById('catalogo-ubicacion-hint');
     const placaInput = document.querySelector('#modal-producto input[name="numero_placa"]');
     const cuentadanteInput = document.querySelector('#modal-producto input[name="cuentadante"]');
     const devolutivoWrap = document.getElementById('devolutivo-fields-create');
+    const allSubcatOptions = subcategoriasSelect
+        ? Array.from(subcategoriasSelect.options).map(opt => opt.cloneNode(true))
+        : [];
+
+    const renderSubcategoriasPicker = () => {
+        if (!subcategoriasSelect || !subcategoriasPicker) return;
+
+        const selectedValues = new Set(
+            Array.from(subcategoriasSelect.selectedOptions).map(opt => opt.value)
+        );
+
+        subcategoriasPicker.innerHTML = '';
+        const opcionesActuales = Array.from(subcategoriasSelect.options);
+
+        if (!opcionesActuales.length) {
+            subcategoriasPicker.classList.add('is-empty');
+            return;
+        }
+
+        subcategoriasPicker.classList.remove('is-empty');
+
+        opcionesActuales.forEach(option => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'subcat-folder-item';
+            btn.dataset.value = option.value;
+
+            const isSelected = selectedValues.has(option.value);
+            if (isSelected) {
+                btn.classList.add('is-selected');
+            }
+            btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+
+            const iconWrap = document.createElement('span');
+            iconWrap.className = 'subcat-folder-item__icon';
+            iconWrap.innerHTML = '<ion-icon name="folder-open-outline"></ion-icon>';
+
+            const text = document.createElement('span');
+            text.className = 'subcat-folder-item__text';
+            text.textContent = option.textContent.trim();
+
+            btn.appendChild(iconWrap);
+            btn.appendChild(text);
+
+            btn.addEventListener('click', () => {
+                option.selected = !option.selected;
+                renderSubcategoriasPicker();
+            });
+
+            subcategoriasPicker.appendChild(btn);
+        });
+    };
+
+    const renderCatalogoUbicacionPicker = () => {
+        if (!catalogoUbicacionSelect || !catalogoUbicacionPicker) return;
+
+        const selectedValue = (catalogoUbicacionSelect.value || '').toString();
+        const options = Array.from(catalogoUbicacionSelect.options).filter(opt => !!opt.value);
+        catalogoUbicacionPicker.innerHTML = '';
+
+        if (!options.length) {
+            catalogoUbicacionPicker.classList.add('is-empty');
+            if (catalogoUbicacionHint) {
+                catalogoUbicacionHint.textContent = 'Primero registra una ubicación desde el botón "Ubicaciones de productos".';
+            }
+            return;
+        }
+
+        catalogoUbicacionPicker.classList.remove('is-empty');
+        if (catalogoUbicacionHint) {
+            catalogoUbicacionHint.textContent = 'Selecciona la ubicación predeterminada de este catálogo.';
+        }
+
+        options.forEach(option => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'subcat-folder-item subcat-folder-item--single';
+            btn.dataset.value = option.value;
+
+            const isSelected = selectedValue === option.value;
+            if (isSelected) {
+                btn.classList.add('is-selected');
+            }
+            btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+
+            const iconWrap = document.createElement('span');
+            iconWrap.className = 'subcat-folder-item__icon';
+            iconWrap.innerHTML = '<ion-icon name="location-outline"></ion-icon>';
+
+            const text = document.createElement('span');
+            text.className = 'subcat-folder-item__text';
+            text.textContent = option.textContent.trim();
+
+            btn.appendChild(iconWrap);
+            btn.appendChild(text);
+
+            btn.addEventListener('click', () => {
+                catalogoUbicacionSelect.value = option.value;
+                renderCatalogoUbicacionPicker();
+            });
+
+            catalogoUbicacionPicker.appendChild(btn);
+        });
+    };
+
+    const syncUbicacionProductoPorCatalogo = () => {
+        if (!catalogoSelect || !ubicacionProductoInput) return;
+        const catId = (catalogoSelect.value || '').toString();
+        const ubicacion = catId ? (catalogoUbicacionesMap[catId] || '') : '';
+        ubicacionProductoInput.value = ubicacion;
+    };
+
+    const syncSubcategoriasPorCatalogo = () => {
+        if (!catalogoSelect || !subcategoriasSelect || !subcategoriasGroup) return;
+
+        const catalogoId = (catalogoSelect.value || '').toString();
+        const selectedValues = new Set(Array.from(subcategoriasSelect.selectedOptions).map(opt => opt.value));
+
+        subcategoriasSelect.innerHTML = '';
+
+        const opcionesFiltradas = allSubcatOptions.filter(opt => {
+            const catId = (opt.getAttribute('data-cat-id') || '').toString();
+            return catalogoId && catId === catalogoId;
+        });
+
+        opcionesFiltradas.forEach(opt => {
+            const clone = opt.cloneNode(true);
+            clone.selected = selectedValues.has(clone.value);
+            subcategoriasSelect.appendChild(clone);
+        });
+
+        const hasSubcategorias = opcionesFiltradas.length > 0;
+        subcategoriasGroup.style.display = hasSubcategorias ? '' : 'none';
+        subcategoriasSelect.disabled = !hasSubcategorias;
+        if (tipoSubcatRow) {
+            tipoSubcatRow.classList.toggle('is-subcat-empty', !hasSubcategorias);
+        }
+        renderSubcategoriasPicker();
+
+        if (!hasSubcategorias && subcategoriasHint) {
+            subcategoriasHint.textContent = 'Este catálogo no tiene subcategorías creadas aún.';
+        } else if (hasSubcategorias && subcategoriasHint) {
+            subcategoriasHint.textContent = 'Puedes seleccionar varias subcategorías existentes del catálogo elegido.';
+        }
+    };
 
     const toggleDevolutivoFields = () => {
         if (!tipoBienSelect || !placaInput || !cuentadanteInput) return;
@@ -316,6 +546,20 @@ const initCatalogoPage = () => {
     if (tipoBienSelect) {
         tipoBienSelect.addEventListener('change', toggleDevolutivoFields);
         toggleDevolutivoFields();
+    }
+
+    if (catalogoSelect) {
+        catalogoSelect.addEventListener('change', () => {
+            syncSubcategoriasPorCatalogo();
+            syncUbicacionProductoPorCatalogo();
+        });
+        syncSubcategoriasPorCatalogo();
+        syncUbicacionProductoPorCatalogo();
+    }
+
+    if (catalogoUbicacionSelect) {
+        catalogoUbicacionSelect.addEventListener('change', renderCatalogoUbicacionPicker);
+        renderCatalogoUbicacionPicker();
     }
 
 
@@ -346,10 +590,16 @@ const initCatalogoPage = () => {
                 if (sel) sel.value = catId;
                 const title = document.getElementById('modal-prod-title');
                 if (title && catName) title.textContent = `Nuevo producto en "${catName}"`;
+                syncSubcategoriasPorCatalogo();
+                syncUbicacionProductoPorCatalogo();
             } else {
                 // Reset title cuando se abre desde el botón general
                 const title = document.getElementById('modal-prod-title');
                 if (title) title.textContent = 'Nuevo producto';
+            }
+
+            if (id === 'modal-catalogo') {
+                renderCatalogoUbicacionPicker();
             }
             openModal(id);
         });
@@ -365,6 +615,8 @@ const initCatalogoPage = () => {
                 if (form) {
                     form.reset();
                 }
+                syncSubcategoriasPorCatalogo();
+                syncUbicacionProductoPorCatalogo();
                 // Limpiar fotos acumuladas
                 fotosAccum = new DataTransfer();
                 const fotosIn = modal.querySelector('#id_fotos');
@@ -373,6 +625,13 @@ const initCatalogoPage = () => {
                 if (prev) prev.innerHTML = '';
                 const msg = modal.querySelector('#fotos-count-msg');
                 if (msg) msg.textContent = '';
+            }
+            if (modal && modal.id === 'modal-catalogo') {
+                const form = modal.querySelector('form');
+                if (form) {
+                    form.reset();
+                }
+                renderCatalogoUbicacionPicker();
             }
             closeAll();
         });

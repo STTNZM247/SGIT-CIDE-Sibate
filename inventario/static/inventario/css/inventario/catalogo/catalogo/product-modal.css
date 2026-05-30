@@ -1,0 +1,320 @@
+    min-height: 34px;
+    padding: 0 .75rem;
+    border-radius: 10px;
+    font-size: .8rem;
+    white-space: nowrap;
+}
+
+.product-modal__close {
+    border: 0;
+    background: #f5f7fa;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: #4d5a6a;
+}
+
+.product-modal__media {
+    padding: .9rem 1rem 0;
+}
+
+.product-modal__img,
+.product-modal__placeholder {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: contain;
+    border-radius: 12px;
+    border: 1px solid #e8edf3;
+    background: #f7fafc;
+}
+
+.product-modal__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #7d8b9a;
+    background: #f7fafc;
+}
+
+.product-modal__content {
+    padding: .95rem 1rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+}
+
+.product-modal__danger {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: .4rem;
+    border-top: 1px solid #edf1f6;
+}
+
+@media (max-width: 720px) {
+    .product-modal__header {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .product-modal__header-actions {
+        width: 100%;
+        margin-left: 0;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+}
+
+.cat-btn--danger {
+    background: #fff1f1;
+    color: #c62828;
+    border: 1px solid #efb5b5;
+}
+
+.cat-btn--danger:hover {
+    background: #ffe3e3;
+}
+
+
+/* --- Mensajes flash ------------------------------------- */
+.catalogo-messages {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+.alert {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .75rem 1rem;
+    border-radius: 10px;
+    font-size: .9rem;
+    font-weight: 500;
+}
+
+.alert--success {
+    background: #d4f7d4;
+    color: #1a5e1a;
+}
+
+.alert--error {
+    background: #fde8e8;
+    color: #8b0000;
+}
+
+/* --- Hero ------------------------------------------------ */
+.catalogo-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 2rem 0 1.5rem;
+}
+
+.catalogo-hero__title {
+    font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+    font-weight: 800;
+    color: #1a1a2e;
+    margin: 0 0 .25rem;
+    letter-spacing: -.5px;
+}
+
+.catalogo-hero__sub {
+    font-size: .9rem;
+    color: #555;
+    margin: 0;
+}
+
+.catalogo-hero__actions {
+    display: flex;
+    gap: .6rem;
+    flex-wrap: wrap;
+}
+
+.catalogo-hero__actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .88rem;
+    padding: 8px 14px;
+    border-radius: 10px;
+}
+
+.btn--outline {
+    background: transparent;
+    color: #39A900;
+    border: 1.5px solid #39A900;
+}
+
+.btn--outline:hover {
+    background: #f0fff0;
+}
+
+/* --- Panel de registro ---------------------------------- */
+.registro-panel {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .45s ease, margin .3s ease;
+    margin-bottom: 0;
+}
+
+.registro-panel[aria-hidden="false"] {
+    max-height: 700px;
+    margin-bottom: 1.5rem;
+}
+
+.registro-panel__inner {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 16px rgba(0,0,0,.08);
+    padding: 1.25rem 1.25rem 1.5rem;
+}
+
+.registro-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.1rem;
+}
+
+.registro-panel__title {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+}
+
+.registro-panel__title ion-icon {
+    color: #39A900;
+    font-size: 1.25rem;
+}
+
+.registro-panel__close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #999;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 8px;
+    transition: background .2s, color .2s;
+}
+
+.registro-panel__close:hover {
+    background: #f3f4f6;
+    color: #333;
+}
+
+/* --- Formulario ----------------------------------------- */
+.registro-form {
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+
+.form-label {
+    font-size: .82rem;
+    font-weight: 600;
+    color: #444;
+    letter-spacing: .02em;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid #ddd;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: .9rem;
+    color: #222;
+    background: #fafafa;
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    border-color: #39A900;
+    box-shadow: 0 0 0 3px rgba(57,169,0,.12);
+    background: #fff;
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-error {
+    font-size: .78rem;
+    color: #c0392b;
+}
+
+/* --- Zona de subida de imagen -------------------------- */
+.file-upload-zone {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    padding: 1.5rem 1rem;
+    border: 2px dashed #ccc;
+    border-radius: 12px;
+    background: #f9fafb;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    text-align: center;
+}
+
+.file-upload-zone:hover {
+    border-color: #39A900;
+    background: #f0fff0;
+}
+
+.file-upload-zone ion-icon {
+    font-size: 2rem;
+    color: #39A900;
+}
+
+.file-upload-zone__text {
+    font-size: .88rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.file-upload-zone__hint {
+    font-size: .75rem;
+    color: #999;
+}
+
+/* Ocultar el input nativo pero mantenerlo activo para el click */
+.file-upload-zone .form-file {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;

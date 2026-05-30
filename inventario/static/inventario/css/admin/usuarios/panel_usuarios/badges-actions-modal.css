@@ -1,0 +1,320 @@
+.validacion-badge--pendiente {
+    background: #f3f4f6;
+    border-color: #d8dde3;
+    color: #4c5865;
+}
+
+.validacion-badge--solicitada,
+.validacion-badge--enlace_enviado {
+    background: #fff6ea;
+    border-color: #f0d7a9;
+    color: #8a5a00;
+}
+
+.validacion-badge--documento_cargado {
+    background: #ecf7ff;
+    border-color: #c5dced;
+    color: #205279;
+}
+
+.validacion-badge--validado {
+    background: #eaf7e5;
+    border-color: #c7e0be;
+    color: #25682e;
+}
+
+.validacion-badge--rechazada {
+    background: #fff0f0;
+    border-color: #f0cccc;
+    color: #8a2d2d;
+}
+
+.validacion-link-doc {
+    color: #216227;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.validacion-link-doc:hover {
+    text-decoration: underline;
+}
+
+.form-rol-personalizado {
+    display: grid;
+    grid-template-columns: minmax(110px, 1fr) auto;
+    gap: 6px;
+    align-items: center;
+}
+
+.form-estado-usuario {
+    display: flex;
+    align-items: center;
+}
+
+.estado-toggle {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border: 1px solid #d8e5d4;
+    border-radius: 999px;
+    background: #f8fbf7;
+    padding: 6px 10px;
+    min-height: 40px;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease, transform .15s ease;
+}
+
+.estado-toggle:hover {
+    transform: translateY(-1px);
+}
+
+.estado-toggle__track {
+    position: relative;
+    width: 46px;
+    height: 24px;
+    border-radius: 999px;
+    flex-shrink: 0;
+    background: #ff2130;
+    box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.06);
+    transition: background .25s ease;
+}
+
+.estado-toggle__thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+    transition: transform .25s ease;
+}
+
+.estado-toggle__text {
+    font-weight: 800;
+    font-size: 0.82rem;
+    color: #2f4333;
+}
+
+.estado-toggle.is-active {
+    background: #f3fbef;
+    border-color: #cfe4c7;
+}
+
+.estado-toggle.is-active .estado-toggle__track {
+    background: #27c71b;
+}
+
+.estado-toggle.is-active .estado-toggle__thumb {
+    transform: translateX(22px);
+}
+
+.estado-toggle.is-inactive {
+    background: #fff5f5;
+    border-color: #f0cccc;
+}
+
+.estado-toggle.is-inactive .estado-toggle__text {
+    color: #7b3333;
+}
+
+.custom-select-rol {
+    position: relative;
+    min-width: 120px;
+    user-select: none;
+    cursor: pointer;
+}
+
+.selected-rol {
+    background: #f7fbf6;
+    border: 1px solid #d8e7d3;
+    border-radius: 9px;
+    padding: 8px 28px 8px 10px;
+    min-height: 40px;
+    color: #203424;
+    font-weight: 600;
+    font-size: 0.92rem;
+    position: relative;
+}
+
+.selected-rol::after {
+    content: "▾";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.9rem;
+    color: #4f6954;
+}
+
+.rol-options {
+    position: absolute;
+    left: 0;
+    top: 110%;
+    width: 100%;
+    border-radius: 9px;
+    border: 1px solid #cfe4c8;
+    background: #fff;
+    z-index: 30;
+    box-shadow: 0 12px 24px rgba(24, 54, 22, 0.11);
+    overflow: hidden;
+}
+
+.rol-option {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+}
+
+.rol-option:hover,
+.rol-option.selected {
+    background: #edf6ea;
+    color: #216026;
+}
+
+.custom-select-rol input[type="hidden"] {
+    display: none;
+}
+
+.tabla-vacia {
+    text-align: center;
+    padding: 24px 10px;
+    color: #516253;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1300;
+    background: rgba(11, 20, 14, 0.45);
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.modal-content {
+    width: min(640px, 100%);
+    border-radius: 18px;
+    background: #fff;
+    border: 1px solid #dbe8d7;
+    box-shadow: 0 26px 45px rgba(0, 0, 0, 0.19);
+    padding: 22px;
+}
+
+.modal-content--danger {
+    width: min(520px, 100%);
+    border-color: #f0d4ce;
+    background: linear-gradient(180deg, #fffdfc 0%, #fff6f4 100%);
+}
+
+.modal-content h2 {
+    margin: 0;
+    color: #18311f;
+}
+
+.modal-danger-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    background: linear-gradient(135deg, #fff0ec 0%, #ffd9d1 100%);
+    color: #b33221;
+    font-size: 1.5rem;
+    border: 1px solid #f0c3ba;
+}
+
+.modal-subtitle {
+    margin: 6px 0 14px;
+    color: #59735e;
+    font-size: 0.92rem;
+}
+
+.usuarios-delete-alert {
+    display: grid;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid #f0cfc8;
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+}
+
+.usuarios-delete-alert strong {
+    color: #7e251a;
+    font-size: 1rem;
+}
+
+.usuarios-delete-alert span {
+    color: #5a3a35;
+    font-weight: 700;
+    word-break: break-word;
+}
+
+.form-delete-user {
+    display: block;
+}
+
+.modal-actions--danger {
+    margin-top: 14px;
+}
+
+.form-crear-usuario {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.form-crear-usuario .form-input {
+    width: 100%;
+    min-height: 42px;
+    border-radius: 10px;
+    border: 1px solid #d5e4d0;
+    background: #f9fcf8;
+    padding: 10px 12px;
+    outline: none;
+}
+
+.form-crear-usuario .form-input:focus {
+    border-color: #2f8a1b;
+    box-shadow: 0 0 0 3px rgba(57, 169, 0, 0.15);
+}
+
+.form-group {
+    grid-column: 1 / -1;
+    position: relative;
+}
+
+.form-group .form-input {
+    padding-right: 44px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    color: #5c6f5f;
+    font-size: 1.15rem;
+    cursor: pointer;
+}
+
+.form-crear-usuario select.form-input {
+    grid-column: 1 / -1;
+}
+
+.modal-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+}

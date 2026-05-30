@@ -1,0 +1,6 @@
+/* Modular index: panel_prestamos.css */
+@import url('./panel_prestamos/base-kpis.css');
+@import url('./panel_prestamos/filtros-lista.css');
+@import url('./panel_prestamos/modal-confirmacion.css');
+@import url('./panel_prestamos/responsive-dark-general.css');
+@import url('./panel_prestamos/dark-modal-confirmacion.css');

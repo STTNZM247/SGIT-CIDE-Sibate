@@ -1,10 +1,10 @@
 {% extends 'inventario/shared/base_login.html' %}
-{% load static %}
+{% load static assets %}
 
 {% block title %}Login | Inventario SENA - Sibate{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventario/login/css/login.css' %}">
+    <link rel="stylesheet" href="{% css_asset 'inventario/css/user/auth/login.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -73,5 +73,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'inventario/login/js/login.js' %}" defer></script>
+    <script src="{% static 'inventario/js/user/auth/login.js' %}" defer></script>
 {% endblock %}

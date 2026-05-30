@@ -1,0 +1,9 @@
+/* Modular index: dashboard.css */
+@import url('./dashboard/layout-filters.css');
+@import url('./dashboard/cards-lanes.css');
+@import url('./dashboard/stock-gap-modal.css');
+@import url('./dashboard/sena-review-evidence.css');
+@import url('./dashboard/trends-tower.css');
+@import url('./dashboard/audit-panel.css');
+@import url('./dashboard/responsive.css');
+@import url('./dashboard/dark.css');

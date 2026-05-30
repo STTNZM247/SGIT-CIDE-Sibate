@@ -1,10 +1,10 @@
 {% extends 'inventario/shared/base_login.html' %}
-{% load static %}
+{% load static assets %}
 
 {% block title %}Registro | Inventario SENA - Sibate{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventario/login/css/login.css' %}?v=20260421-registro-fix">
+    <link rel="stylesheet" href="{% css_asset 'inventario/css/user/auth/login.css' %}?v=20260421-registro-fix">
     <style>
         .login-form--wizard .registro-step-panel {
             display: none !important;
@@ -167,7 +167,7 @@
 
                     <div class="login-actions login-actions--split">
                         <button type="button" class="btn login-submit--back-circle" data-step-prev aria-label="Volver">
-                            <img src="{% static 'inventario/img/alt-arrow-left-svgrepo-com.svg' %}" alt="Volver" style="width:22px;height:22px;display:block;">
+                            <img src="{% static 'inventario/inventario/img/alt-arrow-left-svgrepo-com.svg' %}" alt="Volver" style="width:22px;height:22px;display:block;">
                         </button>
                         <button type="submit" class="btn btn--block login-submit">Registrarme</button>
                     </div>

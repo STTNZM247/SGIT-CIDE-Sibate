@@ -197,6 +197,14 @@ class Catalogo(models.Model):
     id_cat = models.AutoField(primary_key=True)
     nombre_catalogo = models.CharField(max_length=255, null=True, blank=True)
     descripcion = models.TextField(null=True, blank=True)
+    id_ubicacion_fk = models.ForeignKey(
+        'UbicacionProducto',
+        on_delete=models.SET_NULL,
+        db_column='id_ubicacion_fk',
+        null=True,
+        blank=True,
+        related_name='catalogos',
+    )
     fch_registro = models.DateTimeField(null=True, blank=True)
     fch_ult_act = models.DateTimeField(null=True, blank=True)
 
@@ -205,6 +213,20 @@ class Catalogo(models.Model):
 
     def __str__(self):
         return self.nombre_catalogo or f'Catalogo {self.id_cat}'
+
+
+class UbicacionProducto(models.Model):
+    id_ubicacion = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=120, unique=True)
+    fch_registro = models.DateTimeField(null=True, blank=True)
+    fch_ult_act = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'ubicacion_producto'
+        ordering = ['nombre']
+
+    def __str__(self):
+        return self.nombre
 
 
 class UsuCat(models.Model):

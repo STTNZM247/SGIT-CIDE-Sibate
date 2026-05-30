@@ -5,7 +5,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
 
 from .db_compat import usuario_missing_optional_fields, usuario_supports_tipo_doc
-from .models import Catalogo, Producto, Rol, Subcategoria, TipoDoc, Usuario
+from .models import Catalogo, Producto, Rol, Subcategoria, TipoDoc, UbicacionProducto, Usuario
 
 
 class CorreoAuthenticationForm(AuthenticationForm):
@@ -281,16 +281,31 @@ class CambioPasswordPerfilForm(forms.Form):
 
 
 class CatalogoForm(forms.ModelForm):
+    id_ubicacion_fk = forms.ModelChoiceField(
+        queryset=UbicacionProducto.objects.none(),
+        required=True,
+        label='Ubicación predeterminada',
+        widget=forms.Select(attrs={
+            'class': 'form-input form-select form-select-multiple subcat-native-select',
+        }),
+        empty_label='Selecciona una ubicación',
+    )
+
     def clean_nombre_catalogo(self):
         nombre = (self.cleaned_data.get('nombre_catalogo') or '').strip()
         return nombre.upper()
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['id_ubicacion_fk'].queryset = UbicacionProducto.objects.order_by('nombre')
+
     class Meta:
         model = Catalogo
-        fields = ['nombre_catalogo', 'descripcion']
+        fields = ['nombre_catalogo', 'descripcion', 'id_ubicacion_fk']
         labels = {
             'nombre_catalogo': 'Nombre del catálogo',
             'descripcion': 'Descripción',
+            'id_ubicacion_fk': 'Ubicación predeterminada',
         }
         widgets = {
             'nombre_catalogo': forms.TextInput(attrs={
@@ -339,16 +354,6 @@ class ProductoForm(forms.ModelForm):
             'size': '6',
         }),
     )
-    nuevas_subcategorias = forms.CharField(
-        required=False,
-        label='Nuevas subcategorías',
-        widget=forms.Textarea(attrs={
-            'class': 'form-input form-textarea',
-            'placeholder': 'Ej: Cajas y tableros / Accesorios tableros / Bornera 4mm',
-            'rows': 2,
-        }),
-        help_text='Separa por coma, slash (/) o salto de línea.',
-    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -357,12 +362,28 @@ class ProductoForm(forms.ModelForm):
             'subcategoria_padre_id',
             'nombre_subcategoria',
         )
+        self.fields['ubicacion'].widget.attrs['readonly'] = 'readonly'
+        self.fields['ubicacion'].widget.attrs['title'] = 'Esta ubicación se completa automáticamente desde el catálogo.'
 
     def clean(self):
         cleaned_data = super().clean()
         tipo_bien = cleaned_data.get('tipo_bien')
+        catalogo = cleaned_data.get('id_cat_fk')
+        subcategorias = list(cleaned_data.get('subcategorias') or [])
+        ubicacion = (cleaned_data.get('ubicacion') or '').strip()
         placa = (cleaned_data.get('numero_placa') or '').strip()
         cuentadante = (cleaned_data.get('cuentadante') or '').strip()
+
+        if catalogo and catalogo.id_ubicacion_fk:
+            cleaned_data['ubicacion'] = catalogo.id_ubicacion_fk.nombre
+        elif not ubicacion:
+            self.add_error('ubicacion', 'El catálogo seleccionado no tiene ubicación predeterminada.')
+
+        if catalogo and subcategorias:
+            filtradas = [s for s in subcategorias if s.id_cat_fk_id == catalogo.id_cat]
+            if len(filtradas) != len(subcategorias):
+                self.add_error('subcategorias', 'Solo puedes seleccionar subcategorías del catálogo elegido.')
+            cleaned_data['subcategorias'] = filtradas
 
         if tipo_bien == 'devolutivo':
             if not placa:
@@ -375,24 +396,6 @@ class ProductoForm(forms.ModelForm):
 
         return cleaned_data
 
-    @staticmethod
-    def _parse_subcategorias_text(raw_text):
-        text = (raw_text or '').replace('\n', ',').replace(';', ',')
-        items = []
-        for part in text.split(','):
-            value = part.strip()
-            if value:
-                items.append(value)
-        unique = []
-        seen = set()
-        for item in items:
-            key = item.lower()
-            if key in seen:
-                continue
-            seen.add(key)
-            unique.append(item)
-        return unique
-
     def save(self, commit=True):
         producto = super().save(commit=commit)
 
@@ -400,16 +403,6 @@ class ProductoForm(forms.ModelForm):
             return producto
 
         seleccionadas = list(self.cleaned_data.get('subcategorias') or [])
-        nuevas_raw = self.cleaned_data.get('nuevas_subcategorias')
-        nuevas = self._parse_subcategorias_text(nuevas_raw)
-        catalogo = self.cleaned_data.get('id_cat_fk')
-
-        if catalogo and nuevas:
-            for nombre in nuevas:
-                ruta = [segment.strip() for segment in nombre.split('/') if segment.strip()]
-                subcat = Subcategoria.ensure_path(catalogo, ruta)
-                seleccionadas.append(subcat)
-
         if seleccionadas:
             producto.subcategorias.set(list({s.pk: s for s in seleccionadas}.values()))
         else:
@@ -459,7 +452,7 @@ class ProductoForm(forms.ModelForm):
             }),
             'ubicacion': forms.TextInput(attrs={
                 'class': 'form-input',
-                'placeholder': 'Ej: Estante B2 - Zona eléctrica',
+                'placeholder': 'Se completa al seleccionar el catálogo',
                 'autocomplete': 'off',
             }),
             'tipo_bien': forms.Select(attrs={
@@ -473,6 +466,28 @@ class ProductoForm(forms.ModelForm):
             'cuentadante': forms.TextInput(attrs={
                 'class': 'form-input',
                 'placeholder': 'Nombre del responsable',
+                'autocomplete': 'off',
+            }),
+        }
+
+
+class UbicacionProductoForm(forms.ModelForm):
+    def clean_nombre(self):
+        nombre = (self.cleaned_data.get('nombre') or '').strip().upper()
+        if not nombre:
+            raise forms.ValidationError('Debes indicar el nombre de la ubicación.')
+        return nombre
+
+    class Meta:
+        model = UbicacionProducto
+        fields = ['nombre']
+        labels = {
+            'nombre': 'Nombre de la ubicación',
+        }
+        widgets = {
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Ej: Bodega principal',
                 'autocomplete': 'off',
             }),
         }

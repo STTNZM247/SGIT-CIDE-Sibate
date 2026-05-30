@@ -1,16 +1,16 @@
-{% load static %}
+{% load static assets %}
 <!doctype html>
 <html lang="es">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Inventario SENA - Sibate{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="{% static 'inventario/img/Logo SENA.svg' %}?v=2">
-    <link rel="shortcut icon" href="{% static 'inventario/img/Logo SENA.svg' %}?v=2">
+    <link rel="icon" type="image/svg+xml" href="{% static 'inventario/inventario/img/Logo SENA.svg' %}?v=2">
+    <link rel="shortcut icon" href="{% static 'inventario/inventario/img/Logo SENA.svg' %}?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'inventario/shared/css/base.css' %}">
+    <link rel="stylesheet" href="{% css_asset 'inventario/css/inventario/shared/base.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>

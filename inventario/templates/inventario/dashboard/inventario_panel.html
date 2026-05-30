@@ -1,14 +1,14 @@
 {% extends 'inventario/shared/base.html' %}
-{% load static %}
+{% load static assets %}
 
 {% block title %}Inventario — Panel de productos{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventario/dashboard/css/dashboard.css' %}" data-page-style="true">
-    <link rel="stylesheet" href="{% static 'inventario/css/catalogo/catalogo.css' %}" data-page-style="true">
-    <link rel="stylesheet" href="{% static 'inventario/dashboard/css/temu_inventory.css' %}" data-page-style="true">
-    <link rel="stylesheet" href="{% static 'inventario/dashboard/css/temu_searchbar.css' %}" data-page-style="true">
-    <link rel="stylesheet" href="{% static 'inventario/dashboard/css/product_detail_quick.css' %}" data-page-style="true">
+    <link rel="stylesheet" href="{% css_asset 'inventario/css/dashboard/dashboard.css' %}" data-page-style="true">
+    <link rel="stylesheet" href="{% css_asset 'inventario/css/inventario/catalogo/catalogo.css' %}" data-page-style="true">
+    <link rel="stylesheet" href="{% css_asset 'inventario/css/dashboard/inventario_grid.css' %}" data-page-style="true">
+    <link rel="stylesheet" href="{% css_asset 'inventario/css/dashboard/inventario_searchbar.css' %}" data-page-style="true">
+    <link rel="stylesheet" href="{% css_asset 'inventario/css/dashboard/product_detail_quick.css' %}" data-page-style="true">
     <style data-page-style="true">
     .mini-carousel{position:relative;width:100%;overflow:hidden;border-radius:10px;}
     .mini-carousel__track{display:flex;transition:transform .32s ease;}
@@ -20,10 +20,10 @@
     .mini-carousel__dots{display:flex;justify-content:center;gap:5px;margin-top:8px;flex-wrap:wrap;}
     .mini-carousel__dot{width:7px;height:7px;border-radius:50%;background:var(--color-border,#e5e7eb);border:none;cursor:pointer;padding:0;transition:background .2s;flex-shrink:0;}
     .mini-carousel__dot.is-active{background:var(--color-primary,#39b54a);}
-    .temu-card__trace{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
-    .temu-card__trace-chip{display:inline-flex;align-items:center;max-width:100%;padding:4px 8px;border-radius:999px;background:rgba(57,169,0,.10);color:#1e5f2a;font-size:.72rem;font-weight:600;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none;transition:background .14s ease, box-shadow .14s ease, transform .14s ease;}
-    .temu-card__trace-chip:hover{background:rgba(57,169,0,.16);box-shadow:0 0 0 2px rgba(57,169,0,.12);transform:translateY(-1px);}
-    .temu-card__trace-empty{margin:10px 0 0;color:#7b857f;font-size:.76rem;}
+    .inventario-card__trace{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+    .inventario-card__trace-chip{display:inline-flex;align-items:center;max-width:100%;padding:4px 8px;border-radius:999px;background:rgba(57,169,0,.10);color:#1e5f2a;font-size:.72rem;font-weight:600;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none;transition:background .14s ease, box-shadow .14s ease, transform .14s ease;}
+    .inventario-card__trace-chip:hover{background:rgba(57,169,0,.16);box-shadow:0 0 0 2px rgba(57,169,0,.12);transform:translateY(-1px);}
+    .inventario-card__trace-empty{margin:10px 0 0;color:#7b857f;font-size:.76rem;}
     .product-detail-routes{display:flex;flex-wrap:wrap;gap:8px;}
     .product-route-chip{display:inline-flex;align-items:center;max-width:100%;padding:8px 10px;border-radius:999px;background:#eef8ef;color:#1e5f2a;font-size:.78rem;font-weight:700;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none;transition:background .14s ease, box-shadow .14s ease, transform .14s ease;}
     .product-route-chip:hover{background:#e3f3e5;box-shadow:0 0 0 2px rgba(57,169,0,.12);transform:translateY(-1px);}
@@ -37,7 +37,7 @@
 
 {% block header_center %}
 <div class="inventario-toolbar">
-    <form class="temu-searchbar" method="get" action="{% url 'inventario_panel' %}">
+    <form class="inventario-searchbar" method="get" action="{% url 'inventario_panel' %}">
         <input type="search" name="q" value="{{ q }}" placeholder="Buscar producto" aria-label="Buscar en inventario">
         {% if categoria_activa %}<input type="hidden" name="categoria" value="{{ categoria_activa }}">{% endif %}
         {% if bajo_stock %}<input type="hidden" name="bajo_stock" value="1">{% endif %}
@@ -83,35 +83,35 @@
 {% endblock %}
 
 {% block content %}
-<section class="temu-inventory-grid">
+<section class="inventario-inventory-grid">
 
     {% if productos %}
-    <div class="temu-grid">
+    <div class="inventario-grid">
         {% for p in productos %}
-        <button type="button" class="temu-card temu-card-btn" data-open-modal="producto-{{ p.id_prod }}" title="Ver detalles de {{ p.nombre_producto }}">
-            <span class="temu-card__media">
+        <button type="button" class="inventario-card inventario-card-btn" data-open-modal="producto-{{ p.id_prod }}" title="Ver detalles de {{ p.nombre_producto }}">
+            <span class="inventario-card__media">
                 {% if p.fot_prod %}
                 <img src="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}" loading="lazy" decoding="async">
                 {% else %}
-                <span class="temu-card__placeholder">
+                <span class="inventario-card__placeholder">
                     <ion-icon name="image-outline"></ion-icon>
                 </span>
                 {% endif %}
             </span>
-            <span class="temu-card__body">
-                <h3 class="temu-card__name">{{ p.nombre_producto }}</h3>
-                <p class="temu-card__cat">{{ p.id_cat_fk.nombre_catalogo }}</p>
+            <span class="inventario-card__body">
+                <h3 class="inventario-card__name">{{ p.nombre_producto }}</h3>
+                <p class="inventario-card__cat">{{ p.id_cat_fk.nombre_catalogo }}</p>
                 {% if p.subcategoria_trazas %}
-                <div class="temu-card__trace" aria-label="Trazabilidad en subcategorías">
+                <div class="inventario-card__trace" aria-label="Trazabilidad en subcategorías">
                     {% for trace in p.subcategoria_trazas %}
-                    <a class="temu-card__trace-chip" href="{% url 'productos_catalogo' p.id_cat_fk.id_cat %}?subcat={{ trace.id }}" title="Ir a {{ trace.ruta }}">{{ trace.ruta }}</a>
+                    <a class="inventario-card__trace-chip" href="{% url 'productos_catalogo' p.id_cat_fk.id_cat %}?subcat={{ trace.id }}" title="Ir a {{ trace.ruta }}">{{ trace.ruta }}</a>
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="temu-card__trace-empty">Raíz del catálogo</p>
+                <p class="inventario-card__trace-empty">Raíz del catálogo</p>
                 {% endif %}
-                <p class="temu-card__desc">{% if p.descripcion %}{{ p.descripcion|truncatechars:70 }}{% else %}Sin descripción registrada.{% endif %}</p>
-                <span class="temu-card__meta">
+                <p class="inventario-card__desc">{% if p.descripcion %}{{ p.descripcion|truncatechars:70 }}{% else %}Sin descripción registrada.{% endif %}</p>
+                <span class="inventario-card__meta">
                     <span><ion-icon name="archive-outline"></ion-icon> Stock: {{ p.stock_actual|default:'0' }}</span>
                     <span><ion-icon name="layers-outline"></ion-icon> Cantidad: {{ p.cantidad_actual|default:'0' }}</span>
                 </span>
@@ -197,7 +197,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'inventario/dashboard/js/dashboard.js' %}" defer></script>
+    <script src="{% static 'inventario/js/inventario/dashboard/dashboard.js' %}" defer></script>
     <script data-page-script="true">
     (() => {
         // Inicializar custom select de catálogo (re-init en navegación PJAX)

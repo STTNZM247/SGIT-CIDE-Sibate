@@ -1,10 +1,10 @@
 {% extends 'inventario/shared/base.html' %}
-{% load static %}
+{% load static assets %}
 
 {% block title %}Mi Perfil{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'inventario/css/usuario/perfil.css' %}" data-page-style="true">
+<link rel="stylesheet" href="{% css_asset 'inventario/css/user/perfil/perfil.css' %}" data-page-style="true">
 <style data-page-style="true">
 /* ── Preferencias de aspecto ──────────────────────────── */
 .perfil-aspecto-card {
@@ -568,7 +568,7 @@ html[data-theme="dark"] #perfil-cover-trigger * {
       var ctx = canvas.getContext('2d');
       var olaImg = new Image();
       olaImg.crossOrigin = 'anonymous';
-      olaImg.src = "{% static 'inventario/img/5623406.jpg' %}";
+      olaImg.src = "{% static 'inventario/inventario/img/5623406.jpg' %}";
       olaImg.onload = function () {
         ctx.fillStyle = color;
         ctx.fillRect(0, 0, 1200, 400);

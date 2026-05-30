@@ -1,0 +1,103 @@
+html[data-theme="dark"] .prestamo-modal-confirm__title,
+html[data-theme="dark"] .prestamo-modal-confirm__text strong {
+  color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .prestamo-modal-confirm__text,
+html[data-theme="dark"] .prestamo-modal-confirm__field label {
+  color: #91a891 !important;
+}
+
+html[data-theme="dark"] .prestamo-modal-confirm__field input {
+  background: #161e16 !important;
+  border-color: #253025 !important;
+  color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .prestamo-modal-confirm__field input:focus {
+  border-color: #42a5f5 !important;
+  box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.18) !important;
+}
+
+html[data-theme="dark"] .prestamo-modal-confirm__btn--back {
+  background: #161e16 !important;
+  color: #c8dcc8 !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .prestamo-modal-confirm__btn--confirm {
+  background: #1f6fda !important;
+  border-color: #1758ae !important;
+}
+
+html[data-theme="dark"] .prestamos-empty {
+  background: linear-gradient(180deg, #111611, #0f140f) !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .prestamos-empty__icon {
+  background: #182018 !important;
+  color: #7dd87d !important;
+}
+
+html[data-theme="dark"] .prestamos-empty h2 {
+  color: #e2ede2 !important;
+}
+
+html[data-theme="dark"] .prestamos-empty p {
+  color: #91a891 !important;
+}
+
+html[data-theme="dark"] .prestamo-productos-toggle {
+  background: #141b14 !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .prestamo-productos-toggle summary {
+  color: #c8dcc8 !important;
+}
+
+html[data-theme="dark"] .prestamo-productos-summary-meta em {
+  color: #91a891 !important;
+}
+
+html[data-theme="dark"] .prestamo-productos-summary-meta strong {
+  background: #182018 !important;
+  border-color: #253025 !important;
+  color: #8fe0a2 !important;
+}
+
+html[data-theme="dark"] .prestamo-producto-item {
+  background: #111611 !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .prestamo-producto-item__qty {
+  background: #182018 !important;
+  color: #8fe0a2 !important;
+}
+
+@media (max-width: 860px) {
+  html[data-theme="dark"] .prestamo-row__usuario,
+  html[data-theme="dark"] .prestamo-row__actions {
+    border-color: #253025 !important;
+  }
+}
+
+@media (max-width: 580px) {
+  html[data-theme="dark"] .prestamo-row > div {
+    border-bottom-color: #253025 !important;
+  }
+}
+
+/* Fondo de los pills de meta (catálogo, devolver, etc.) */
+html[data-theme="dark"] .prestamo-producto-item__meta span {
+  background: #1e2b1e !important;
+  color: #91a891 !important;
+}
+
+/* Colores de fecha en dark mode */
+html[data-theme="dark"] .prestamo-producto-item__fecha--ok      { color: #7dd87d !important; }
+html[data-theme="dark"] .prestamo-producto-item__fecha--vencido  { color: #ff9a9a !important; }
+html[data-theme="dark"] .prestamo-producto-item__fecha--none     { color: #4a6a4a !important; }
+html[data-theme="dark"] .prestamo-producto-item__fecha--devuelto { color: #8fe0a2 !important; }

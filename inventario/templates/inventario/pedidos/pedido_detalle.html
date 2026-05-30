@@ -1,8 +1,8 @@
 ﻿{% extends 'inventario/shared/base.html' %}
-{% load static %}
+{% load static assets %}
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventario/shared/css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'inventario/css/pedidos/panel_pedidos.css' %}" data-page-style="true">
+    <link rel="stylesheet" href="{% css_asset 'inventario/css/inventario/shared/base.css' %}">
+    <link rel="stylesheet" href="{% css_asset 'inventario/css/inventario/pedidos/panel_pedidos.css' %}" data-page-style="true">
 {% endblock %}
 {% block title %}Detalle Pedido #{{ pedido.id_pedido }} | Inventario SENA{% endblock %}
 {% block content %}
@@ -196,25 +196,34 @@
                 </div>
 
                 {% elif pedido.estado == 'esperando entrega' %}
-                <div class="detalle-codigo-layout">
-                    <div class="pedido-codigo-box">
-                        <p><ion-icon name="key-outline"></ion-icon> Código de entrega activo</p>
-                        <strong>{{ pedido.codigo_entrega|default:'------' }}</strong>
-                        <small>Vence: {{ pedido.codigo_expira_en|date:'d/m/Y H:i' }}</small>
+                <form method="post" action="{% url 'pedido_confirmar_entrega_codigo' pedido.id_pedido %}" class="pedido-codigo-form" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="detalle-codigo-layout">
+                        <div class="pedido-codigo-box">
+                            <p><ion-icon name="key-outline"></ion-icon> Código de entrega activo</p>
+                            <strong>{{ pedido.codigo_entrega|default:'------' }}</strong>
+                            <small>Vence: {{ pedido.codigo_expira_en|date:'d/m/Y h:i A' }}</small>
+                        </div>
+
+                        <div class="pedido-codigo-input-box">
+                            <label for="codigo_entrega"><ion-icon name="create-outline"></ion-icon> Código entregado por el usuario</label>
+                            <input id="codigo_entrega" name="codigo_entrega" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" minlength="6" placeholder="000000" required>
+                        </div>
                     </div>
 
-                    <form method="post" action="{% url 'pedido_confirmar_entrega_codigo' pedido.id_pedido %}" class="pedido-codigo-form" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <label for="codigo_entrega"><ion-icon name="keypad-outline"></ion-icon> Código entregado por el usuario</label>
-                        <input id="codigo_entrega" name="codigo_entrega" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" minlength="6" placeholder="000000" required>
-                        <label for="evidencias_entrega"><ion-icon name="camera-outline"></ion-icon> Fotos de evidencia <span>(opcional, máx. 8)</span></label>
+                    <div class="pedido-evidencias-upload">
+                        <label for="evidencias_entrega"><ion-icon name="camera-outline"></ion-icon> Fotos de evidencia <span>(máximo 8)</span></label>
                         <input id="evidencias_entrega" name="evidencias_entrega" type="file" accept="image/*" multiple>
-                        <button type="submit" class="pedido-action-btn pedido-action-btn--deliver">
-                            <ion-icon name="bag-check-outline"></ion-icon>
-                            Confirmar entrega
-                        </button>
-                    </form>
-                </div>
+                        <small class="pedido-evidencias-upload__help" id="evidenciasHint">En celular puedes tomar foto o elegir desde galería.</small>
+                        <div class="pedido-evidencias-preview" id="evidenciasPreview" hidden></div>
+                    </div>
+
+                    <button type="submit" class="pedido-action-btn pedido-action-btn--deliver">
+                        <ion-icon name="bag-check-outline"></ion-icon>
+                        Confirmar entrega
+                    </button>
+                </form>
 
                 {% else %}
                 <span class="pedido-action-info">
@@ -374,8 +383,88 @@
     var motivoNoDispInput = document.getElementById('motivoNoDisponibleInput');
     var tipoSolicitudHintBtn = document.getElementById('tipoSolicitudHintBtn');
     var tipoSolicitudHint = document.getElementById('tipoSolicitudHint');
+    var evidenciasInput = document.getElementById('evidencias_entrega');
+    var evidenciasPreview = document.getElementById('evidenciasPreview');
+    var evidenciasHint = document.getElementById('evidenciasHint');
     var sidebarList = document.querySelector('.detalle-sidebar__list');
     if (!modal) return;
+
+    var evidenciasObjectUrls = [];
+    var evidenciasFiles = [];
+    var supportsDataTransfer = (typeof DataTransfer !== 'undefined');
+
+    function setEvidenciasHint(text) {
+        if (evidenciasHint) {
+            evidenciasHint.textContent = text;
+        }
+    }
+
+    function fileKey(file) {
+        return [file.name, file.size, file.lastModified].join('::');
+    }
+
+    function syncEvidenciasInput() {
+        if (!evidenciasInput || !supportsDataTransfer) return;
+        var dt = new DataTransfer();
+        evidenciasFiles.forEach(function (file) {
+            dt.items.add(file);
+        });
+        evidenciasInput.files = dt.files;
+    }
+
+    function clearEvidenciasPreview() {
+        if (!evidenciasPreview) return;
+        evidenciasObjectUrls.forEach(function (url) {
+            URL.revokeObjectURL(url);
+        });
+        evidenciasObjectUrls = [];
+        evidenciasPreview.innerHTML = '';
+        evidenciasPreview.hidden = true;
+    }
+
+    function renderEvidenciasPreview() {
+        if (!evidenciasPreview) return;
+        clearEvidenciasPreview();
+        if (!evidenciasFiles.length) {
+            setEvidenciasHint('En celular puedes tomar foto o elegir desde galería.');
+            return;
+        }
+
+        evidenciasPreview.hidden = false;
+        evidenciasFiles.forEach(function (file, index) {
+            if (!file.type || !file.type.startsWith('image/')) return;
+            var card = document.createElement('div');
+            card.className = 'pedido-evidencia-preview-item';
+
+            var img = document.createElement('img');
+            img.alt = 'Evidencia ' + (index + 1);
+            var url = URL.createObjectURL(file);
+            evidenciasObjectUrls.push(url);
+            img.src = url;
+
+            var badge = document.createElement('span');
+            badge.className = 'pedido-evidencia-preview-item__num';
+            badge.textContent = String(index + 1);
+
+            var removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'pedido-evidencia-preview-item__remove';
+            removeBtn.setAttribute('aria-label', 'Quitar evidencia ' + (index + 1));
+            removeBtn.textContent = '×';
+            removeBtn.addEventListener('click', function () {
+                evidenciasFiles.splice(index, 1);
+                syncEvidenciasInput();
+                renderEvidenciasPreview();
+            });
+
+            card.appendChild(img);
+            card.appendChild(badge);
+            card.appendChild(removeBtn);
+            evidenciasPreview.appendChild(card);
+        });
+
+        setEvidenciasHint('Has seleccionado ' + evidenciasFiles.length + ' de 8 fotos.');
+    }
 
     function openProdModal(btn) {
         var d = btn.dataset;
@@ -476,6 +565,51 @@
                 tipoSolicitudHintBtn.setAttribute('aria-expanded', 'false');
                 tipoSolicitudHint.dataset.open = 'false';
             }
+        });
+    }
+
+    if (evidenciasInput) {
+        evidenciasInput.addEventListener('change', function () {
+            var incoming = Array.from(evidenciasInput.files || []).filter(function (file) {
+                return file.type && file.type.startsWith('image/');
+            });
+
+            if (!incoming.length) {
+                syncEvidenciasInput();
+                renderEvidenciasPreview();
+                return;
+            }
+
+            if (!supportsDataTransfer) {
+                evidenciasFiles = incoming.slice(0, 8);
+                if (incoming.length > 8) {
+                    setEvidenciasHint('Se tomaron solo las primeras 8 fotos.');
+                } else {
+                    setEvidenciasHint('Tu navegador no permite acumular selecciones; vuelve a elegir todas si necesitas cambiar.');
+                }
+                renderEvidenciasPreview();
+                return;
+            }
+
+            var seen = {};
+            evidenciasFiles.forEach(function (file) {
+                seen[fileKey(file)] = true;
+            });
+
+            incoming.forEach(function (file) {
+                var key = fileKey(file);
+                if (evidenciasFiles.length < 8 && !seen[key]) {
+                    evidenciasFiles.push(file);
+                    seen[key] = true;
+                }
+            });
+
+            if (evidenciasFiles.length >= 8) {
+                setEvidenciasHint('Límite alcanzado: máximo 8 fotos. Quita alguna con la X para agregar otra.');
+            }
+
+            syncEvidenciasInput();
+            renderEvidenciasPreview();
         });
     }
 

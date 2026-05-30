@@ -1,0 +1,305 @@
+    align-items: center;
+    gap: .75rem;
+    padding: 4rem 1rem;
+    color: #aaa;
+}
+
+.catalogo-empty ion-icon {
+    font-size: 3.5rem;
+}
+
+.catalogo-empty p {
+    font-size: .95rem;
+    margin: 0;
+}
+
+
+/* --- Hero ------------------------------------------------ */
+.catalogo-hero {
+    padding: 2.5rem 1rem 1.5rem;
+    text-align: center;
+}
+
+.catalogo-hero__title {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 800;
+    color: #1a1a2e;
+    margin: 0 0 .4rem;
+    letter-spacing: -.5px;
+}
+
+.catalogo-hero__sub {
+    font-size: .95rem;
+    color: #555;
+    margin: 0;
+}
+
+/* --- Sección carrusel ------------------------------------ */
+.carousel-section {
+    padding: 1rem 0 2.5rem;
+}
+
+.carousel-section__label {
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #39A900;
+    margin: 0 0 1.2rem 1rem;
+}
+
+/* --- Contenedor ------------------------------------------ */
+/*  Técnica: dos .grupo idénticos + translate: -100%        */
+.carousel {
+    display: flex;
+    overflow: hidden;           /* esconde lo que sale por los lados  */
+    width: 100%;
+    user-select: none;
+    mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 8%,
+        black 92%,
+        transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 8%,
+        black 92%,
+        transparent 100%
+    );
+}
+
+/* Ocultar scrollbar por si acaso */
+.carousel::-webkit-scrollbar { display: none; }
+
+/* --- Grupo (se duplica para el loop) --------------------- */
+.grupo {
+    display: flex;
+    align-items: stretch;
+    gap: 1.2em;
+    padding: 1rem .5rem;
+    flex-shrink: 0;             /* no encojerse, ocupar su ancho real  */
+    animation: spin-carousel 18s infinite linear;
+}
+
+/* Pausa al pasar el ratón sobre el carrusel */
+.carousel:hover .grupo {
+    animation-play-state: paused;
+}
+
+/* --- Keyframe: mover el grupo su propio ancho a la izq.-- */
+@keyframes spin-carousel {
+    from { translate: 0; }
+    to   { translate: -100%; }
+}
+
+/* --- Tarjeta --------------------------------------------- */
+.card {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    flex-shrink: 0;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+    overflow: hidden;
+    transition: box-shadow .25s, translate .25s;
+    cursor: default;
+}
+
+.card:hover {
+    box-shadow: 0 6px 24px rgba(57, 169, 0, .18);
+    translate: 0 -4px;
+}
+
+/* Área superior (placeholder de imagen / icono) */
+.card__thumb {
+    height: 130px;
+    background: linear-gradient(135deg, #39A900 0%, #2d8600 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 3rem;
+}
+
+/* Cuerpo de la tarjeta */
+.card__body {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    padding: .85rem 1rem 1rem;
+}
+
+.card__name {
+    font-size: .92rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    white-space: normal;
+    line-height: 1.24;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: normal;
+    overflow-wrap: break-word;
+    text-wrap: pretty;
+}
+
+.card__count {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .78rem;
+    color: #777;
+}
+
+.card__count ion-icon {
+    font-size: .85rem;
+    color: #39A900;
+    flex-shrink: 0;
+}
+
+/* --- Estado vacío --------------------------------------- */
+.catalogo-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .75rem;
+    padding: 4rem 1rem;
+    color: #aaa;
+}
+
+.catalogo-empty ion-icon {
+    font-size: 3.5rem;
+}
+
+.catalogo-empty p {
+    font-size: .95rem;
+    margin: 0;
+}
+
+/* ----------------------------------------------
+   DARK MODE - Catalogo / Productos
+   ---------------------------------------------- */
+html[data-theme="dark"] .cat-header__title,
+html[data-theme="dark"] .catalogo-hero__title { color: #e2ede2 !important; }
+html[data-theme="dark"] .cat-header__sub,
+html[data-theme="dark"] .catalogo-hero__sub   { color: #7a9a7a !important; }
+html[data-theme="dark"] .stat-chip { background: #161e16 !important; border-color: #253025 !important; color: #c4d8c4 !important; }
+html[data-theme="dark"] .stat-chip ion-icon { color: #42a5f5 !important; }
+html[data-theme="dark"] .cat-btn--secondary { background: #0d2538 !important; color: #42a5f5 !important; border-color: #1a3a5c !important; }
+html[data-theme="dark"] .cat-btn--ghost { background: #161e16 !important; color: #c4d8c4 !important; border-color: #253025 !important; }
+html[data-theme="dark"] .cat-btn--danger { background: #1c0909 !important; color: #ef9a9a !important; border-color: #4a1010 !important; }
+html[data-theme="dark"] .cat-btn-mini { background: #0d2538 !important; color: #42a5f5 !important; border-color: #1a3a5c !important; }
+html[data-theme="dark"] .cat-btn-mini--view { background: #0d1e38 !important; color: #90caf9 !important; border-color: #1a3060 !important; }
+html[data-theme="dark"] .btn--outline { background: transparent !important; color: #42a5f5 !important; border-color: #42a5f5 !important; }
+html[data-theme="dark"] .cat-card, html[data-theme="dark"] .card { background: #111611 !important; border-color: #253025 !important; box-shadow: 0 2px 12px rgba(0,0,0,0.35) !important; }
+html[data-theme="dark"] .cat-card:hover, html[data-theme="dark"] .card:hover { box-shadow: 0 6px 24px rgba(66,165,245,0.14) !important; }
+html[data-theme="dark"] .cat-card__name, html[data-theme="dark"] .card__name { color: #e2ede2 !important; }
+html[data-theme="dark"] .cat-card__desc { color: #7a9a7a !important; }
+html[data-theme="dark"] .cat-card__footer { border-top-color: #253025 !important; }
+html[data-theme="dark"] .cat-card__count, html[data-theme="dark"] .card__count { color: #7a9a7a !important; }
+html[data-theme="dark"] .cat-card__count ion-icon, html[data-theme="dark"] .card__count ion-icon { color: #42a5f5 !important; }
+html[data-theme="dark"] .product-accordion { background: #111611 !important; border-color: #253025 !important; }
+html[data-theme="dark"] .product-accordion[open] { border-color: #1a3a5c !important; box-shadow: 0 6px 24px rgba(66,165,245,0.1) !important; }
+html[data-theme="dark"] .product-accordion__chips .cat-card__count { background: #0d2538 !important; border-color: #1a3a5c !important; }
+html[data-theme="dark"] .product-accordion__body { border-top-color: #253025 !important; }
+html[data-theme="dark"] .product-accordion__arrow { color: #7a9aaa !important; }
+html[data-theme="dark"] .product-detail-block { background: #161e16 !important; border-color: #253025 !important; }
+html[data-theme="dark"] .product-detail-label { color: #7a9aaa !important; }
+html[data-theme="dark"] .product-detail-value { color: #e2ede2 !important; }
+html[data-theme="dark"] .product-tile { background: #111611 !important; border-color: #253025 !important; }
+html[data-theme="dark"] .product-tile__chips .cat-card__count { background: #0d2538 !important; border-color: #1a3a5c !important; }
+html[data-theme="dark"] .product-tile__delete { background: #1c0909 !important; border-color: #4a1010 !important; color: #ef9a9a !important; }
+html[data-theme="dark"] .product-modal { background: #111611 !important; border-color: #253025 !important; }
+html[data-theme="dark"] .product-modal__header { background: #111611 !important; border-bottom-color: #253025 !important; }
+html[data-theme="dark"] .product-modal__title { color: #e2ede2 !important; }
+html[data-theme="dark"] .product-modal__close { background: #161e16 !important; color: #c4d8c4 !important; }
+html[data-theme="dark"] .product-modal__img, html[data-theme="dark"] .product-modal__placeholder { background: #161e16 !important; border-color: #253025 !important; }
+html[data-theme="dark"] .product-modal__content { background: #111611 !important; }
+html[data-theme="dark"] .product-modal__danger { border-top-color: #253025 !important; }
+html[data-theme="dark"] .modal { background: #111611 !important; }
+html[data-theme="dark"] .modal__header { background: #111611 !important; border-bottom-color: #253025 !important; }
+html[data-theme="dark"] .modal__title { color: #e2ede2 !important; }
+html[data-theme="dark"] .modal__close { color: #7a9a7a !important; }
+html[data-theme="dark"] .modal__close:hover { background: #161e16 !important; color: #e2ede2 !important; }
+html[data-theme="dark"] .modal__actions { border-top-color: #253025 !important; }
+html[data-theme="dark"] .modal__icon { background: #0d2538 !important; color: #42a5f5 !important; }
+html[data-theme="dark"] .mf-label { color: #7aaecc !important; }
+html[data-theme="dark"] .mf-hint  { color: #4a6a7a !important; }
+html[data-theme="dark"] .modal__form input[type="text"],
+html[data-theme="dark"] .modal__form input[type="email"],
+html[data-theme="dark"] .modal__form textarea,
+html[data-theme="dark"] .modal__form select,
+html[data-theme="dark"] .form-input,
+html[data-theme="dark"] .form-textarea,
+html[data-theme="dark"] .form-select { background: #0d1e2e !important; border-color: #1a3a5c !important; color: #d0e8ff !important; }
+html[data-theme="dark"] .modal__form input:focus,
+html[data-theme="dark"] .modal__form textarea:focus,
+html[data-theme="dark"] .modal__form select:focus { border-color: #42a5f5 !important; box-shadow: 0 0 0 3px rgba(66,165,245,0.18) !important; }
+html[data-theme="dark"] .file-drop, html[data-theme="dark"] .file-upload-zone { background: #0d1e0d !important; border-color: #253025 !important; }
+html[data-theme="dark"] .file-drop:hover, html[data-theme="dark"] .file-upload-zone:hover { background: #0d2538 !important; border-color: #42a5f5 !important; }
+html[data-theme="dark"] .file-drop__text, html[data-theme="dark"] .file-upload-zone__text { color: #c4d8c4 !important; }
+html[data-theme="dark"] .file-drop__hint, html[data-theme="dark"] .file-upload-zone__hint { color: #4a6a4a !important; }
+html[data-theme="dark"] .registro-panel__inner { background: #111611 !important; box-shadow: 0 2px 16px rgba(0,0,0,0.4) !important; }
+html[data-theme="dark"] .registro-panel__title { color: #e2ede2 !important; }
+html[data-theme="dark"] .registro-panel__title ion-icon { color: #42a5f5 !important; }
+html[data-theme="dark"] .registro-panel__close { color: #7a9a7a !important; }
+html[data-theme="dark"] .form-label { color: #7aaecc !important; }
+html[data-theme="dark"] .carousel-section__label { color: #42a5f5 !important; }
+html[data-theme="dark"] .flash--success, html[data-theme="dark"] .alert--success { background: #0d1e0d !important; color: #80cbc4 !important; }
+html[data-theme="dark"] .flash--error, html[data-theme="dark"] .alert--error { background: #1c0909 !important; color: #ef9a9a !important; }
+html[data-theme="dark"] .cat-empty__inner { color: #4a6a4a !important; }
+html[data-theme="dark"] .cat-empty__inner h2 { color: #c4d8c4 !important; }
+html[data-theme="dark"] .catalogo-empty { color: #4a6a4a !important; }
+html[data-theme="dark"] .product-edit-shell {
+    background: linear-gradient(180deg, #111611 0%, #0f140f 100%) !important;
+    border-color: #253025 !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,.28) !important;
+}
+html[data-theme="dark"] .product-edit-shell__header {
+    border-bottom-color: #253025 !important;
+    background: radial-gradient(circle at top right, rgba(66,165,245,.12), transparent 0 30%), linear-gradient(180deg, #121912 0%, #111611 100%) !important;
+}
+html[data-theme="dark"] .product-edit-shell__eyebrow {
+    color: #7dd87d !important;
+}
+html[data-theme="dark"] .product-edit-shell__title {
+    color: #e2ede2 !important;
+}
+html[data-theme="dark"] .product-edit-shell__subtitle {
+    color: #91a891 !important;
+}
+html[data-theme="dark"] .product-edit-card {
+    background: #111611 !important;
+    border-color: #253025 !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.16) !important;
+}
+html[data-theme="dark"] .product-edit-card__head h2 {
+    color: #e2ede2 !important;
+}
+html[data-theme="dark"] .product-edit-preview {
+    background: #161e16 !important;
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .product-edit-preview__img {
+    background: #161e16 !important;
+}
+html[data-theme="dark"] .product-edit-preview__placeholder {
+    color: #7a9a7a !important;
+}
+html[data-theme="dark"] .product-edit-preview__placeholder ion-icon {
+    color: #7dd87d !important;
+}
+html[data-theme="dark"] .product-edit-note {
+    background: #141c14 !important;
+    border-color: #253025 !important;
+    color: #b8d0b8 !important;
+}
+html[data-theme="dark"] .product-edit-note ion-icon {
+    color: #7dd87d !important;
+}

@@ -1,71 +1,9 @@
 {% extends 'inventario/shared/base.html' %}
-{% load static %}
+{% load static assets %}
 
 {% block title %}Mis Pedidos{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'inventario/css/usuario/pedidos_usuario.css' %}" data-page-style="true">
-<style data-page-style="true">
-/* ── Bloque vencimiento inline ── */
-.pu-vencido-card {
-  display: flex; gap: 14px; align-items: flex-start;
-  margin-top: 14px;
-  background: linear-gradient(135deg, #fff8e1 60%, #fff3cd);
-  border: 2px solid #fbbf24;
-  border-radius: 18px;
-  padding: 16px 18px;
-  box-shadow: 0 2px 14px rgba(251,191,36,0.15);
-}
-.pu-vencido-card__icon-wrap {
-  flex-shrink: 0; width: 46px; height: 46px;
-  background: #f59e0b; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 2px 8px rgba(245,158,11,0.35);
-}
-.pu-vencido-card__icon-wrap ion-icon { font-size: 1.6em; color: #fff; }
-.pu-vencido-card__body { flex: 1; min-width: 0; }
-.pu-vencido-card__title {
-  font-size: 0.8em; font-weight: 900; color: #92400e;
-  text-transform: uppercase; letter-spacing: 0.07em; margin: 0 0 5px;
-}
-.pu-vencido-card__desc {
-  font-size: 0.93em; color: #78350f; margin: 0 0 12px; line-height: 1.5;
-}
-.pu-vencido-card__desc strong { color: #92400e; }
-.pu-vencido-card__extensiones {
-  display: flex; align-items: center; gap: 6px; margin-bottom: 12px;
-}
-.pu-vencido-ext-dot {
-  width: 13px; height: 13px; border-radius: 50%;
-  background: #e5e7eb; border: 2px solid #d1d5db; display: inline-block;
-  transition: background 0.2s;
-}
-.pu-vencido-ext-dot--used { background: #f59e0b; border-color: #d97706; }
-.pu-vencido-ext-label { font-size: 0.84em; color: #92400e; font-weight: 600; }
-.pu-vencido-btn-extender {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: #39A900; color: #fff; border: none; border-radius: 24px;
-  font-size: 0.97em; font-weight: 700; padding: 11px 22px;
-  cursor: pointer; transition: background 0.18s, transform 0.12s;
-  box-shadow: 0 3px 12px rgba(57,169,0,0.22);
-}
-.pu-vencido-btn-extender:hover { background: #2e7d0b; transform: translateY(-1px); }
-.pu-vencido-btn-extender ion-icon { font-size: 1.2em; }
-.pu-vencido-btn-dias {
-  background: rgba(255,255,255,0.22); border-radius: 10px;
-  padding: 2px 9px; font-size: 0.86em; font-weight: 800; letter-spacing: 0.02em;
-}
-.pu-vencido-card__limite {
-  display: flex; align-items: center; gap: 8px;
-  background: #fee2e2; border: 1.5px solid #fca5a5; border-radius: 12px;
-  padding: 10px 14px; color: #991b1b; font-size: 0.92em; font-weight: 600;
-}
-.pu-vencido-card__limite ion-icon { font-size: 1.15em; color: #dc2626; flex-shrink: 0; }
-@media (max-width: 600px) {
-  .pu-vencido-card { flex-direction: column; gap: 10px; }
-  .pu-vencido-card__icon-wrap { width: 38px; height: 38px; }
-  .pu-vencido-btn-extender { width: 100%; justify-content: center; }
-}
-</style>
+<link rel="stylesheet" href="{% css_asset 'inventario/css/user/pedidos/pedidos_usuario.css' %}" data-page-style="true">
 {% endblock %}
 
 {% block content %}
@@ -99,10 +37,6 @@
             <span>Devuelto</span>
             <strong>{{ conteos_estado.devuelto|default:0 }}</strong>
         </a>
-        <a href="?estado=rechazado" class="pedidos-usuario-filtro pedidos-usuario-filtro--rechazado {% if estado_activo == 'rechazado' %}is-active{% endif %}">
-            <span>Rechazado</span>
-            <strong>{{ conteos_estado.rechazado|default:0 }}</strong>
-        </a>
         <a href="?estado=cancelado" class="pedidos-usuario-filtro pedidos-usuario-filtro--cancelado {% if estado_activo == 'cancelado' %}is-active{% endif %}">
             <span>Cancelado</span>
             <strong>{{ conteos_estado.cancelado|default:0 }}</strong>
@@ -113,31 +47,25 @@
 <div id="live-section-data">
     <div class="pedidos-usuario-list">
         {% for pedido in pedidos %}
-        <article class="pedidos-usuario-card pedidos-usuario-card--{{ pedido.estado|slugify }}">
+        <article class="pedidos-usuario-card pedidos-usuario-card--{{ pedido.estado_ui|slugify }}">
             <div class="pedidos-usuario-card__head">
                 <div>
                     <p class="pedidos-usuario-card__id">Pedido #{{ pedido.id_pedido }}</p>
                     <p class="pedidos-usuario-card__date">{{ pedido.fch_registro|date:'d/m/Y H:i' }}</p>
                 </div>
-                <span class="pedidos-usuario-status pedidos-usuario-status--{{ pedido.estado|slugify }}">{{ pedido.estado|title }}</span>
+                <span class="pedidos-usuario-status pedidos-usuario-status--{{ pedido.estado_ui|slugify }}">{{ pedido.estado_ui_label }}</span>
             </div>
 
-            {% if pedido.estado == 'rechazado' %}
-            <div class="pedidos-usuario-alert pedidos-usuario-alert--rechazado">
-                <ion-icon name="close-circle-outline"></ion-icon>
-                <div>
-                    <strong>Pedido rechazado</strong>
-                    <p>{{ pedido.motivo_rechazo|default:'El pedido fue rechazado por no disponibilidad.' }}</p>
-                </div>
-            </div>
-            {% endif %}
-
-            {% if pedido.estado == 'cancelado' %}
+            {% if pedido.estado_ui == 'cancelado' %}
             <div class="pedidos-usuario-alert pedidos-usuario-alert--cancelado">
                 <ion-icon name="close-circle-outline"></ion-icon>
                 <div>
                     <strong>Pedido cancelado</strong>
+                    {% if pedido.estado == 'rechazado' %}
+                    <p>{{ pedido.motivo_rechazo|default:'El pedido fue cancelado por no disponibilidad.' }}</p>
+                    {% else %}
                     <p>Cancelaste este pedido. Si necesitas los materiales, crea un nuevo pedido.</p>
+                    {% endif %}
                 </div>
             </div>
             {% endif %}
@@ -339,7 +267,7 @@
     <section class="pedidos-usuario-empty">
         <div class="pedidos-usuario-empty__icon"><ion-icon name="receipt-outline"></ion-icon></div>
         <h2>No hay pedidos en este estado</h2>
-        <p>Cambia el filtro superior para revisar pedidos pendientes, en espera, entregados, devueltos o rechazados.</p>
+        <p>Cambia el filtro superior para revisar pedidos pendientes, en espera, entregados, devueltos o cancelados.</p>
     </section>
     {% endif %}
 </div>
@@ -368,182 +296,16 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'inventario/js/user/pedidos/lightbox.js' %}" defer></script>
+<script src="{% static 'inventario/js/user/pedidos/cancel-countdown.js' %}" defer></script>
+<script src="{% static 'inventario/js/user/pedidos/dynamic-code.js' %}" defer></script>
+<script src="{% static 'inventario/js/user/pedidos/cancel-modal.js' %}" defer></script>
+<script src="{% static 'inventario/js/user/pedidos/init.js' %}" defer></script>
 <script data-page-script="true">
-// ── Función global de reinit para sobrevivir al refresco de #live-section-data ─
-window.sgitReinitPage = function() {
-
-    // ── Lightbox de evidencias ────────────────────────────────────────────
-    const lightbox = document.getElementById('pedidosUsuarioLightbox');
-    const lightboxImg = document.getElementById('pedidosUsuarioLightboxImg');
-    if (lightbox && lightboxImg) {
-        document.querySelectorAll('.pedidos-usuario-evidencia-item[data-evidencia-src]:not([data-ev-init])').forEach((item) => {
-            item.setAttribute('data-ev-init', '1');
-            item.addEventListener('click', () => {
-                lightboxImg.src = item.dataset.evidenciaSrc;
-                lightboxImg.alt = item.dataset.evidenciaAlt || 'Evidencia';
-                lightbox.classList.add('is-open');
-                lightbox.setAttribute('aria-hidden', 'false');
-                document.body.classList.add('modal-open');
-            });
-        });
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.PedidosUsuario && typeof window.PedidosUsuario.boot === 'function') {
+        window.PedidosUsuario.boot();
     }
-
-    // ── Cancelación countdown (reutiliza data-segundos del servidor) ──────
-    document.querySelectorAll('[data-cancelar-pedido]:not([data-cd-init])').forEach((wrap) => {
-        wrap.setAttribute('data-cd-init', '1');
-        const btn = wrap.querySelector('.pedidos-usuario-btn-cancelar');
-        const display = wrap.querySelector('.pedidos-cancelar-countdown');
-        if (!display) return;
-        let secs = parseInt(wrap.dataset.segundos || '0', 10);
-        const fmtSeg = (s) => { const m = Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; };
-        display.textContent = fmtSeg(secs);
-        const t = setInterval(() => {
-            secs -= 1;
-            if (secs <= 0) {
-                clearInterval(t); display.textContent = '0:00';
-                wrap.classList.add('pedidos-cancelar-expirado');
-                if (btn) btn.disabled = true;
-            } else {
-                display.textContent = fmtSeg(secs);
-                if (secs <= 60) wrap.classList.add('pedidos-cancelar-urgente');
-            }
-        }, 1000);
-        wrap._cdTimer = t;
-    });
-
-    // ── Devolución código dinámico ────────────────────────────────────────
-    const parseIsoMs = (v) => { if (!v) return NaN; const p = Date.parse(v); return Number.isFinite(p) ? p : NaN; };
-    const fmtSecs = (s) => { const mm = Math.floor(s/60); return `${mm}:${String(s%60).padStart(2,'0')}`; };
-
-    document.querySelectorAll('[data-devolucion-codigo]:not([data-dev-init])').forEach((box) => {
-        box.setAttribute('data-dev-init', '1');
-        const ring = box.querySelector('[data-ring]');
-        const codeEl = box.querySelector('[data-codigo]');
-        const countEl = box.querySelector('[data-countdown]');
-        let secs = parseInt(box.dataset.segundos || '0', 10);
-        let serverOffsetMs = 0;
-        let expiresAtMs = NaN;
-        let refreshInFlight = false;
-
-        const syncClock = () => {
-            const snMs = parseIsoMs(box.dataset.serverAhora || '');
-            if (Number.isFinite(snMs)) serverOffsetMs = snMs - Date.now();
-            expiresAtMs = parseIsoMs(box.dataset.expiraEn || '');
-            if (Number.isFinite(expiresAtMs)) {
-                secs = Math.max(0, Math.ceil((expiresAtMs - (Date.now() + serverOffsetMs)) / 1000));
-            } else {
-                secs = Math.max(0, parseInt(box.dataset.segundos || '0', 10));
-            }
-        };
-
-        const paint = () => {
-            const s = Math.max(0, secs);
-            if (ring) ring.style.setProperty('--progress', String(Math.max(0, Math.min(1, s / 60))));
-            if (countEl) countEl.textContent = fmtSecs(s);
-            if (ring) ring.classList.toggle('is-warning', s <= 15);
-        };
-
-        const refreshCodigo = async () => {
-            if (refreshInFlight) return; refreshInFlight = true;
-            try {
-                const res = await fetch(`/usuario/pedidos/${box.dataset.pedidoId}/codigo-devolucion/`, {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                });
-                const data = await res.json();
-                if (!res.ok || !data.ok) return;
-                box.dataset.segundos = String(data.segundos || 0);
-                box.dataset.expiraEn = data.expira_en || '';
-                box.dataset.serverAhora = data.server_now || '';
-                if (codeEl) codeEl.textContent = data.codigo || '------';
-                syncClock();
-            } catch(_) {} finally { refreshInFlight = false; }
-        };
-
-        const tick = async () => {
-            if (Number.isFinite(expiresAtMs)) {
-                secs = Math.max(0, Math.ceil((expiresAtMs - (Date.now() + serverOffsetMs)) / 1000));
-            } else { secs = Math.max(0, secs - 1); }
-            if (secs <= 0) { paint(); await refreshCodigo(); } paint();
-        };
-
-        syncClock(); paint();
-        if (!codeEl || codeEl.textContent.trim() === '------' || secs <= 0 || !Number.isFinite(expiresAtMs)) {
-            refreshCodigo().then(() => paint());
-        }
-        setInterval(tick, 1000);
-    });
-};
-
-// ── Lightbox: cerrar y keydown (solo se registran una vez en document) ───
-(function() {
-    const getLB = () => document.getElementById('pedidosUsuarioLightbox');
-    const getLBImg = () => document.getElementById('pedidosUsuarioLightboxImg');
-    const cerrarEvidencia = () => {
-        const lb = getLB(), img = getLBImg();
-        if (lb) { lb.classList.remove('is-open'); lb.setAttribute('aria-hidden', 'true'); }
-        if (img) img.src = '';
-        document.body.classList.remove('modal-open');
-    };
-    document.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-close-evidencia]');
-        if (btn) cerrarEvidencia();
-        const lb = getLB();
-        if (lb && e.target === lb) cerrarEvidencia();
-    });
-    document.addEventListener('keydown', (e) => {
-        const lb = getLB();
-        if (e.key === 'Escape' && lb && lb.classList.contains('is-open')) cerrarEvidencia();
-    });
-})();
-
-// ── Cancelación modal: event delegation (sobrevive al refresh) ───────────
-(function() {
-    const getOverlay = () => document.getElementById('cancelar-confirm-modal');
-    const getNumLabel = () => document.getElementById('cancelar-modal-num');
-    const getBtnBack = () => document.getElementById('cancelar-modal-back');
-    const getBtnConf = () => document.getElementById('cancelar-modal-confirm');
-    let pendingForm = null;
-
-    const openModal = (form, numPedido) => {
-        pendingForm = form;
-        const nl = getNumLabel();
-        if (nl) nl.textContent = 'pedido #' + numPedido;
-        const ov = getOverlay();
-        if (ov) { ov.classList.add('is-open'); ov.setAttribute('aria-hidden', 'false'); }
-        document.body.style.overflow = 'hidden';
-        const bb = getBtnBack();
-        if (bb) bb.focus();
-    };
-
-    const closeModal = () => {
-        const ov = getOverlay();
-        if (ov) { ov.classList.remove('is-open'); ov.setAttribute('aria-hidden', 'true'); }
-        document.body.style.overflow = '';
-        pendingForm = null;
-    };
-
-    document.addEventListener('click', (e) => {
-        const triggerBtn = e.target.closest('[data-trigger-cancelar]');
-        if (triggerBtn) {
-            const form = triggerBtn.closest('[data-cancelar-form]');
-            if (form) openModal(form, form.dataset.pedidoNum);
-            return;
-        }
-        const backBtn = e.target.closest('#cancelar-modal-back');
-        if (backBtn) { closeModal(); return; }
-        const confBtn = e.target.closest('#cancelar-modal-confirm');
-        if (confBtn) { if (pendingForm) pendingForm.submit(); return; }
-        const ov = getOverlay();
-        if (ov && e.target === ov) closeModal();
-    });
-    document.addEventListener('keydown', (e) => {
-        const ov = getOverlay();
-        if (e.key === 'Escape' && ov && ov.classList.contains('is-open')) closeModal();
-    });
-})();
-
-// ── Primer init ──────────────────────────────────────────────────────────
-window.sgitReinitPage();
-document.addEventListener('live-section-refreshed', window.sgitReinitPage);
+});
 </script>
 {% endblock %}

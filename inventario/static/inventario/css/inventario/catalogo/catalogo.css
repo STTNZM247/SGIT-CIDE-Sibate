@@ -1,0 +1,8 @@
+/* Modular index: catalogo.css */
+@import url('./catalogo/base-grid-header.css');
+@import url('./catalogo/subcategorias-tree.css');
+@import url('./catalogo/modal-responsive-subcats.css');
+@import url('./catalogo/accordion-detalle.css');
+@import url('./catalogo/product-modal.css');
+@import url('./catalogo/edit-form.css');
+@import url('./catalogo/cards-empty-misc.css');

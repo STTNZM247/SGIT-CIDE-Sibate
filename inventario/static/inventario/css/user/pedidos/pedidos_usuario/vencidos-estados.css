@@ -1,0 +1,320 @@
+}
+.pu-vencido-btn-extender ion-icon {
+  font-size: 1.25em;
+}
+.pu-vencido-btn-dias {
+  background: rgba(255,255,255,0.22);
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 0.88em;
+  font-weight: 800;
+}
+.pu-vencido-card__limite {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #fee2e2;
+  border: 1.5px solid #fca5a5;
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: #991b1b;
+  font-size: 0.93em;
+  font-weight: 600;
+}
+.pu-vencido-card__limite ion-icon {
+  font-size: 1.2em;
+  color: #dc2626;
+  flex-shrink: 0;
+}
+
+.pedidos-usuario-devolucion-box {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #c9e8d3;
+  background: #f3fbf6;
+  border-radius: 16px;
+  padding: 12px 14px;
+}
+
+.pedidos-usuario-devolucion-box__head span {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #1f7a43;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pedidos-usuario-devolucion-box__head small {
+  display: block;
+  margin-top: 4px;
+  color: #536557;
+  font-size: 0.82rem;
+}
+
+.pedidos-usuario-devolucion-ring {
+  --progress: 1;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(#2e8f50 calc(var(--progress) * 1turn), #d6e5d9 0);
+  position: relative;
+}
+
+.pedidos-usuario-devolucion-ring::before {
+  content: '';
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #d7e6da;
+  position: absolute;
+}
+
+.pedidos-usuario-devolucion-ring strong {
+  position: relative;
+  z-index: 1;
+  font-size: 0.93rem;
+  letter-spacing: 0.08em;
+  color: #1f2a22;
+}
+
+.pedidos-usuario-devolucion-ring.is-warning {
+  background: conic-gradient(#d8711f calc(var(--progress) * 1turn), #ecdccf 0);
+}
+
+.pedidos-usuario-devolucion-box__timer {
+  min-width: 92px;
+  text-align: right;
+}
+
+.pedidos-usuario-devolucion-box__timer span {
+  display: block;
+  font-size: 0.77rem;
+  color: #5d6d61;
+}
+
+.pedidos-usuario-devolucion-box__timer strong {
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  color: #1f7a43;
+}
+
+/* -- Producto no disponible -- */
+.pedidos-usuario-product-item--no-disponible {
+  opacity: 0.65;
+  filter: grayscale(45%);
+  border-color: #f5c5c5;
+  background: #fff8f8;
+}
+
+.pedidos-usuario-no-disp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #ffecec;
+  color: #b43a3a;
+  border: 1px solid #ffcece;
+  font-size: 0.76rem;
+  font-weight: 800;
+  margin-top: 4px;
+}
+
+/* ── Tab cancelado ─────────────────────────────────────────────────────────── */
+
+.pedidos-usuario-filtro--cancelado {
+  border-color: #e0bfe8 !important;
+  color: #6a1b8a;
+}
+
+.pedidos-usuario-filtro--cancelado strong {
+  background: #f3e5f5 !important;
+  color: #7b1fa2 !important;
+}
+
+.pedidos-usuario-filtro--cancelado.is-active {
+  background: #f3e5f5;
+  border-color: #ce93d8 !important;
+  color: #6a1b8a;
+}
+
+/* ── Card cancelada ────────────────────────────────────────────────────────── */
+
+.pedidos-usuario-card--cancelado {
+  border-left: 5px solid #9c27b0;
+  opacity: 0.85;
+}
+
+.pedidos-usuario-alert--cancelado {
+  background: #fdf4ff;
+  border: 1px solid #e1bee7;
+  color: #6a1b8a;
+}
+
+.pedidos-usuario-status--cancelado {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+/* ── Zona de cancelación con countdown ─────────────────────────────────────── */
+
+.pedidos-usuario-cancelar-wrap {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fffbf0;
+  border: 1.5px solid #ffe082;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.pedidos-usuario-cancelar-wrap.pedidos-cancelar-urgente {
+  background: #fff3e0;
+  border-color: #ffb74d;
+}
+
+.pedidos-usuario-cancelar-wrap.pedidos-cancelar-expirado {
+  background: #fafafa;
+  border-color: #e0e0e0;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.pedidos-usuario-cancelar-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: #795548;
+  flex: 1;
+}
+
+.pedidos-usuario-cancelar-info ion-icon {
+  font-size: 1.2rem;
+  color: #f9a825;
+  flex-shrink: 0;
+}
+
+.pedidos-cancelar-countdown {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #e65100;
+  font-size: 0.95rem;
+}
+
+.pedidos-cancelar-urgente .pedidos-cancelar-countdown {
+  color: #c62828;
+  animation: pulse-warning 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-warning {
+  from { opacity: 1; }
+  to   { opacity: 0.55; }
+}
+
+.pedidos-usuario-cancelar-form {
+  flex-shrink: 0;
+}
+
+.pedidos-usuario-btn-cancelar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 10px;
+  border: 1.5px solid #ef9a9a;
+  background: #fff;
+  color: #c62828;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.pedidos-usuario-btn-cancelar:hover {
+  background: #c62828;
+  color: #fff;
+  border-color: #c62828;
+}
+
+.pedidos-usuario-btn-cancelar:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Modal de confirmación cancelar pedido ────────────────────────────────── */
+
+.cancelar-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  /* fondo borroso */
+  background: rgba(20, 24, 28, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fadeOverlay 0.18s ease;
+}
+
+.cancelar-modal-overlay.is-open {
+  display: flex;
+}
+
+@keyframes fadeOverlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.cancelar-modal {
+  background: #fff;
+  border-radius: 22px;
+  padding: 36px 32px 28px;
+  width: min(420px, 100%);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.22);
+  text-align: center;
+  animation: slideUp 0.22s cubic-bezier(.34,1.56,.64,1);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(28px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.cancelar-modal__icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #fff3f3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  border: 2px solid #ffcece;
+}
+
+.cancelar-modal__icon ion-icon {
+  font-size: 2rem;
+  color: #c62828;
+}
+
+.cancelar-modal__title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1a1a1e;
+  margin: 0 0 10px;
+}
+

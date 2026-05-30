@@ -1,10 +1,10 @@
 {% extends 'inventario/shared/base.html' %}
-{% load static %}
+{% load static assets %}
 
 {% block title %}Inventario - Panel Usuario{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'inventario/dashboard/css/dashboard.css' %}" data-page-style="true">
-<link rel="stylesheet" href="{% static 'inventario/css/usuario/panel_usuario.css' %}" data-page-style="true">
+<link rel="stylesheet" href="{% css_asset 'inventario/css/dashboard/dashboard.css' %}" data-page-style="true">
+<link rel="stylesheet" href="{% css_asset 'inventario/css/user/panel/panel_usuario.css' %}" data-page-style="true">
 {% if request.user.tema == 'oscuro' %}
 <style data-page-style="true">
 .usuario-busqueda-bar {

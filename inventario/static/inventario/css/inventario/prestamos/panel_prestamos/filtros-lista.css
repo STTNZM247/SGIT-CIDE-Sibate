@@ -1,0 +1,337 @@
+  color: #9a2020;
+}
+
+.prestamos-filtro--devuelto strong {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.prestamos-filtro--devuelto.is-active {
+  border-color: #b7d9bb;
+  background: #eef9f1;
+  color: #20683f;
+}
+
+/* Cancelado */
+.prestamos-filtro--cancelado strong {
+  background: #ffecec;
+  color: #9a2020;
+}
+
+.prestamos-filtro--cancelado.is-active {
+  border-color: #e8c8c8;
+  background: #fff8f8;
+  color: #7a1818;
+}
+
+/* Cabecera de columnas */
+.prestamos-list-header {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.45fr) minmax(180px, 1.05fr) minmax(120px, 0.75fr) minmax(260px, 1.4fr) minmax(170px, 0.9fr) minmax(180px, 1fr);
+  gap: 0;
+  padding: 10px 16px;
+  margin-bottom: 8px;
+  border: 1px solid #dce7d7;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f6faf3, #eef5ea);
+  color: #667268;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* Tarjeta de préstamo */
+.prestamo-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.45fr) minmax(180px, 1.05fr) minmax(120px, 0.75fr) minmax(260px, 1.4fr) minmax(170px, 0.9fr) minmax(180px, 1fr);
+  gap: 0;
+  border: 1px solid #e1eadc;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(57, 169, 0, 0.06);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.prestamo-row:hover {
+  box-shadow: 0 12px 32px rgba(57, 169, 0, 0.11);
+}
+
+.prestamo-row--vencido {
+  border-left: 5px solid #ff6b6b;
+  border-color: #ffcece;
+  background: #fffafa;
+}
+
+.prestamo-row--ok {
+  border-left: 5px solid #39a900;
+}
+
+.prestamo-row--sin-fecha {
+  border-left: 5px solid #aab8ac;
+}
+
+.prestamo-row--cancelado {
+  border-left: 5px solid #c0392b;
+  border-color: #ffcece;
+  background: #fff5f5;
+  opacity: 0.82;
+}
+
+.prestamo-row--devuelto {
+  border-left: 5px solid #2e8f50;
+  border-color: #cdebd8;
+  background: #f7fcf8;
+}
+
+/* Celdas */
+.prestamo-row > div {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 8px;
+  border-right: 1px solid #f0f4ed;
+  background: linear-gradient(180deg, #ffffff, #fbfef9);
+}
+
+.prestamo-row > div:last-child {
+  border-right: none;
+}
+
+.prestamo-row > div:nth-child(even) {
+  background: linear-gradient(180deg, #fcfefb, #f7fbf4);
+}
+
+/* Columna usuario */
+.prestamo-row__usuario {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 12px;
+}
+
+.prestamo-row__avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid #d8ead0;
+}
+
+.prestamo-row__avatar-placeholder {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #e8f4e0;
+  display: grid;
+  place-items: center;
+  color: #39a900;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  border: 2px solid #c8e4b8;
+}
+
+.prestamo-row__nombre {
+  margin: 0;
+  font-weight: 800;
+  color: #1d251f;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+.prestamo-row__meta {
+  margin: 3px 0 0;
+  font-size: 0.78rem;
+  color: #667268;
+}
+
+/* Área / ambiente */
+.prestamo-row__area {
+  font-size: 0.88rem;
+  color: #3a4a3c;
+  line-height: 1.35;
+  display: -webkit-box;
+  line-clamp: 3;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #f2f8ee;
+  border: 1px solid #d9e8d2;
+}
+
+/* Tipo devolución */
+.prestamo-row__tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #dde8d8;
+  background: #f4f8f1;
+  color: #3a5c30;
+  width: fit-content;
+}
+
+/* Fecha devolución */
+.prestamo-row__fecha strong {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #1d251f;
+}
+
+.prestamo-row__fecha small {
+  font-size: 0.78rem;
+  color: #667268;
+  margin-top: 2px;
+}
+
+.prestamo-row__fecha {
+  gap: 8px;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.prestamo-row--vencido .prestamo-row__fecha strong {
+  color: #b43a3a;
+}
+
+/* Badge de estado */
+.prestamo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  border: 1px solid transparent;
+  width: fit-content;
+}
+
+.prestamo-badge--ok {
+  background: #eef8e7;
+  color: #1f6200;
+  border-color: #c2e4a4;
+}
+
+.prestamo-badge--vencido {
+  background: #ffecec;
+  color: #b43a3a;
+  border-color: #ffcece;
+  animation: prestamo-pulse 2s ease-in-out infinite;
+}
+
+.prestamo-badge--sin-fecha {
+  background: #f4f6f4;
+  color: #667268;
+  border-color: #dde8d5;
+}
+
+.prestamo-badge--cancelado {
+  background: #ffecec;
+  color: #b43a3a;
+  border-color: #ffcece;
+  font-weight: 900;
+}
+
+.prestamo-badge--devuelto {
+  background: #e9f8ee;
+  color: #1f7a43;
+  border-color: #cdebd8;
+}
+
+@keyframes prestamo-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.72; }
+}
+
+/* Conteo días */
+.prestamo-dias {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.prestamo-dias--ok    { color: #2a7600; }
+.prestamo-dias--warn  { color: #b05c00; }
+.prestamo-dias--vencido { color: #c0392b; }
+
+/* Acciones */
+.prestamo-row__actions {
+  align-items: stretch;
+  gap: 10px;
+  flex-direction: column !important;
+  justify-content: center;
+  background: #f8fcf5;
+}
+
+.prestamo-action-form {
+  display: block;
+  width: 100%;
+}
+
+.prestamo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.prestamo-btn:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(22, 34, 24, 0.16);
+}
+
+.prestamo-btn--detail {
+  background: #f0f8ea;
+  color: #1f5800;
+  border-color: #c5e4a8;
+}
+
+.prestamo-btn--aviso {
+  background: #fff0f0;
+  color: #b43a3a;
+  border-color: #ffc8c8;
+}
+
+.prestamo-btn--return {
+  background: #eef8e7;
+  color: #1f7a43;
+  border-color: #c5e4a8;
+}
+
+/* Modal confirmación devolver */
+.prestamo-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(20, 24, 28, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.prestamo-modal-overlay.is-open {

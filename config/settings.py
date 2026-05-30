@@ -158,6 +158,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# CSS build pipeline
+USE_BUILT_CSS = os.getenv('USE_BUILT_CSS', 'False').lower() == 'true'
+CSS_ASSET_MANIFEST = BASE_DIR / 'inventario' / 'static' / 'inventario' / 'css-build' / 'manifest.json'
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 

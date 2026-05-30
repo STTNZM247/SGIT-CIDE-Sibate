@@ -1,0 +1,296 @@
+}
+html[data-theme="dark"] .pedido-codigo-box p { color: #6a9fd8 !important; }
+html[data-theme="dark"] .pedido-codigo-box strong { color: #b8d8ff !important; }
+html[data-theme="dark"] .pedido-codigo-box small { color: #5a7ab8 !important; }
+
+/* Form confirmación entrega */
+html[data-theme="dark"] .pedido-codigo-form label { color: #c8e4c8 !important; }
+html[data-theme="dark"] .pedido-codigo-form label span { color: #91a891 !important; }
+html[data-theme="dark"] .pedido-codigo-form input[type="text"] {
+  background: #111611 !important;
+  border-color: #253025 !important;
+  color: #e2ede2 !important;
+}
+html[data-theme="dark"] .pedido-codigo-form input[type="text"]:focus {
+  border-color: #7dd87d !important;
+}
+html[data-theme="dark"] .pedido-codigo-form input[type="file"] {
+  background: #111611 !important;
+  border-color: #253025 !important;
+  color: #91a891 !important;
+}
+
+html[data-theme="dark"] .pedido-codigo-input-box {
+  background: #152018 !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .pedido-evidencias-upload {
+  background: #121b12 !important;
+  border-color: #253025 !important;
+}
+
+html[data-theme="dark"] .pedido-evidencias-upload__help {
+  color: #8aa08a !important;
+}
+
+html[data-theme="dark"] .pedido-evidencia-preview-item {
+  background: #1a281a !important;
+  border-color: #2b3c2b !important;
+}
+
+html[data-theme="dark"] .pedido-evidencia-preview-item__remove {
+  background: rgba(186, 54, 54, 0.92) !important;
+}
+
+html[data-theme="dark"] .pedido-evidencia-preview-item__remove:hover {
+  background: #a72a2a !important;
+}
+
+html[data-theme="dark"] .pedido-codigo-form input[type="file"]::file-selector-button {
+  background: #1f2d1f !important;
+  border-color: #2f4633 !important;
+  color: #d4e8d4 !important;
+}
+
+html[data-theme="dark"] .pedido-codigo-form input[type="file"]::file-selector-button:hover {
+  background: #253625 !important;
+}
+
+/* Info acción (pedido ya procesado) */
+html[data-theme="dark"] .pedido-action-info {
+  background: #0e1a2e !important;
+  color: #8ec5ff !important;
+}
+
+/* Cards de producto */
+html[data-theme="dark"] .pedido-product-card {
+  background: #111611 !important;
+  border-color: #253025 !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28) !important;
+}
+html[data-theme="dark"] .pedido-product-card:hover {
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.38) !important;
+}
+html[data-theme="dark"] .pedido-product-card__media {
+  background: radial-gradient(circle at 60% 30%, #182018, #131d13) !important;
+  border-bottom-color: #253025 !important;
+}
+html[data-theme="dark"] .pedido-product-card__placeholder { color: #4a6a4a !important; }
+html[data-theme="dark"] .pedido-product-card__catalogo { color: #7dd87d !important; }
+html[data-theme="dark"] .pedido-product-card h3 { color: #ddeadd !important; }
+
+html[data-theme="dark"] .pedido-product-card__meta div {
+  background: #182018 !important;
+  border-color: #253025 !important;
+}
+html[data-theme="dark"] .pedido-product-card__meta-devolucion {
+  background: #101a2e !important;
+  border-color: #1e3560 !important;
+}
+html[data-theme="dark"] .pedido-product-card__meta span { color: #7a9c7a !important; }
+html[data-theme="dark"] .pedido-product-card__meta-devolucion span { color: #8ec5ff !important; }
+html[data-theme="dark"] .pedido-product-card__meta strong { color: #e2ede2 !important; }
+
+/* Badge no disponible */
+html[data-theme="dark"] .pedido-product-card__no-disp-badge {
+  background: #2a1010 !important;
+  color: #ff9a9a !important;
+  border-color: #6d2c2c !important;
+}
+
+/* Checkbox no disponible */
+html[data-theme="dark"] .pedido-product-card__no-disp-label {
+  background: #1e1208 !important;
+  border-color: #5a3010 !important;
+  color: #f5b87a !important;
+}
+html[data-theme="dark"] .pedido-product-card__no-disp-label:has(input:checked) {
+  background: #2a1010 !important;
+  border-color: #6d2c2c !important;
+  color: #ff9a9a !important;
+}
+
+html[data-theme="dark"] .pedido-reject-modal {
+  background: rgba(4, 8, 15, 0.72) !important;
+}
+
+html[data-theme="dark"] .pedido-reject-modal__dialog {
+  background: linear-gradient(180deg, #171a24, #121520) !important;
+  border-color: #2f3546 !important;
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.48) !important;
+}
+
+html[data-theme="dark"] .pedido-reject-modal__close {
+  background: #1b2030 !important;
+  border-color: #343b50 !important;
+  color: #c4cbe0 !important;
+}
+
+html[data-theme="dark"] .pedido-reject-modal__icon {
+  background: #34171f !important;
+  color: #ff8793 !important;
+}
+
+html[data-theme="dark"] .pedido-reject-modal__dialog h3 {
+  color: #f2f4ff !important;
+}
+
+html[data-theme="dark"] .pedido-reject-modal__dialog p {
+  color: #b5bbcf !important;
+}
+
+html[data-theme="dark"] .pedido-reject-modal__label {
+  color: #c3a39a !important;
+}
+
+html[data-theme="dark"] .pedido-reject-modal__textarea {
+  background: #231714 !important;
+  border-color: #5a2c24 !important;
+  color: #e8ccc3 !important;
+}
+
+html[data-theme="dark"] .pedido-reject-modal__btn--ghost {
+  background: #23283a !important;
+  color: #c6cee2 !important;
+}
+
+/* Card no disponible */
+html[data-theme="dark"] .pedido-product-card--no-disponible { border-color: #4d2020 !important; }
+html[data-theme="dark"] .pedido-product-card--no-disponible .pedido-product-card__media {
+  background: #1e1212 !important;
+}
+
+/* Submit no disponibles */
+html[data-theme="dark"] .detalle-no-disp-submit {
+  background: #1e1208 !important;
+  border-color: #5a3010 !important;
+}
+html[data-theme="dark"] .detalle-no-disp-submit p { color: #f5b87a !important; }
+
+html[data-theme="dark"] .detalle-no-disp-panel {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+html[data-theme="dark"] .detalle-no-disp-panel textarea {
+  background: #191c1b !important;
+  border-color: #3a413d !important;
+  color: #e8ece8 !important;
+}
+
+/* Evidencias */
+html[data-theme="dark"] .pedido-evidencias-grid .pedido-evidencia-item {
+  background: #111611 !important;
+  border-color: #253025 !important;
+}
+
+/* =====================================================
+   AJUSTES FINALES MOBILE — DETALLE PEDIDO
+   ===================================================== */
+@media (max-width: 720px) {
+  .detalle-sidebar {
+    position: static;
+    top: auto;
+    border-radius: 18px;
+    padding: 14px;
+  }
+
+  .detalle-sidebar__list {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+    gap: 10px;
+  }
+
+  .pps-item {
+    border-radius: 16px;
+    padding: 10px;
+    gap: 9px;
+  }
+
+  .pps-item__thumb {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    flex: 0 0 52px;
+  }
+
+  .pps-item__name {
+    font-size: 1rem;
+  }
+
+  .pps-item__qty {
+    font-size: 0.9rem;
+    line-height: 1.25;
+  }
+
+  .detalle-actions-row--fixed {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .detalle-actions-row--fixed > .pedido-action-btn,
+  .detalle-actions-row--fixed .detalle-actions-reject-form .pedido-action-btn,
+  .detalle-actions-row--fixed .detalle-actions-approve-form .pedido-action-btn {
+    width: 100%;
+    min-height: 54px;
+    justify-content: center;
+    border-radius: 999px !important;
+  }
+
+  .detalle-productos-resumen {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .detalle-productos-tabla-wrap {
+    border-radius: 16px;
+  }
+
+  .detalle-productos-tabla__row {
+    gap: 9px;
+    padding: 12px 12px 14px;
+  }
+
+  .detalle-productos-tabla__cell {
+    font-size: 0.92rem;
+    line-height: 1.3;
+  }
+
+  .detalle-productos-tabla__cell::before {
+    margin-bottom: 3px;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+  }
+
+  .detalle-productos-tabla__cell--action {
+    margin-top: 2px;
+  }
+
+  .detalle-productos-tabla__ver-btn {
+    width: 100%;
+    min-height: 42px;
+    border-radius: 999px !important;
+    font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .detalle-sidebar__header .detalle-section-title,
+  .detalle-productos-resumen__header .detalle-section-title {
+    font-size: 0.92rem;
+  }
+
+  .detalle-section-count {
+    font-size: 0.82rem;
+    padding: 5px 10px;
+  }
+
+  .detalle-actions-row--fixed > .pedido-action-btn,
+  .detalle-actions-row--fixed .detalle-actions-reject-form .pedido-action-btn,
+  .detalle-actions-row--fixed .detalle-actions-approve-form .pedido-action-btn {
+    min-height: 52px;
+    font-size: 1rem;
+  }
+}

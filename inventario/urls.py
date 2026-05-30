@@ -14,6 +14,7 @@ from .views import (
     producto_mover_subcategoria,
     producto_restaurar_subcategorias,
     registrar_catalogo,
+    registrar_ubicacion_producto,
     registrar_producto,
     subcategoria_delete_estado,
     subcategoria_crear_rapida,
@@ -58,7 +59,13 @@ from .views import (
     notificaciones_marcar_todas_leidas,
 )
 
-from .views_usuario import carrito_usuario, panel_usuario, pedido_cancelar_usuario, pedido_codigo_devolucion, pedido_extender_plazo, pedidos_usuario, producto_detalle_usuario, solicitar_validacion_manual, usuario_actualizar_cantidad_carrito, usuario_agregar_carrito, usuario_eliminar_carrito, usuario_realizar_pedido, validacion_sena, validacion_sena_carga_manual
+from .views_usuario import carrito_usuario, panel_usuario, producto_detalle_usuario, solicitar_validacion_manual, usuario_actualizar_cantidad_carrito, usuario_agregar_carrito, usuario_eliminar_carrito, usuario_realizar_pedido, validacion_sena, validacion_sena_carga_manual
+from .interfaces.http.views.usuario_pedidos import (
+    pedido_cancelar_usuario,
+    pedido_codigo_devolucion,
+    pedido_extender_plazo,
+    pedidos_usuario,
+)
 
 urlpatterns = [
     path(
@@ -96,6 +103,7 @@ urlpatterns = [
     path('producto/<int:prod_id>/foto/<int:foto_id>/eliminar/', eliminar_foto_producto, name='eliminar_foto_producto'),
     path('catalogo/<int:cat_id>/productos/<int:prod_id>/eliminar/', eliminar_producto, name='eliminar_producto'),
     path('catalogo/nuevo/', registrar_catalogo, name='registrar_catalogo'),
+    path('catalogo/nueva-ubicacion/', registrar_ubicacion_producto, name='registrar_ubicacion_producto'),
     path('catalogo/nuevo-producto/', registrar_producto, name='registrar_producto'),
     path('perfil/', perfil_usuario, name='perfil_usuario'),
     path('perfil/cambiar-password/', perfil_cambiar_password, name='perfil_cambiar_password'),
@@ -125,9 +133,7 @@ urlpatterns = [
     path('usuarios/<int:usuario_id>/editar-rol/', editar_rol_usuario, name='editar_rol_usuario'),
     path('usuarios/<int:usuario_id>/eliminar/', eliminar_usuario, name='eliminar_usuario'),
     path('usuarios/<int:usuario_id>/toggle-estado/', toggle_estado_usuario, name='toggle_estado_usuario'),
-    path('panel_usuario/', panel_usuario, name='panel_usuario'),
-    path('producto_detalle_usuario/', producto_detalle_usuario, name='producto_detalle_usuario'),
-    path('usuario_agregar_carrito/', usuario_agregar_carrito, name='usuario_agregar_carrito'),
+    path('panel_usuario/', panel_usuario, name='panel_usuario_legacy'),
     path('usuario/inventario/', panel_usuario, name='panel_usuario'),
     path('usuario/producto/<int:prod_id>/', producto_detalle_usuario, name='producto_detalle_usuario'),
     path('usuario/carrito/agregar/<int:prod_id>/', usuario_agregar_carrito, name='usuario_agregar_carrito'),

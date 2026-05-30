@@ -942,8 +942,8 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .db_compat import usuario_supports_tipo_doc
-from .forms import CambioPasswordPerfilForm, CatalogoForm, ProductoForm, UsuarioPerfilForm
-from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Pedido, PedidoEvidencia, Producto, ProductoFoto, Subcategoria, Usuario, Rol, VerificacionSenaToken
+from .forms import CambioPasswordPerfilForm, CatalogoForm, ProductoForm, UbicacionProductoForm, UsuarioPerfilForm
+from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Pedido, PedidoEvidencia, Producto, ProductoFoto, Subcategoria, UbicacionProducto, Usuario, Rol, VerificacionSenaToken
 
 
 def _user_role(request):
@@ -977,10 +977,16 @@ def catalogo(request):
 
     catalogos = (
         Catalogo.objects
+        .select_related('id_ubicacion_fk')
         .annotate(total_productos=models.Count('producto'))
         .order_by('nombre_catalogo')
     )
+    catalogo_ubicaciones_map = {
+        str(cat.id_cat): (cat.id_ubicacion_fk.nombre if cat.id_ubicacion_fk else '')
+        for cat in catalogos
+    }
     cat_form = CatalogoForm()
+    ubi_form = UbicacionProductoForm()
     prod_form = ProductoForm()
     return render(
         request,
@@ -988,7 +994,9 @@ def catalogo(request):
         {
             'catalogos': catalogos,
             'cat_form': cat_form,
+            'ubi_form': ubi_form,
             'prod_form': prod_form,
+            'catalogo_ubicaciones_map': catalogo_ubicaciones_map,
             'puede_gestionar_catalogo': _is_admin(request),
         },
     )
@@ -1021,6 +1029,33 @@ def registrar_catalogo(request):
 
 
 @login_required
+def registrar_ubicacion_producto(request):
+    if not _is_admin(request):
+        messages.error(request, 'Solo el administrador puede registrar ubicaciones de productos.')
+        return redirect('catalogo')
+
+    if request.method == 'POST':
+        form = UbicacionProductoForm(request.POST)
+        if form.is_valid():
+            ubicacion = form.save(commit=False)
+            ubicacion.fch_registro = timezone.now()
+            ubicacion.fch_ult_act = timezone.now()
+            ubicacion.save()
+            _registrar_auditoria(
+                request,
+                accion='crear',
+                entidad='ubicacion_producto',
+                entidad_id=ubicacion.id_ubicacion,
+                descripcion=f'Se creó la ubicación "{ubicacion.nombre}".',
+            )
+            messages.success(request, f'Ubicación "{ubicacion.nombre}" registrada correctamente.')
+        else:
+            messages.error(request, 'Error al registrar la ubicación. Revisa el formulario.')
+
+    return redirect('catalogo')
+
+
+@login_required
 def registrar_producto(request):
     if not _is_admin(request):
         messages.error(request, 'Solo el administrador puede registrar productos.')
@@ -1043,7 +1078,7 @@ def registrar_producto(request):
                 obj,
                 obj.id_cat_fk_id,
                 [str(s.pk) for s in (form.cleaned_data.get('subcategorias') or [])],
-                form.cleaned_data.get('nuevas_subcategorias', ''),
+                '',
             )
 
             # Fotos adicionales (índices 1-4)

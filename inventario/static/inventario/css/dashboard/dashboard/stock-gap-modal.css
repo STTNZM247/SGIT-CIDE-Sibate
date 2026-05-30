@@ -1,0 +1,320 @@
+.stock-gap-modal.is-open {
+    display: grid;
+}
+
+.stock-gap-modal__dialog {
+    width: min(980px, 100%);
+    max-height: min(82vh, 700px);
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #d8e4f1;
+    box-shadow: 0 24px 46px rgba(0, 0, 0, .24);
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr;
+}
+
+.stock-gap-modal__head {
+    padding: .72rem .82rem;
+    border-bottom: 1px solid #e2ebf7;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.stock-gap-modal__head h2 {
+    margin: 0;
+    font-size: 1rem;
+    color: #162d48;
+}
+
+.stock-gap-modal__close {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #d2dfef;
+    border-radius: 8px;
+    background: #f8fbff;
+    color: #22415f;
+    font-size: 1.12rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.stock-gap-modal__body {
+    padding: .72rem;
+    overflow: auto;
+}
+
+.stock-gap-modal__hint {
+    margin: 0 0 .6rem;
+    color: #546b86;
+    font-size: .84rem;
+}
+
+.stock-gap-table-wrap {
+    overflow: auto;
+}
+
+.stock-gap-table {
+    width: 100%;
+    min-width: 840px;
+    border-collapse: collapse;
+    font-size: .82rem;
+}
+
+.stock-gap-table th,
+.stock-gap-table td {
+    border-bottom: 1px solid #e8eef7;
+    padding: .44rem .5rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.stock-gap-table th {
+    background: #f5f9ff;
+    color: #2a4665;
+    font-size: .76rem;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+}
+
+.stock-gap-link {
+    color: #1d67d8;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.stock-gap-link:hover {
+    text-decoration: underline;
+}
+
+.stock-gap-muted {
+    color: #70849f;
+    font-size: .78rem;
+}
+
+.admin-chart-grid {
+    margin-top: .9rem;
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: 1fr 1.1fr;
+}
+
+.admin-card--pendientes {
+    margin-top: .8rem;
+    border-color: #cfe3cd;
+    background: #ffffff;
+}
+
+.admin-pending-table-wrap {
+    margin-top: .45rem;
+    overflow-x: auto;
+    border: 1px solid #d7e7d4;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.admin-pending-table {
+    width: 100%;
+    min-width: 860px;
+    border-collapse: collapse;
+    font-size: .84rem;
+}
+
+.admin-pending-table th,
+.admin-pending-table td {
+    padding: .5rem .55rem;
+    text-align: left;
+    border-bottom: 1px solid #e6efe4;
+    color: #203528;
+}
+
+.admin-pending-table th {
+    background: #f2faf1;
+    color: #355638;
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+}
+
+.admin-pending-table tr:hover td {
+    background: #f8fdf7;
+}
+
+.admin-pending-table .pending-row {
+    cursor: pointer;
+}
+
+.admin-pending-table .pending-row:focus td {
+    outline: 2px solid #8fc696;
+    outline-offset: -2px;
+    background: #f3fbf2;
+}
+
+.pending-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid #9fd1a0;
+    background: #e9f9ea;
+    color: #286a2e;
+    font-size: .74rem;
+    font-weight: 700;
+    padding: .14rem .48rem;
+}
+
+.admin-pending-actions {
+    margin-top: .55rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.admin-pending-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    border: 1px solid #8dc79a;
+    background: #f2fbf2;
+    color: #225f2b;
+    border-radius: 999px;
+    padding: .28rem .72rem;
+    font-size: .82rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.admin-pending-more-btn:hover {
+    background: #e7f7e8;
+}
+
+.admin-card--sena-manual {
+    margin-top: .8rem;
+    border-color: #d9e8da;
+    background: #ffffff;
+}
+
+.admin-sena-grid {
+    margin-top: .8rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .75rem;
+}
+
+.admin-card--sena-documentos {
+    border-color: #d9e8da;
+    background: #ffffff;
+}
+
+.admin-sena-table-wrap {
+    margin-top: .45rem;
+    overflow-x: auto;
+    border: 1px solid #d7e7d4;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.admin-sena-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    font-size: .84rem;
+}
+
+.admin-sena-table th,
+.admin-sena-table td {
+    padding: .5rem .55rem;
+    text-align: left;
+    border-bottom: 1px solid #e6efe4;
+    color: #203528;
+    vertical-align: top;
+}
+
+.admin-sena-table th {
+    background: #f2faf1;
+    color: #355638;
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+}
+
+.admin-sena-table tr:hover td {
+    background: #f8fdf7;
+}
+
+.admin-sena-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid #9fd1a0;
+    background: #e9f9ea;
+    color: #286a2e;
+    font-size: .74rem;
+    font-weight: 700;
+    padding: .14rem .48rem;
+}
+
+.admin-sena-table td strong {
+    display: block;
+}
+
+.admin-sena-table td small {
+    display: block;
+    margin-top: 2px;
+    color: #66806b;
+}
+
+.admin-sena-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .35rem;
+}
+
+.admin-sena-actions--review {
+    align-items: flex-start;
+}
+
+.admin-sena-actions form {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin: 0;
+}
+
+.admin-sena-actions form:has(.admin-sena-btn--send) {
+    justify-content: center;
+}
+
+.admin-sena-link {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #9ec6a2;
+    border-radius: 999px;
+    background: #eff9f0;
+    color: #225f2b;
+    text-decoration: none;
+    padding: .24rem .58rem;
+    font-size: .78rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.admin-sena-link:hover {
+    background: #e1f3e4;
+}
+
+.admin-sena-btn {
+    border: 1px solid #8dc79a;
+    border-radius: 999px;
+    background: #f2fbf2;
+    color: #225f2b;
+    padding: .24rem .62rem;
+    font-size: .78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+}
+
+.admin-sena-btn:hover {
+    background: #e4f6e7;
+}

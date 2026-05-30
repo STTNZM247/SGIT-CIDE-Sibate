@@ -1,0 +1,320 @@
+/* Select personalizado */
+.inventario-inventory-grid {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 0 1rem;
+}
+
+.custom-select {
+    position: relative;
+    min-width: 180px;
+    margin-left: 12px;
+    font-size: 1.08rem;
+    border-radius: 30px;
+    background: #fff;
+    box-shadow: 0 2px 16px 0 rgba(57,169,255,0.07);
+    cursor: pointer;
+    user-select: none;
+}
+.custom-select__selected {
+    padding: 10px 38px 10px 18px;
+    border-radius: 30px;
+    border: 1.5px solid #e2e8ee;
+    background: #fff;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+}
+.custom-select__arrow {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1em;
+    color: #b0b8c9;
+    pointer-events: none;
+}
+.custom-select__options {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 8px 32px 0 rgba(57,169,255,0.13);
+    z-index: 10;
+    margin-top: 4px;
+    border: 1.5px solid #e2e8ee;
+    max-height: 260px;
+    overflow-y: auto;
+}
+.custom-select__option {
+    padding: 12px 18px;
+    cursor: pointer;
+    transition: background 0.13s;
+    border-radius: 12px;
+}
+.custom-select__option:hover, .custom-select__option.selected {
+    background: #f2fbe9;
+}
+/* Barra de búsqueda moderna y centrada (igual usuarios) */
+.busqueda-contenedor-centrado {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+    margin-top: 8px;
+}
+.barra-busqueda-moderna {
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border-radius: 40px;
+    box-shadow: 0 2px 16px 0 rgba(57,169,255,0.07);
+    padding: 0 8px 0 0;
+    max-width: 900px;
+    width: 100%;
+    border: none;
+    position: relative;
+}
+.icono-busqueda {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 18px;
+    margin-right: 8px;
+    background: none;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 0;
+    height: 40px;
+    width: 40px;
+    transition: background 0.18s;
+}
+.icono-busqueda:focus, .icono-busqueda:hover {
+    background: #f2fbe9;
+    border-radius: 50%;
+}
+.input-busqueda-moderna {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 1.13rem;
+    flex: 1;
+    padding: 16px 0 16px 0;
+    border-radius: 40px;
+    color: #222;
+}
+.input-busqueda-moderna::placeholder {
+    color: #b0b8c9;
+    font-weight: 400;
+}
+.btn-busqueda-moderna {
+    background: #39A900;
+    color: #fff;
+    border: none;
+    border-radius: 40px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 10px 28px;
+    margin-left: 8px;
+    transition: background 0.2s;
+    box-shadow: 0 2px 8px 0 rgba(57,169,0,0.07);
+}
+.btn-busqueda-moderna:hover {
+    background: #2e7d0b;
+}
+.app-main {
+    padding: 18px 16px 90px;
+}
+
+.app-container {
+    width: min(1300px, 100%);
+}
+
+.inventory-filters {
+    width: min(1300px, 100%);
+    margin: 0 auto;
+    background: #ffffff;
+    border: 1px solid #e2e8ee;
+    border-radius: 14px;
+    padding: .8rem;
+    box-shadow: 0 12px 30px rgba(22, 34, 55, .05);
+}
+
+.inventory-filters__row {
+    display: grid;
+    grid-template-columns: 1fr 230px auto;
+    gap: .65rem;
+}
+
+.inventory-filters input[type="search"],
+.inventory-filters select {
+    height: 42px;
+    border-radius: 10px;
+    border: 1px solid #d5dde7;
+    padding: 0 .8rem;
+    font: inherit;
+    background: #fff;
+}
+
+.inventory-filters__check {
+    margin-top: .55rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    font-size: .9rem;
+    color: #4b5a6d;
+}
+
+.btn--filter {
+    height: 42px;
+    padding: 0 1rem;
+    border-radius: 10px;
+}
+
+.inventory-home {
+    margin-top: 1rem;
+    display: grid;
+    gap: 1rem;
+    width: 100%;
+    min-width: 0;
+}
+
+.inventory-hero {
+    background: radial-gradient(circle at 10% 10%, #1f2734, #0e1727 68%);
+    color: #f5f9ff;
+    border-radius: 18px;
+    padding: 1.2rem;
+    border: 1px solid #0b1220;
+}
+
+.inventory-hero h1 {
+    margin: 0;
+    font-size: clamp(1.4rem, 2.6vw, 2rem);
+}
+
+.inventory-hero p {
+    margin: .35rem 0 0;
+    color: #c7d5ea;
+}
+
+.inventory-stats {
+    margin-top: .95rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .7rem;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(210, 224, 244, .22);
+    border-radius: 12px;
+    padding: .75rem .8rem;
+}
+
+.stat-card__label {
+    display: block;
+    font-size: .78rem;
+    color: #b8c9e0;
+}
+
+.stat-card__value {
+    margin-top: .15rem;
+    display: block;
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.stat-card--warning {
+    border-color: rgba(255, 161, 64, .45);
+}
+
+.market-section,
+.catalog-lanes {
+    background: #fff;
+    border: 1px solid #e2e8ee;
+    border-radius: 16px;
+    padding: 1rem;
+    width: 100%;
+    min-width: 0;
+}
+
+.section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .8rem;
+}
+
+.section-head h2 {
+    margin: 0;
+    font-size: 1.12rem;
+    color: #15243a;
+}
+
+.section-head span {
+    font-size: .82rem;
+    color: #708197;
+}
+
+.market-carousel {
+    margin-top: .85rem;
+    overflow: hidden;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 100%;
+}
+
+.market-track {
+    display: flex;
+    gap: .85rem;
+    width: auto;
+    will-change: transform;
+}
+
+.market-card {
+    border: 1px solid #e4eaf1;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    width: 210px;
+    flex: 0 0 210px;
+}
+
+.market-card__media {
+    display: block;
+    height: 152px;
+    background: #f4f7fb;
+}
+
+.market-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.market-card__placeholder {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    color: #8b9db3;
+    font-size: 2rem;
+}
+
+.market-card__body {
+    padding: .72rem;
+    display: grid;
+    gap: .3rem;
+}
+
+.market-card__body h3 {

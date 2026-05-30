@@ -1,0 +1,320 @@
+.pedidos-usuario-page {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: 10px 0 30px;
+}
+
+.pedidos-usuario-hero {
+  margin-bottom: 18px;
+}
+
+.pedidos-usuario-eyebrow {
+  margin: 0 0 8px;
+  color: #39a900;
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.pedidos-usuario-hero h1 {
+  margin: 0;
+  color: #1f281f;
+  font-size: clamp(1.8rem, 2.6vw, 2.8rem);
+}
+
+.pedidos-usuario-hero p {
+  margin: 10px 0 0;
+  color: #5e685f;
+  max-width: 680px;
+}
+
+.pedidos-usuario-list {
+  display: grid;
+  gap: 14px;
+}
+
+.pedidos-usuario-filtros {
+  margin: 0 0 14px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pedidos-usuario-filtro {
+  border: 1px solid #dce7d7;
+  border-radius: 14px;
+  background: #fff;
+  text-decoration: none;
+  color: #2a342c;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-weight: 700;
+}
+
+.pedidos-usuario-filtro strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #eef7e8;
+  color: #2b7600;
+  font-size: 0.8rem;
+}
+
+.pedidos-usuario-filtro.is-active {
+  border-color: #4ba41f;
+  background: #eef8e7;
+  color: #1f5c00;
+}
+
+.pedidos-usuario-filtro--pendiente {
+  border-color: #ffd7ab;
+  color: #a85c03;
+}
+
+.pedidos-usuario-filtro--pendiente strong {
+  background: #fff6e8 !important;
+  color: #c96a00 !important;
+}
+
+.pedidos-usuario-filtro--pendiente.is-active {
+  background: #fff4e4;
+  border-color: #f0bf86 !important;
+  color: #9a5400;
+}
+
+.pedidos-usuario-filtro--esperando-entrega {
+  border-color: #cadeff;
+  color: #24539d;
+}
+
+.pedidos-usuario-filtro--esperando-entrega strong {
+  background: #eef5ff !important;
+  color: #2e63b8 !important;
+}
+
+.pedidos-usuario-filtro--esperando-entrega.is-active {
+  background: #e9f2ff;
+  border-color: #9fc0f3 !important;
+  color: #1e4b90;
+}
+
+.pedidos-usuario-card {
+  border: 1px solid #e1eadc;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 14px 28px rgba(57, 169, 0, 0.08);
+  padding: 16px;
+}
+
+.pedidos-usuario-card--pendiente {
+  border-left: 5px solid #d88711;
+  background: linear-gradient(180deg, #fffdf9 0%, #ffffff 100%);
+}
+
+.pedidos-usuario-card--esperando-entrega {
+  border-left: 5px solid #3e73c2;
+  background: linear-gradient(180deg, #fbfdff 0%, #ffffff 100%);
+}
+
+.pedidos-usuario-card--entregado {
+  border-left: 5px solid #2e8f50;
+}
+
+.pedidos-usuario-card--devuelto {
+  border-left: 5px solid #1f7a43;
+}
+
+.pedidos-usuario-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.pedidos-usuario-card__id {
+  margin: 0;
+  color: #1f281f;
+  font-weight: 800;
+}
+
+.pedidos-usuario-card__date {
+  margin: 4px 0 0;
+  color: #657064;
+  font-size: 0.9rem;
+}
+
+.pedidos-usuario-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: capitalize;
+  border: 1px solid transparent;
+}
+
+.pedidos-usuario-status--pendiente {
+  background: #fff6e8;
+  color: #c96a00;
+  border-color: #ffd7ab;
+}
+
+.pedidos-usuario-status--esperando-entrega {
+  background: #eef5ff;
+  color: #2e63b8;
+  border-color: #cadeff;
+}
+
+.pedidos-usuario-status--aprobado {
+  background: #edf7e7;
+  color: #2b7600;
+  border-color: #d8ebca;
+}
+
+.pedidos-usuario-status--rechazado {
+  background: #ffecec;
+  color: #b43a3a;
+  border-color: #ffcece;
+}
+
+.pedidos-usuario-status--entregado {
+  background: #e9f8ee;
+  color: #1f7a43;
+  border-color: #cdebd8;
+}
+
+.pedidos-usuario-status--devuelto {
+  background: #edf8f0;
+  color: #1b6a3a;
+  border-color: #cae8d2;
+}
+
+.pedidos-usuario-card__stats {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pedidos-usuario-card__stats div {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #f4f8f1;
+  border: 1px solid #dce8d5;
+}
+
+.pedidos-usuario-card__stats span {
+  display: block;
+  color: #677268;
+  font-size: 0.82rem;
+}
+
+.pedidos-usuario-codigo {
+  margin-top: 10px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  padding: 10px 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.pedidos-usuario-codigo span {
+  font-size: 0.82rem;
+  color: #5f6a61;
+}
+
+.pedidos-usuario-codigo strong {
+  font-size: 1.32rem;
+  letter-spacing: 0.2em;
+  font-weight: 900;
+}
+
+.pedidos-usuario-codigo small {
+  color: #5f6a61;
+}
+
+.pedidos-usuario-codigo--ok {
+  background: #edf5ff;
+  border-color: #cfe0ff;
+  color: #285da9;
+}
+
+.pedidos-usuario-codigo--expired {
+  background: #fff3eb;
+  border-color: #ffd8bc;
+  color: #b75a00;
+}
+
+.pedidos-usuario-products-toggle {
+  margin-top: 12px;
+  border: 1px solid #dbe7d5;
+  border-radius: 14px;
+  background: #f8fbf6;
+  overflow: hidden;
+}
+
+.pedidos-usuario-products-toggle summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-weight: 700;
+  color: #2f3b31;
+}
+
+.pedidos-usuario-products-toggle summary::-webkit-details-marker {
+  display: none;
+}
+
+.pedidos-usuario-products-toggle summary strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #e8f4e1;
+  color: #2c7600;
+  font-size: 0.82rem;
+}
+
+.pedidos-usuario-products-toggle[open] {
+  background: #fff;
+}
+
+.pedidos-usuario-products {
+  margin-top: 0;
+  display: grid;
+  gap: 10px;
+  padding: 0 10px 10px;
+}
+
+.pedidos-usuario-evidencias-grid {
+  margin-top: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+  padding: 0 10px 10px;
+}
+
+.pedidos-usuario-evidencia-item {
+  display: block;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  border: 1px solid #dde8d8;

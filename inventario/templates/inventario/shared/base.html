@@ -1,4 +1,4 @@
-{% load static %}
+{% load static assets %}
 <!doctype html>
 <html lang="es" {% if request.user.is_authenticated and request.user.tema == 'oscuro' %}data-theme="dark"{% endif %}>
 <head>
@@ -7,8 +7,8 @@
     <!-- Sincronizar localStorage con preferencia de BD para evitar flash en páginas externas -->
     <script>(function(){try{var t='{% if request.user.is_authenticated and request.user.tema == "oscuro" %}dark{% else %}light{% endif %}';localStorage.setItem('sgit-theme',t);}catch(e){}})()</script>
     <title>{% block title %}Inventario SENA - Sibate{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="{% static 'inventario/img/Logo SENA.svg' %}?v=2">
-    <link rel="shortcut icon" href="{% static 'inventario/img/Logo SENA.svg' %}?v=2">
+    <link rel="icon" type="image/svg+xml" href="{% static 'inventario/inventario/img/Logo SENA.svg' %}?v=2">
+    <link rel="shortcut icon" href="{% static 'inventario/inventario/img/Logo SENA.svg' %}?v=2">
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +22,7 @@
             }
         </style>
 
-    <link rel="stylesheet" href="{% static 'inventario/shared/css/base.css' %}">
+    <link rel="stylesheet" href="{% css_asset 'inventario/css/inventario/shared/base.css' %}">
     <style>
         /* Garantiza que el botón de notificaciones siempre sea visible,
            independiente de la versión de base.css en caché en el servidor */
@@ -211,7 +211,7 @@
         </div>
     </div>
 
-    <script src="{% static 'inventario/shared/js/navigation.js' %}" defer></script>
+    <script src="{% static 'inventario/js/inventario/shared/navigation.js' %}" defer></script>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     {% if request.user.is_authenticated %}

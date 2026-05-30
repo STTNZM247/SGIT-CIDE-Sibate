@@ -1,23 +1,23 @@
-va ahora vamos a mejorar el panel de http://127.0.0.1:8000/usuario/pedidos/, vamos a simplificar css codigos y mejorar funcionamientos,
+## Resumen de hoy (29 de mayo)
 
+- Se reorganizó la estructura del frontend y CSS del proyecto para dejar estilos más modulares por panel y funcionalidad.
+- Se corrigieron rutas y referencias estáticas para mantener consistencia en la carga de assets.
+- Se ajustó nomenclatura/organización general (alineación de nombres y módulos) para reducir confusión en mantenimiento.
+- Se consolidó el flujo de compilación de CSS (build + manifest) para evitar diferencias entre estilos fuente y estilos servidos.
 
-comos abemos tenemos las opciones de pendiente
-en espera
-devuelto
-cancelado
-rechazado(que deberia ser soloc ancelado pues rechazaco yc ancelado es lo mismo)
-entregaado
-
-tenemos el codigo de entrega y el codigo dinamico para cuando se vence el pedido y necesita entregarlo y estan als opciones d epedir ams tiempo solo 3 solicuitudes de pedir mas tiempo
-
-
-
-asi q vamos a mejorar todo eso, empezando con modular funciones js y css 
-
-
-asi q vamosa  mirar static, vemos q hay uancc arpeta llamda css pero debajo de todas esas hay otra q dice pedidos y dentro css, que pasa hayc arpetas volando de css asi q la primera carpeta de css es donde tendremso modulados todos los css del sistema por carpetas dependiendo de q tratan, si trata el css de usario de cualquier coas de usaurios sera la carpeta usuario y adnetro encontraremos los css de ellos sean en un solo archvio o varios para mejorar carga, entonces primero modula y arregla esas carpetas, luego vamos a modular el js y css
-
-
-despues de hcaer eso si editaremos el panel de http://127.0.0.1:8000/usuario/pedidos/
-
-para mejorar eos botones de filtro q tiene arriba  y mejroar lsoc ajones de los estados del pedido 
+- Se corrigieron desajustes visuales en varios paneles (`pedidos`, `prestamos`, `auditorias`) por bloques CSS truncados o mal ubicados.
+- Se mejoró el panel de `inventario` en búsqueda/select para que quedara consistente con el panel de usuario.
+- Se rediseñaron las tarjetas de productos en inventario (mejor jerarquía visual, chips, espaciado y dark mode).
+- Se mejoró la ventana/modal de detalle rápido de producto con mejor estructura visual y legibilidad.
+- Se ensanchó y reorganizó el formulario de `Nuevo producto` en catálogo para mejor distribución.
+- Se implementó lógica de subcategorías por catálogo: solo se muestran las subcategorías del catálogo seleccionado.
+- Se cambió la selección de subcategorías a estilo visual tipo “carpetas” (en lugar de selector nativo).
+- Se eliminó del flujo de `Nuevo producto` la función de crear “nuevas subcategorías” para simplificar la experiencia de usuarios nuevos.
+- Se ajustó el layout del formulario para evitar espacios en blanco y selects sobredimensionados.
+- Se implementó gestión de `Ubicaciones de productos`.
+- Nuevo botón en catálogo para abrir mini formulario y registrar ubicaciones por nombre.
+- Nuevo modelo `UbicacionProducto` y relación en `Catalogo` (`id_ubicacion_fk`).
+- Nuevo selector tipo “carpetas” en `Nuevo catálogo` para asignar ubicación predeterminada.
+- Autocompletado de ubicación en `Nuevo producto` según catálogo seleccionado.
+- Se creó y aplicó migración `0026_ubicacionproducto_catalogo_id_ubicacion_fk`.
+- Validaciones ejecutadas durante los cambios: `build_css_assets`, `check` y `migrate` completados correctamente.

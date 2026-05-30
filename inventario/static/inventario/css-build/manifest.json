@@ -1,0 +1,18 @@
+{
+  "inventario/css/admin/usuarios/panel_usuarios.css": "inventario/css-build/admin/usuarios/panel_usuarios.min.css",
+  "inventario/css/dashboard/dashboard.css": "inventario/css-build/dashboard/dashboard.min.css",
+  "inventario/css/dashboard/inventario_grid.css": "inventario/css-build/dashboard/inventario_grid.min.css",
+  "inventario/css/dashboard/inventario_searchbar.css": "inventario/css-build/dashboard/inventario_searchbar.min.css",
+  "inventario/css/dashboard/product_detail_quick.css": "inventario/css-build/dashboard/product_detail_quick.min.css",
+  "inventario/css/inventario/catalogo/catalogo.css": "inventario/css-build/inventario/catalogo/catalogo.min.css",
+  "inventario/css/inventario/pedidos/panel_pedidos.css": "inventario/css-build/inventario/pedidos/panel_pedidos.min.css",
+  "inventario/css/inventario/prestamos/panel_prestamos.css": "inventario/css-build/inventario/prestamos/panel_prestamos.min.css",
+  "inventario/css/inventario/shared/base.css": "inventario/css-build/inventario/shared/base.min.css",
+  "inventario/css/user/auth/login.css": "inventario/css-build/user/auth/login.min.css",
+  "inventario/css/user/carrito/carrito_usuario.css": "inventario/css-build/user/carrito/carrito_usuario.min.css",
+  "inventario/css/user/notificaciones/notificaciones.css": "inventario/css-build/user/notificaciones/notificaciones.min.css",
+  "inventario/css/user/panel/panel_usuario.css": "inventario/css-build/user/panel/panel_usuario.min.css",
+  "inventario/css/user/pedidos/pedidos_usuario.css": "inventario/css-build/user/pedidos/pedidos_usuario.min.css",
+  "inventario/css/user/perfil/perfil.css": "inventario/css-build/user/perfil/perfil.min.css",
+  "inventario/css/user/validacion/validacion_sena.css": "inventario/css-build/user/validacion/validacion_sena.min.css"
+}

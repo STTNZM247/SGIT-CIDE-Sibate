@@ -1,0 +1,253 @@
+/* =============================================
+   DARK MODE — Dashboard
+   ============================================= */
+html[data-theme="dark"] .admin-resumen__head h1,
+html[data-theme="dark"] .admin-resumen__head p {
+    color: #e2ede2;
+}
+
+html[data-theme="dark"] .admin-report-toolbar input[type="month"] {
+    background: #182018;
+    border-color: #253025;
+    color: #e2ede2;
+    color-scheme: dark;
+}
+
+html[data-theme="dark"] .btn-export--excel {
+    background: #1a3a1a;
+    color: #7dd87d;
+    border-color: #253025;
+}
+html[data-theme="dark"] .btn-export--inventory {
+    background: #123739;
+    color: #8de7e1;
+    border-color: #244143;
+}
+html[data-theme="dark"] .btn-export--pdf {
+    background: #1a2a1a;
+    color: #7dd87d;
+    border-color: #253025;
+}
+
+/* KPI cards */
+html[data-theme="dark"] .admin-kpi {
+    background: #111611 !important;
+    border-color: #253025 !important;
+    color: #e2ede2 !important;
+}
+html[data-theme="dark"] .admin-kpi--warn {
+    background: #1e1a0e !important;
+    border-color: #3a300a !important;
+}
+html[data-theme="dark"] .admin-kpi__label {
+    color: #90b090 !important;
+}
+html[data-theme="dark"] .admin-kpi__value {
+    color: #e2ede2 !important;
+}
+html[data-theme="dark"] .admin-kpi-pie__center span {
+    color: #90b090 !important;
+}
+html[data-theme="dark"] .admin-kpi-pie-legend .legend-row {
+    color: #b8d0b8 !important;
+}
+html[data-theme="dark"] .admin-kpi-link {
+    color: #7dd87d !important;
+    border-color: #253025 !important;
+    background: #182018 !important;
+}
+
+/* Modal stock gap */
+html[data-theme="dark"] .stock-gap-modal__dialog {
+    background: #111611 !important;
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .stock-gap-modal__head {
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .stock-gap-modal__head h2,
+html[data-theme="dark"] .stock-gap-modal__hint {
+    color: #e2ede2 !important;
+}
+html[data-theme="dark"] .stock-gap-table th {
+    background: #182018 !important;
+    color: #90b090 !important;
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .stock-gap-table td {
+    color: #c8dcc8 !important;
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .stock-gap-table tr:hover td {
+    background: #1a2b1a !important;
+}
+
+/* Admin cards (tablas y gráficos) */
+html[data-theme="dark"] .admin-card {
+    background: #111611 !important;
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .admin-card__head {
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .admin-card__head h2 {
+    color: #e2ede2 !important;
+}
+html[data-theme="dark"] .admin-card__head span,
+html[data-theme="dark"] .admin-card__empty {
+    color: #90b090 !important;
+}
+
+/* Tabla pedidos pendientes */
+html[data-theme="dark"] .admin-card--pendientes {
+    background: #0d1a0d !important;
+    border-color: #1e2b1e !important;
+}
+html[data-theme="dark"] .admin-pending-table th {
+    background: #182018 !important;
+    color: #90b090 !important;
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .admin-pending-table td {
+    color: #c8dcc8 !important;
+    border-color: #1e2b1e !important;
+}
+html[data-theme="dark"] .admin-pending-table tr:hover td {
+    background: #1a2b1a !important;
+}
+html[data-theme="dark"] .admin-pending-more-btn {
+    background: #182018 !important;
+    color: #7dd87d !important;
+    border-color: #253025 !important;
+}
+
+/* Tabla validación SENA manual */
+html[data-theme="dark"] .admin-card--sena-manual {
+    background: #0d1a0d !important;
+    border-color: #1e2b1e !important;
+}
+html[data-theme="dark"] .admin-card--sena-documentos {
+    background: #0d1a0d !important;
+    border-color: #1e2b1e !important;
+}
+html[data-theme="dark"] .admin-sena-table-wrap {
+    background: #111611 !important;
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .admin-sena-table th {
+    background: #182018 !important;
+    color: #90b090 !important;
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .admin-sena-table td {
+    color: #c8dcc8 !important;
+    border-color: #1e2b1e !important;
+}
+html[data-theme="dark"] .admin-sena-table tr:hover td {
+    background: #1a2b1a !important;
+}
+html[data-theme="dark"] .admin-sena-pill {
+    background: #1c321f !important;
+    border-color: #2c5232 !important;
+    color: #9ed3a7 !important;
+}
+html[data-theme="dark"] .admin-sena-link,
+html[data-theme="dark"] .admin-sena-btn {
+    background: #182018 !important;
+    color: #7dd87d !important;
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .admin-sena-btn--send {
+    background: linear-gradient(180deg, #17301b 0%, #1b3a20 100%) !important;
+    color: #abecb2 !important;
+    border-color: #2f6b3a !important;
+    box-shadow: 0 4px 14px rgba(27, 165, 68, 0.18) !important;
+    animation: adminSenaBtnJumpDark 1.9s ease-in-out infinite;
+}
+html[data-theme="dark"] .admin-sena-btn--send:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(180deg, #1b3821 0%, #214629 100%) !important;
+    border-color: #3b7f48 !important;
+    box-shadow: 0 8px 18px rgba(27, 165, 68, 0.24) !important;
+}
+
+@keyframes adminSenaBtnPulseDark {
+    0%, 100% {
+        box-shadow: 0 4px 14px rgba(27, 165, 68, 0.18);
+    }
+    50% {
+        box-shadow: 0 7px 20px rgba(27, 165, 68, 0.28);
+    }
+}
+
+@keyframes adminSenaBtnJumpDark {
+    0%, 100% {
+        transform: translateY(0);
+        box-shadow: 0 4px 14px rgba(27, 165, 68, 0.18);
+    }
+    22% {
+        transform: translateY(-2px);
+        box-shadow: 0 7px 18px rgba(27, 165, 68, 0.24);
+    }
+    44% {
+        transform: translateY(-5px);
+        box-shadow: 0 11px 22px rgba(27, 165, 68, 0.3);
+    }
+    60% {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(27, 165, 68, 0.24);
+    }
+    75% {
+        transform: translateY(0);
+        box-shadow: 0 4px 14px rgba(27, 165, 68, 0.18);
+    }
+}
+html[data-theme="dark"] .admin-sena-review {
+    background: #121d12 !important;
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .admin-sena-review__title {
+    color: #9ed3a7 !important;
+}
+html[data-theme="dark"] .admin-sena-btn--danger {
+    background: #2c1a1a !important;
+    color: #ffb8b8 !important;
+    border-color: #5b2d2d !important;
+}
+html[data-theme="dark"] .admin-sena-review__reason {
+    background: #111611 !important;
+    color: #c8dcc8 !important;
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .admin-sena-details summary,
+html[data-theme="dark"] .admin-sena-details p {
+    color: #9db99f !important;
+}
+html[data-theme="dark"] .admin-sena-evidence a {
+    color: #8bc4ff !important;
+}
+html[data-theme="dark"] .admin-sena-thumb {
+    border-color: #2d442e !important;
+    background: #162316 !important;
+}
+html[data-theme="dark"] #evidencePreviewImage {
+    border-color: #2a3f2a !important;
+    background: #111611 !important;
+}
+
+/* Gráfico de barras (line chart) */
+html[data-theme="dark"] .admin-line-controls {
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .line-filter {
+    background: #182018 !important;
+    color: #90b090 !important;
+    border-color: #253025 !important;
+}
+html[data-theme="dark"] .line-filter.is-active {
+    background: #39A900 !important;
+    color: #fff !important;
+}
+html[data-theme="dark"] .admin-line-chart .axis {
+    stroke: #253025 !important;
+    color: #6a8a6a !important;

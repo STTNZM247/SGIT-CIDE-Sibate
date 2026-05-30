@@ -1,9 +1,9 @@
 {% extends 'inventario/shared/base.html' %}
-{% load static %}
+{% load static assets %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventario/shared/css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'inventario/dashboard/css/dashboard.css' %}" data-page-style="true">
+    <link rel="stylesheet" href="{% css_asset 'inventario/css/inventario/shared/base.css' %}">
+    <link rel="stylesheet" href="{% css_asset 'inventario/css/dashboard/dashboard.css' %}" data-page-style="true">
 {% endblock %}
 
 {% block title %}Auditoría del sistema{% endblock %}

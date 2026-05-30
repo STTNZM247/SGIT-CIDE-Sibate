@@ -1,8 +1,8 @@
 ﻿{% extends 'inventario/shared/base.html' %}
-{% load static %}
+{% load static assets %}
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'inventario/shared/css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'inventario/css/pedidos/panel_pedidos.css' %}" data-page-style="true">
+    <link rel="stylesheet" href="{% css_asset 'inventario/css/inventario/shared/base.css' %}">
+    <link rel="stylesheet" href="{% css_asset 'inventario/css/inventario/pedidos/panel_pedidos.css' %}" data-page-style="true">
 {% endblock %}
 {% block title %}Panel de Pedidos | Inventario SENA{% endblock %}
 {% block content %}

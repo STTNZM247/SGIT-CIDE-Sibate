@@ -1,0 +1,115 @@
+html[data-theme="dark"] .usuario-megamenu__col {
+  background: #1a261b;
+  border-color: #2a3b2d;
+}
+html[data-theme="dark"] .usuario-megamenu__parent {
+  background: #1f3021;
+  color: #9dd57c;
+}
+html[data-theme="dark"] .usuario-megamenu__parent:hover {
+  background: #243727;
+  border-color: #3a553e;
+  color: #b8e89d;
+}
+html[data-theme="dark"] .usuario-megamenu__list a {
+  background: #1c2b1e;
+  color: #9dd57c;
+}
+html[data-theme="dark"] .usuario-megamenu__list a:hover {
+  background: #233225;
+  border-color: #3a553e;
+  color: #b8e89d;
+}
+html[data-theme="dark"] .usuario-megamenu__empty {
+  color: #a4b7a6;
+}
+html[data-theme="dark"] .usuario-store-empty {
+  background: #161f17;
+  border-color: #2a3b2d;
+  color: #b7c9b8;
+}
+html[data-theme="dark"] .usuario-store-empty h2 {
+  color: #deeadf;
+}
+html[data-theme="dark"] .usuario-store-empty p {
+  color: #9fb39f;
+}
+html[data-theme="dark"] .usuario-store-empty ion-icon {
+  color: #8fd66f;
+}
+
+/* -- Inventario grid cards -- */
+html[data-theme="dark"] .usuario-card {
+  background: #161e16;
+  border-color: #253025;
+  box-shadow: 0 2px 12px rgba(0,0,0,.3);
+}
+html[data-theme="dark"] .usuario-card__media,
+html[data-theme="dark"] .usuario-card__placeholder {
+  background: #1a241a;
+}
+html[data-theme="dark"] .usuario-card__name {
+  color: #e2ede2;
+}
+html[data-theme="dark"] .usuario-card__desc {
+  color: #8aac8a;
+}
+html[data-theme="dark"] .usuario-card__trace {
+  color: #8fb18f;
+}
+html[data-theme="dark"] .usuario-card__trace ion-icon {
+  color: #9dd57c;
+}
+html[data-theme="dark"] .usuario-carrito-form label {
+  color: #c5dcc5;
+}
+html[data-theme="dark"] .usuario-carrito-form input[type="number"] {
+  background: #0d1e0d;
+  border-color: #253025;
+  color: #e2ede2;
+}
+
+/* -- Detalle producto -- */
+html[data-theme="dark"] .usuario-product-detail-page {
+  background: #111611;
+  box-shadow: 0 8px 40px rgba(0,0,0,.5);
+}
+html[data-theme="dark"] .usuario-product-modal__placeholder {
+  background: #1a241a;
+  color: #4a6a4a;
+}
+html[data-theme="dark"] .usuario-product-modal__title {
+  color: #e2ede2;
+}
+html[data-theme="dark"] .usuario-product-detail-info .usuario-carrito-form label {
+  color: #c5dcc5;
+}
+html[data-theme="dark"] .usuario-product-detail-info .usuario-carrito-form input[type="number"] {
+  background: #0d1e2e;
+  border-color: #1a3a5c;
+  color: #d0e8ff;
+}
+html[data-theme="dark"] .usuario-product-detail-stock,
+html[data-theme="dark"] .usuario-product-detail-cat {
+  color: #b0c8b0;
+}
+html[data-theme="dark"] .usuario-product-detail-stock .usuario-product-detail-value,
+html[data-theme="dark"] .usuario-product-detail-cat .usuario-product-detail-value {
+  color: #e2ede2;
+}
+html[data-theme="dark"] .usuario-product-detail-stock .usuario-product-detail-label,
+html[data-theme="dark"] .usuario-product-detail-cat .usuario-product-detail-label {
+  color: #6a8a6a;
+}
+html[data-theme="dark"] .usuario-product-detail-block {
+  border-top-color: #253025;
+}
+html[data-theme="dark"] .usuario-product-detail-label {
+  color: #6a8a6a;
+}
+html[data-theme="dark"] .usuario-product-detail-value {
+  color: #e2ede2;
+}
+html[data-theme="dark"] .usuario-product-detail-value--preserve {
+  color: #b0c8b0;
+}
