@@ -3,7 +3,6 @@
 
 {% block title %}Inventario - Panel Usuario{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% css_asset 'inventario/css/dashboard/dashboard.css' %}" data-page-style="true">
 <link rel="stylesheet" href="{% css_asset 'inventario/css/user/panel/panel_usuario.css' %}" data-page-style="true">
 {% if request.user.tema == 'oscuro' %}
 <style data-page-style="true">
@@ -41,28 +40,28 @@ html[data-theme='dark'] .usuario-busqueda-bar input.usuario-busqueda-input:not([
 {% endblock %}
 
 {% block content %}
-<section class="panel-simple">
+<section class="panel-simple tw-space-y-4 tw-pb-6">
     <form method="get" action="" class="usuario-busqueda-form">
-        <div class="usuario-busqueda-bar">
-            <input type="text" name="q" class="usuario-busqueda-input" id="usuario-busqueda-input" placeholder="Busca tus elementos o productos" value="{{ request.GET.q|default:'' }}">
+        <div class="usuario-busqueda-bar tw-flex tw-items-center tw-gap-2 tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-px-3 tw-py-2 tw-shadow-sm">
+            <input type="text" name="q" class="usuario-busqueda-input tw-w-full tw-border-0 tw-bg-transparent tw-text-sm tw-text-slate-700 placeholder:tw-text-slate-400 focus:tw-outline-none" id="usuario-busqueda-input" placeholder="Busca tus elementos o productos" value="{{ request.GET.q|default:'' }}">
             {% if cat_sel %}<input type="hidden" name="cat" value="{{ cat_sel.id_cat }}">{% endif %}
             {% if sub_sel %}<input type="hidden" name="sub" value="{{ sub_sel.id_subcat }}">{% endif %}
-            <button type="button" class="usuario-busqueda-clear{% if not request.GET.q %} is-hidden{% endif %}" id="usuario-busqueda-clear" aria-label="Limpiar búsqueda" title="Limpiar búsqueda">
+            <button type="button" class="usuario-busqueda-clear tw-inline-flex tw-h-9 tw-w-9 tw-items-center tw-justify-center tw-rounded-lg tw-text-slate-500 hover:tw-bg-slate-100{% if not request.GET.q %} is-hidden{% endif %}" id="usuario-busqueda-clear" aria-label="Limpiar búsqueda" title="Limpiar búsqueda">
                 <ion-icon name="close-outline"></ion-icon>
             </button>
-            <button type="submit" class="usuario-busqueda-btn" aria-label="Buscar productos">
+            <button type="submit" class="usuario-busqueda-btn tw-inline-flex tw-h-9 tw-w-9 tw-items-center tw-justify-center tw-rounded-lg tw-bg-lime-500 tw-text-white hover:tw-bg-lime-600" aria-label="Buscar productos">
                 <ion-icon name="search-outline"></ion-icon>
             </button>
         </div>
     </form>
 
-    <nav class="usuario-megamenu" id="usuarioMegaMenu" aria-label="Catálogos y subcatálogos">
-        <div class="usuario-megamenu__tabs">
+    <nav class="usuario-megamenu tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-3 tw-shadow-sm" id="usuarioMegaMenu" aria-label="Catálogos y subcatálogos">
+        <div class="usuario-megamenu__tabs tw-flex tw-flex-wrap tw-items-center tw-gap-2">
             {% for item_menu in menu_catalogos %}
             {% if item_menu.columnas %}
             <button
                 type="button"
-                class="usuario-megamenu__tab{% if cat_sel and cat_sel.id_cat == item_menu.catalogo.id_cat %} is-active{% endif %}"
+                class="usuario-megamenu__tab tw-inline-flex tw-h-10 tw-items-center tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50{% if cat_sel and cat_sel.id_cat == item_menu.catalogo.id_cat %} is-active{% endif %}"
                 data-cat="{{ item_menu.catalogo.id_cat }}"
                 data-url="{% url 'panel_usuario' %}?cat={{ item_menu.catalogo.id_cat }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}"
                 title="Clic: ver subcategorías · Doble clic: ver todo el catálogo"
@@ -71,7 +70,7 @@ html[data-theme='dark'] .usuario-busqueda-bar input.usuario-busqueda-input:not([
             </button>
             {% else %}
             <a
-                class="usuario-megamenu__tab{% if cat_sel and cat_sel.id_cat == item_menu.catalogo.id_cat %} is-active{% endif %}"
+                class="usuario-megamenu__tab tw-inline-flex tw-h-10 tw-items-center tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50{% if cat_sel and cat_sel.id_cat == item_menu.catalogo.id_cat %} is-active{% endif %}"
                 href="{% url 'panel_usuario' %}?cat={{ item_menu.catalogo.id_cat }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}"
             >
                 {{ item_menu.catalogo.nombre_catalogo }}
@@ -91,14 +90,14 @@ html[data-theme='dark'] .usuario-busqueda-bar input.usuario-busqueda-input:not([
 
         {% for item_menu in menu_catalogos %}
         {% if item_menu.columnas %}
-        <div class="usuario-megamenu__panel{% if cat_sel and cat_sel.id_cat == item_menu.catalogo.id_cat %} is-open{% endif %}" data-panel="{{ item_menu.catalogo.id_cat }}">
-            <div class="usuario-megamenu__grid">
+        <div class="usuario-megamenu__panel tw-mt-3 tw-rounded-xl tw-border tw-border-slate-200 tw-bg-slate-50 tw-p-3{% if cat_sel and cat_sel.id_cat == item_menu.catalogo.id_cat %} is-open{% endif %}" data-panel="{{ item_menu.catalogo.id_cat }}">
+            <div class="usuario-megamenu__grid tw-grid tw-grid-cols-1 tw-gap-3 md:tw-grid-cols-2 xl:tw-grid-cols-3">
                 {% for col in item_menu.columnas %}
-                <section class="usuario-megamenu__col">
-                    <a class="usuario-megamenu__parent" href="{% url 'panel_usuario' %}?cat={{ item_menu.catalogo.id_cat }}&sub={{ col.padre.id_subcat }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}">
+                <section class="usuario-megamenu__col tw-rounded-lg tw-border tw-border-slate-200 tw-bg-white tw-p-3">
+                    <a class="usuario-megamenu__parent tw-text-sm tw-font-semibold tw-text-lime-700 hover:tw-underline" href="{% url 'panel_usuario' %}?cat={{ item_menu.catalogo.id_cat }}&sub={{ col.padre.id_subcat }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}">
                         {{ col.padre.nombre_subcategoria }}
                     </a>
-                    <ul class="usuario-megamenu__list">
+                    <ul class="usuario-megamenu__list tw-mt-2 tw-space-y-1">
                         {% for hija in col.hijas|slice:':8' %}
                         <li>
                             <a href="{% url 'panel_usuario' %}?cat={{ item_menu.catalogo.id_cat }}&sub={{ hija.id_subcat }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}">{{ hija.nombre_subcategoria }}</a>
@@ -115,7 +114,7 @@ html[data-theme='dark'] .usuario-busqueda-bar input.usuario-busqueda-input:not([
         {% endfor %}
     </nav>
 
-    <nav class="usuario-breadcrumb" aria-label="Trazabilidad de ruta">
+    <nav class="usuario-breadcrumb tw-flex tw-flex-wrap tw-items-center tw-gap-1.5 tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-px-3 tw-py-2 tw-text-sm tw-shadow-sm" aria-label="Trazabilidad de ruta">
         {% for crumb in breadcrumb %}
             {% if crumb.url %}
             <a href="{{ crumb.url }}{% if request.GET.q and forloop.counter0 < breadcrumb|length|add:'-1' %}{% if '?' in crumb.url %}&{% else %}?{% endif %}q={{ request.GET.q|urlencode }}{% endif %}">{{ crumb.label }}</a>
@@ -135,7 +134,7 @@ html[data-theme='dark'] .usuario-busqueda-bar input.usuario-busqueda-input:not([
     </p>
     {% endif %}
 
-    <header class="usuario-catalog-header">
+    <header class="usuario-catalog-header tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
         <h1>
             {% if sub_sel %}
                 {{ sub_sel.nombre_subcategoria }}
@@ -148,9 +147,9 @@ html[data-theme='dark'] .usuario-busqueda-bar input.usuario-busqueda-input:not([
         <p>{{ productos|length }} producto{{ productos|length|pluralize }} disponible{{ productos|length|pluralize:'s' }}</p>
     </header>
 
-    <div class="usuario-inventario-grid">
+    <div class="usuario-inventario-grid tw-grid tw-grid-cols-1 tw-gap-4 md:tw-grid-cols-2 xl:tw-grid-cols-3">
         {% for producto in productos %}
-        <article class="usuario-store-card" onclick="if(!event.target.closest('form')){window.location='{% url 'producto_detalle_usuario' producto.id_prod %}?{% if cat_sel %}cat={{ cat_sel.id_cat }}&{% endif %}{% if sub_sel %}sub={{ sub_sel.id_subcat }}&{% endif %}{% if request.GET.q %}q={{ request.GET.q|urlencode }}{% endif %}';}">
+        <article class="usuario-store-card tw-overflow-hidden tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm hover:tw-border-lime-300 hover:tw-shadow-md" onclick="if(!event.target.closest('form')){window.location='{% url 'producto_detalle_usuario' producto.id_prod %}?{% if cat_sel %}cat={{ cat_sel.id_cat }}&{% endif %}{% if sub_sel %}sub={{ sub_sel.id_subcat }}&{% endif %}{% if request.GET.q %}q={{ request.GET.q|urlencode }}{% endif %}';}">
             <div class="usuario-card__media">
                 {% if producto.fot_prod %}
                     <img src="{{ producto.fot_prod.url }}" alt="{{ producto.nombre_producto }}">
@@ -189,11 +188,11 @@ html[data-theme='dark'] .usuario-busqueda-bar input.usuario-busqueda-input:not([
                     </span>
                 </div>
 
-                <form method="post" action="{% url 'usuario_agregar_carrito' producto.id_prod %}" class="usuario-carrito-form" onclick="event.stopPropagation();">
+                <form method="post" action="{% url 'usuario_agregar_carrito' producto.id_prod %}" class="usuario-carrito-form tw-mt-2 tw-flex tw-items-end tw-gap-2" onclick="event.stopPropagation();">
                     {% csrf_token %}
-                    <label for="cantidad-{{ producto.id_prod }}">Cantidad</label>
-                    <input type="number" min="1" max="{{ producto.stock_actual|default:'1' }}" name="cantidad" id="cantidad-{{ producto.id_prod }}" value="1" required>
-                    <button type="submit" class="usuario-btn-carrito" title="Agregar al carrito" {% if producto.stock_actual|default:0 <= 0 %}disabled{% endif %}>
+                    <label class="tw-text-xs tw-font-semibold tw-text-slate-600" for="cantidad-{{ producto.id_prod }}">Cantidad</label>
+                    <input class="tw-h-9 tw-w-16 tw-rounded-lg tw-border tw-border-slate-300 tw-px-2 tw-text-sm" type="number" min="1" max="{{ producto.stock_actual|default:'1' }}" name="cantidad" id="cantidad-{{ producto.id_prod }}" value="1" required>
+                    <button type="submit" class="usuario-btn-carrito tw-inline-flex tw-h-9 tw-items-center tw-justify-center tw-gap-1 tw-rounded-lg tw-bg-lime-500 tw-px-3 tw-text-xs tw-font-semibold tw-text-white hover:tw-bg-lime-600" title="Agregar al carrito" {% if producto.stock_actual|default:0 <= 0 %}disabled{% endif %}>
                         <ion-icon name="cart-outline"></ion-icon>
                         <span>Agregar</span>
                     </button>
@@ -201,7 +200,7 @@ html[data-theme='dark'] .usuario-busqueda-bar input.usuario-busqueda-input:not([
             </div>
         </article>
         {% empty %}
-        <section class="usuario-store-empty">
+        <section class="usuario-store-empty tw-col-span-full tw-rounded-2xl tw-border tw-border-dashed tw-border-slate-300 tw-bg-white tw-p-8 tw-text-center tw-text-slate-600">
             <ion-icon name="search-outline"></ion-icon>
             <h2>No se encontraron productos con estos filtros</h2>
             <p>Prueba con otro término de búsqueda o selecciona un subcatálogo diferente.</p>

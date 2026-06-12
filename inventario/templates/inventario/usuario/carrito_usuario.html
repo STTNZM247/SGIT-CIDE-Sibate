@@ -3,17 +3,15 @@
 
 {% block title %}Carrito de Compras{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% css_asset 'inventario/css/dashboard/dashboard.css' %}" data-page-style="true">
-<link rel="stylesheet" href="{% css_asset 'inventario/css/user/panel/panel_usuario.css' %}" data-page-style="true">
 <link rel="stylesheet" href="{% css_asset 'inventario/css/user/carrito/carrito_usuario.css' %}" data-page-style="true">
 {% endblock %}
 
 {% block content %}
-<div class="usuario-carrito-page">
+<div class="usuario-carrito-page tw-space-y-4 tw-pb-6">
     {% if messages %}
-    <div class="usuario-carrito-flashes" role="alert">
+    <div class="usuario-carrito-flashes tw-space-y-2" role="alert">
         {% for msg in messages %}
-        <div class="usuario-carrito-flash usuario-carrito-flash--{{ msg.tags|default:'info' }}">
+        <div class="usuario-carrito-flash usuario-carrito-flash--{{ msg.tags|default:'info' }} tw-flex tw-items-center tw-gap-2 tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-px-3 tw-py-2 tw-text-sm tw-font-medium tw-text-slate-700">
             <ion-icon name="{% if 'error' in msg.tags %}alert-circle-outline{% else %}checkmark-circle-outline{% endif %}"></ion-icon>
             <span>{{ msg }}</span>
         </div>
@@ -21,24 +19,24 @@
     </div>
     {% endif %}
 
-    <header class="usuario-carrito-hero">
+    <header class="usuario-carrito-hero tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-sm">
         <div>
-            <p class="usuario-carrito-eyebrow">Mi carrito</p>
-            <h1>Productos guardados para tu pedido</h1>
-            <p class="usuario-carrito-subtitle">Revisa cantidades y organiza tu solicitud antes de enviarla al almacenista.</p>
+            <p class="usuario-carrito-eyebrow tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Mi carrito</p>
+            <h1 class="tw-text-2xl tw-font-bold tw-text-slate-900">Productos guardados para tu pedido</h1>
+            <p class="usuario-carrito-subtitle tw-mt-1 tw-text-sm tw-text-slate-600">Revisa cantidades y organiza tu solicitud antes de enviarla al almacenista.</p>
         </div>
     </header>
 
     {% if carrito_items %}
-    <section class="usuario-carrito-layout">
+    <section class="usuario-carrito-layout tw-grid tw-grid-cols-1 tw-gap-4 xl:tw-grid-cols-[2fr_1fr]">
         <div class="usuario-carrito-lista">
-            <div class="usuario-carrito-toolbar">
-                <span class="usuario-carrito-pill">{{ total_productos }} producto{{ total_productos|pluralize }}</span>
-                <span class="usuario-carrito-pill">{{ total_unidades }} unidad{{ total_unidades|pluralize:"es" }} solicitada{{ total_unidades|pluralize:"s" }}</span>
+            <div class="usuario-carrito-toolbar tw-mb-3 tw-flex tw-flex-wrap tw-gap-2">
+                <span class="usuario-carrito-pill tw-inline-flex tw-items-center tw-rounded-full tw-bg-slate-100 tw-px-3 tw-py-1 tw-text-xs tw-font-semibold tw-text-slate-700">{{ total_productos }} producto{{ total_productos|pluralize }}</span>
+                <span class="usuario-carrito-pill tw-inline-flex tw-items-center tw-rounded-full tw-bg-lime-100 tw-px-3 tw-py-1 tw-text-xs tw-font-semibold tw-text-lime-700">{{ total_unidades }} unidad{{ total_unidades|pluralize:"es" }} solicitada{{ total_unidades|pluralize:"s" }}</span>
             </div>
 
             {% for item in carrito_items %}
-            <article class="usuario-carrito-card {% if item.supera_stock %}usuario-carrito-card--warning{% endif %}{% if item.cantidad == 0 %} usuario-carrito-card--inactive{% endif %}">
+            <article class="usuario-carrito-card tw-mb-3 tw-overflow-hidden tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm {% if item.supera_stock %}usuario-carrito-card--warning{% endif %}{% if item.cantidad == 0 %} usuario-carrito-card--inactive{% endif %}">
                 <div class="usuario-carrito-card__media">
                     {% if item.producto.fot_prod %}
                     <img src="{{ item.producto.fot_prod.url }}" alt="{{ item.producto.nombre_producto }}">
@@ -57,7 +55,7 @@
                         </div>
                         <form method="post" action="{% url 'usuario_eliminar_carrito' item.producto.id_prod %}">
                             {% csrf_token %}
-                            <button type="submit" class="usuario-carrito-remove" aria-label="Eliminar {{ item.producto.nombre_producto }} del carrito">
+                            <button type="submit" class="usuario-carrito-remove tw-inline-flex tw-h-9 tw-w-9 tw-items-center tw-justify-center tw-rounded-lg tw-border tw-border-rose-200 tw-bg-rose-50 tw-text-rose-700 hover:tw-bg-rose-100" aria-label="Eliminar {{ item.producto.nombre_producto }} del carrito">
                                 <ion-icon name="trash-outline"></ion-icon>
                             </button>
                         </form>
@@ -76,7 +74,7 @@
                             <span class="usuario-carrito-meta-box__label">Cantidad solicitada</span>
                             <form method="post" action="{% url 'usuario_actualizar_cantidad_carrito' item.producto.id_prod %}" class="usuario-carrito-cantidad-form">
                                 {% csrf_token %}
-                                <input type="number" name="cantidad" value="{{ item.cantidad }}" min="0" max="999" class="usuario-carrito-cantidad-input" aria-label="Cantidad solicitada de {{ item.producto.nombre_producto }}" onchange="this.form.submit()">
+                                <input type="number" name="cantidad" value="{{ item.cantidad }}" min="0" max="999" class="usuario-carrito-cantidad-input tw-h-10 tw-w-20 tw-rounded-lg tw-border tw-border-slate-300 tw-px-2" aria-label="Cantidad solicitada de {{ item.producto.nombre_producto }}" onchange="this.form.submit()">
                                 <small>Si dejas 0, este producto no se incluirá en el pedido.</small>
                             </form>
                         </div>
@@ -101,7 +99,7 @@
         </div>
 
         <aside class="usuario-carrito-resumen">
-            <div class="usuario-carrito-resumen__card">
+            <div class="usuario-carrito-resumen__card tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
                 <p class="usuario-carrito-resumen__eyebrow">Resumen del pedido</p>
                 <h2>Tu selección actual</h2>
 
@@ -148,7 +146,7 @@
                 </div>
                 {% endif %}
 
-                <a href="{% url 'panel_usuario' %}" class="usuario-carrito-resumen__action usuario-carrito-resumen__action--secondary">
+                <a href="{% url 'panel_usuario' %}" class="usuario-carrito-resumen__action usuario-carrito-resumen__action--secondary tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-gap-2 tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-4 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50">
                     <ion-icon name="bag-add-outline"></ion-icon>
                     Agregar más productos
                 </a>
@@ -156,20 +154,20 @@
         </aside>
     </section>
     {% else %}
-    <section class="usuario-carrito-empty">
+    <section class="usuario-carrito-empty tw-rounded-2xl tw-border tw-border-dashed tw-border-slate-300 tw-bg-white tw-p-8 tw-text-center tw-text-slate-600">
         <div class="usuario-carrito-empty__icon">
             <ion-icon name="cart-outline"></ion-icon>
         </div>
         <h2>Tu carrito está vacío</h2>
         <p>Aún no has guardado productos. Explora el inventario y agrega los elementos que necesites.</p>
-        <a href="{% url 'panel_usuario' %}" class="cat-btn cat-btn--secondary">Ver productos</a>
+        <a href="{% url 'panel_usuario' %}" class="cat-btn cat-btn--secondary tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-4 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50">Ver productos</a>
     </section>
     {% endif %}
 </div>
 
 <!-- ===== Modal Préstamo ===== -->
-<div class="prestamo-modal-overlay" id="prestamo-modal" role="dialog" aria-modal="true" aria-labelledby="prestamo-modal-title" style="display:none">
-    <div class="prestamo-modal">
+<div class="prestamo-modal-overlay tw-fixed tw-inset-0 tw-z-[1400] tw-hidden tw-items-center tw-justify-center tw-bg-black/45 tw-p-4" id="prestamo-modal" role="dialog" aria-modal="true" aria-labelledby="prestamo-modal-title" style="display:none">
+    <div class="prestamo-modal tw-w-full tw-max-w-2xl tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-2xl">
         <button type="button" class="prestamo-modal__close" id="prestamo-modal-close" aria-label="Cerrar">
             <ion-icon name="close-outline"></ion-icon>
         </button>

@@ -8,23 +8,23 @@
 {% endblock %}
 
 {% block content %}
-<section class="validacion-sena-page">
-    <header class="validacion-sena-hero">
+<section class="validacion-sena-page tw-space-y-4 tw-pb-6">
+    <header class="validacion-sena-hero tw-flex tw-flex-col tw-gap-4 tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-sm lg:tw-flex-row lg:tw-items-start lg:tw-justify-between">
         <div>
-            <p class="validacion-sena-eyebrow">Identidad SENA</p>
-            <h1>Valida tu información para poder pedir</h1>
-            <p>Solo necesitas hacerlo una vez. Cuando tu cuenta quede validada no volveremos a pedirte este paso al realizar un pedido.</p>
+            <p class="validacion-sena-eyebrow tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Identidad SENA</p>
+            <h1 class="tw-text-2xl tw-font-bold tw-text-slate-900">Valida tu información para poder pedir</h1>
+            <p class="tw-mt-1 tw-text-sm tw-text-slate-600">Solo necesitas hacerlo una vez. Cuando tu cuenta quede validada no volveremos a pedirte este paso al realizar un pedido.</p>
         </div>
-        <div class="validacion-sena-status validacion-sena-status--{{ estado_validacion }}">
+        <div class="validacion-sena-status validacion-sena-status--{{ estado_validacion }} tw-rounded-xl tw-border tw-border-slate-200 tw-bg-slate-50 tw-px-3 tw-py-2 tw-text-sm">
             <span>Estado actual</span>
             <strong>{{ request.user.get_verificacion_sena_estado_display }}</strong>
         </div>
     </header>
 
     {% if messages %}
-    <div class="validacion-sena-flashes" role="alert">
+    <div class="validacion-sena-flashes tw-space-y-2" role="alert">
         {% for msg in messages %}
-        <div class="validacion-sena-flash validacion-sena-flash--{{ msg.tags|default:'info' }}">
+        <div class="validacion-sena-flash validacion-sena-flash--{{ msg.tags|default:'info' }} tw-flex tw-items-center tw-gap-2 tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-px-3 tw-py-2 tw-text-sm tw-font-medium tw-text-slate-700">
             <ion-icon name="{% if 'error' in msg.tags %}alert-circle-outline{% else %}checkmark-circle-outline{% endif %}"></ion-icon>
             <span>{{ msg }}</span>
         </div>
@@ -32,8 +32,8 @@
     </div>
     {% endif %}
 
-    <div class="validacion-sena-layout">
-        <article class="validacion-sena-card validacion-sena-card--primary">
+    <div class="validacion-sena-layout tw-grid tw-grid-cols-1 tw-gap-4 xl:tw-grid-cols-[2fr_1fr]">
+        <article class="validacion-sena-card validacion-sena-card--primary tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
             <div class="validacion-sena-card__head">
                 <div>
                     <h2>Envía tu foto para revisión manual</h2>
@@ -125,7 +125,7 @@
 
         </article>
 
-        <aside class="validacion-sena-card validacion-sena-card--secondary">
+        <aside class="validacion-sena-card validacion-sena-card--secondary tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
             <div class="validacion-sena-card__head">
                 <div>
                     <h2>¿Qué pasa después?</h2>

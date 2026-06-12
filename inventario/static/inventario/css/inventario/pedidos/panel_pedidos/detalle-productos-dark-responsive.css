@@ -68,19 +68,19 @@ html[data-theme="dark"] .detalle-productos-vacio {
   gap: 8px;
   border: none;
   border-radius: 14px;
-  padding: 12px 20px;
+  padding: 10px 16px;
   color: #fff;
   font-weight: 800;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   cursor: pointer;
   font-family: inherit;
   transition: opacity 0.2s, transform 0.15s;
 }
 
 .detalle-actions-row--fixed .pedido-action-btn {
-  min-height: 50px;
+  min-height: 42px;
   color: #fff !important;
-  font-size: 1.05rem;
+  font-size: 0.92rem;
   font-weight: 800;
   letter-spacing: 0.01em;
 }

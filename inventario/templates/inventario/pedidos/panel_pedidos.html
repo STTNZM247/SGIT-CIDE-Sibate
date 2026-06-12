@@ -1,19 +1,52 @@
 ﻿{% extends 'inventario/shared/base.html' %}
 {% load static assets %}
 {% block extra_css %}
-    <link rel="stylesheet" href="{% css_asset 'inventario/css/inventario/shared/base.css' %}">
-    <link rel="stylesheet" href="{% css_asset 'inventario/css/inventario/pedidos/panel_pedidos.css' %}" data-page-style="true">
+<link rel="stylesheet" href="{% css_asset 'inventario/css/inventario/pedidos/panel_pedidos.css' %}" data-page-style="true">
+<style>
+    .pedido-row .pedidos-estado {
+        align-self: flex-start;
+        display: inline-flex;
+        align-items: center;
+        max-width: none;
+        width: max-content;
+        min-height: 28px;
+        padding: 5px 12px;
+        font-size: 0.78rem;
+        line-height: 1.35;
+        white-space: nowrap;
+    }
+
+    .pedido-row__btn-detalle {
+        justify-content: center;
+        min-height: 34px;
+        padding: 6px 12px;
+        font-size: 0.78rem;
+    }
+
+    @media (max-width: 860px) {
+        .pedido-row .pedidos-estado {
+            min-height: 30px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        .pedido-row__btn-detalle {
+            min-height: 36px;
+            font-size: 0.8rem;
+        }
+    }
+</style>
 {% endblock %}
 {% block title %}Panel de Pedidos | Inventario SENA{% endblock %}
 {% block content %}
-<section class="pedidos-page">
-    <header class="pedidos-page__hero">
+<section class="pedidos-page tw-space-y-4 tw-pb-6">
+    <header class="pedidos-page__hero tw-flex tw-flex-col tw-gap-4 tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-sm lg:tw-flex-row lg:tw-items-start lg:tw-justify-between">
         <div>
-            <p class="pedidos-page__eyebrow">Panel de pedidos</p>
-            <h1>Solicitudes de préstamo</h1>
-            <p>Pedidos pendientes y en espera de entrega. Los pedidos ya entregados se gestionan en el <a href="{% url 'prestamos_panel' %}" style="color:#39a900;font-weight:700;">panel de préstamos</a>.</p>
+            <p class="pedidos-page__eyebrow tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Panel de pedidos</p>
+            <h1 class="tw-text-2xl tw-font-bold tw-text-slate-900">Solicitudes de préstamo</h1>
+            <p class="tw-mt-1 tw-text-sm tw-text-slate-600">Pedidos pendientes y en espera de entrega. Los pedidos ya entregados se gestionan en el <a href="{% url 'prestamos_panel' %}" class="tw-font-bold tw-text-lime-700 hover:tw-underline">panel de préstamos</a>.</p>
         </div>
-        <div class="pedidos-page__summary">
+        <div class="pedidos-page__summary tw-inline-flex tw-items-center tw-gap-2 tw-self-start tw-rounded-full tw-bg-sky-100 tw-px-3 tw-py-1 tw-text-xs tw-font-semibold tw-text-sky-700">
             <ion-icon name="albums-outline"></ion-icon>
             <span>{{ pedidos|length }} pedido{{ pedidos|length|pluralize }}</span>
         </div>
@@ -22,9 +55,9 @@
     <div id="live-section-data">
 
     {% if pedidos %}
-    <div class="pedidos-cards">
+    <div class="pedidos-cards tw-space-y-3">
         {% for pedido in pedidos %}
-        <article class="pedido-row pedido-row--{{ pedido.estado|slugify }}">
+        <article class="pedido-row pedido-row--{{ pedido.estado|slugify }} tw-grid tw-grid-cols-1 tw-gap-3 tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm lg:tw-grid-cols-5">
 
             <!-- Columna 1: Usuario + ID -->
             <div class="pedido-row__usuario">
@@ -85,7 +118,6 @@
                     <ion-icon name="person-outline"></ion-icon>
                     <span>Sin verificar</span>
                 </div>
-                </div>
                 {% endif %}
             </div>
 
@@ -101,7 +133,7 @@
         {% endfor %}
     </div>
     {% else %}
-    <section class="pedidos-empty">
+    <section class="pedidos-empty tw-rounded-2xl tw-border tw-border-dashed tw-border-slate-300 tw-bg-white tw-p-8 tw-text-center tw-text-slate-600">
         <div class="pedidos-empty__icon">
             <ion-icon name="file-tray-outline"></ion-icon>
         </div>

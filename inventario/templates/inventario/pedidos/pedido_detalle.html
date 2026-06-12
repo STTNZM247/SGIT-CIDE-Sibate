@@ -1,17 +1,27 @@
 ﻿{% extends 'inventario/shared/base.html' %}
 {% load static assets %}
 {% block extra_css %}
-    <link rel="stylesheet" href="{% css_asset 'inventario/css/inventario/shared/base.css' %}">
-    <link rel="stylesheet" href="{% css_asset 'inventario/css/inventario/pedidos/panel_pedidos.css' %}" data-page-style="true">
+<link rel="stylesheet" href="{% css_asset 'inventario/css/inventario/pedidos/panel_pedidos.css' %}" data-page-style="true">
+<style>
+    .pedido-action-btn {
+        padding: 10px 16px;
+        font-size: 0.88rem;
+    }
+
+    .detalle-actions-row--fixed .pedido-action-btn {
+        min-height: 42px;
+        font-size: 0.92rem;
+    }
+</style>
 {% endblock %}
 {% block title %}Detalle Pedido #{{ pedido.id_pedido }} | Inventario SENA{% endblock %}
 {% block content %}
-<section class="pedidos-page">
+<section class="pedidos-page tw-space-y-4 tw-pb-6">
 
     {% if messages %}
-    <div class="pedidos-flashes" role="alert">
+    <div class="pedidos-flashes tw-space-y-2" role="alert">
         {% for msg in messages %}
-        <div class="pedidos-flash pedidos-flash--{{ msg.tags|default:'info' }}">
+        <div class="pedidos-flash pedidos-flash--{{ msg.tags|default:'info' }} tw-flex tw-items-center tw-gap-2 tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-px-3 tw-py-2 tw-text-sm tw-font-medium tw-text-slate-700">
             <ion-icon name="{% if 'error' in msg.tags %}alert-circle-outline{% else %}checkmark-circle-outline{% endif %}"></ion-icon>
             <span>{{ msg }}</span>
         </div>
@@ -20,14 +30,14 @@
     {% endif %}
 
     <!-- HERO -->
-    <header class="pedidos-page__hero">
+    <header class="pedidos-page__hero tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-sm">
         <div>
-            <p class="pedidos-page__eyebrow">Detalle del pedido</p>
-            <h1>Pedido #{{ pedido.id_pedido }}</h1>
+            <p class="pedidos-page__eyebrow tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Detalle del pedido</p>
+            <h1 class="tw-text-2xl tw-font-bold tw-text-slate-900">Pedido #{{ pedido.id_pedido }}</h1>
         </div>
     </header>
 
-    <section class="detalle-usuario-box">
+    <section class="detalle-usuario-box tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
         <div class="detalle-usuario-box__identity">
             <span class="detalle-usuario-box__avatar">
                 {% if pedido.id_usuario_fk.fot_usu %}
@@ -54,10 +64,10 @@
     </section>
 
     <!-- LAYOUT PRINCIPAL: sidebar + info -->
-    <div class="detalle-main-layout">
+    <div class="detalle-main-layout tw-grid tw-grid-cols-1 tw-gap-4 xl:tw-grid-cols-[1.15fr_1fr]">
 
         <!-- Sidebar izquierdo: lista de productos -->
-        <aside class="detalle-sidebar">
+        <aside class="detalle-sidebar tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-3 tw-shadow-sm">
             <div class="detalle-sidebar__header">
                 <h2 class="detalle-section-title"><ion-icon name="cube-outline"></ion-icon> Productos</h2>
                 <span class="detalle-section-count">{{ pedido.total_productos }} prod.</span>
@@ -106,7 +116,7 @@
         </aside>
 
         <!-- Columna derecha: Info general -->
-        <div class="detalle-info-col">
+        <div class="detalle-info-col tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
             <div class="detalle-info-header">
                 <h2 class="detalle-section-title"><ion-icon name="information-circle-outline"></ion-icon> Información general</h2>
             </div>
@@ -235,7 +245,7 @@
         </div>
     </div>
 
-    <section class="detalle-productos-resumen">
+    <section class="detalle-productos-resumen tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
         <div class="detalle-productos-resumen__header">
             <h2 class="detalle-section-title"><ion-icon name="list-outline"></ion-icon> Productos solicitados</h2>
             <span class="detalle-section-count">{{ pedido.total_productos }} items</span>
@@ -318,7 +328,7 @@
         <div class="prod-modal__dialog">
             <button type="button" class="prod-modal__close" id="prodModalClose" aria-label="Cerrar">&times;</button>
             <div class="prod-modal__media" id="prodModalMedia">
-                <img id="prodModalImg" src="" alt="" style="display:none;">
+                <img id="prodModalImg" src="" alt="" class="tw-hidden">
                 <span class="prod-modal__placeholder" id="prodModalPlaceholder"><ion-icon name="cube-outline"></ion-icon></span>
             </div>
             <div class="prod-modal__body">
@@ -337,12 +347,12 @@
                         <span>Stock disponible</span>
                         <strong id="prodModalStock"></strong>
                     </div>
-                    <div class="prod-modal__meta-item prod-modal__meta-item--dev" id="prodModalDevRow" style="display:none;">
+                    <div class="prod-modal__meta-item prod-modal__meta-item--dev tw-hidden" id="prodModalDevRow">
                         <ion-icon name="arrow-undo-outline"></ion-icon>
                         <span>Devolver antes del</span>
                         <strong id="prodModalDev"></strong>
                     </div>
-                    <div class="prod-modal__meta-item prod-modal__meta-item--unavail" id="prodModalUnavailRow" style="display:none;">
+                    <div class="prod-modal__meta-item prod-modal__meta-item--unavail tw-hidden" id="prodModalUnavailRow">
                         <ion-icon name="ban-outline"></ion-icon>
                         <span id="prodModalUnavailLabel"></span>
                     </div>
@@ -479,28 +489,28 @@
         var devRow = document.getElementById('prodModalDevRow');
         if (d.devolucion) {
             document.getElementById('prodModalDev').textContent = d.devolucion;
-            devRow.style.display = '';
+            devRow.classList.remove('tw-hidden');
         } else {
-            devRow.style.display = 'none';
+            devRow.classList.add('tw-hidden');
         }
         var unavailRow = document.getElementById('prodModalUnavailRow');
         if (d.estado === 'no_disponible') {
             document.getElementById('prodModalUnavailLabel').textContent = 'Marcado como no disponible';
-            unavailRow.style.display = '';
+            unavailRow.classList.remove('tw-hidden');
         } else if (d.estado === 'rechazado') {
             document.getElementById('prodModalUnavailLabel').textContent = 'Producto rechazado';
-            unavailRow.style.display = '';
+            unavailRow.classList.remove('tw-hidden');
         } else {
-            unavailRow.style.display = 'none';
+            unavailRow.classList.add('tw-hidden');
         }
         if (d.foto) {
             img.src = d.foto;
             img.alt = d.name || '';
-            img.style.display = '';
-            placeholder.style.display = 'none';
+            img.classList.remove('tw-hidden');
+            placeholder.classList.add('tw-hidden');
         } else {
-            img.style.display = 'none';
-            placeholder.style.display = '';
+            img.classList.add('tw-hidden');
+            placeholder.classList.remove('tw-hidden');
         }
         var verBtn = document.getElementById('prodModalVerBtn');
         if (d.prodId) {

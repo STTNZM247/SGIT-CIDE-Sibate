@@ -209,7 +209,7 @@
 
 .pedido-row {
   display: grid;
-  grid-template-columns: minmax(200px, 1.6fr) 120px minmax(200px, 1.4fr) 110px auto;
+  grid-template-columns: minmax(200px, 1.6fr) minmax(150px, 0.95fr) minmax(200px, 1.4fr) 110px auto;
   align-items: center;
   gap: 0;
   background: #fff;
@@ -308,6 +308,20 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
+  min-width: 0;
+}
+
+.pedido-row .pedidos-estado {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  max-width: none;
+  width: max-content;
+  min-height: 28px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  white-space: nowrap;
 }
 
 .pedido-row__label {

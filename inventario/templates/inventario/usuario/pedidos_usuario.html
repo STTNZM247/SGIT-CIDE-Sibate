@@ -7,37 +7,37 @@
 {% endblock %}
 
 {% block content %}
-<section class="pedidos-usuario-page">
-    <header class="pedidos-usuario-hero">
+<section class="pedidos-usuario-page tw-space-y-4 tw-pb-6">
+    <header class="pedidos-usuario-hero tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-sm">
         <div>
-            <p class="pedidos-usuario-eyebrow">Mis solicitudes</p>
-            <h1>Pedidos realizados</h1>
-            <p>Consulta el estado de tus pedidos y los productos incluidos en cada solicitud.</p>
+            <p class="pedidos-usuario-eyebrow tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Mis solicitudes</p>
+            <h1 class="tw-text-2xl tw-font-bold tw-text-slate-900">Pedidos realizados</h1>
+            <p class="tw-mt-1 tw-text-sm tw-text-slate-600">Consulta el estado de tus pedidos y los productos incluidos en cada solicitud.</p>
         </div>
     </header>
 
-    <nav class="pedidos-usuario-filtros" aria-label="Filtrar pedidos por estado">
-        <a href="?estado=todos" class="pedidos-usuario-filtro {% if estado_activo == 'todos' %}is-active{% endif %}">
+    <nav class="pedidos-usuario-filtros tw-flex tw-flex-wrap tw-gap-2" aria-label="Filtrar pedidos por estado">
+        <a href="?estado=todos" class="pedidos-usuario-filtro tw-inline-flex tw-items-center tw-gap-2 tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-py-2 tw-text-sm tw-font-semibold tw-text-slate-700 {% if estado_activo == 'todos' %}is-active{% endif %}">
             <span>Todos</span>
             <strong>{{ conteos_estado.todos|default:0 }}</strong>
         </a>
-        <a href="?estado=pendiente" class="pedidos-usuario-filtro pedidos-usuario-filtro--pendiente {% if estado_activo == 'pendiente' %}is-active{% endif %}">
+        <a href="?estado=pendiente" class="pedidos-usuario-filtro pedidos-usuario-filtro--pendiente tw-inline-flex tw-items-center tw-gap-2 tw-rounded-xl tw-border tw-border-amber-300 tw-bg-amber-50 tw-px-3 tw-py-2 tw-text-sm tw-font-semibold tw-text-amber-700 {% if estado_activo == 'pendiente' %}is-active{% endif %}">
             <span>Pendiente</span>
             <strong>{{ conteos_estado.pendiente|default:0 }}</strong>
         </a>
-        <a href="?estado=esperando-entrega" class="pedidos-usuario-filtro pedidos-usuario-filtro--esperando-entrega {% if estado_activo == 'esperando-entrega' %}is-active{% endif %}">
+        <a href="?estado=esperando-entrega" class="pedidos-usuario-filtro pedidos-usuario-filtro--esperando-entrega tw-inline-flex tw-items-center tw-gap-2 tw-rounded-xl tw-border tw-border-sky-300 tw-bg-sky-50 tw-px-3 tw-py-2 tw-text-sm tw-font-semibold tw-text-sky-700 {% if estado_activo == 'esperando-entrega' %}is-active{% endif %}">
             <span>En espera de entrega</span>
             <strong>{{ conteos_estado.esperando_entrega|default:0 }}</strong>
         </a>
-        <a href="?estado=entregado" class="pedidos-usuario-filtro {% if estado_activo == 'entregado' %}is-active{% endif %}">
+        <a href="?estado=entregado" class="pedidos-usuario-filtro tw-inline-flex tw-items-center tw-gap-2 tw-rounded-xl tw-border tw-border-lime-300 tw-bg-lime-50 tw-px-3 tw-py-2 tw-text-sm tw-font-semibold tw-text-lime-700 {% if estado_activo == 'entregado' %}is-active{% endif %}">
             <span>Entregado</span>
             <strong>{{ conteos_estado.entregado|default:0 }}</strong>
         </a>
-        <a href="?estado=devuelto" class="pedidos-usuario-filtro pedidos-usuario-filtro--devuelto {% if estado_activo == 'devuelto' %}is-active{% endif %}">
+        <a href="?estado=devuelto" class="pedidos-usuario-filtro pedidos-usuario-filtro--devuelto tw-inline-flex tw-items-center tw-gap-2 tw-rounded-xl tw-border tw-border-emerald-300 tw-bg-emerald-50 tw-px-3 tw-py-2 tw-text-sm tw-font-semibold tw-text-emerald-700 {% if estado_activo == 'devuelto' %}is-active{% endif %}">
             <span>Devuelto</span>
             <strong>{{ conteos_estado.devuelto|default:0 }}</strong>
         </a>
-        <a href="?estado=cancelado" class="pedidos-usuario-filtro pedidos-usuario-filtro--cancelado {% if estado_activo == 'cancelado' %}is-active{% endif %}">
+        <a href="?estado=cancelado" class="pedidos-usuario-filtro pedidos-usuario-filtro--cancelado tw-inline-flex tw-items-center tw-gap-2 tw-rounded-xl tw-border tw-border-rose-300 tw-bg-rose-50 tw-px-3 tw-py-2 tw-text-sm tw-font-semibold tw-text-rose-700 {% if estado_activo == 'cancelado' %}is-active{% endif %}">
             <span>Cancelado</span>
             <strong>{{ conteos_estado.cancelado|default:0 }}</strong>
         </a>
@@ -45,9 +45,9 @@
 
     {% if pedidos %}
 <div id="live-section-data">
-    <div class="pedidos-usuario-list">
+    <div class="pedidos-usuario-list tw-space-y-4">
         {% for pedido in pedidos %}
-        <article class="pedidos-usuario-card pedidos-usuario-card--{{ pedido.estado_ui|slugify }}">
+        <article class="pedidos-usuario-card pedidos-usuario-card--{{ pedido.estado_ui|slugify }} tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
             <div class="pedidos-usuario-card__head">
                 <div>
                     <p class="pedidos-usuario-card__id">Pedido #{{ pedido.id_pedido }}</p>
@@ -197,7 +197,7 @@
             </div>
             {% endif %}
 
-            <details class="pedidos-usuario-products-toggle">
+            <details class="pedidos-usuario-products-toggle tw-rounded-xl tw-border tw-border-slate-200 tw-bg-slate-50 tw-p-3">
                 <summary>
                     <span>Ver productos del pedido</span>
                     <strong>{{ pedido.detalles_usuario_count }}</strong>
@@ -264,7 +264,7 @@
                 </div>
         </div>
     {% else %}
-    <section class="pedidos-usuario-empty">
+    <section class="pedidos-usuario-empty tw-rounded-2xl tw-border tw-border-dashed tw-border-slate-300 tw-bg-white tw-p-8 tw-text-center tw-text-slate-600">
         <div class="pedidos-usuario-empty__icon"><ion-icon name="receipt-outline"></ion-icon></div>
         <h2>No hay pedidos en este estado</h2>
         <p>Cambia el filtro superior para revisar pedidos pendientes, en espera, entregados, devueltos o cancelados.</p>

@@ -8,15 +8,15 @@
 {% endblock %}
 
 {% block header_center %}
-<div class="page-title-row">
-    <h1 class="page-title">
+<div class="page-title-row tw-flex tw-flex-wrap tw-items-center tw-gap-3">
+    <h1 class="page-title tw-inline-flex tw-items-center tw-gap-2 tw-text-2xl tw-font-bold tw-text-slate-900">
         <ion-icon name="notifications-outline"></ion-icon>
         Notificaciones
     </h1>
     {% if notificaciones %}
-    <form method="post" action="{% url 'notificaciones_marcar_todas_leidas' %}" style="margin-left:auto;">
+    <form method="post" action="{% url 'notificaciones_marcar_todas_leidas' %}" class="tw-ml-auto">
         {% csrf_token %}
-        <button type="submit" class="btn-marcar-todas">
+        <button type="submit" class="btn-marcar-todas tw-inline-flex tw-h-10 tw-items-center tw-justify-center tw-gap-1 tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-4 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50">
             <ion-icon name="checkmark-done-outline"></ion-icon>
             Marcar todas como leídas
         </button>
@@ -26,18 +26,18 @@
 {% endblock %}
 
 {% block content %}
-<div class="notif-panel">
+<div class="notif-panel tw-space-y-3 tw-pb-6">
 
     {% if not notificaciones %}
-    <div class="notif-empty">
+    <div class="notif-empty tw-rounded-2xl tw-border tw-border-dashed tw-border-slate-300 tw-bg-white tw-p-8 tw-text-center tw-text-slate-600">
         <ion-icon name="notifications-off-outline"></ion-icon>
         <p>No tienes notificaciones aún.</p>
     </div>
     {% else %}
 
-    <ul class="notif-list">
+    <ul class="notif-list tw-space-y-3">
         {% for noti in notificaciones %}
-        <li class="notif-card {% if not noti.leida %}notif-unread{% endif %} notif-tipo-{{ noti.tipo }}">
+        <li class="notif-card tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm {% if not noti.leida %}notif-unread{% endif %} notif-tipo-{{ noti.tipo }}">
 
             <div class="notif-icon-wrap">
                 {% if noti.tipo == 'pedido_creado' %}
