@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'anymail',
     'inventario',
 ]
 
@@ -178,33 +179,23 @@ CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = IS_PYTHONANYWHERE
 CSRF_COOKIE_SECURE = IS_PYTHONANYWHERE
 
-# Email (SMTP transaccional)
-# Proveedor por variable: resend | brevo
-EMAIL_PROVIDER = os.getenv('EMAIL_PROVIDER', 'resend').strip().lower()
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+# Email transaccional
+# - En hosting (RESEND_API_KEY definida): usa Anymail → Resend API (HTTPS, sin SMTP).
+# - En local sin variable: backend de consola para no necesitar credenciales.
+_RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
 
-EMAIL_PROVIDER_DEFAULTS = {
-    'resend': {
-        'host': 'smtp.resend.com',
-        'port': '587',
-        'tls': 'True',
-        'user': 'resend',
-        'from_email': 'onboarding@resend.dev',
-    },
-    'brevo': {
-        'host': 'smtp-relay.brevo.com',
-        'port': '587',
-        'tls': 'True',
-        'user': '',
-        'from_email': '',
-    },
-}
+if _RESEND_API_KEY:
+    EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
+    ANYMAIL = {
+        'RESEND_API_KEY': _RESEND_API_KEY,
+    }
+else:
+    EMAIL_BACKEND = os.getenv(
+        'EMAIL_BACKEND',
+        'django.core.mail.backends.console.EmailBackend',
+    )
 
-_email_defaults = EMAIL_PROVIDER_DEFAULTS.get(EMAIL_PROVIDER, EMAIL_PROVIDER_DEFAULTS['resend'])
-
-EMAIL_HOST = os.getenv('EMAIL_HOST', _email_defaults['host'])
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', _email_defaults['port']))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', _email_defaults['tls']).lower() == 'true'
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', _email_defaults['user'])
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', _email_defaults['from_email'] or EMAIL_HOST_USER)
+DEFAULT_FROM_EMAIL = os.getenv(
+    'DEFAULT_FROM_EMAIL',
+    'Inventario SENA <notificaciones@resend.dev>',
+)
