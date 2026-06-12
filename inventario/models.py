@@ -291,10 +291,30 @@ class Producto(models.Model):
     class Meta:
         db_table = 'producto'
 
+    @staticmethod
+    def _strip_mysql_unsupported_chars(value):
+        if not isinstance(value, str):
+            return value
+        return ''.join(ch for ch in value if ord(ch) <= 0xFFFF)
+
     def __str__(self):
         return self.nombre_producto or f'Producto {self.id_prod}'
 
     def save(self, *args, **kwargs):
+        for field_name in (
+            'codigo_producto',
+            'nombre_producto',
+            'descripcion',
+            'unidad_medida',
+            'ubicacion',
+            'tipo_bien',
+            'numero_placa',
+            'cuentadante',
+        ):
+            current_value = getattr(self, field_name, None)
+            if isinstance(current_value, str):
+                setattr(self, field_name, self._strip_mysql_unsupported_chars(current_value))
+
         # Evita recomprimir cuando la imagen no cambió.
         should_optimize = bool(self.fot_prod)
         if should_optimize and self.pk:
