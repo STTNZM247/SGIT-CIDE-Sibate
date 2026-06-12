@@ -3,6 +3,7 @@
 
 {% block title %}Detalle de Producto | {{ producto.nombre_producto }}{% endblock %}
 {% block extra_css %}
+<link rel="stylesheet" href="{% css_asset 'inventario/css/user/panel/panel_usuario.css' %}" data-page-style="true">
 {% if request.user.tema == 'oscuro' %}
 <style data-page-style="true">
 .usuario-product-detail-page {
