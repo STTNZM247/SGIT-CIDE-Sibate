@@ -4264,8 +4264,19 @@ def pedido_detalle_panel(request, pedido_id):
             'Producto devolvible: debe retornarse después de su uso.'
         )
 
+    ahora = timezone.now()
+    pedido_es_vencido = (
+        pedido.estado in ['entregado', 'vencido']
+        and pedido.fecha_devolucion is not None
+        and pedido.fecha_devolucion <= ahora
+    )
+    estado_ui = 'vencido' if pedido_es_vencido else pedido.estado
+    estado_ui_label = 'Vencido' if estado_ui == 'vencido' else pedido.estado.title()
+
     return render(request, 'inventario/pedidos/pedido_detalle.html', {
         'pedido': pedido,
+        'estado_ui': estado_ui,
+        'estado_ui_label': estado_ui_label,
         'tipo_solicitud_items': tipo_solicitud_items,
         'tipo_solicitud_ayuda': tipo_solicitud_ayuda,
     })

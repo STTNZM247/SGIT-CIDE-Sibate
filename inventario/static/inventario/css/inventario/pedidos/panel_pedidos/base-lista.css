@@ -193,6 +193,7 @@
 .pedidos-estado--pendiente       { background: #fff6e8; color: #c96a00; border-color: #ffd7ab; }
 .pedidos-estado--esperando-entrega { background: #eef5ff; color: #2e63b8; border-color: #cadeff; }
 .pedidos-estado--entregado        { background: #e9f8ee; color: #1f7a43; border-color: #cdebd8; }
+.pedidos-estado--vencido          { background: #fff1ef; color: #b9382a; border-color: #f4c7c1; }
 .pedidos-estado--aprobado         { background: #edf7e7; color: #2b7600; border-color: #d8ebca; }
 .pedidos-estado--rechazado        { background: #ffecec; color: #b43a3a; border-color: #ffcece; }
 

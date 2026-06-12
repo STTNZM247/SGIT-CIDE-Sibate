@@ -53,7 +53,7 @@
             </div>
         </div>
         <div class="detalle-usuario-box__badges">
-            <span class="pedidos-estado pedidos-estado--{{ pedido.estado|slugify }} detalle-usuario-box__estado">{{ pedido.estado|title }}</span>
+            <span class="pedidos-estado pedidos-estado--{{ estado_ui|slugify }} detalle-usuario-box__estado">{{ estado_ui_label }}</span>
             {% with estado_sena=pedido.id_usuario_fk.verificacion_sena_estado %}
             <span class="detalle-user-badge {% if estado_sena == 'validado' %}detalle-user-badge--ok{% else %}detalle-user-badge--pending{% endif %}">
                 <ion-icon name="{% if estado_sena == 'validado' %}shield-checkmark-outline{% else %}shield-outline{% endif %}"></ion-icon>
@@ -238,7 +238,7 @@
                 {% else %}
                 <span class="pedido-action-info">
                     <ion-icon name="checkmark-circle-outline"></ion-icon>
-                    Este pedido ya está en estado: <strong>{{ pedido.estado }}</strong>
+                    Este pedido ya está en estado: <strong>{{ estado_ui_label }}</strong>
                 </span>
                 {% endif %}
             </div>

@@ -123,6 +123,12 @@ html[data-theme="dark"] .pedidos-estado--aprobado {
   border-color: #27452f !important;
 }
 
+html[data-theme="dark"] .pedidos-estado--vencido {
+  background: #2a1616 !important;
+  color: #ffb0a6 !important;
+  border-color: #7c3430 !important;
+}
+
 html[data-theme="dark"] .pedidos-estado--rechazado {
   background: #241515 !important;
   color: #ffb0b0 !important;
