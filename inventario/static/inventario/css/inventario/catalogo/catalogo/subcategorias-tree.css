@@ -129,7 +129,7 @@
     text-align: left;
     transition: background .16s, border-color .16s, box-shadow .16s, transform .16s;
     box-shadow: 0 10px 24px rgba(15,23,42,.04);
-    max-width: 280px;
+    max-width: 100%;
 }
 
 .subcat-node__tip {
