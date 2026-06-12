@@ -1,6 +1,7 @@
 {
   "inventario/css/admin/usuarios/panel_usuarios.css": "inventario/css-build/admin/usuarios/panel_usuarios.min.css",
   "inventario/css/dashboard/dashboard.css": "inventario/css-build/dashboard/dashboard.min.css",
+  "inventario/css/dashboard/dashboard/audit-panel.css": "inventario/css-build/dashboard/dashboard/audit-panel.min.css",
   "inventario/css/dashboard/inventario_grid.css": "inventario/css-build/dashboard/inventario_grid.min.css",
   "inventario/css/dashboard/inventario_searchbar.css": "inventario/css-build/dashboard/inventario_searchbar.min.css",
   "inventario/css/dashboard/product_detail_quick.css": "inventario/css-build/dashboard/product_detail_quick.min.css",
