@@ -47,6 +47,14 @@
   margin: 8px 0 0;
   text-align: right;
 }
+.perfil-cover-color--verde-1 { background: #39A900; }
+.perfil-cover-color--verde-2 { background: #007832; }
+.perfil-cover-color--azul { background: #00304D; }
+.perfil-cover-color--morado { background: #71277A; }
+.perfil-cover-color--cyan { background: #50E5F9; }
+.perfil-cover-color--amarillo { background: #FDC300; }
+.perfil-cover-color--neutro { background: #F6F6F6; }
+.perfil-cover-color--negro { background: #000000; }
 /* Toggle switch */
 .perfil-theme-switch {
   position: relative;
@@ -98,12 +106,12 @@ html[data-theme="dark"] #perfil-cover-trigger * {
 {% endblock %}
 
 {% block content %}
-<div class="perfil-page">
+<div class="perfil-page tw-space-y-4 tw-pb-6">
 
   {% if messages %}
-    <div class="perfil-messages">
+    <div class="perfil-messages tw-space-y-2">
       {% for message in messages %}
-        <div class="perfil-alert perfil-alert--{{ message.tags }}">
+        <div class="perfil-alert perfil-alert--{{ message.tags }} tw-flex tw-items-center tw-gap-2 tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-px-3 tw-py-2 tw-text-sm tw-font-medium tw-text-slate-700">
           <ion-icon name="{% if message.tags == 'success' %}checkmark-circle-outline{% else %}alert-circle-outline{% endif %}"></ion-icon>
           {{ message }}
         </div>
@@ -115,18 +123,18 @@ html[data-theme="dark"] #perfil-cover-trigger * {
     {% csrf_token %}
     {{ form.non_field_errors }}
 
-    <div style="display:none">
+    <div class="tw-hidden">
       {{ form.fot_usu }}
       {{ form.banner_usu }}
     </div>
 
-    <div class="perfil-card">
+    <div class="perfil-card tw-overflow-hidden tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-shadow-sm">
       <div class="perfil-cover" id="perfil-cover-area">
         {% if usuario.banner_usu %}
           <img src="{{ usuario.banner_usu.url }}" alt="Portada" class="perfil-cover-img" id="perfil-cover-preview">
         {% else %}
           <div class="perfil-cover-img perfil-cover-img--gradient" id="perfil-cover-preview-fallback"></div>
-          <img src="" alt="Portada" class="perfil-cover-img" id="perfil-cover-preview" style="display:none">
+          <img src="" alt="Portada" class="perfil-cover-img tw-hidden" id="perfil-cover-preview">
         {% endif %}
         <button type="button" class="perfil-cover-btn" id="perfil-cover-trigger" title="Cambiar portada">
           <ion-icon name="camera-outline"></ion-icon>
@@ -181,8 +189,8 @@ html[data-theme="dark"] #perfil-cover-trigger * {
         </article>
       </div>
 
-      <div class="perfil-dashboard-grid">
-        <section class="perfil-panel">
+      <div class="perfil-dashboard-grid tw-grid tw-grid-cols-1 tw-gap-4 lg:tw-grid-cols-[2fr_1fr]">
+        <section class="perfil-panel tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4">
           <h2 class="perfil-section-title">
             <ion-icon name="person-circle-outline"></ion-icon>
             Datos personales
@@ -225,7 +233,7 @@ html[data-theme="dark"] #perfil-cover-trigger * {
           </div>
         </section>
 
-        <aside class="perfil-panel perfil-panel--side">
+        <aside class="perfil-panel perfil-panel--side tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4">
           <h2 class="perfil-section-title">
             <ion-icon name="grid-outline"></ion-icon>
             Sub-menú rápido
@@ -243,7 +251,7 @@ html[data-theme="dark"] #perfil-cover-trigger * {
           </div>
 
           {# ── Preferencias de aspecto ───────────────────────── #}
-          <h2 class="perfil-section-title" style="margin-top:28px;">
+          <h2 class="perfil-section-title tw-mt-7">
             <ion-icon name="color-palette-outline"></ion-icon>
             Preferencias de aspecto
           </h2>
@@ -261,7 +269,7 @@ html[data-theme="dark"] #perfil-cover-trigger * {
                 <span class="perfil-theme-slider"></span>
               </label>
             </div>
-            <p class="perfil-aspecto-saved" id="aspecto-saved" style="display:none;">✓ Guardado</p>
+            <p class="perfil-aspecto-saved tw-hidden" id="aspecto-saved">✓ Guardado</p>
           </div>
         </aside>
       </div>
@@ -370,14 +378,14 @@ html[data-theme="dark"] #perfil-cover-trigger * {
   <div class="perfil-cover-picker" id="perfil-cover-picker">
     <p class="perfil-cover-picker-title">Elige un color</p>
     <div class="perfil-cover-picker-colors">
-      <button type="button" class="perfil-cover-color" data-color="#39A900" title="Verde institucional" style="background:#39A900"></button>
-      <button type="button" class="perfil-cover-color" data-color="#007832" title="Verde secundario" style="background:#007832"></button>
-      <button type="button" class="perfil-cover-color" data-color="#00304D" title="Azul marino" style="background:#00304D"></button>
-      <button type="button" class="perfil-cover-color" data-color="#71277A" title="Púrpura" style="background:#71277A"></button>
-      <button type="button" class="perfil-cover-color" data-color="#50E5F9" title="Cyan" style="background:#50E5F9"></button>
-      <button type="button" class="perfil-cover-color" data-color="#FDC300" title="Amarillo" style="background:#FDC300"></button>
-      <button type="button" class="perfil-cover-color" data-color="#F6F6F6" title="Neutro" style="background:#F6F6F6"></button>
-      <button type="button" class="perfil-cover-color" data-color="#000000" title="Negro" style="background:#000000"></button>
+      <button type="button" class="perfil-cover-color perfil-cover-color--verde-1" data-color="#39A900" title="Verde institucional"></button>
+      <button type="button" class="perfil-cover-color perfil-cover-color--verde-2" data-color="#007832" title="Verde secundario"></button>
+      <button type="button" class="perfil-cover-color perfil-cover-color--azul" data-color="#00304D" title="Azul marino"></button>
+      <button type="button" class="perfil-cover-color perfil-cover-color--morado" data-color="#71277A" title="Púrpura"></button>
+      <button type="button" class="perfil-cover-color perfil-cover-color--cyan" data-color="#50E5F9" title="Cyan"></button>
+      <button type="button" class="perfil-cover-color perfil-cover-color--amarillo" data-color="#FDC300" title="Amarillo"></button>
+      <button type="button" class="perfil-cover-color perfil-cover-color--neutro" data-color="#F6F6F6" title="Neutro"></button>
+      <button type="button" class="perfil-cover-color perfil-cover-color--negro" data-color="#000000" title="Negro"></button>
     </div>
     <div class="perfil-cover-picker-divider"></div>
     <button type="button" class="perfil-cover-picker-upload" id="perfil-cover-upload-btn">
@@ -483,9 +491,9 @@ html[data-theme="dark"] #perfil-cover-trigger * {
           /* Actualizar src para que la siguiente carga muestre la imagen */
           if (coverPreview) {
             coverPreview.src = data.url + '?t=' + Date.now();
-            coverPreview.style.display = 'block';
+            coverPreview.classList.remove('tw-hidden');
           }
-          if (coverFallback) coverFallback.style.display = 'none';
+          if (coverFallback) coverFallback.classList.add('tw-hidden');
         } else {
           showCoverStatus('✗ ' + (data.error || 'Error'), 'error');
         }
@@ -557,8 +565,8 @@ html[data-theme="dark"] #perfil-cover-trigger * {
       } else {
         coverArea.removeAttribute('data-light-cover');
       }
-      if (coverPreview) coverPreview.style.display = 'none';
-      if (coverFallback) coverFallback.style.display = 'none';
+      if (coverPreview) coverPreview.classList.add('tw-hidden');
+      if (coverFallback) coverFallback.classList.add('tw-hidden');
       document.querySelectorAll('.perfil-cover-color').forEach(function (b) { b.classList.remove('is-selected'); });
       this.classList.add('is-selected');
       coverPicker.classList.remove('is-open');
@@ -624,9 +632,9 @@ html[data-theme="dark"] #perfil-cover-trigger * {
       var file = this.files[0];
       if (coverPreview) {
         coverPreview.src = URL.createObjectURL(file);
-        coverPreview.style.display = 'block';
+        coverPreview.classList.remove('tw-hidden');
       }
-      if (coverFallback) coverFallback.style.display = 'none';
+      if (coverFallback) coverFallback.classList.add('tw-hidden');
       coverArea.style.background = '';
       document.querySelectorAll('.perfil-cover-color').forEach(function (b) { b.classList.remove('is-selected'); });
       saveBanner(file, file.name);
@@ -674,9 +682,9 @@ html[data-theme="dark"] #perfil-cover-trigger * {
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (data.ok && savedMsg) {
-          savedMsg.style.display = 'block';
+          savedMsg.classList.remove('tw-hidden');
           clearTimeout(savedTimer);
-          savedTimer = setTimeout(function () { savedMsg.style.display = 'none'; }, 2500);
+          savedTimer = setTimeout(function () { savedMsg.classList.add('tw-hidden'); }, 2500);
         }
       })
       .catch(function () {});

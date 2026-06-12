@@ -8,17 +8,17 @@
 {% endblock %}
 
 {% block content %}
-<section class="panel-simple panel-usuarios-admin">
+<section class="panel-simple panel-usuarios-admin tw-space-y-5 tw-pb-6">
     {% if messages %}
-    <div class="usuarios-alerts" aria-live="polite">
+    <div class="usuarios-alerts tw-space-y-2" aria-live="polite">
         {% for msg in messages %}
             {% if 'error' in msg.tags %}
-            <div class="usuarios-alert usuarios-alert--error">
+            <div class="usuarios-alert usuarios-alert--error tw-flex tw-items-center tw-gap-2 tw-rounded-xl tw-border tw-border-rose-200 tw-bg-rose-50 tw-px-3 tw-py-2 tw-text-sm tw-font-medium tw-text-rose-700">
                 <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
                 <span>{{ msg }}</span>
             </div>
             {% elif 'success' in msg.tags %}
-            <div class="usuarios-alert usuarios-alert--success">
+            <div class="usuarios-alert usuarios-alert--success tw-flex tw-items-center tw-gap-2 tw-rounded-xl tw-border tw-border-lime-200 tw-bg-lime-50 tw-px-3 tw-py-2 tw-text-sm tw-font-medium tw-text-lime-700">
                 <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
                 <span>{{ msg }}</span>
             </div>
@@ -27,119 +27,119 @@
     </div>
     {% endif %}
 
-    <header class="usuarios-topbar">
+    <header class="usuarios-topbar tw-flex tw-flex-col tw-gap-4 tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-sm lg:tw-flex-row lg:tw-items-center lg:tw-justify-between">
         <div>
-            <h1>Gestión de usuarios</h1>
-            <p>Administra cuentas, registra nuevos usuarios y actualiza roles con seguridad.</p>
+            <h1 class="tw-text-2xl tw-font-bold tw-text-slate-900">Gestión de usuarios</h1>
+            <p class="tw-mt-1 tw-text-sm tw-text-slate-600">Administra cuentas, registra nuevos usuarios y actualiza roles con seguridad.</p>
         </div>
-        <button class="usuarios-btn usuarios-btn--primary" id="btnAbrirModalCrearUsuario" type="button">
+        <button class="usuarios-btn usuarios-btn--primary tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-gap-2 tw-rounded-xl tw-bg-lime-500 tw-px-4 tw-text-sm tw-font-semibold tw-text-white hover:tw-bg-lime-600" id="btnAbrirModalCrearUsuario" type="button">
             <ion-icon name="person-add-outline" aria-hidden="true"></ion-icon>
             Nuevo usuario
         </button>
     </header>
 
-    <section class="usuarios-kpis" aria-label="Resumen de usuarios">
-        <article class="usuarios-kpi">
-            <span>Total usuarios</span>
-            <strong>{{ resumen.total_usuarios }}</strong>
+    <section class="usuarios-kpis tw-grid tw-grid-cols-1 tw-gap-3 sm:tw-grid-cols-2 xl:tw-grid-cols-4" aria-label="Resumen de usuarios">
+        <article class="usuarios-kpi tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
+            <span class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Total usuarios</span>
+            <strong class="tw-mt-1 tw-block tw-text-2xl tw-font-bold tw-text-slate-900">{{ resumen.total_usuarios }}</strong>
         </article>
-        <article class="usuarios-kpi">
-            <span>Usuarios activos</span>
-            <strong>{{ resumen.total_activos }}</strong>
+        <article class="usuarios-kpi tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
+            <span class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Usuarios activos</span>
+            <strong class="tw-mt-1 tw-block tw-text-2xl tw-font-bold tw-text-lime-700">{{ resumen.total_activos }}</strong>
         </article>
-        <article class="usuarios-kpi usuarios-kpi--locked">
-            <span>Administradores</span>
-            <strong>{{ resumen.total_admins }}</strong>
+        <article class="usuarios-kpi usuarios-kpi--locked tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
+            <span class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Administradores</span>
+            <strong class="tw-mt-1 tw-block tw-text-2xl tw-font-bold tw-text-sky-700">{{ resumen.total_admins }}</strong>
         </article>
-        <article class="usuarios-kpi">
-            <span>Resultado actual</span>
-            <strong>{{ resumen.total_visibles }}</strong>
+        <article class="usuarios-kpi tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
+            <span class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Resultado actual</span>
+            <strong class="tw-mt-1 tw-block tw-text-2xl tw-font-bold tw-text-slate-900">{{ resumen.total_visibles }}</strong>
         </article>
     </section>
 
-    <section class="usuarios-tools" aria-label="Filtros de búsqueda">
-        <form method="get" class="usuarios-search-form">
-            <label class="usuarios-search" for="q_usuarios">
+    <section class="usuarios-tools tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm" aria-label="Filtros de búsqueda">
+        <form method="get" class="usuarios-search-form tw-flex tw-flex-col tw-gap-2 sm:tw-flex-row sm:tw-items-center">
+            <label class="usuarios-search tw-flex tw-flex-1 tw-items-center tw-gap-2 tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-py-2" for="q_usuarios">
                 <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
-                <input id="q_usuarios" type="text" name="q" value="{{ query }}" placeholder="Buscar por nombre, correo o cédula">
+                <input id="q_usuarios" class="tw-w-full tw-border-0 tw-bg-transparent tw-text-sm tw-text-slate-700 placeholder:tw-text-slate-400 focus:tw-outline-none" type="text" name="q" value="{{ query }}" placeholder="Buscar por nombre, correo o cédula">
             </label>
-            <button class="usuarios-btn usuarios-btn--soft" type="submit">Buscar</button>
+            <button class="usuarios-btn usuarios-btn--soft tw-inline-flex tw-h-10 tw-items-center tw-justify-center tw-rounded-xl tw-border tw-border-slate-300 tw-bg-slate-100 tw-px-4 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-200" type="submit">Buscar</button>
         </form>
     </section>
 
     <div id="live-section-data">
-    <div class="tabla-usuarios-wrapper" role="region" aria-label="Tabla de usuarios">
-        <table class="tabla-usuarios-admin">
+    <div class="tabla-usuarios-wrapper tw-overflow-hidden tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-shadow-sm" role="region" aria-label="Tabla de usuarios">
+        <table class="tabla-usuarios-admin tw-w-full">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Cédula</th>
-                    <th>Nombre completo</th>
-                    <th>Correo</th>
-                    <th>Rol</th>
-                    <th>Estado</th>
-                    <th>Validación SENA</th>
-                    <th>Gestión</th>
+                    <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">ID</th>
+                    <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Cédula</th>
+                    <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Nombre completo</th>
+                    <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Correo</th>
+                    <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Rol</th>
+                    <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Estado</th>
+                    <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Validación SENA</th>
+                    <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Gestión</th>
                 </tr>
             </thead>
             <tbody>
                 {% for usuario in usuarios %}
-                <tr>
-                    <td data-label="ID">{{ usuario.id_usu }}</td>
-                    <td data-label="Cédula">{{ usuario.cc|default:'—' }}</td>
-                    <td data-label="Nombre completo">
-                        <strong>{{ usuario.nombre|default:'—' }}</strong>
-                        <span>{{ usuario.apellido|default:'—' }}</span>
+                <tr class="tw-border-t tw-border-slate-100">
+                    <td class="tw-px-3 tw-py-3 tw-text-sm tw-font-medium tw-text-slate-700" data-label="ID">{{ usuario.id_usu }}</td>
+                    <td class="tw-px-3 tw-py-3 tw-text-sm tw-text-slate-600" data-label="Cédula">{{ usuario.cc|default:'—' }}</td>
+                    <td class="tw-px-3 tw-py-3" data-label="Nombre completo">
+                        <strong class="tw-block tw-text-sm tw-font-semibold tw-text-slate-800">{{ usuario.nombre|default:'—' }}</strong>
+                        <span class="tw-text-xs tw-text-slate-500">{{ usuario.apellido|default:'—' }}</span>
                     </td>
-                    <td data-label="Correo" class="correo-cell">{{ usuario.correo }}</td>
-                    <td data-label="Rol">
+                    <td data-label="Correo" class="correo-cell tw-px-3 tw-py-3 tw-text-sm tw-text-slate-600">{{ usuario.correo }}</td>
+                    <td class="tw-px-3 tw-py-3" data-label="Rol">
                         {% if usuario.id_rol_fk and usuario.id_rol_fk.nombre_rol == 'admin' %}
-                            <span class="rol-badge rol-badge--admin">
+                            <span class="rol-badge rol-badge--admin tw-inline-flex tw-items-center tw-gap-1 tw-rounded-full tw-bg-sky-100 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-sky-700">
                                 <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
                                 Admin
                             </span>
                         {% elif usuario.id_rol_fk %}
-                            <span class="rol-badge">{{ usuario.id_rol_fk.nombre_rol }}</span>
+                            <span class="rol-badge tw-inline-flex tw-items-center tw-rounded-full tw-bg-slate-100 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-slate-700">{{ usuario.id_rol_fk.nombre_rol }}</span>
                         {% else %}
-                            <span class="rol-badge">Sin rol</span>
+                            <span class="rol-badge tw-inline-flex tw-items-center tw-rounded-full tw-bg-amber-100 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-amber-700">Sin rol</span>
                         {% endif %}
                     </td>
-                    <td data-label="Estado">
+                    <td class="tw-px-3 tw-py-3" data-label="Estado">
                         {% if usuario.is_active %}
-                            <span class="estado-badge estado-badge--activo">Activo</span>
+                            <span class="estado-badge estado-badge--activo tw-inline-flex tw-items-center tw-rounded-full tw-bg-lime-100 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-lime-700">Activo</span>
                         {% else %}
-                            <span class="estado-badge estado-badge--inactivo">Inactivo</span>
+                            <span class="estado-badge estado-badge--inactivo tw-inline-flex tw-items-center tw-rounded-full tw-bg-rose-100 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-rose-700">Inactivo</span>
                         {% endif %}
                     </td>
-                    <td data-label="Validación SENA">
-                        <div class="validacion-admin-stack">
-                            <span class="validacion-badge validacion-badge--{{ usuario.verificacion_sena_estado }}">{{ usuario.get_verificacion_sena_estado_display }}</span>
+                    <td class="tw-px-3 tw-py-3" data-label="Validación SENA">
+                        <div class="validacion-admin-stack tw-flex tw-flex-col tw-gap-1.5">
+                            <span class="validacion-badge validacion-badge--{{ usuario.verificacion_sena_estado }} tw-inline-flex tw-items-center tw-self-start tw-rounded-full tw-bg-slate-100 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-slate-700">{{ usuario.get_verificacion_sena_estado_display }}</span>
                             {% if usuario.verificacion_sena_imagen %}
-                            <a href="{{ usuario.verificacion_sena_imagen.url }}" target="_blank" rel="noopener" class="validacion-link-doc">Ver intento OCR</a>
+                            <a href="{{ usuario.verificacion_sena_imagen.url }}" target="_blank" rel="noopener" class="validacion-link-doc tw-text-xs tw-font-semibold tw-text-sky-700 hover:tw-underline">Ver intento OCR</a>
                             {% endif %}
                             {% if usuario.verificacion_sena_documento %}
-                            <a href="{{ usuario.verificacion_sena_documento.url }}" target="_blank" rel="noopener" class="validacion-link-doc">Ver documento manual</a>
+                            <a href="{{ usuario.verificacion_sena_documento.url }}" target="_blank" rel="noopener" class="validacion-link-doc tw-text-xs tw-font-semibold tw-text-sky-700 hover:tw-underline">Ver documento manual</a>
                             {% endif %}
                         </div>
                     </td>
-                    <td data-label="Gestión">
-                        <div class="gestion-usuario-stack">
+                    <td class="tw-px-3 tw-py-3" data-label="Gestión">
+                        <div class="gestion-usuario-stack tw-flex tw-flex-col tw-gap-2">
                             {% if usuario.id_rol_fk and usuario.id_rol_fk.nombre_rol != 'admin' %}
-                            <form method="post" action="{% url 'editar_rol_usuario' usuario.id_usu %}" class="form-rol-personalizado">
+                            <form method="post" action="{% url 'editar_rol_usuario' usuario.id_usu %}" class="form-rol-personalizado tw-flex tw-flex-col tw-gap-2">
                                 {% csrf_token %}
-                                <div class="custom-select-rol" tabindex="0">
-                                    <div class="selected-rol">{{ usuario.id_rol_fk.nombre_rol }}</div>
-                                    <div class="rol-options" style="display:none;">
+                                <div class="custom-select-rol tw-relative" tabindex="0">
+                                    <div class="selected-rol tw-flex tw-h-10 tw-items-center tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-text-sm tw-font-medium tw-text-slate-700">{{ usuario.id_rol_fk.nombre_rol }}</div>
+                                    <div class="rol-options tw-hidden">
                                         {% for rol in roles %}
-                                            <div class="rol-option{% if usuario.id_rol_fk.id_rol == rol.id_rol %} selected{% endif %}" data-value="{{ rol.id_rol }}">{{ rol.nombre_rol }}</div>
+                                            <div class="rol-option tw-cursor-pointer tw-px-3 tw-py-2 tw-text-sm tw-text-slate-700 hover:tw-bg-slate-100{% if usuario.id_rol_fk.id_rol == rol.id_rol %} selected{% endif %}" data-value="{{ rol.id_rol }}">{{ rol.nombre_rol }}</div>
                                         {% endfor %}
                                     </div>
                                     <input type="hidden" name="id_rol_fk" value="{{ usuario.id_rol_fk.id_rol }}">
                                 </div>
-                                <button type="submit" class="usuarios-btn usuarios-btn--save">Guardar rol</button>
+                                <button type="submit" class="usuarios-btn usuarios-btn--save tw-inline-flex tw-h-9 tw-items-center tw-justify-center tw-rounded-lg tw-bg-emerald-600 tw-px-3 tw-text-xs tw-font-semibold tw-text-white hover:tw-bg-emerald-700">Guardar rol</button>
                             </form>
                             {% else %}
-                            <span class="admin-lock" title="El rol admin no se puede modificar">
+                            <span class="admin-lock tw-inline-flex tw-items-center tw-gap-1 tw-rounded-lg tw-bg-slate-100 tw-px-2.5 tw-py-1.5 tw-text-xs tw-font-semibold tw-text-slate-600" title="El rol admin no se puede modificar">
                                 <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
                                 Rol protegido
                             </span>
@@ -148,7 +148,7 @@
                             {% if usuario.verificacion_sena_estado == 'solicitada' or usuario.verificacion_sena_estado == 'enlace_enviado' or usuario.verificacion_sena_estado == 'pendiente' or usuario.verificacion_sena_estado == 'rechazada' %}
                             <form method="post" action="{% url 'enviar_enlace_validacion_sena' usuario.id_usu %}" class="form-estado-usuario">
                                 {% csrf_token %}
-                                <button type="submit" class="usuarios-btn usuarios-btn--manual">
+                                <button type="submit" class="usuarios-btn usuarios-btn--manual tw-inline-flex tw-h-9 tw-items-center tw-justify-center tw-gap-1 tw-rounded-lg tw-border tw-border-sky-200 tw-bg-sky-50 tw-px-3 tw-text-xs tw-font-semibold tw-text-sky-700 hover:tw-bg-sky-100">
                                     <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
                                     {% if usuario.verificacion_sena_estado == 'enlace_enviado' %}Reenviar enlace{% else %}Enviar enlace{% endif %}
                                 </button>
@@ -156,13 +156,13 @@
                             {% elif usuario.verificacion_sena_estado == 'documento_cargado' %}
                             <form method="post" action="{% url 'aprobar_validacion_sena' usuario.id_usu %}" class="form-estado-usuario">
                                 {% csrf_token %}
-                                <button type="submit" class="usuarios-btn usuarios-btn--approve">
+                                <button type="submit" class="usuarios-btn usuarios-btn--approve tw-inline-flex tw-h-9 tw-items-center tw-justify-center tw-gap-1 tw-rounded-lg tw-bg-lime-600 tw-px-3 tw-text-xs tw-font-semibold tw-text-white hover:tw-bg-lime-700">
                                     <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
                                     Aprobar verificación
                                 </button>
                             </form>
                             {% elif usuario.verificacion_sena_estado == 'validado' %}
-                            <span class="admin-lock" title="La validación SENA ya está aprobada">
+                            <span class="admin-lock tw-inline-flex tw-items-center tw-gap-1 tw-rounded-lg tw-bg-lime-100 tw-px-2.5 tw-py-1.5 tw-text-xs tw-font-semibold tw-text-lime-700" title="La validación SENA ya está aprobada">
                                 <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
                                 Verificado
                             </span>
@@ -171,7 +171,7 @@
                             {% if request.user.id_usu != usuario.id_usu %}
                             <form method="post" action="{% url 'toggle_estado_usuario' usuario.id_usu %}" class="form-estado-usuario">
                                 {% csrf_token %}
-                                <button type="submit" class="estado-toggle {% if usuario.is_active %}is-active{% else %}is-inactive{% endif %}" title="{% if usuario.is_active %}Desactivar usuario{% else %}Activar usuario{% endif %}">
+                                <button type="submit" class="estado-toggle {% if usuario.is_active %}is-active{% else %}is-inactive{% endif %} tw-inline-flex tw-items-center tw-gap-2" title="{% if usuario.is_active %}Desactivar usuario{% else %}Activar usuario{% endif %}">
                                     <span class="estado-toggle__track" aria-hidden="true">
                                         <span class="estado-toggle__thumb"></span>
                                     </span>
@@ -180,7 +180,7 @@
                             </form>
                             <button
                                 type="button"
-                                class="usuarios-btn usuarios-btn--danger btn-eliminar-usuario"
+                                class="usuarios-btn usuarios-btn--danger btn-eliminar-usuario tw-inline-flex tw-h-9 tw-items-center tw-justify-center tw-gap-1 tw-rounded-lg tw-border tw-border-rose-300 tw-bg-rose-50 tw-px-3 tw-text-xs tw-font-semibold tw-text-rose-700 hover:tw-bg-rose-100"
                                 data-usuario-id="{{ usuario.id_usu }}"
                                 data-usuario-nombre="{{ usuario.nombre|default:'' }} {{ usuario.apellido|default:'' }}"
                                 data-usuario-correo="{{ usuario.correo }}"
@@ -189,7 +189,7 @@
                                 Eliminar
                             </button>
                             {% else %}
-                            <span class="admin-lock" title="No puedes cambiar el estado de tu propia sesión">
+                            <span class="admin-lock tw-inline-flex tw-items-center tw-gap-1 tw-rounded-lg tw-bg-slate-100 tw-px-2.5 tw-py-1.5 tw-text-xs tw-font-semibold tw-text-slate-600" title="No puedes cambiar el estado de tu propia sesión">
                                 <ion-icon name="shield-outline" aria-hidden="true"></ion-icon>
                                 Sesión actual
                             </span>
@@ -199,7 +199,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="8" class="tabla-vacia">
+                    <td colspan="8" class="tabla-vacia tw-p-10 tw-text-center tw-text-sm tw-font-medium tw-text-slate-500">
                         No se encontraron usuarios con ese criterio.
                     </td>
                 </tr>
@@ -208,54 +208,54 @@
         </table>
     </div>
 
-    <div id="modalCrearUsuario" class="modal" aria-hidden="true">
-        <div class="modal-content">
-            <h2>Registrar nuevo usuario</h2>
-            <p class="modal-subtitle">Completa los datos básicos y asigna un rol inicial.</p>
+    <div id="modalCrearUsuario" class="modal tw-fixed tw-inset-0 tw-z-[1400] tw-hidden tw-items-center tw-justify-center tw-bg-black/45 tw-p-4" aria-hidden="true">
+        <div class="modal-content tw-w-full tw-max-w-xl tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-2xl">
+            <h2 class="tw-text-xl tw-font-bold tw-text-slate-900">Registrar nuevo usuario</h2>
+            <p class="modal-subtitle tw-mt-1 tw-text-sm tw-text-slate-600">Completa los datos básicos y asigna un rol inicial.</p>
             <form method="post" action="{% url 'crear_usuario' %}" autocomplete="off" class="form-crear-usuario">
                 {% csrf_token %}
-                <input type="text" name="cc" class="form-input" placeholder="Cédula" required>
-                <input type="text" name="nombre" class="form-input" placeholder="Nombre" required>
-                <input type="text" name="apellido" class="form-input" placeholder="Apellido" required>
-                <input type="email" name="correo" class="form-input" placeholder="Correo" required>
-                <div class="form-group">
-                    <input type="password" name="password" id="inputPassword" class="form-input" placeholder="Contraseña" required>
-                    <button type="button" class="toggle-password" id="togglePassword" tabindex="-1" aria-label="Mostrar u ocultar contraseña">
+                <input type="text" name="cc" class="form-input tw-mt-4 tw-h-11 tw-w-full tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-text-sm tw-text-slate-700 placeholder:tw-text-slate-400 focus:tw-border-lime-500 focus:tw-outline-none" placeholder="Cédula" required>
+                <input type="text" name="nombre" class="form-input tw-mt-2 tw-h-11 tw-w-full tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-text-sm tw-text-slate-700 placeholder:tw-text-slate-400 focus:tw-border-lime-500 focus:tw-outline-none" placeholder="Nombre" required>
+                <input type="text" name="apellido" class="form-input tw-mt-2 tw-h-11 tw-w-full tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-text-sm tw-text-slate-700 placeholder:tw-text-slate-400 focus:tw-border-lime-500 focus:tw-outline-none" placeholder="Apellido" required>
+                <input type="email" name="correo" class="form-input tw-mt-2 tw-h-11 tw-w-full tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-text-sm tw-text-slate-700 placeholder:tw-text-slate-400 focus:tw-border-lime-500 focus:tw-outline-none" placeholder="Correo" required>
+                <div class="form-group tw-relative tw-mt-2">
+                    <input type="password" name="password" id="inputPassword" class="form-input tw-h-11 tw-w-full tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-pl-3 tw-pr-10 tw-text-sm tw-text-slate-700 placeholder:tw-text-slate-400 focus:tw-border-lime-500 focus:tw-outline-none" placeholder="Contraseña" required>
+                    <button type="button" class="toggle-password tw-absolute tw-right-2 tw-top-1/2 -tw-translate-y-1/2 tw-inline-flex tw-h-8 tw-w-8 tw-items-center tw-justify-center tw-rounded-lg tw-text-slate-500 hover:tw-bg-slate-100" id="togglePassword" tabindex="-1" aria-label="Mostrar u ocultar contraseña">
                         <span id="iconEye">
                             <ion-icon name="eye-outline"></ion-icon>
                         </span>
                     </button>
                 </div>
-                <select name="id_rol_fk" class="form-input" required>
+                <select name="id_rol_fk" class="form-input tw-mt-2 tw-h-11 tw-w-full tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-text-sm tw-text-slate-700 focus:tw-border-lime-500 focus:tw-outline-none" required>
                     <option value="">Selecciona un rol</option>
                     {% for rol in roles %}
                         <option value="{{ rol.id_rol }}">{{ rol.nombre_rol }}</option>
                     {% endfor %}
                 </select>
-                <div class="modal-actions">
-                    <button type="button" id="btnCerrarModalCrearUsuario" class="usuarios-btn usuarios-btn--ghost">Cancelar</button>
-                    <button type="submit" class="usuarios-btn usuarios-btn--primary">Crear usuario</button>
+                <div class="modal-actions tw-mt-4 tw-flex tw-justify-end tw-gap-2">
+                    <button type="button" id="btnCerrarModalCrearUsuario" class="usuarios-btn usuarios-btn--ghost tw-inline-flex tw-h-10 tw-items-center tw-justify-center tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-4 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50">Cancelar</button>
+                    <button type="submit" class="usuarios-btn usuarios-btn--primary tw-inline-flex tw-h-10 tw-items-center tw-justify-center tw-rounded-xl tw-bg-lime-500 tw-px-4 tw-text-sm tw-font-semibold tw-text-white hover:tw-bg-lime-600">Crear usuario</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="modalEliminarUsuario" class="modal" aria-hidden="true">
-        <div class="modal-content modal-content--danger">
-            <div class="modal-danger-icon" aria-hidden="true">
+    <div id="modalEliminarUsuario" class="modal tw-fixed tw-inset-0 tw-z-[1400] tw-hidden tw-items-center tw-justify-center tw-bg-black/45 tw-p-4" aria-hidden="true">
+        <div class="modal-content modal-content--danger tw-w-full tw-max-w-md tw-rounded-2xl tw-border tw-border-rose-200 tw-bg-white tw-p-5 tw-shadow-2xl">
+            <div class="modal-danger-icon tw-mx-auto tw-mb-2 tw-flex tw-h-12 tw-w-12 tw-items-center tw-justify-center tw-rounded-full tw-bg-rose-100 tw-text-rose-600" aria-hidden="true">
                 <ion-icon name="warning-outline"></ion-icon>
             </div>
-            <h2>Eliminar usuario</h2>
-            <p class="modal-subtitle">Esta acción eliminará la cuenta seleccionada del sistema.</p>
-            <div class="usuarios-delete-alert">
+            <h2 class="tw-text-center tw-text-xl tw-font-bold tw-text-slate-900">Eliminar usuario</h2>
+            <p class="modal-subtitle tw-mt-1 tw-text-center tw-text-sm tw-text-slate-600">Esta acción eliminará la cuenta seleccionada del sistema.</p>
+            <div class="usuarios-delete-alert tw-mt-3 tw-rounded-xl tw-border tw-border-rose-200 tw-bg-rose-50 tw-p-3 tw-text-sm tw-text-rose-700">
                 <strong>Seguro que quieres eliminar este usuario?</strong>
-                <span id="deleteUserLabel"></span>
+                <span id="deleteUserLabel" class="tw-mt-1 tw-block tw-font-semibold"></span>
             </div>
             <form method="post" id="deleteUserForm" class="form-delete-user">
                 {% csrf_token %}
-                <div class="modal-actions modal-actions--danger">
-                    <button type="button" id="btnCerrarModalEliminarUsuario" class="usuarios-btn usuarios-btn--ghost">Cancelar</button>
-                    <button type="submit" class="usuarios-btn usuarios-btn--danger-solid">
+                <div class="modal-actions modal-actions--danger tw-mt-4 tw-flex tw-justify-end tw-gap-2">
+                    <button type="button" id="btnCerrarModalEliminarUsuario" class="usuarios-btn usuarios-btn--ghost tw-inline-flex tw-h-10 tw-items-center tw-justify-center tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-4 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50">Cancelar</button>
+                    <button type="submit" class="usuarios-btn usuarios-btn--danger-solid tw-inline-flex tw-h-10 tw-items-center tw-justify-center tw-gap-1 tw-rounded-xl tw-bg-rose-600 tw-px-4 tw-text-sm tw-font-semibold tw-text-white hover:tw-bg-rose-700">
                         <ion-icon name="trash-outline" aria-hidden="true"></ion-icon>
                         Sí, eliminar
                     </button>

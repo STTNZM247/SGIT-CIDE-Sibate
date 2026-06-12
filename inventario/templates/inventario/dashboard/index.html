@@ -8,33 +8,33 @@
 {% endblock %}
 
 {% block content %}
-<section class="inventario-inventory-grid">
-    <section class="admin-resumen" aria-label="Dashboard administrativo">
-        <header class="admin-resumen__head">
-            <div>
-                <h1>Dashboard de administración</h1>
-                <p>Seguimiento operativo de pedidos, préstamos y estado de inventario en tiempo real.</p>
+<section class="inventario-inventory-grid tw-space-y-6 tw-pb-6">
+    <section class="admin-resumen tw-space-y-6" aria-label="Dashboard administrativo">
+        <header class="admin-resumen__head tw-flex tw-flex-col tw-gap-4 tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-sm lg:tw-flex-row lg:tw-items-start lg:tw-justify-between">
+            <div class="tw-space-y-1.5">
+                <h1 class="tw-text-2xl tw-font-bold tw-text-slate-900">Dashboard de administración</h1>
+                <p class="tw-max-w-3xl tw-text-sm tw-text-slate-600">Seguimiento operativo de pedidos, préstamos y estado de inventario en tiempo real.</p>
             </div>
-            <form method="get" class="admin-report-toolbar" aria-label="Exportar reportes">
-                <input id="mes_reporte" type="month" name="mes" value="{{ mes_reporte }}" aria-label="Mes de reporte">
-                <button type="submit" formaction="{% url 'reporte_prestamos_excel' %}" class="btn-export btn-export--excel">
+            <form method="get" class="admin-report-toolbar tw-grid tw-w-full tw-grid-cols-1 tw-gap-2 sm:tw-grid-cols-2 lg:tw-w-auto lg:tw-grid-cols-4" aria-label="Exportar reportes">
+                <input id="mes_reporte" type="month" name="mes" value="{{ mes_reporte }}" aria-label="Mes de reporte" class="tw-h-11 tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-text-sm tw-text-slate-700 focus:tw-border-lime-500 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-lime-200">
+                <button type="submit" formaction="{% url 'reporte_prestamos_excel' %}" class="btn-export btn-export--excel tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-gap-2 tw-rounded-xl tw-border tw-border-emerald-200 tw-bg-emerald-50 tw-px-3 tw-text-sm tw-font-semibold tw-text-emerald-700 hover:tw-bg-emerald-100">
                     <ion-icon name="document-text-outline"></ion-icon>
                     Excel
                 </button>
-                <button type="submit" formaction="{% url 'exportar_inventario_excel' %}" class="btn-export btn-export--inventory">
+                <button type="submit" formaction="{% url 'exportar_inventario_excel' %}" class="btn-export btn-export--inventory tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-gap-2 tw-rounded-xl tw-border tw-border-sky-200 tw-bg-sky-50 tw-px-3 tw-text-sm tw-font-semibold tw-text-sky-700 hover:tw-bg-sky-100">
                     <ion-icon name="download-outline"></ion-icon>
                     Exportar todo el inventario
                 </button>
-                <button type="submit" formaction="{% url 'reporte_prestamos_pdf' %}" class="btn-export btn-export--pdf">
+                <button type="submit" formaction="{% url 'reporte_prestamos_pdf' %}" class="btn-export btn-export--pdf tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-gap-2 tw-rounded-xl tw-border tw-border-rose-200 tw-bg-rose-50 tw-px-3 tw-text-sm tw-font-semibold tw-text-rose-700 hover:tw-bg-rose-100">
                     <ion-icon name="document-outline"></ion-icon>
                     PDF
                 </button>
             </form>
         </header>
 
-        <div class="admin-resumen__stats">
-            <article class="admin-kpi admin-kpi--pie">
-                <span class="admin-kpi__label">Stock vs cantidad (global)</span>
+        <div class="admin-resumen__stats tw-grid tw-grid-cols-1 tw-gap-4 xl:tw-grid-cols-4">
+            <article class="admin-kpi admin-kpi--pie tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm xl:tw-col-span-2">
+                <span class="admin-kpi__label tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Stock vs cantidad (global)</span>
                 <div class="admin-kpi-pie-wrap">
                     <div class="admin-kpi-pie" style="background: {{ pie_stock_cantidad_conic }};">
                         <div class="admin-kpi-pie__center">
@@ -52,21 +52,21 @@
                         {% endfor %}
                     </div>
                 </div>
-                <button type="button" class="admin-kpi-link" id="openDeficitModalBtn">
+                <button type="button" class="admin-kpi-link tw-mt-3 tw-inline-flex tw-w-full tw-items-center tw-justify-center tw-rounded-xl tw-border tw-border-amber-200 tw-bg-amber-50 tw-px-3 tw-py-2 tw-text-xs tw-font-semibold tw-text-amber-700 hover:tw-bg-amber-100" id="openDeficitModalBtn">
                     Ver productos con cantidad menor al stock ({{ total_productos_deficit }})
                 </button>
             </article>
-            <article class="admin-kpi">
-                <span class="admin-kpi__label">Pedidos del mes</span>
-                <strong class="admin-kpi__value">{{ pedidos_mes_actual }}</strong>
+            <article class="admin-kpi tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
+                <span class="admin-kpi__label tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Pedidos del mes</span>
+                <strong class="admin-kpi__value tw-mt-2 tw-block tw-text-3xl tw-font-black tw-text-slate-800">{{ pedidos_mes_actual }}</strong>
             </article>
-            <article class="admin-kpi">
-                <span class="admin-kpi__label">Préstamos realizados (mes)</span>
-                <strong class="admin-kpi__value">{{ prestamos_mes_actual }}</strong>
+            <article class="admin-kpi tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
+                <span class="admin-kpi__label tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Préstamos realizados (mes)</span>
+                <strong class="admin-kpi__value tw-mt-2 tw-block tw-text-3xl tw-font-black tw-text-slate-800">{{ prestamos_mes_actual }}</strong>
             </article>
-            <article class="admin-kpi admin-kpi--warn">
-                <span class="admin-kpi__label">Productos en mora</span>
-                <strong class="admin-kpi__value">{{ productos_en_mora }}</strong>
+            <article class="admin-kpi admin-kpi--warn tw-rounded-2xl tw-border tw-border-rose-200 tw-bg-rose-50 tw-p-4 tw-shadow-sm">
+                <span class="admin-kpi__label tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-rose-600">Productos en mora</span>
+                <strong class="admin-kpi__value tw-mt-2 tw-block tw-text-3xl tw-font-black tw-text-rose-700">{{ productos_en_mora }}</strong>
             </article>
         </div>
 
@@ -123,14 +123,14 @@
             </div>
         </div>
 
-        <article class="admin-card admin-card--pendientes">
-            <header class="admin-card__head">
-                <h2>Vista rápida de pedidos pendientes</h2>
-                <span>Total pendientes: {{ pedidos_pendientes_total }}</span>
+        <article class="admin-card admin-card--pendientes tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
+            <header class="admin-card__head tw-mb-3 tw-flex tw-flex-col tw-gap-2 sm:tw-flex-row sm:tw-items-center sm:tw-justify-between">
+                <h2 class="tw-text-lg tw-font-bold tw-text-slate-900">Vista rápida de pedidos pendientes</h2>
+                <span class="tw-inline-flex tw-items-center tw-rounded-full tw-bg-slate-100 tw-px-3 tw-py-1 tw-text-xs tw-font-semibold tw-text-slate-600">Total pendientes: {{ pedidos_pendientes_total }}</span>
             </header>
             {% if resumen_pendientes %}
-            <div class="admin-pending-table-wrap" role="region" aria-label="Resumen de pedidos pendientes">
-                <table class="admin-pending-table">
+            <div class="admin-pending-table-wrap tw-overflow-x-auto tw-rounded-xl tw-border tw-border-slate-200" role="region" aria-label="Resumen de pedidos pendientes">
+                <table class="admin-pending-table tw-min-w-full tw-text-sm">
                     <thead>
                         <tr>
                             <th>ID pedido</th>
@@ -160,24 +160,24 @@
             {% else %}
             <p class="admin-card__empty">No hay pedidos en estado pendiente en este momento.</p>
             {% endif %}
-            <div class="admin-pending-actions">
-                <a href="{% url 'pedidos_panel' %}" class="admin-pending-more-btn">
+            <div class="admin-pending-actions tw-mt-4 tw-flex tw-justify-end">
+                <a href="{% url 'pedidos_panel' %}" class="admin-pending-more-btn tw-inline-flex tw-items-center tw-gap-1.5 tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-4 tw-py-2 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50">
                     Ver más
                     <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
                 </a>
             </div>
         </article>
 
-        <div class="admin-sena-grid">
-            <article class="admin-card admin-card--sena-documentos">
-                <header class="admin-card__head">
-                    <h2>Usuarios que necesitan ser validados</h2>
-                    <span>Documentos pendientes: {{ usuarios_documento_validacion_total }}</span>
+        <div class="admin-sena-grid tw-grid tw-grid-cols-1 tw-gap-4">
+            <article class="admin-card admin-card--sena-documentos tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
+                <header class="admin-card__head tw-mb-3 tw-flex tw-flex-col tw-gap-2 sm:tw-flex-row sm:tw-items-center sm:tw-justify-between">
+                    <h2 class="tw-text-lg tw-font-bold tw-text-slate-900">Usuarios que necesitan ser validados</h2>
+                    <span class="tw-inline-flex tw-items-center tw-rounded-full tw-bg-slate-100 tw-px-3 tw-py-1 tw-text-xs tw-font-semibold tw-text-slate-600">Documentos pendientes: {{ usuarios_documento_validacion_total }}</span>
                 </header>
 
                 {% if usuarios_documento_validacion %}
-                <div class="admin-sena-table-wrap" role="region" aria-label="Usuarios con documento manual cargado">
-                    <table class="admin-sena-table">
+                <div class="admin-sena-table-wrap tw-overflow-x-auto tw-rounded-xl tw-border tw-border-slate-200" role="region" aria-label="Usuarios con documento manual cargado">
+                    <table class="admin-sena-table tw-min-w-full tw-text-sm">
                         <thead>
                             <tr>
                                 <th>Usuario</th>
@@ -258,8 +258,8 @@
                 </div>
                 <div class="stock-gap-modal__body">
                     {% if usuarios_solicitud_manual_modal %}
-                    <div class="admin-sena-table-wrap">
-                        <table class="admin-sena-table">
+                    <div class="admin-sena-table-wrap tw-overflow-x-auto tw-rounded-xl tw-border tw-border-slate-200">
+                        <table class="admin-sena-table tw-min-w-full tw-text-sm">
                             <thead>
                                 <tr>
                                     <th>Usuario</th>
@@ -312,11 +312,11 @@
             </div>
         </div>
 
-        <div class="admin-chart-grid">
-            <article class="admin-card admin-card--chart">
-                <header class="admin-card__head">
-                    <h2>Pedidos por estado</h2>
-                    <span>{{ mes_actual_label }}</span>
+        <div class="admin-chart-grid tw-grid tw-grid-cols-1 tw-gap-4 xl:tw-grid-cols-2">
+            <article class="admin-card admin-card--chart tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
+                <header class="admin-card__head tw-mb-3 tw-flex tw-items-center tw-justify-between tw-gap-3">
+                    <h2 class="tw-text-lg tw-font-bold tw-text-slate-900">Pedidos por estado</h2>
+                    <span class="tw-text-xs tw-font-semibold tw-text-slate-500">{{ mes_actual_label }}</span>
                 </header>
                 <div class="admin-pie-wrap">
                     <div class="admin-pie" style="background: {{ pie_conic }};">
@@ -339,18 +339,18 @@
                 </div>
             </article>
 
-            <article class="admin-card admin-card--chart">
-                <header class="admin-card__head">
-                    <h2>Tendencia mensual interactiva</h2>
-                    <span>Rueda del mouse: zoom de 12 a 1 mes. Se actualiza automáticamente.</span>
+            <article class="admin-card admin-card--chart tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
+                <header class="admin-card__head tw-mb-3 tw-flex tw-flex-col tw-gap-1">
+                    <h2 class="tw-text-lg tw-font-bold tw-text-slate-900">Tendencia mensual interactiva</h2>
+                    <span class="tw-text-xs tw-text-slate-500">Rueda del mouse: zoom de 12 a 1 mes. Se actualiza automáticamente.</span>
                 </header>
                 <div class="admin-line-chart" aria-label="Gráfica de torres mensual" data-source-url="{% url 'dashboard_tendencia_data' %}">
-                    <div class="admin-line-controls" role="group" aria-label="Filtros de líneas">
-                        <button type="button" class="line-filter is-active" data-series="pendientes">Pendientes</button>
-                        <button type="button" class="line-filter is-active" data-series="prestamos">Prestados</button>
-                        <button type="button" class="line-filter is-active" data-series="devueltos">Devueltos</button>
-                        <button type="button" class="line-filter is-active" data-series="cancelados">Cancelados</button>
-                        <span class="line-window" id="lineWindowLabel">Ventana: 6 meses</span>
+                    <div class="admin-line-controls tw-flex tw-flex-wrap tw-items-center tw-gap-2" role="group" aria-label="Filtros de líneas">
+                        <button type="button" class="line-filter is-active tw-rounded-full tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-py-1.5 tw-text-xs tw-font-semibold tw-text-slate-700" data-series="pendientes">Pendientes</button>
+                        <button type="button" class="line-filter is-active tw-rounded-full tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-py-1.5 tw-text-xs tw-font-semibold tw-text-slate-700" data-series="prestamos">Prestados</button>
+                        <button type="button" class="line-filter is-active tw-rounded-full tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-py-1.5 tw-text-xs tw-font-semibold tw-text-slate-700" data-series="devueltos">Devueltos</button>
+                        <button type="button" class="line-filter is-active tw-rounded-full tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-py-1.5 tw-text-xs tw-font-semibold tw-text-slate-700" data-series="cancelados">Cancelados</button>
+                        <span class="line-window tw-ml-auto tw-text-xs tw-font-semibold tw-text-slate-500" id="lineWindowLabel">Ventana: 6 meses</span>
                     </div>
                     <svg id="tendenciaSvg" viewBox="0 0 400 190" role="img" aria-label="Torres de pendientes, prestados, devueltos y cancelados">
                         <line x1="20" y1="170" x2="380" y2="170" class="axis"></line>
@@ -379,20 +379,20 @@
             </article>
         </div>
 
-        <article class="admin-card admin-card--stock">
-            <header class="admin-card__head">
-                <h2>Alertas de stock priorizadas</h2>
-                <div class="admin-stock-head-actions">
-                    <span>Productos por debajo del mínimo operativo (5)</span>
-                    <a href="{% url 'reporte_stock_bajo_pdf' %}" class="admin-stock-pdf-btn">
+        <article class="admin-card admin-card--stock tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
+            <header class="admin-card__head tw-mb-4 tw-flex tw-flex-col tw-gap-3 lg:tw-flex-row lg:tw-items-center lg:tw-justify-between">
+                <h2 class="tw-text-lg tw-font-bold tw-text-slate-900">Alertas de stock priorizadas</h2>
+                <div class="admin-stock-head-actions tw-flex tw-flex-col tw-gap-2 sm:tw-flex-row sm:tw-items-center sm:tw-justify-end sm:tw-gap-3">
+                    <span class="tw-text-xs tw-font-semibold tw-text-slate-500">Productos por debajo del mínimo operativo (5)</span>
+                    <a href="{% url 'reporte_stock_bajo_pdf' %}" class="admin-stock-pdf-btn tw-inline-flex tw-items-center tw-gap-2 tw-rounded-xl tw-border tw-border-red-200 tw-bg-red-50 tw-px-3 tw-py-2 tw-text-xs tw-font-semibold tw-text-red-700 hover:tw-bg-red-100">
                         <ion-icon name="download-outline"></ion-icon>
                         Descargar recibo PDF
                     </a>
                 </div>
             </header>
-            <div class="admin-stock-columns">
-                <section class="admin-stock-block">
-                    <h3>Stock bajo (&lt; 5)</h3>
+            <div class="admin-stock-columns tw-grid tw-grid-cols-1 tw-gap-4 xl:tw-grid-cols-2">
+                <section class="admin-stock-block tw-rounded-xl tw-border tw-border-amber-200 tw-bg-amber-50/40 tw-p-3">
+                    <h3 class="tw-mb-2 tw-text-sm tw-font-bold tw-text-amber-800">Stock bajo (&lt; 5)</h3>
                     {% if alertas_stock_bajo %}
                     <ul class="admin-stock-list">
                         {% for alerta in alertas_stock_bajo %}
@@ -412,8 +412,8 @@
                     {% endif %}
                 </section>
 
-                <section class="admin-stock-block">
-                    <h3>Cantidad baja (&lt; 5)</h3>
+                <section class="admin-stock-block tw-rounded-xl tw-border tw-border-sky-200 tw-bg-sky-50/40 tw-p-3">
+                    <h3 class="tw-mb-2 tw-text-sm tw-font-bold tw-text-sky-800">Cantidad baja (&lt; 5)</h3>
                     {% if alertas_cantidad_baja %}
                     <ul class="admin-stock-list">
                         {% for alerta in alertas_cantidad_baja %}

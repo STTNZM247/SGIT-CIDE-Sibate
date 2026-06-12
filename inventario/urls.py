@@ -9,12 +9,14 @@ from .views import (
     dashboard_tendencia_detalle,
     inventario_panel,
     eliminar_catalogo,
+    editar_catalogo,
     eliminar_producto,
     productos_catalogo,
     producto_mover_subcategoria,
     producto_restaurar_subcategorias,
     registrar_catalogo,
     registrar_ubicacion_producto,
+    editar_ubicacion_producto,
     registrar_producto,
     subcategoria_delete_estado,
     subcategoria_crear_rapida,
@@ -58,6 +60,12 @@ from .views import (
     notificacion_marcar_leida,
     notificaciones_marcar_todas_leidas,
 )
+from .views_catalogo_wizard import (
+    wizard_codigo_api,
+    wizard_crear_categoria,
+    wizard_crear_macro,
+    wizard_crear_subcategorias,
+)
 
 from .views_usuario import carrito_usuario, panel_usuario, producto_detalle_usuario, solicitar_validacion_manual, usuario_actualizar_cantidad_carrito, usuario_agregar_carrito, usuario_eliminar_carrito, usuario_realizar_pedido, validacion_sena, validacion_sena_carga_manual
 from .interfaces.http.views.usuario_pedidos import (
@@ -91,6 +99,7 @@ urlpatterns = [
     path('almacenista/', panel_almacenista, name='panel_almacenista'),
     path('catalogo/', catalogo, name='catalogo'),
     path('catalogo/<int:cat_id>/eliminar/', eliminar_catalogo, name='eliminar_catalogo'),
+    path('catalogo/editar/', editar_catalogo, name='editar_catalogo'),
     path('catalogo/<int:cat_id>/productos/', productos_catalogo, name='productos_catalogo'),
     path('catalogo/<int:cat_id>/subcategorias/crear/', subcategoria_crear_rapida, name='subcategoria_crear_rapida'),
     path('catalogo/<int:cat_id>/subcategorias/<int:subcat_id>/renombrar/', subcategoria_renombrar, name='subcategoria_renombrar'),
@@ -103,7 +112,12 @@ urlpatterns = [
     path('producto/<int:prod_id>/foto/<int:foto_id>/eliminar/', eliminar_foto_producto, name='eliminar_foto_producto'),
     path('catalogo/<int:cat_id>/productos/<int:prod_id>/eliminar/', eliminar_producto, name='eliminar_producto'),
     path('catalogo/nuevo/', registrar_catalogo, name='registrar_catalogo'),
+    path('catalogo/wizard/macro/', wizard_crear_macro, name='wizard_crear_macro'),
+    path('catalogo/wizard/categoria/', wizard_crear_categoria, name='wizard_crear_categoria'),
+    path('catalogo/wizard/subcategorias/', wizard_crear_subcategorias, name='wizard_crear_subcategorias'),
+    path('catalogo/wizard/codigo/', wizard_codigo_api, name='wizard_codigo_api'),
     path('catalogo/nueva-ubicacion/', registrar_ubicacion_producto, name='registrar_ubicacion_producto'),
+    path('catalogo/ubicacion/<int:ubicacion_id>/editar/', editar_ubicacion_producto, name='editar_ubicacion_producto'),
     path('catalogo/nuevo-producto/', registrar_producto, name='registrar_producto'),
     path('perfil/', perfil_usuario, name='perfil_usuario'),
     path('perfil/cambiar-password/', perfil_cambiar_password, name='perfil_cambiar_password'),

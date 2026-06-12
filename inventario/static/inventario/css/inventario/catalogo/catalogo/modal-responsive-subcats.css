@@ -71,6 +71,116 @@
     visibility: visible;
 }
 
+/* Wizard de clasificación: backdrop completo + modal ancho en desktop */
+#modal-catalogo.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    width: 100dvw;
+    height: 100dvh;
+    padding: clamp(.5rem, 1.2vw, 1rem);
+    z-index: 3200;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, .45);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+#modal-catalogo .modal {
+    width: min(1180px, calc(100dvw - 2.25rem));
+    max-width: min(1180px, calc(100dvw - 2.25rem));
+    height: min(90dvh, 860px);
+    max-height: 90dvh;
+    border-radius: 30px;
+    overflow: hidden;
+}
+
+#modal-catalogo #wizard-scroll-area {
+    overflow-y: auto;
+    min-height: 0;
+    padding-bottom: 1rem;
+}
+
+#modal-catalogo #wizard-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 4;
+    background: rgba(248, 250, 252, .95);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* Modal editar macro: mismo lenguaje visual del wizard */
+#modal-editar-macro.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    width: 100dvw;
+    height: 100dvh;
+    padding: clamp(.5rem, 1.2vw, 1rem);
+    z-index: 3200;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, .45);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+#modal-editar-macro .modal {
+    width: min(780px, calc(100dvw - 2rem));
+    max-width: min(780px, calc(100dvw - 2rem));
+    max-height: 92dvh;
+    border-radius: 30px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 24px 90px rgba(15, 23, 42, .18);
+}
+
+#modal-editar-macro .modal__header {
+    border-bottom: 1px solid #e2e8f0;
+    background: rgba(248, 250, 252, .86);
+    padding: 1rem 1.25rem;
+}
+
+#modal-editar-macro .modal__form {
+    padding: 1rem 1.25rem 1.1rem;
+}
+
+#modal-editar-macro .modal__actions {
+    position: sticky;
+    bottom: 0;
+    background: rgba(248, 250, 252, .95);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-top: 1px solid #e2e8f0;
+}
+
+/* El contenido de pasos respira y usa columnas antes */
+#modal-catalogo [data-wizard-step="1"] > .tw-grid,
+#modal-catalogo [data-wizard-step="2"] > .tw-grid {
+    gap: 1rem;
+}
+
+/* Paso 3: alinear filas de subcategorias */
+#modal-catalogo #wiz-subcat-inputs td {
+    vertical-align: top;
+}
+
+#modal-catalogo #wiz-subcat-inputs td:last-child {
+    min-width: 128px;
+}
+
+#modal-catalogo #wiz-subcat-inputs [data-col="nombre"],
+#modal-catalogo #wiz-subcat-inputs [data-col="descripcion"] {
+    height: 46px;
+}
+
+/* Si elementos del layout quedan por encima, los suavizamos durante modal abierto */
+body.modal-open .navigation,
+body.modal-open .nav-brand,
+body.modal-open .nav-notif-btn {
+    filter: blur(2px);
+}
+
 body.modal-open { overflow: hidden; }
 
 .modal {
@@ -107,6 +217,78 @@ body.modal-open { overflow: hidden; }
 
 .modal__form--producto #subcategorias-group {
     transition: opacity .18s ease;
+}
+
+.ubicaciones-existentes {
+    background: linear-gradient(180deg, #fcfdfd 0%, #f8fafc 100%);
+}
+
+.ubicaciones-lista {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: .2rem;
+}
+
+.ubicacion-item-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .45rem;
+    padding: .35rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.ubicacion-item-input {
+    margin: 0;
+}
+
+.ubicacion-item-input[readonly] {
+    background: #f8fafc;
+    color: #475569;
+    border-color: #dbe3ec;
+    cursor: default;
+}
+
+.ubicacion-item-input:not([readonly]) {
+    background: #fff;
+    border-color: #39A900;
+    box-shadow: 0 0 0 2px rgba(57, 169, 0, .12);
+}
+
+.cat-btn-mini--edit-location {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .3rem;
+    min-height: 38px;
+    padding: .45rem .7rem;
+    border-radius: 10px;
+    border: 1px solid #f2cf8a;
+    background: linear-gradient(180deg, #fff7e6 0%, #ffefcf 100%);
+    color: #8a5a12;
+    font-size: .76rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.cat-btn-mini--edit-location:hover {
+    background: linear-gradient(180deg, #ffefcf 0%, #ffe6bd 100%);
+}
+
+.cat-btn-mini--edit-location.is-ready-save {
+    border-color: #bde8b0;
+    background: linear-gradient(180deg, #effbe8 0%, #e0f7d1 100%);
+    color: #256e1f;
+}
+
+.cat-btn-mini--edit-location.is-ready-save:hover {
+    background: linear-gradient(180deg, #e5f8d9 0%, #d7f3c6 100%);
 }
 
 .modal-backdrop[aria-hidden="false"] .modal {
@@ -216,6 +398,31 @@ body.modal-open { overflow: hidden; }
     .modal__form--producto .mf-row--tipo-subcat,
     .modal__form--producto .mf-row--tipo-subcat.is-subcat-empty {
         grid-template-columns: 1fr;
+    }
+
+    #modal-catalogo.modal-backdrop {
+        width: 100dvw;
+        height: 100dvh;
+        padding: .35rem;
+    }
+
+    #modal-catalogo .modal {
+        width: calc(100dvw - .7rem);
+        max-width: calc(100dvw - .7rem);
+        height: min(96dvh, 900px);
+        max-height: 96dvh;
+        border-radius: 22px;
+    }
+
+    #modal-editar-macro .modal {
+        width: calc(100dvw - .7rem);
+        max-width: calc(100dvw - .7rem);
+        max-height: 96dvh;
+        border-radius: 22px;
+    }
+
+    #modal-catalogo #wizard-actions {
+        padding: .8rem;
     }
 }
 

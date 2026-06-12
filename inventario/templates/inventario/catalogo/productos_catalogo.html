@@ -21,6 +21,7 @@
 
 {% block content %}
 <meta name="csrf-token" content="{{ csrf_token }}">
+<div class="tw-mx-auto tw-max-w-[1660px] tw-space-y-5 tw-pb-6 tw-px-2 sm:tw-px-4 lg:tw-px-6">
 {% if messages %}
 <div class="catalogo-messages" role="alert">
     {% for msg in messages %}
@@ -33,64 +34,56 @@
 </div>
 {% endif %}
 
-<header class="cat-header">
-    <div class="cat-header__text">
-        <h1 class="cat-header__title">{{ catalogo.nombre_catalogo }}</h1>
-        <p class="cat-header__sub">Listado de productos registrados en este catálogo</p>
+<header class="cat-header tw-flex tw-flex-col tw-gap-4 tw-rounded-[28px] tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-sm lg:tw-flex-row lg:tw-items-center lg:tw-justify-between">
+    <div class="cat-header__text tw-space-y-1.5">
+        <h1 class="cat-header__title tw-text-2xl tw-font-bold tw-text-slate-900">{{ catalogo.nombre_catalogo }}</h1>
+        <p class="cat-header__sub tw-text-sm tw-text-slate-600">Listado de productos registrados en este catálogo</p>
     </div>
-    <div class="cat-header__actions">
-        <a class="cat-btn cat-btn--secondary" href="{% url 'catalogo' %}">
+    <div class="cat-header__actions tw-flex tw-flex-wrap tw-items-center tw-gap-2">
+        <a class="cat-btn cat-btn--secondary tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-gap-2 tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-4 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50" href="{{ back_url }}">
             <ion-icon name="arrow-back-outline"></ion-icon>
-            Volver a catálogos
+            Volver
         </a>
     </div>
 </header>
 
-<nav class="subcat-breadcrumb" aria-label="Ruta de subcategorías" data-subcat-breadcrumb>
-    <a class="subcat-breadcrumb__link" data-subcat-drop-target data-subcat-id="" href="{% url 'productos_catalogo' catalogo.id_cat %}">{{ catalogo.nombre_catalogo }}</a>
-    {% for crumb in breadcrumb_subcats %}
-    <span class="subcat-breadcrumb__sep">/</span>
-    {% if not forloop.last %}
-    <a class="subcat-breadcrumb__link" data-subcat-drop-target data-subcat-id="{{ crumb.id_subcat }}" href="{% url 'productos_catalogo' catalogo.id_cat %}?subcat={{ crumb.id_subcat }}">{{ crumb.nombre_subcategoria }}</a>
-    {% else %}
-    <span class="subcat-breadcrumb__current" data-subcat-drop-target data-subcat-id="{{ crumb.id_subcat }}">{{ crumb.nombre_subcategoria }}</span>
-    {% endif %}
-    {% endfor %}
-</nav>
-
+<div class="catalogo-layout tw-grid tw-gap-5 xl:tw-grid-cols-[minmax(320px,390px)_minmax(0,1fr)]">
 {% if puede_gestionar_catalogo %}
-<section class="subcat-workspace{% if not subcategoria_tree and productos %} subcat-workspace--compact{% endif %}" data-subcat-workspace data-current-subcat-id="{{ selected_subcat_id|default:'' }}" data-create-url="{% url 'subcategoria_crear_rapida' catalogo.id_cat %}" data-rename-url-template="{% url 'subcategoria_renombrar' catalogo.id_cat 0 %}" data-delete-state-url-template="{% url 'subcategoria_delete_estado' catalogo.id_cat 0 %}" data-delete-url-template="{% url 'subcategoria_eliminar' catalogo.id_cat 0 %}" data-move-product-url-template="{% url 'producto_mover_subcategoria' catalogo.id_cat 0 %}" data-restore-product-url-template="{% url 'producto_restaurar_subcategorias' catalogo.id_cat 0 %}">
+<aside class="catalogo-layout__rail tw-space-y-5">
+<section class="subcat-workspace tw-rounded-[28px] tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm{% if not subcategoria_tree and productos %} subcat-workspace--compact{% endif %}" data-subcat-workspace data-current-subcat-id="{{ selected_subcat_id|default:'' }}" data-create-url="{% url 'subcategoria_crear_rapida' catalogo.id_cat %}" data-rename-url-template="{% url 'subcategoria_renombrar' catalogo.id_cat 0 %}" data-delete-state-url-template="{% url 'subcategoria_delete_estado' catalogo.id_cat 0 %}" data-delete-url-template="{% url 'subcategoria_eliminar' catalogo.id_cat 0 %}" data-move-product-url-template="{% url 'producto_mover_subcategoria' catalogo.id_cat 0 %}" data-restore-product-url-template="{% url 'producto_restaurar_subcategorias' catalogo.id_cat 0 %}">
     <div class="subcat-tree" data-subcat-root>
         {% if subcategoria_tree %}
-            {% include "inventario/catalogo/_subcategoria_tree.html" with nodes=subcategoria_tree %}
+            {% include "inventario/catalogo/_subcategoria_tree.html" with nodes=subcategoria_tree catalogo=catalogo puede_gestionar_catalogo=puede_gestionar_catalogo mostrar_hijas=selected_subcat_id %}
         {% else %}
             {% if not productos %}
-            <p class="subcat-tree__placeholder">Clic derecho en el fondo para crear tu primera subcategoría.</p>
+            <p class="subcat-tree__placeholder tw-col-span-full tw-text-center tw-text-sm tw-font-medium tw-text-slate-500">Clic derecho en el fondo para crear tu primera subcategoría.</p>
             {% endif %}
         {% endif %}
     </div>
-    <div class="subcat-context-menu" data-subcat-context-menu hidden>
-        <button type="button" class="subcat-context-menu__item" data-create-subcat>
+    <div class="subcat-context-menu tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-p-1.5 tw-shadow-2xl" data-subcat-context-menu hidden>
+        <button type="button" class="subcat-context-menu__item tw-flex tw-w-full tw-items-center tw-gap-2 tw-rounded-lg tw-px-3 tw-py-2 tw-text-left tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-100" data-create-subcat>
             <ion-icon name="folder-add-outline"></ion-icon>
             Crear subcategoría
         </button>
-        <button type="button" class="subcat-context-menu__item" data-rename-subcat hidden>
+        <button type="button" class="subcat-context-menu__item tw-flex tw-w-full tw-items-center tw-gap-2 tw-rounded-lg tw-px-3 tw-py-2 tw-text-left tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-100" data-rename-subcat hidden>
             <ion-icon name="create-outline"></ion-icon>
             Cambiar nombre
         </button>
-        <button type="button" class="subcat-context-menu__item subcat-context-menu__item--danger" data-delete-subcat hidden>
+        <button type="button" class="subcat-context-menu__item subcat-context-menu__item--danger tw-flex tw-w-full tw-items-center tw-gap-2 tw-rounded-lg tw-px-3 tw-py-2 tw-text-left tw-text-sm tw-font-semibold tw-text-rose-700 hover:tw-bg-rose-50" data-delete-subcat hidden>
             <ion-icon name="trash-outline"></ion-icon>
             Eliminar subcategoría
         </button>
     </div>
 </section>
+</aside>
 {% endif %}
 
+<div class="catalogo-layout__content tw-space-y-5{% if not puede_gestionar_catalogo %} xl:tw-col-span-2{% endif %}">
 {% if productos %}
-<section class="cat-grid-section">
-    <div class="cat-grid cat-grid--productos">
+<section class="cat-grid-section tw-rounded-[28px] tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
+    <div class="cat-grid cat-grid--productos tw-grid tw-grid-cols-1 tw-gap-5 md:tw-grid-cols-2 2xl:tw-grid-cols-3">
         {% for p in productos %}
-        <article class="cat-card product-tile" data-product-tile data-product-id="{{ p.id_prod }}" data-product-subcats="{% for sc in p.subcategorias.all %}{{ sc.id_subcat }}{% if not forloop.last %},{% endif %}{% endfor %}" draggable="{% if puede_gestionar_catalogo %}true{% else %}false{% endif %}">
+        <article class="cat-card product-tile tw-overflow-hidden tw-rounded-[24px] tw-border tw-border-slate-200 tw-bg-white tw-shadow-sm hover:tw-border-lime-300 hover:tw-shadow-md" data-product-tile data-product-id="{{ p.id_prod }}" data-product-subcats="{% for sc in p.subcategorias.all %}{{ sc.id_subcat }}{% if not forloop.last %},{% endif %}{% endfor %}" draggable="{% if puede_gestionar_catalogo %}true{% else %}false{% endif %}">
             {% if puede_gestionar_catalogo %}
             <form
                 class="product-tile__delete-form"
@@ -105,30 +98,30 @@
             </form>
             {% endif %}
 
-            <button type="button" class="product-tile__open" data-open-modal="producto-{{ p.id_prod }}">
-                <div class="product-tile__thumb">
+            <button type="button" class="product-tile__open tw-flex tw-w-full tw-flex-col tw-gap-3 tw-text-left xl:tw-flex-row xl:tw-items-start" data-open-modal="producto-{{ p.id_prod }}">
+                <div class="product-tile__thumb tw-flex tw-h-44 tw-items-center tw-justify-center tw-rounded-2xl tw-bg-slate-50 xl:tw-mb-0 xl:tw-h-auto xl:tw-w-[160px] xl:tw-shrink-0">
                     {% if p.fot_prod %}
                     <img src="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}" class="product-tile__img">
                     {% else %}
                     <ion-icon name="cube-outline"></ion-icon>
                     {% endif %}
                 </div>
-                <div class="product-tile__body">
-                    <h3 class="cat-card__name">{{ p.nombre_producto }}</h3>
-                    <p class="cat-card__desc">{% if p.descripcion %}{{ p.descripcion|truncatechars:90 }}{% else %}Sin descripción registrada.{% endif %}</p>
-                    <div class="product-tile__chips">
-                        <span class="cat-card__count"><ion-icon name="layers-outline"></ion-icon>Cantidad: {{ p.cantidad_total|default:'0' }}</span>
-                        <span class="cat-card__count"><ion-icon name="archive-outline"></ion-icon>Stock: {{ p.stock_actual|default:'0' }}</span>
-                        <span class="cat-card__count"><ion-icon name="cube-outline"></ion-icon>{{ p.get_tipo_bien_display }}</span>
+                <div class="product-tile__body tw-flex tw-min-w-0 tw-flex-1 tw-flex-col tw-gap-2">
+                    <h3 class="cat-card__name tw-text-base tw-font-bold tw-text-slate-900">{{ p.nombre_producto }}</h3>
+                    <p class="cat-card__desc tw-text-sm tw-text-slate-600">{% if p.descripcion %}{{ p.descripcion|truncatechars:110 }}{% else %}Sin descripción registrada.{% endif %}</p>
+                    <div class="product-tile__chips tw-flex tw-flex-wrap tw-gap-2">
+                        <span class="cat-card__count tw-inline-flex tw-items-center tw-gap-1 tw-rounded-full tw-bg-slate-100 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-slate-700"><ion-icon name="layers-outline"></ion-icon>Cantidad: {{ p.cantidad_total|default:'0' }}</span>
+                        <span class="cat-card__count tw-inline-flex tw-items-center tw-gap-1 tw-rounded-full tw-bg-lime-100 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-lime-700"><ion-icon name="archive-outline"></ion-icon>Stock: {{ p.stock_actual|default:'0' }}</span>
+                        <span class="cat-card__count tw-inline-flex tw-items-center tw-gap-1 tw-rounded-full tw-bg-sky-100 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-sky-700"><ion-icon name="cube-outline"></ion-icon>{{ p.get_tipo_bien_display }}</span>
                     </div>
                 </div>
             </button>
         </article>
 
-        <div class="product-modal-backdrop" id="producto-{{ p.id_prod }}" aria-hidden="true">
-            <div class="product-modal" role="dialog" aria-modal="true" aria-labelledby="producto-title-{{ p.id_prod }}">
-                <div class="product-modal__header">
-                    <h2 class="product-modal__title" id="producto-title-{{ p.id_prod }}">{{ p.nombre_producto }}</h2>
+        <div class="product-modal-backdrop tw-fixed tw-inset-0 tw-z-[1400] tw-bg-black/45 tw-p-4" id="producto-{{ p.id_prod }}" aria-hidden="true">
+            <div class="product-modal tw-mx-auto tw-w-full tw-max-w-5xl tw-overflow-hidden tw-rounded-[28px] tw-border tw-border-slate-200 tw-bg-white tw-shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="producto-title-{{ p.id_prod }}">
+                <div class="product-modal__header tw-flex tw-items-center tw-justify-between tw-gap-3 tw-border-b tw-border-slate-200 tw-p-4">
+                    <h2 class="product-modal__title tw-text-lg tw-font-bold tw-text-slate-900" id="producto-title-{{ p.id_prod }}">{{ p.nombre_producto }}</h2>
                     <div class="product-modal__header-actions">
                         {% if request.user.is_authenticated and request.user.id_rol_fk.nombre_rol == 'admin' %}
                         <a href="{% url 'producto_editar' p.id_prod %}" class="cat-btn cat-btn--primary cat-btn--modal-head">
@@ -148,26 +141,27 @@
                             </button>
                         </form>
                         {% endif %}
-                        <button class="product-modal__close" type="button" data-close-modal aria-label="Cerrar detalle">
+                        <button class="product-modal__close tw-inline-flex tw-h-9 tw-w-9 tw-items-center tw-justify-center tw-rounded-full tw-border tw-border-slate-200 tw-bg-white tw-text-slate-500 hover:tw-bg-slate-100" type="button" data-close-modal aria-label="Cerrar detalle">
                             <ion-icon name="close-outline"></ion-icon>
                         </button>
                     </div>
                 </div>
 
-                <div class="product-modal__media">
+                <div class="product-modal__body tw-grid tw-gap-0 xl:tw-grid-cols-[minmax(360px,.95fr)_minmax(0,1.05fr)]">
+                <div class="product-modal__media tw-bg-slate-50 tw-p-4 xl:tw-border-r xl:tw-border-slate-200">
                     {% with fotos_adic=p.fotos.all %}
                     {% if p.fot_prod or fotos_adic %}
                     <div class="mini-carousel" data-carousel>
                         <div class="mini-carousel__track">
                             {% if p.fot_prod %}
                             <div class="mini-carousel__slide">
-                                <img data-lazy="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}" style="width:100%;height:260px;object-fit:contain;display:block;border-radius:10px;background:var(--color-bg-alt,#f4f6f8);" loading="lazy">
-                                <div style="text-align:center;margin-top:4px;"><span style="font-size:.7rem;background:rgba(0,150,80,.13);color:var(--color-primary,#39b54a);padding:1px 8px;border-radius:10px;">Principal</span></div>
+                                <img data-lazy="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}" class="tw-block tw-h-[260px] tw-w-full tw-rounded-[10px] tw-bg-slate-100 tw-object-contain" loading="lazy">
+                                <div class="tw-mt-1 tw-text-center"><span class="tw-inline-block tw-rounded-full tw-bg-lime-100 tw-px-2 tw-py-0.5 tw-text-[11px] tw-font-semibold tw-text-lime-700">Principal</span></div>
                             </div>
                             {% endif %}
                             {% for foto in fotos_adic %}
                             <div class="mini-carousel__slide">
-                                <img data-lazy="{{ foto.foto.url }}" alt="Foto {{ forloop.counter }}" style="width:100%;height:260px;object-fit:contain;display:block;border-radius:10px;background:var(--color-bg-alt,#f4f6f8);" loading="lazy">
+                                <img data-lazy="{{ foto.foto.url }}" alt="Foto {{ forloop.counter }}" class="tw-block tw-h-[260px] tw-w-full tw-rounded-[10px] tw-bg-slate-100 tw-object-contain" loading="lazy">
                             </div>
                             {% endfor %}
                         </div>
@@ -178,7 +172,7 @@
                         {% endif %}
                     </div>
                     {% else %}
-                    <div class="product-modal__placeholder"><ion-icon name="image-outline"></ion-icon></div>
+                    <div class="product-modal__placeholder tw-flex tw-h-64 tw-items-center tw-justify-center tw-rounded-xl tw-border tw-border-dashed tw-border-slate-300 tw-text-4xl tw-text-slate-400"><ion-icon name="image-outline"></ion-icon></div>
                     {% endif %}
                     {% endwith %}
                 </div>
@@ -241,6 +235,7 @@
                         <p class="product-detail-value product-detail-value--preserve">{% if p.descr_dispo_actual %}{{ p.descr_dispo_actual }}{% else %}Sin observaciones de disponibilidad.{% endif %}</p>
                     </div>
                 </div>
+                </div>
             </div>
         </div>
         {% endfor %}
@@ -248,13 +243,15 @@
 </section>
 {% else %}
 <section class="cat-empty">
-    <div class="cat-empty__inner">
+    <div class="cat-empty__inner tw-rounded-[28px] tw-border tw-border-dashed tw-border-slate-300 tw-bg-white tw-p-8 tw-text-center tw-text-slate-600">
         <ion-icon name="cube-outline"></ion-icon>
         <h2>Sin productos en este catálogo</h2>
         <p>Desde la pestaña de catálogo puedes registrar el primer producto.</p>
     </div>
 </section>
 {% endif %}
+</div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -852,7 +849,9 @@ const initProductosCatalogoPage = () => {
 
     const buildSubcatNode = (subcat) => {
         const node = document.createElement('div');
-        node.className = 'subcat-node';
+        const kindClass = subcat.padre_id ? 'subcat-node--subcategoria' : 'subcat-node--categoria';
+        const kindLabel = subcat.padre_id ? 'Subcategoría' : 'Categoría';
+        node.className = `subcat-node ${kindClass}`;
         node.dataset.subcatId = String(subcat.id);
         node.dataset.parentId = subcat.padre_id ? String(subcat.padre_id) : '';
 
@@ -862,15 +861,40 @@ const initProductosCatalogoPage = () => {
         row.dataset.subcatNodeRow = 'true';
         row.dataset.subcatId = String(subcat.id);
 
+        const tip = document.createElement('span');
+        tip.className = 'subcat-node__tip';
+        tip.setAttribute('aria-hidden', 'true');
+        tip.innerHTML = '<ion-icon name="return-down-forward-outline"></ion-icon>Doble click para abrir';
+
+        const iconWrap = document.createElement('span');
+        iconWrap.className = 'subcat-node__icon-wrap';
         const icon = document.createElement('ion-icon');
         icon.name = 'folder-outline';
+        icon.className = 'subcat-node__icon';
+        iconWrap.appendChild(icon);
+
+        const content = document.createElement('span');
+        content.className = 'subcat-node__content';
+
+        const kind = document.createElement('span');
+        kind.className = `subcat-node__kind ${subcat.padre_id ? 'subcat-node__kind--subcategoria' : 'subcat-node__kind--categoria'}`;
+        kind.textContent = kindLabel;
+
+        const code = document.createElement('span');
+        code.className = 'subcat-node__code';
+        code.textContent = (subcat.codigo || 'SIN-COD').toString();
 
         const name = document.createElement('span');
         name.className = 'subcat-node__name';
         applySubcatName(name, subcat.nombre);
 
-        row.appendChild(icon);
-        row.appendChild(name);
+        content.appendChild(kind);
+        content.appendChild(code);
+        content.appendChild(name);
+
+        row.appendChild(tip);
+        row.appendChild(iconWrap);
+        row.appendChild(content);
 
         const children = document.createElement('div');
         children.className = 'subcat-node__children';
@@ -961,7 +985,7 @@ const initProductosCatalogoPage = () => {
                 });
                 const payload = await response.json().catch(() => ({}));
                 if (response.status === 400) {
-                    const message400 = payload.error || 'Se ha alcanzado el límite máximo de 12 niveles de profundidad.';
+                    const message400 = payload.error || 'Se ha alcanzado el límite máximo de 30 niveles de profundidad.';
                     clearComposer();
                     window.alert(message400);
                     return;

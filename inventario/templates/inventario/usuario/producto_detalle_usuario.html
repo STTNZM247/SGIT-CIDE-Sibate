@@ -3,8 +3,6 @@
 
 {% block title %}Detalle de Producto | {{ producto.nombre_producto }}{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% css_asset 'inventario/css/dashboard/dashboard.css' %}" data-page-style="true">
-<link rel="stylesheet" href="{% css_asset 'inventario/css/user/panel/panel_usuario.css' %}" data-page-style="true">
 {% if request.user.tema == 'oscuro' %}
 <style data-page-style="true">
 .usuario-product-detail-page {
@@ -146,8 +144,8 @@ html[data-theme='oscuro'] .subcats-chip {
 {% endblock %}
 
 {% block content %}
-<div class="usuario-product-detail-page">
-  <nav class="usuario-breadcrumb" aria-label="Trazabilidad de ruta" style="margin-bottom:10px;">
+<div class="usuario-product-detail-page tw-space-y-4">
+  <nav class="usuario-breadcrumb tw-mb-2.5 tw-flex tw-flex-wrap tw-items-center tw-gap-1.5 tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-px-3 tw-py-2 tw-text-sm tw-shadow-sm" aria-label="Trazabilidad de ruta">
     {% for crumb in breadcrumb %}
       {% if crumb.url %}
       <a href="{{ crumb.url }}">{{ crumb.label }}</a>
@@ -174,7 +172,7 @@ html[data-theme='oscuro'] .subcats-chip {
         </div>
         <div class="usuario-product-detail-info">
             <h1 class="usuario-product-modal__title">{{ producto.nombre_producto }}</h1>
-            <form method="post" action="{% url 'usuario_agregar_carrito' producto.id_prod %}" class="usuario-carrito-form" style="margin-top:12px;">
+            <form method="post" action="{% url 'usuario_agregar_carrito' producto.id_prod %}" class="usuario-carrito-form tw-mt-3 tw-flex tw-flex-wrap tw-items-center tw-gap-2">
                 {% csrf_token %}
                 <label for="cantidad-{{ producto.id_prod }}">Cantidad:</label>
                 <input type="number" min="1" max="{{ producto.stock_actual|default:'1' }}" name="cantidad" id="cantidad-{{ producto.id_prod }}" value="1" required>
@@ -182,29 +180,29 @@ html[data-theme='oscuro'] .subcats-chip {
                     <ion-icon name="cart-outline"></ion-icon>
                     Agregar al carrito
                 </button>
-                <span style="font-size:0.98em;color:#888;margin-top:4px;display:block;">Selecciona la cantidad y agrégalo a tu carrito de compras.</span>
+                <span class="tw-mt-1 tw-block tw-text-sm tw-text-slate-500">Selecciona la cantidad y agrégalo a tu carrito de compras.</span>
             </form>
-            <div class="usuario-product-detail-stock" style="margin-top:10px;">
+            <div class="usuario-product-detail-stock tw-mt-2.5">
                 <span class="usuario-product-detail-label">Cantidad disponible:</span>
                 <span class="usuario-product-detail-value">{{ producto.stock_actual|default:'0' }}</span>
             </div>
-            <div class="usuario-product-detail-cat" style="margin-top:10px;">
+            <div class="usuario-product-detail-cat tw-mt-2.5">
                 <span class="usuario-product-detail-label">Catálogo:</span>
                 <span class="usuario-product-detail-value">{{ producto.id_cat_fk.nombre_catalogo }}</span>
             </div>
-            <div class="usuario-product-detail-cat" style="margin-top:10px;">
+            <div class="usuario-product-detail-cat tw-mt-2.5">
               <span class="usuario-product-detail-label">Unidad de medida:</span>
               <span class="usuario-product-detail-value">{{ producto.get_unidad_medida_display }}</span>
             </div>
-            <div class="usuario-product-detail-cat" style="margin-top:10px;">
+            <div class="usuario-product-detail-cat tw-mt-2.5">
               <span class="usuario-product-detail-label">Ubicación:</span>
               <span class="usuario-product-detail-value">{{ producto.ubicacion|default:'Sin ubicación' }}</span>
             </div>
-            <div class="usuario-product-detail-cat" style="margin-top:10px;">
+            <div class="usuario-product-detail-cat tw-mt-2.5">
               <span class="usuario-product-detail-label">Tipo de bien:</span>
               <span class="usuario-product-detail-value">{{ producto.get_tipo_bien_display }}</span>
             </div>
-            <div class="usuario-product-detail-cat" style="margin-top:10px;">
+            <div class="usuario-product-detail-cat tw-mt-2.5">
               <span class="usuario-product-detail-label">Devolución:</span>
               <span class="usuario-product-detail-value">
                 {% if producto.tipo_bien == 'devolutivo' %}
@@ -236,7 +234,7 @@ html[data-theme='oscuro'] .subcats-chip {
     <h2 class="usuario-sugerencias-title">Explora productos similares</h2>
     <div class="usuario-inventario-grid usuario-sugerencias-grid">
         {% for prod in sugerencias %}
-        <form method="post" action="{% url 'usuario_agregar_carrito' prod.id_prod %}" class="usuario-card usuario-card-sugerido" style="cursor:pointer;" onclick="if(event.target.tagName!=='BUTTON'&&event.target.type!=='number'){window.location='{% url 'producto_detalle_usuario' prod.id_prod %}';return false;}">
+    <form method="post" action="{% url 'usuario_agregar_carrito' prod.id_prod %}" class="usuario-card usuario-card-sugerido tw-cursor-pointer" onclick="if(event.target.tagName!=='BUTTON'&&event.target.type!=='number'){window.location='{% url 'producto_detalle_usuario' prod.id_prod %}';return false;}">
             {% csrf_token %}
             <div class="usuario-card__media">
                 {% if prod.fot_prod %}
@@ -248,14 +246,14 @@ html[data-theme='oscuro'] .subcats-chip {
                 {% endif %}
             </div>
             <div class="usuario-card__body">
-                <h3 class="usuario-card__name" style="font-weight:900;color:#222;">
+                <h3 class="usuario-card__name tw-font-black tw-text-slate-900">
                     {{ prod.nombre_producto }}
                 </h3>
                 <p class="usuario-card__cat">{{ prod.id_cat_fk.nombre_catalogo }}</p>
                 <p class="usuario-card__desc">{{ prod.descripcion|truncatechars:45 }}</p>
-                <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
-                    <label for="cantidad-sug-{{ prod.id_prod }}" style="font-size:0.97em;">Cantidad:</label>
-                    <input type="number" min="1" max="99" name="cantidad" id="cantidad-sug-{{ prod.id_prod }}" value="1" required style="width:48px;">
+                <div class="tw-mt-2.5 tw-flex tw-items-center tw-gap-2">
+                  <label class="tw-text-sm" for="cantidad-sug-{{ prod.id_prod }}">Cantidad:</label>
+                  <input class="tw-w-12 tw-rounded-md tw-border tw-border-slate-300 tw-px-2" type="number" min="1" max="99" name="cantidad" id="cantidad-sug-{{ prod.id_prod }}" value="1" required>
                     <button type="submit" class="usuario-btn-carrito" title="Agregar al carrito" onclick="event.stopPropagation();">
                         <ion-icon name="cart-outline"></ion-icon>
                     </button>

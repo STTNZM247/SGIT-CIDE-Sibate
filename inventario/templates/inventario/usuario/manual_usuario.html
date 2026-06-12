@@ -3,10 +3,10 @@
 {% block title %}Manual de usuario{% endblock %}
 
 {% block content %}
-<section class="manual-page">
-  <header class="manual-head">
-    <h1>Manual del sistema</h1>
-    <p>
+<section class="manual-page tw-space-y-3 tw-pb-6">
+  <header class="manual-head tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-sm">
+    <h1 class="tw-text-2xl tw-font-bold tw-text-slate-900">Manual del sistema</h1>
+    <p class="tw-mt-1 tw-text-sm tw-text-slate-600">
       {% if rol_manual == 'admin' %}
         Guía para administración integral: catálogos, inventario, pedidos, préstamos, auditoría y usuarios.
       {% elif rol_manual == 'almacenista' %}
@@ -18,7 +18,7 @@
   </header>
 
   {% if rol_manual == 'admin' %}
-  <article class="manual-card">
+  <article class="manual-card tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
     <h2>1. Gestión del catálogo</h2>
     <ol>
       <li>Ingresa a Catálogo y crea categorías principales.</li>
@@ -28,7 +28,7 @@
     </ol>
   </article>
 
-  <article class="manual-card">
+  <article class="manual-card tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
     <h2>2. Inventario y trazabilidad</h2>
     <ol>
       <li>En Inventario revisa stock, ubicación y estado de productos.</li>
@@ -37,7 +37,7 @@
     </ol>
   </article>
 
-  <article class="manual-card">
+  <article class="manual-card tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
     <h2>3. Pedidos, préstamos y auditoría</h2>
     <ol>
       <li>Aprueba o rechaza pedidos según disponibilidad real.</li>
@@ -46,7 +46,7 @@
     </ol>
   </article>
 
-  <article class="manual-card">
+  <article class="manual-card tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
     <h2>4. Usuarios</h2>
     <ol>
       <li>Crea usuarios nuevos con rol inicial correcto.</li>
@@ -55,7 +55,7 @@
     </ol>
   </article>
   {% elif rol_manual == 'almacenista' %}
-  <article class="manual-card">
+  <article class="manual-card tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
     <h2>1. Inventario operativo</h2>
     <ol>
       <li>Revisa stock y cantidades antes de confirmar entregas.</li>
@@ -64,7 +64,7 @@
     </ol>
   </article>
 
-  <article class="manual-card">
+  <article class="manual-card tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
     <h2>2. Gestión de pedidos</h2>
     <ol>
       <li>Abre Pedidos para validar cada solicitud.</li>
@@ -73,7 +73,7 @@
     </ol>
   </article>
 
-  <article class="manual-card">
+  <article class="manual-card tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
     <h2>3. Préstamos y devoluciones</h2>
     <ol>
       <li>Consulta fechas de devolución en panel de préstamos.</li>
@@ -110,7 +110,7 @@
   </article>
   {% endif %}
 
-  <article class="manual-card manual-card--tips">
+  <article class="manual-card manual-card--tips tw-rounded-2xl tw-border tw-border-lime-300 tw-bg-lime-50 tw-p-4 tw-shadow-sm">
     <h2>Buenas prácticas</h2>
     <ul>
       <li>Mantén la información actualizada para evitar errores de inventario.</li>

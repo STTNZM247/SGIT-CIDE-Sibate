@@ -1,23 +1,27 @@
-## Resumen de hoy (29 de mayo)
+entonces en ese caso tenemos a rreglar todo el modal de catalogo, verifica esto y cambia/modifica 
 
-- Se reorganizó la estructura del frontend y CSS del proyecto para dejar estilos más modulares por panel y funcionalidad.
-- Se corrigieron rutas y referencias estáticas para mantener consistencia en la carga de assets.
-- Se ajustó nomenclatura/organización general (alineación de nombres y módulos) para reducir confusión en mantenimiento.
-- Se consolidó el flujo de compilación de CSS (build + manifest) para evitar diferencias entre estilos fuente y estilos servidos.
+botones crear catalogo esta mal, eso serai crear macro categoria dentro numero macro, titulo macro descripcion y ubicacion de bodega, en ese formulario tendra el que diga sigueinte al dar sigueinte la macro ya se creo y se subio en la bd en segundo plano al darle siguiente el formulario de mafcro se ajusta ahora para decir crear categoria doden tendremos numero categoria, nombre categoria y descripcion al dar siguiente igualmente el formulario nuevamente se ajusta ahora para crear las subcategorias donde tendremos en este metodo el registro de siubcategorias
 
-- Se corrigieron desajustes visuales en varios paneles (`pedidos`, `prestamos`, `auditorias`) por bloques CSS truncados o mal ubicados.
-- Se mejoró el panel de `inventario` en búsqueda/select para que quedara consistente con el panel de usuario.
-- Se rediseñaron las tarjetas de productos en inventario (mejor jerarquía visual, chips, espaciado y dark mode).
-- Se mejoró la ventana/modal de detalle rápido de producto con mejor estructura visual y legibilidad.
-- Se ensanchó y reorganizó el formulario de `Nuevo producto` en catálogo para mejor distribución.
-- Se implementó lógica de subcategorías por catálogo: solo se muestran las subcategorías del catálogo seleccionado.
-- Se cambió la selección de subcategorías a estilo visual tipo “carpetas” (en lugar de selector nativo).
-- Se eliminó del flujo de `Nuevo producto` la función de crear “nuevas subcategorías” para simplificar la experiencia de usuarios nuevos.
-- Se ajustó el layout del formulario para evitar espacios en blanco y selects sobredimensionados.
-- Se implementó gestión de `Ubicaciones de productos`.
-- Nuevo botón en catálogo para abrir mini formulario y registrar ubicaciones por nombre.
-- Nuevo modelo `UbicacionProducto` y relación en `Catalogo` (`id_ubicacion_fk`).
-- Nuevo selector tipo “carpetas” en `Nuevo catálogo` para asignar ubicación predeterminada.
-- Autocompletado de ubicación en `Nuevo producto` según catálogo seleccionado.
-- Se creó y aplicó migración `0026_ubicacionproducto_catalogo_id_ubicacion_fk`.
-- Validaciones ejecutadas durante los cambios: `build_css_assets`, `check` y `migrate` completados correctamente.
+
+el formulario tendra esto el numero nombre y descripcion de la subcategoria con la difretencia q el usuario agregara y se ajustaran abajo en una lista asi, la descripcion es opcional 
+
+| codigo sub | nombre | descricion 
+| 10005      | destornillador | destornillador de cruz | + agregar 
+ aca se despliega otra celda para seguir agregando par que al dar agregar al primero abajooo  de este cajon de agregar vera en un cajon como carpetar las subcategorias asi como en la imagen 
+
+
+ tienes q verificar todo el modal de catalogo cambiarlo si es necesairo y modula asi mismo, para que primero tendermos el panel de catalogo y para crear las macro categorias y subcategorias en aca en views se vea en dferentes ahcios evitando que en un htmlk tengamos ma de 500 lines de codigo. el js igual modularlo en diferentes archivos por especialidad para hacer ams rapido todo y menos codigo, el css usa tailwind para hacerlo con eso y asi no hacemos archivos css
+
+## Lista de lo que hicimos hoy
+
+- Se dejó activo el asistente de 3 pasos en catálogo: Macro -> Categoría -> Subcategorías.
+- Se modularizó la lógica del wizard en backend y frontend para separar responsabilidades.
+- Se validó que al crear Macro y Categoría con Siguiente se guarden en BD en segundo plano.
+- Se reforzó el manejo de CSRF para evitar el error 403 en peticiones del wizard.
+- Se ajustó el paso de Subcategorías para permitir agregar y quitar filas con botones + y -.
+- Se mejoró la visual de confirmación jerárquica (macro/categoría/subcategoría) dentro del modal.
+- Se corrigió la eliminación de subcategorías para que en envío normal redirija con mensaje y no muestre JSON crudo.
+- Se conservó respuesta JSON para flujos AJAX/fetch de eliminación.
+- Se ensanchó el modal del wizard para desktop y se optimizó el alto para reducir scroll.
+- Se mejoró el espaciado y ancho de inputs de la tabla de subcategorías para una vista más limpia.
+- Se verificó integridad del proyecto con python manage.py check sin errores.

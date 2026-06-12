@@ -199,20 +199,21 @@ html[data-theme="dark"] .subcats-chip {
 .product-tile__delete {
     width: 34px;
     height: 34px;
-    border-radius: 10px;
-    border: 1px solid #f3b4b4;
-    background: rgba(255, 255, 255, .95);
-    color: #d32f2f;
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #111827;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     font-size: 1rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+    box-shadow: none;
 }
 
 .product-tile__delete:hover {
-    background: #ffecec;
+    background: #f8fafc;
+    border-color: #cbd5e1;
 }
 
 .product-tile__thumb {

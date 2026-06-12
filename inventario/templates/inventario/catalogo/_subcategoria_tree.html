@@ -1,16 +1,26 @@
 {% for node in nodes %}
-<div class="subcat-node" data-subcat-id="{{ node.id }}" data-parent-id="{{ node.padre_id|default:'' }}">
-    <button type="button" class="subcat-node__row" data-subcat-node-row>
+<div class="subcat-node {% if not node.padre_id %}subcat-node--categoria{% else %}subcat-node--subcategoria{% endif %} tw-relative tw-flex tw-w-full tw-flex-col tw-items-stretch" data-subcat-id="{{ node.id }}" data-parent-id="{{ node.padre_id|default:'' }}">
+    <button type="button" class="subcat-node__row tw-relative tw-flex tw-w-full tw-items-center tw-gap-3 tw-rounded-[22px] tw-border tw-border-slate-200 tw-bg-white tw-p-3 tw-text-left tw-shadow-sm tw-transition hover:tw-border-amber-300 hover:tw-bg-amber-50" data-subcat-node-row>
         <span class="subcat-node__tip" aria-hidden="true">
             <ion-icon name="return-down-forward-outline"></ion-icon>
-            Doble clic para entrar
+            Doble click para abrir
         </span>
-        <ion-icon class="subcat-node__icon" name="folder-outline"></ion-icon>
-        <span class="subcat-node__name">{{ node.nombre }}</span>
+        <span class="subcat-node__icon-wrap tw-inline-flex tw-h-11 tw-w-11 tw-items-center tw-justify-center tw-rounded-2xl tw-bg-amber-50 tw-text-amber-500">
+            <ion-icon class="subcat-node__icon" name="folder-outline"></ion-icon>
+        </span>
+        <span class="subcat-node__content tw-flex tw-min-w-0 tw-flex-1 tw-flex-col tw-gap-1">
+            <span class="subcat-node__kind {% if not node.padre_id %}subcat-node__kind--categoria{% else %}subcat-node__kind--subcategoria{% endif %}">{% if not node.padre_id %}Categoría{% else %}Subcategoría{% endif %}</span>
+            <span class="subcat-node__code tw-font-mono tw-text-[11px] tw-font-semibold tw-text-lime-700">{{ node.codigo|default:'SIN-COD' }}</span>
+            <span class="subcat-node__name tw-text-sm tw-font-semibold tw-text-slate-800">{{ node.nombre }}</span>
+            <span class="subcat-node__meta tw-flex tw-flex-wrap tw-gap-1 tw-text-[10px] tw-font-semibold tw-text-slate-500">
+            <span class="tw-rounded-full tw-bg-slate-100 tw-px-2 tw-py-0.5">{{ node.children_count }} hijas</span>
+            <span class="tw-rounded-full tw-bg-lime-50 tw-px-2 tw-py-0.5 tw-text-lime-700">{{ node.branch_products_count }} prod.</span>
+            </span>
+        </span>
     </button>
-    <div class="subcat-node__children">
-        {% if node.children %}
-            {% include "inventario/catalogo/_subcategoria_tree.html" with nodes=node.children %}
+    <div class="subcat-node__children tw-w-full tw-gap-3 tw-pt-2">
+        {% if mostrar_hijas and node.children %}
+            {% include "inventario/catalogo/_subcategoria_tree.html" with nodes=node.children catalogo=catalogo puede_gestionar_catalogo=puede_gestionar_catalogo mostrar_hijas=mostrar_hijas %}
         {% endif %}
     </div>
 </div>

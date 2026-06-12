@@ -31,3 +31,30 @@ Con eso, los templates usarán automáticamente los `.min.css` del manifiesto.
 2. Ejecutar `python manage.py build_css_assets`
 3. Desplegar con `USE_BUILT_CSS=true`
 
+## Tailwind CSS (uso gradual)
+
+Se integró Tailwind para usar utilidades sin romper los estilos actuales.
+
+- Prefijo de clases: `tw-` (ejemplo: `tw-flex tw-gap-2`)
+- Preflight desactivado para evitar choques con CSS existente.
+- Archivo de entrada: `inventario/static/inventario/tailwind/input.css`
+- Archivo compilado: `inventario/static/inventario/css-build/tailwind.css`
+
+### Instalar dependencias
+
+```bash
+npm install
+```
+
+### Compilar Tailwind una vez
+
+```bash
+npm run tw:build
+```
+
+### Modo watch (desarrollo)
+
+```bash
+npm run tw:watch
+```
+

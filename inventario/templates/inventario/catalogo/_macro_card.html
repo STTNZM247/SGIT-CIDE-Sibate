@@ -1,0 +1,86 @@
+<article class="cat-card cat-card--catalogo tw-cursor-pointer tw-rounded-[26px] tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm hover:tw-border-lime-300 hover:tw-shadow-md" data-href="{% url 'productos_catalogo' card.id %}">
+  <div class="cat-card__top tw-flex tw-items-start tw-justify-between tw-gap-4">
+    <div class="cat-card__identity tw-flex tw-min-w-0 tw-flex-1 tw-items-start tw-gap-3">
+      <div class="cat-card__icon-wrap tw-inline-flex tw-h-12 tw-w-12 tw-items-center tw-justify-center tw-rounded-2xl tw-bg-slate-100 tw-text-slate-600">
+        <ion-icon name="albums-outline"></ion-icon>
+      </div>
+      <div class="tw-min-w-0 tw-flex-1">
+        <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-2">
+          <h3 class="cat-card__name tw-text-lg tw-font-extrabold tw-text-slate-900">{{ card.nombre }}</h3>
+          <span class="cat-card__badge tw-inline-flex tw-items-center tw-rounded-full tw-bg-slate-100 tw-px-2.5 tw-py-1 tw-text-[11px] tw-font-semibold tw-text-slate-500">Macro</span>
+        </div>
+        <p class="tw-mt-1 tw-font-mono tw-text-xs tw-font-semibold tw-text-lime-700">Código: {{ card.codigo|default:'-' }}</p>
+        {% if card.descripcion %}
+        <p class="cat-card__desc tw-mt-1 tw-text-sm tw-text-slate-600">{{ card.descripcion|truncatechars:86 }}</p>
+        {% endif %}
+      </div>
+    </div>
+    {% if puede_gestionar_catalogo %}
+    <form class="cat-card__delete-form" method="post" action="{% url 'eliminar_catalogo' card.id %}" onsubmit="return confirm('¿Seguro que deseas eliminar la macro categoría {{ card.nombre }}?');">
+      {% csrf_token %}
+      <button
+        class="cat-card__delete tw-inline-flex tw-h-10 tw-w-10 tw-items-center tw-justify-center tw-rounded-full disabled:tw-cursor-not-allowed disabled:tw-opacity-50"
+        type="submit"
+        {% if not card.can_delete %}disabled title="{{ card.delete_reason }}"{% else %}title="Eliminar macro categoría"{% endif %}
+      >
+        <ion-icon name="trash-outline"></ion-icon>
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="cat-card__stats tw-mt-4 tw-grid tw-grid-cols-3 tw-gap-2">
+    <div class="tw-rounded-2xl tw-bg-slate-50 tw-px-3 tw-py-2.5 tw-text-center">
+      <p class="tw-text-[11px] tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Categorías</p>
+      <p class="tw-text-lg tw-font-extrabold tw-text-slate-800">{{ card.categorias_count }}</p>
+    </div>
+    <div class="tw-rounded-2xl tw-bg-slate-50 tw-px-3 tw-py-2.5 tw-text-center">
+      <p class="tw-text-[11px] tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Subcategorías</p>
+      <p class="tw-text-lg tw-font-extrabold tw-text-slate-800">{{ card.subcategorias_count }}</p>
+    </div>
+    <div class="tw-rounded-2xl tw-bg-lime-50 tw-px-3 tw-py-2.5 tw-text-center">
+      <p class="tw-text-[11px] tw-font-semibold tw-uppercase tw-tracking-wide tw-text-lime-700">Productos</p>
+      <p class="tw-text-lg tw-font-extrabold tw-text-lime-700">{{ card.total_productos }}</p>
+    </div>
+  </div>
+
+  <div class="cat-card__footer tw-mt-4 tw-border-t tw-border-slate-100 tw-pt-4">
+    <div class="cat-card__footer-actions">
+      <a
+        class="cat-btn-mini cat-btn-mini--view cat-btn-mini--macro"
+        href="{% url 'productos_catalogo' card.id %}"
+      >
+        <ion-icon name="eye-outline"></ion-icon>
+        Ver productos
+      </a>
+      {% if puede_gestionar_catalogo %}
+      <button
+        class="cat-btn-mini cat-btn-mini--edit cat-btn-mini--macro"
+        type="button"
+        data-modal="modal-editar-macro"
+        data-cat-id="{{ card.id }}"
+        data-cat-name="{{ card.nombre|escape }}"
+        data-cat-codigo="{{ card.codigo|default:''|escape }}"
+        data-cat-descripcion="{{ card.descripcion|default:''|escape }}"
+        data-cat-ubicacion-id="{{ card.ubicacion_id|default:'' }}"
+        data-cat-codigo-bloqueado="{% if card.codigo_bloqueado %}1{% else %}0{% endif %}"
+        title="Editar macro categoría"
+      >
+        <ion-icon name="create-outline"></ion-icon>
+        Editar macro
+      </button>
+      <button
+        class="cat-btn-mini cat-btn-mini--add cat-btn-mini--macro"
+        type="button"
+        data-modal="modal-producto"
+        data-cat-id="{{ card.id }}"
+        data-cat-name="{{ card.nombre|escape }}"
+        title="Agregar producto en esta macro"
+      >
+        <ion-icon name="add-outline"></ion-icon>
+        Nuevo producto
+      </button>
+      {% endif %}
+    </div>
+  </div>
+</article>

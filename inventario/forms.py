@@ -8,6 +8,44 @@ from .db_compat import usuario_missing_optional_fields, usuario_supports_tipo_do
 from .models import Catalogo, Producto, Rol, Subcategoria, TipoDoc, UbicacionProducto, Usuario
 
 
+class CategoriaWizardForm(forms.Form):
+    codigo_categoria = forms.CharField(
+        max_length=20,
+        required=True,
+        label='Codigo categoria',
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'Ej: 1100',
+            'autocomplete': 'off',
+        }),
+    )
+    nombre_categoria = forms.CharField(
+        max_length=255,
+        required=True,
+        label='Nombre categoria',
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'Ej: Herramientas manuales',
+            'autocomplete': 'off',
+        }),
+    )
+    descripcion_categoria = forms.CharField(
+        required=False,
+        label='Descripcion categoria',
+        widget=forms.Textarea(attrs={
+            'class': 'form-input form-textarea',
+            'rows': 2,
+            'placeholder': 'Opcional',
+        }),
+    )
+
+
+class SubcategoriaWizardItemForm(forms.Form):
+    codigo_subcategoria = forms.CharField(max_length=20, required=True)
+    nombre_subcategoria = forms.CharField(max_length=255, required=True)
+    descripcion_subcategoria = forms.CharField(required=False)
+
+
 class CorreoAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(
         label='Correo',
@@ -294,6 +332,18 @@ class CatalogoForm(forms.ModelForm):
     def clean_nombre_catalogo(self):
         nombre = (self.cleaned_data.get('nombre_catalogo') or '').strip()
         return nombre.upper()
+    
+    def clean_codigo_macro(self):
+        codigo = (self.cleaned_data.get('codigo_macro') or '').strip().upper()
+        if not codigo:
+            return codigo
+        
+        queryset = Catalogo.objects.filter(codigo_macro__iexact=codigo)
+        if self.instance and self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise forms.ValidationError('Código ya registrado.')
+        return codigo
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -301,13 +351,19 @@ class CatalogoForm(forms.ModelForm):
 
     class Meta:
         model = Catalogo
-        fields = ['nombre_catalogo', 'descripcion', 'id_ubicacion_fk']
+        fields = ['codigo_macro', 'nombre_catalogo', 'descripcion', 'id_ubicacion_fk']
         labels = {
+            'codigo_macro': 'Código macro',
             'nombre_catalogo': 'Nombre del catálogo',
             'descripcion': 'Descripción',
             'id_ubicacion_fk': 'Ubicación predeterminada',
         }
         widgets = {
+            'codigo_macro': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Ej: 1000',
+                'autocomplete': 'off',
+            }),
             'nombre_catalogo': forms.TextInput(attrs={
                 'class': 'form-input',
                 'placeholder': 'Ej: Equipos audiovisuales',
@@ -345,45 +401,94 @@ class ProductoForm(forms.ModelForm):
             'rows': 2,
         }),
     )
-    subcategorias = forms.ModelMultipleChoiceField(
+    macro_categoria = forms.ModelChoiceField(
+        queryset=Catalogo.objects.none(),
+        required=True,
+        label='Macro categoría',
+        empty_label='Selecciona una macro categoría',
+        widget=forms.Select(attrs={
+            'class': 'form-input form-select',
+        }),
+    )
+    categoria = forms.ModelChoiceField(
         queryset=Subcategoria.objects.none(),
-        required=False,
-        label='Subcategorías',
-        widget=forms.SelectMultiple(attrs={
-            'class': 'form-input form-select form-select-multiple',
-            'size': '6',
+        required=True,
+        label='Categoría',
+        empty_label='Selecciona una categoría',
+        widget=forms.Select(attrs={
+            'class': 'form-input form-select',
+        }),
+    )
+    subcategoria = forms.ModelChoiceField(
+        queryset=Subcategoria.objects.none(),
+        required=True,
+        label='Subcategoría',
+        empty_label='Selecciona una subcategoría',
+        widget=forms.Select(attrs={
+            'class': 'form-input form-select',
         }),
     )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['subcategorias'].queryset = Subcategoria.objects.select_related('id_cat_fk', 'subcategoria_padre').order_by(
-            'id_cat_fk__nombre_catalogo',
-            'subcategoria_padre_id',
-            'nombre_subcategoria',
-        )
+        self.fields['macro_categoria'].queryset = Catalogo.objects.order_by('nombre_catalogo')
+        self.fields['categoria'].queryset = Subcategoria.objects.select_related('id_cat_fk').filter(
+            subcategoria_padre__isnull=True,
+        ).order_by('id_cat_fk__nombre_catalogo', 'nombre_subcategoria')
+        self.fields['subcategoria'].queryset = Subcategoria.objects.select_related('id_cat_fk', 'subcategoria_padre').filter(
+            subcategoria_padre__isnull=False,
+        ).order_by('id_cat_fk__nombre_catalogo', 'subcategoria_padre__nombre_subcategoria', 'nombre_subcategoria')
+        self.fields['id_cat_fk'].required = False
+        self.fields['id_cat_fk'].widget = forms.HiddenInput()
         self.fields['ubicacion'].widget.attrs['readonly'] = 'readonly'
         self.fields['ubicacion'].widget.attrs['title'] = 'Esta ubicación se completa automáticamente desde el catálogo.'
+
+        bound_macro = self.data.get('macro_categoria') if self.is_bound else None
+        bound_cat = self.data.get('categoria') if self.is_bound else None
+        bound_subcat = self.data.get('subcategoria') if self.is_bound else None
+
+        if not self.is_bound and self.initial.get('id_cat_fk'):
+            self.initial['macro_categoria'] = self.initial.get('id_cat_fk')
+
+        if bound_macro:
+            self.fields['id_cat_fk'].initial = bound_macro
+        if bound_cat:
+            self.initial['categoria'] = bound_cat
+        if bound_subcat:
+            self.initial['subcategoria'] = bound_subcat
 
     def clean(self):
         cleaned_data = super().clean()
         tipo_bien = cleaned_data.get('tipo_bien')
-        catalogo = cleaned_data.get('id_cat_fk')
-        subcategorias = list(cleaned_data.get('subcategorias') or [])
+        macro_categoria = cleaned_data.get('macro_categoria')
+        categoria = cleaned_data.get('categoria')
+        subcategoria = cleaned_data.get('subcategoria')
         ubicacion = (cleaned_data.get('ubicacion') or '').strip()
         placa = (cleaned_data.get('numero_placa') or '').strip()
         cuentadante = (cleaned_data.get('cuentadante') or '').strip()
+
+        if macro_categoria:
+            cleaned_data['id_cat_fk'] = macro_categoria
+        catalogo = cleaned_data.get('id_cat_fk')
 
         if catalogo and catalogo.id_ubicacion_fk:
             cleaned_data['ubicacion'] = catalogo.id_ubicacion_fk.nombre
         elif not ubicacion:
             self.add_error('ubicacion', 'El catálogo seleccionado no tiene ubicación predeterminada.')
 
-        if catalogo and subcategorias:
-            filtradas = [s for s in subcategorias if s.id_cat_fk_id == catalogo.id_cat]
-            if len(filtradas) != len(subcategorias):
-                self.add_error('subcategorias', 'Solo puedes seleccionar subcategorías del catálogo elegido.')
-            cleaned_data['subcategorias'] = filtradas
+        if catalogo and categoria and categoria.id_cat_fk_id != catalogo.id_cat:
+            self.add_error('categoria', 'La categoría seleccionada no pertenece a la macro categoría elegida.')
+
+        if categoria and categoria.subcategoria_padre_id:
+            self.add_error('categoria', 'La categoría debe ser de primer nivel (sin padre).')
+
+        if subcategoria:
+            if not subcategoria.subcategoria_padre_id:
+                self.add_error('subcategoria', 'Debes seleccionar una subcategoría hija de la categoría elegida.')
+            elif categoria and subcategoria.subcategoria_padre_id != categoria.id_subcat:
+                self.add_error('subcategoria', 'La subcategoría no corresponde a la categoría seleccionada.')
+            elif subcategoria.subcategoria_padre and subcategoria.subcategoria_padre.subcategoria_padre_id:
+                self.add_error('subcategoria', 'La subcategoría debe estar en segundo nivel de la jerarquía.')
 
         if tipo_bien == 'devolutivo':
             if not placa:
@@ -402,9 +507,9 @@ class ProductoForm(forms.ModelForm):
         if not commit:
             return producto
 
-        seleccionadas = list(self.cleaned_data.get('subcategorias') or [])
-        if seleccionadas:
-            producto.subcategorias.set(list({s.pk: s for s in seleccionadas}.values()))
+        seleccionada = self.cleaned_data.get('subcategoria')
+        if seleccionada:
+            producto.subcategorias.set([seleccionada])
         else:
             producto.subcategorias.clear()
 
@@ -421,7 +526,6 @@ class ProductoForm(forms.ModelForm):
             'tipo_bien',
             'numero_placa',
             'cuentadante',
-            'subcategorias',
         ]
         labels = {
             'nombre_producto': 'Nombre del producto',

@@ -195,6 +195,7 @@ class VerificacionSenaToken(models.Model):
 
 class Catalogo(models.Model):
     id_cat = models.AutoField(primary_key=True)
+    codigo_macro = models.CharField(max_length=20, null=True, blank=True, unique=True)
     nombre_catalogo = models.CharField(max_length=255, null=True, blank=True)
     descripcion = models.TextField(null=True, blank=True)
     id_ubicacion_fk = models.ForeignKey(
@@ -269,6 +270,7 @@ class Producto(models.Model):
     ]
 
     id_prod = models.AutoField(primary_key=True)
+    codigo_producto = models.CharField(max_length=40, unique=True, null=True, blank=True)
     nombre_producto = models.CharField(max_length=255, null=True, blank=True)
     descripcion = models.TextField(null=True, blank=True)
     fot_prod = models.ImageField(upload_to='productos/', null=True, blank=True)
@@ -325,6 +327,8 @@ class Subcategoria(models.Model):
         related_name='hijas',
     )
     nombre_subcategoria = models.CharField(max_length=255)
+    codigo_clasificacion = models.CharField(max_length=20, null=True, blank=True)
+    descripcion = models.TextField(null=True, blank=True)
     fch_registro = models.DateTimeField(null=True, blank=True)
     fch_ult_act = models.DateTimeField(null=True, blank=True)
 
@@ -332,7 +336,7 @@ class Subcategoria(models.Model):
         db_table = 'subcategoria'
         ordering = ['id_cat_fk_id', 'subcategoria_padre_id', 'nombre_subcategoria']
         constraints = [
-            models.UniqueConstraint(fields=['id_cat_fk', 'subcategoria_padre', 'nombre_subcategoria'], name='uq_subcat_catalogo_padre_nombre'),
+            models.UniqueConstraint(fields=['id_cat_fk', 'subcategoria_padre', 'codigo_clasificacion'], name='uq_subcat_catalogo_padre_codigo'),
         ]
 
     def __str__(self):
@@ -350,8 +354,8 @@ class Subcategoria(models.Model):
                 raise ValidationError('Se detectó una referencia circular en la jerarquía de subcategorías.')
             visited.add(parent.pk)
             depth += 1
-            if depth > 12:
-                raise ValidationError('Se ha alcanzado el límite máximo de 12 niveles de profundidad.')
+            if depth > 30:
+                raise ValidationError('Se ha alcanzado el límite máximo de 30 niveles de profundidad.')
             parent = parent.subcategoria_padre
 
         super().save(*args, **kwargs)

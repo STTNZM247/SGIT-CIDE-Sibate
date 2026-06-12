@@ -1,0 +1,14 @@
+{
+  "name": "invt_sena-tailwind",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "tw:build": "tailwindcss -i ./inventario/static/inventario/tailwind/input.css -o ./inventario/static/inventario/css-build/tailwind.css --minify",
+    "tw:watch": "tailwindcss -i ./inventario/static/inventario/tailwind/input.css -o ./inventario/static/inventario/css-build/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13"
+  }
+}

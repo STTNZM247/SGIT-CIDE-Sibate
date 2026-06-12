@@ -4,7 +4,6 @@
 {% block title %}Importar inventario desde Excel{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% css_asset 'inventario/css/dashboard/dashboard.css' %}" data-page-style="true">
 <style data-page-style="true">
 .import-shell {
     display: grid;
@@ -235,74 +234,74 @@
 {% endblock %}
 
 {% block content %}
-<section class="import-shell">
-    <article class="import-card">
-        <h2>Cargar archivo Excel</h2>
-        <p>Selecciona el archivo de respaldo, revisa la previsualización y luego cárgalo para actualizar la base de datos.</p>
-        <p class="import-note">Recuerda: usa el formato generado por el botón <strong>Exportar todo el inventario</strong> (hojas Inventario e Imágenes Secundarias). En la columna <strong>Subcategorias</strong> usa rutas jerárquicas tipo <strong>Madre / Hija / Nieta</strong> y, si hay varias, sepáralas con <strong>|</strong>.</p>
+<section class="import-shell tw-space-y-4 tw-pb-6">
+    <article class="import-card tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-sm">
+        <h2 class="tw-text-2xl tw-font-bold tw-text-slate-900">Cargar archivo Excel</h2>
+        <p class="tw-mt-1 tw-text-sm tw-text-slate-600">Selecciona el archivo de respaldo, revisa la previsualización y luego cárgalo para actualizar la base de datos.</p>
+        <p class="import-note tw-mt-3 tw-rounded-xl tw-border tw-border-lime-200 tw-bg-lime-50 tw-p-3 tw-text-sm tw-text-lime-800">Recuerda: usa el formato generado por el botón <strong>Exportar todo el inventario</strong> (hojas Inventario e Imágenes Secundarias). En la columna <strong>Subcategorias</strong> usa rutas jerárquicas tipo <strong>Madre / Hija / Nieta</strong> y, si hay varias, sepáralas con <strong>|</strong>.</p>
 
-        <form method="post" enctype="multipart/form-data" class="import-actions">
+        <form method="post" enctype="multipart/form-data" class="import-actions tw-mt-3 tw-flex tw-flex-wrap tw-items-center tw-gap-2">
             {% csrf_token %}
             <input type="hidden" name="action" value="preview">
-            <input class="import-file" type="file" name="excel_file" accept=".xlsx" required>
-            <button type="submit" class="import-btn import-btn--preview">
+            <input class="import-file tw-min-w-[260px] tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-py-2 tw-text-sm" type="file" name="excel_file" accept=".xlsx" required>
+            <button type="submit" class="import-btn import-btn--preview tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-gap-2 tw-rounded-xl tw-bg-sky-600 tw-px-4 tw-text-sm tw-font-semibold tw-text-white hover:tw-bg-sky-700">
                 <ion-icon name="eye-outline"></ion-icon>
                 Cargar y visualizar
             </button>
         </form>
 
         {% if active_file_name %}
-        <p class="import-meta"><strong>Archivo activo:</strong> {{ active_file_name }}</p>
+        <p class="import-meta tw-mt-2 tw-text-sm tw-text-slate-600"><strong>Archivo activo:</strong> {{ active_file_name }}</p>
         {% else %}
-        <p class="import-meta">Aún no hay archivo cargado.</p>
+        <p class="import-meta tw-mt-2 tw-text-sm tw-text-slate-500">Aún no hay archivo cargado.</p>
         {% endif %}
 
         {% if active_file_name %}
-        <p class="import-meta"><strong>Archivo activo:</strong> {{ active_file_name }}</p>
+        <p class="import-meta tw-mt-2 tw-text-sm tw-text-slate-600"><strong>Archivo activo:</strong> {{ active_file_name }}</p>
 
-        <form method="get" class="import-search">
-            <input type="search" name="q" value="{{ preview_search }}" placeholder="Buscar en la previsualización del Excel">
-            <button type="submit">Buscar</button>
+        <form method="get" class="import-search tw-mt-3 tw-flex tw-flex-wrap tw-gap-2">
+            <input class="tw-h-11 tw-min-w-[260px] tw-flex-1 tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-text-sm tw-text-slate-700" type="search" name="q" value="{{ preview_search }}" placeholder="Buscar en la previsualización del Excel">
+            <button class="tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-4 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50" type="submit">Buscar</button>
         </form>
 
         {% if preview_error %}
-        <p class="import-meta" style="color:#b02a37;">{{ preview_error }}</p>
+        <p class="import-meta tw-mt-2 tw-text-sm tw-font-semibold tw-text-rose-700">{{ preview_error }}</p>
         {% endif %}
 
         {% if preview_rows %}
         {% for group in preview_groups %}
-        <div class="import-preview-group">
-            <div class="import-preview-group__head">{{ group.categoria }} ({{ group.items|length }} productos)</div>
-            <div class="import-preview-list">
+        <div class="import-preview-group tw-mt-4 tw-overflow-hidden tw-rounded-2xl tw-border tw-border-slate-200">
+            <div class="import-preview-group__head tw-bg-slate-50 tw-px-4 tw-py-3 tw-text-sm tw-font-bold tw-text-slate-700">{{ group.categoria }} ({{ group.items|length }} productos)</div>
+            <div class="import-preview-list tw-grid tw-gap-3 tw-p-3">
                 {% for row in group.items %}
-                <article class="import-preview-item">
+                <article class="import-preview-item tw-grid tw-grid-cols-1 tw-gap-3 tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-p-3 md:tw-grid-cols-[120px_1fr]">
                     {% if row.MainImage %}
-                    <img src="{{ row.MainImage }}" alt="{{ row.Producto }}" class="import-preview-main">
+                    <img src="{{ row.MainImage }}" alt="{{ row.Producto }}" class="import-preview-main tw-h-[110px] tw-w-[110px] tw-rounded-lg tw-border tw-border-slate-200 tw-bg-slate-50 tw-object-cover">
                     {% else %}
-                    <div class="import-preview-main import-preview-main--empty">Sin foto</div>
+                    <div class="import-preview-main import-preview-main--empty tw-grid tw-h-[110px] tw-w-[110px] tw-place-items-center tw-rounded-lg tw-border tw-border-slate-200 tw-bg-slate-50 tw-text-xs tw-text-slate-500">Sin foto</div>
                     {% endif %}
                     <div>
-                        <h3 class="import-preview-title">{{ row.Producto }}</h3>
-                        <div class="import-preview-meta">
-                            <span class="import-chip">{{ row.Unidad|default:'Unidad' }}</span>
-                            <span class="import-chip">{{ row.Tipo|default:'Tipo' }}</span>
-                            <span class="import-chip">Stock: {{ row.Stock|default:'0' }}</span>
-                            <span class="import-chip">Cantidad: {{ row.Cantidad|default:'0' }}</span>
-                            {% if row.Ubicacion %}<span class="import-chip">{{ row.Ubicacion }}</span>{% endif %}
+                        <h3 class="import-preview-title tw-text-base tw-font-bold tw-text-slate-900">{{ row.Producto }}</h3>
+                        <div class="import-preview-meta tw-mt-2 tw-flex tw-flex-wrap tw-gap-2">
+                            <span class="import-chip tw-inline-flex tw-rounded-full tw-bg-slate-100 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-slate-700">{{ row.Unidad|default:'Unidad' }}</span>
+                            <span class="import-chip tw-inline-flex tw-rounded-full tw-bg-sky-100 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-sky-700">{{ row.Tipo|default:'Tipo' }}</span>
+                            <span class="import-chip tw-inline-flex tw-rounded-full tw-bg-lime-100 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-lime-700">Stock: {{ row.Stock|default:'0' }}</span>
+                            <span class="import-chip tw-inline-flex tw-rounded-full tw-bg-emerald-100 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-emerald-700">Cantidad: {{ row.Cantidad|default:'0' }}</span>
+                            {% if row.Ubicacion %}<span class="import-chip tw-inline-flex tw-rounded-full tw-bg-amber-100 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-amber-700">{{ row.Ubicacion }}</span>{% endif %}
                         </div>
                         {% if row.Subcategorias %}
-                        <p class="import-preview-desc"><strong>Subcategorías:</strong> {{ row.Subcategorias }}</p>
+                        <p class="import-preview-desc tw-mt-2 tw-text-sm tw-text-slate-600"><strong>Subcategorías:</strong> {{ row.Subcategorias }}</p>
                         {% endif %}
                         {% if row.Descripcion %}
-                        <p class="import-preview-desc">{{ row.Descripcion|truncatechars:180 }}</p>
+                        <p class="import-preview-desc tw-mt-1 tw-text-sm tw-text-slate-500">{{ row.Descripcion|truncatechars:180 }}</p>
                         {% endif %}
                         {% if row.SecondaryCount %}
-                        <div class="import-preview-sec">
+                        <div class="import-preview-sec tw-mt-2 tw-flex tw-flex-wrap tw-gap-1.5">
                             {% for sec in row.SecondaryImages %}
-                            <img src="{{ sec }}" alt="Secundaria {{ forloop.counter }}">
+                            <img class="tw-h-11 tw-w-11 tw-rounded-md tw-border tw-border-slate-200 tw-bg-slate-50 tw-object-cover" src="{{ sec }}" alt="Secundaria {{ forloop.counter }}">
                             {% endfor %}
                             {% if row.SecondaryCount > row.SecondaryImages|length %}
-                            <span class="import-chip">+{{ row.SecondaryCount|add:'-4' }} más</span>
+                            <span class="import-chip tw-inline-flex tw-rounded-full tw-bg-slate-100 tw-px-2 tw-py-1 tw-text-xs tw-font-semibold tw-text-slate-700">+{{ row.SecondaryCount|add:'-4' }} más</span>
                             {% endif %}
                         </div>
                         {% endif %}
@@ -313,24 +312,24 @@
         </div>
         {% endfor %}
 
-        <form method="post" class="import-actions" style="margin-top: .9rem;">
+        <form method="post" class="import-actions tw-mt-4 tw-flex tw-flex-wrap tw-gap-2">
             {% csrf_token %}
             <input type="hidden" name="action" value="import">
-            <button type="submit" class="import-btn import-btn--upload">
+            <button type="submit" class="import-btn import-btn--upload tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-gap-2 tw-rounded-xl tw-bg-lime-600 tw-px-4 tw-text-sm tw-font-semibold tw-text-white hover:tw-bg-lime-700">
                 <ion-icon name="cloud-upload-outline"></ion-icon>
                 Cargar inventario a la base de datos
             </button>
         </form>
-        <form method="post" class="import-actions" style="margin-top: .4rem;">
+        <form method="post" class="import-actions tw-mt-2 tw-flex tw-flex-wrap tw-gap-2">
             {% csrf_token %}
             <input type="hidden" name="action" value="cancel">
-            <button type="submit" class="import-btn import-btn--cancel">
+            <button type="submit" class="import-btn import-btn--cancel tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-gap-2 tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-4 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50">
                 <ion-icon name="close-circle-outline"></ion-icon>
                 Cancelar previsualización
             </button>
         </form>
         {% else %}
-        <p class="import-meta">No hay filas para mostrar con ese filtro.</p>
+        <p class="import-meta tw-mt-3 tw-text-sm tw-text-slate-500">No hay filas para mostrar con ese filtro.</p>
         {% endif %}
         {% endif %}
     </article>

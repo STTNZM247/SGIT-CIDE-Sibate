@@ -1,0 +1,182 @@
+{% load static %}
+<div class="modal-backdrop tw-fixed tw-inset-0 tw-z-[1400] tw-bg-slate-950/40 tw-backdrop-blur-[3px] tw-p-2 sm:tw-p-4" id="modal-catalogo" role="dialog" aria-modal="true" aria-labelledby="modal-cat-title" aria-hidden="true" data-url-macro="{% url 'wizard_crear_macro' %}" data-url-categoria="{% url 'wizard_crear_categoria' %}" data-url-subcategorias="{% url 'wizard_crear_subcategorias' %}" data-url-codigo="{% url 'wizard_codigo_api' %}">
+  <div class="modal tw-mx-auto tw-flex tw-h-[min(96vh,980px)] tw-w-full tw-max-w-[96vw] xl:tw-max-w-[1320px] tw-flex-col tw-overflow-hidden tw-rounded-[32px] tw-border tw-border-slate-200 tw-bg-white tw-shadow-[0_24px_90px_rgba(15,23,42,.18)]">
+    <div class="modal__header tw-flex tw-items-center tw-justify-between tw-gap-3 tw-border-b tw-border-slate-200 tw-bg-slate-50/80 tw-p-5 lg:tw-px-6">
+      <div>
+        <h2 class="modal__title tw-text-xl tw-font-extrabold tw-text-slate-900" id="modal-cat-title">Asistente de clasificación</h2>
+        <p class="tw-mt-1 tw-text-xs tw-font-medium tw-text-slate-500" id="wizard-step-label">Paso 1 de 3: crear macro categoría</p>
+      </div>
+      <button class="modal__close tw-inline-flex tw-h-10 tw-w-10 tw-items-center tw-justify-center tw-rounded-full tw-border tw-border-slate-200 tw-bg-white tw-text-slate-500 hover:tw-bg-slate-100" type="button" data-modal-close aria-label="Cerrar">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <div class="tw-border-b tw-border-slate-200 tw-px-5 tw-py-4 lg:tw-px-6">
+      <div class="tw-grid tw-grid-cols-3 tw-gap-3 tw-text-xs tw-font-semibold">
+        <div class="wizard-pill is-active tw-rounded-full tw-border tw-border-slate-200 tw-bg-slate-900 tw-px-3 tw-py-2 tw-text-center tw-text-white" data-wizard-pill="1">Macro</div>
+        <div class="wizard-pill tw-rounded-full tw-border tw-border-slate-200 tw-bg-slate-100 tw-px-3 tw-py-2 tw-text-center tw-text-slate-600" data-wizard-pill="2">Categoría</div>
+        <div class="wizard-pill tw-rounded-full tw-border tw-border-slate-200 tw-bg-slate-100 tw-px-3 tw-py-2 tw-text-center tw-text-slate-600" data-wizard-pill="3">Subcategorías</div>
+      </div>
+    </div>
+
+    <div class="tw-flex-1 tw-overflow-y-auto tw-p-5 lg:tw-p-6" id="wizard-scroll-area">
+      <div class="tw-hidden" id="wizard-csrf-holder">{% csrf_token %}</div>
+      <div class="tw-hidden tw-rounded-xl tw-border tw-border-rose-200 tw-bg-rose-50 tw-p-3 tw-text-sm tw-font-medium tw-text-rose-700" id="wizard-error-box"></div>
+      <div class="tw-hidden tw-rounded-xl tw-border tw-border-slate-200 tw-bg-slate-50 tw-p-3 tw-text-sm tw-font-medium tw-text-slate-700" id="wizard-ok-box"></div>
+
+      <section data-wizard-step="1" class="tw-space-y-5 tw-rounded-[30px] tw-border tw-border-slate-200 tw-bg-white tw-p-5 lg:tw-p-6">
+        <div class="tw-flex tw-items-center tw-justify-between tw-gap-3">
+          <div>
+            <p class="tw-text-sm tw-font-bold tw-text-slate-800">Crear macro categoría</p>
+            <p class="tw-text-xs tw-text-slate-500">Base principal de la estructura.</p>
+          </div>
+          <span class="tw-inline-flex tw-rounded-full tw-border tw-border-slate-200 tw-bg-slate-50 tw-px-3 tw-py-1 tw-text-xs tw-font-semibold tw-text-slate-700">Paso 1</span>
+        </div>
+        <div class="tw-grid tw-grid-cols-1 tw-gap-4 xl:tw-grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div class="tw-space-y-3">
+            <div class="tw-flex tw-items-end tw-justify-between tw-gap-2">
+              <label class="mf-label" for="wiz-codigo-macro">Numero macro <span class="mf-required">*</span></label>
+              <button type="button" class="tw-inline-flex tw-items-center tw-gap-2 tw-rounded-full tw-border tw-border-slate-200 tw-bg-white tw-px-3 tw-py-1 tw-text-[11px] tw-font-semibold tw-text-slate-600 hover:tw-bg-slate-50" data-code-generate="macro" title="Generar código automático">
+                <svg viewBox="0 0 24 24" aria-hidden="true" class="tw-h-3.5 tw-w-3.5 tw-shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 1 0 3-6.708" />
+                  <path d="M3 4v5h5" />
+                </svg>
+                Generar código
+              </button>
+            </div>
+            <input id="wiz-codigo-macro" name="codigo_macro" class="form-input" placeholder="Ej: 1000" autocomplete="off" inputmode="numeric" pattern="[0-9]*" maxlength="20" data-code-field="macro">
+            <p id="wiz-codigo-macro-status" class="tw-mt-1 tw-text-xs tw-font-medium tw-text-slate-500"></p>
+            <div>
+              <label class="mf-label" for="wiz-ubicacion">Ubicación de bodega <span class="mf-required">*</span></label>
+              <select id="wiz-ubicacion" name="id_ubicacion_fk" class="form-input form-select">
+                <option value="">Selecciona ubicación</option>
+                {% for opt in cat_form.fields.id_ubicacion_fk.queryset %}
+                <option value="{{ opt.id_ubicacion }}">{{ opt.nombre }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="tw-space-y-3">
+            <div>
+              <label class="mf-label" for="wiz-nombre-macro">Titulo macro <span class="mf-required">*</span></label>
+              <input id="wiz-nombre-macro" name="nombre_catalogo" class="form-input" placeholder="Ej: Herramientas, equipos y activos devolutivos" autocomplete="off">
+            </div>
+            <div>
+              <label class="mf-label" for="wiz-descripcion-macro">Descripción</label>
+              <textarea id="wiz-descripcion-macro" name="descripcion" class="form-input form-textarea" rows="4" placeholder="Opcional"></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section data-wizard-step="2" class="tw-hidden tw-space-y-5 tw-rounded-[30px] tw-border tw-border-slate-200 tw-bg-white tw-p-5 lg:tw-p-6">
+        <input type="hidden" id="wiz-macro-id">
+        <div class="tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-slate-50 tw-p-4" id="wiz-macro-resumen"></div>
+        <div class="tw-flex tw-items-center tw-justify-between tw-gap-3">
+          <div>
+            <p class="tw-text-sm tw-font-bold tw-text-slate-800">Crear categoría</p>
+            <p class="tw-text-xs tw-text-slate-500">Primer nivel dentro de la macro categoría.</p>
+          </div>
+          <span class="tw-inline-flex tw-rounded-full tw-border tw-border-slate-200 tw-bg-slate-50 tw-px-3 tw-py-1 tw-text-xs tw-font-semibold tw-text-slate-700">Paso 2</span>
+        </div>
+        <div class="tw-grid tw-grid-cols-1 tw-gap-4 xl:tw-grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div class="tw-space-y-3">
+            <div class="tw-flex tw-items-end tw-justify-between tw-gap-2">
+              <label class="mf-label" for="wiz-codigo-categoria">Numero categoria <span class="mf-required">*</span></label>
+              <button type="button" class="tw-inline-flex tw-items-center tw-gap-2 tw-rounded-full tw-border tw-border-slate-200 tw-bg-white tw-px-3 tw-py-1 tw-text-[11px] tw-font-semibold tw-text-slate-600 hover:tw-bg-slate-50" data-code-generate="categoria" title="Generar código automático">
+                <svg viewBox="0 0 24 24" aria-hidden="true" class="tw-h-3.5 tw-w-3.5 tw-shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 1 0 3-6.708" />
+                  <path d="M3 4v5h5" />
+                </svg>
+                Generar código
+              </button>
+            </div>
+            <input id="wiz-codigo-categoria" class="form-input" placeholder="Ej: 1100" autocomplete="off" inputmode="numeric" pattern="[0-9]*" maxlength="20" data-code-field="categoria">
+            <p id="wiz-codigo-categoria-status" class="tw-mt-1 tw-text-xs tw-font-medium tw-text-slate-500"></p>
+          </div>
+          <div class="tw-space-y-3">
+            <div>
+              <label class="mf-label" for="wiz-nombre-categoria">Nombre categoria <span class="mf-required">*</span></label>
+              <input id="wiz-nombre-categoria" class="form-input" placeholder="Ej: Herramientas manuales" autocomplete="off">
+            </div>
+            <div>
+              <label class="mf-label" for="wiz-descripcion-categoria">Descripción categoria</label>
+              <textarea id="wiz-descripcion-categoria" class="form-input form-textarea" rows="3" placeholder="Opcional"></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section data-wizard-step="3" class="tw-hidden tw-space-y-5 tw-rounded-[30px] tw-border tw-border-slate-200 tw-bg-white tw-p-5 lg:tw-p-6">
+        <input type="hidden" id="wiz-categoria-id">
+        <div class="tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-slate-50 tw-p-4" id="wiz-categoria-resumen"></div>
+        <div class="tw-flex tw-items-center tw-justify-between tw-gap-3">
+          <div>
+            <p class="tw-text-sm tw-font-bold tw-text-slate-800">Crear subcategorías</p>
+            <p class="tw-text-xs tw-text-slate-500">Carga varias filas y visualiza la estructura como carpetas.</p>
+          </div>
+          <span class="tw-inline-flex tw-rounded-full tw-border tw-border-slate-200 tw-bg-slate-50 tw-px-3 tw-py-1 tw-text-xs tw-font-semibold tw-text-slate-700">Paso 3</span>
+        </div>
+
+        <div class="tw-grid tw-gap-4 xl:tw-grid-cols-[minmax(0,1fr)_320px]">
+          <div class="tw-overflow-x-auto tw-rounded-2xl tw-border tw-border-slate-200">
+          <table class="tw-min-w-full tw-text-sm">
+            <thead class="tw-bg-slate-50/80">
+              <tr>
+                <th class="tw-px-3 tw-py-2 tw-text-left lg:tw-px-4">Codigo sub</th>
+                <th class="tw-px-3 tw-py-2 tw-text-left lg:tw-px-4">Nombre</th>
+                <th class="tw-px-3 tw-py-2 tw-text-left lg:tw-px-4">Descripción</th>
+                <th class="tw-px-3 tw-py-2 tw-text-left lg:tw-px-4">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="wiz-subcat-inputs">
+              <tr>
+                <td class="tw-px-3 tw-py-2 lg:tw-px-4">
+                  <div class="tw-flex tw-flex-col tw-gap-2">
+                    <div class="tw-flex tw-items-center tw-gap-2">
+                      <input class="form-input tw-min-w-[130px] tw-w-full" data-col="codigo" placeholder="Ej: 1110" inputmode="numeric" pattern="[0-9]*" maxlength="20" data-code-field="subcategoria">
+                      <button type="button" class="tw-inline-flex tw-h-11 tw-w-11 tw-items-center tw-justify-center tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-text-slate-600 hover:tw-bg-slate-50" data-code-generate="subcategoria" title="Generar código automático">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" class="tw-h-4 tw-w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M3 12a9 9 0 1 0 3-6.708" />
+                          <path d="M3 4v5h5" />
+                        </svg>
+                      </button>
+                    </div>
+                    <p class="tw-text-[11px] tw-font-medium tw-text-slate-500" data-code-status="subcategoria"></p>
+                  </div>
+                </td>
+                <td class="tw-px-3 tw-py-2 lg:tw-px-4"><input class="form-input tw-min-w-[180px] tw-w-full" data-col="nombre" placeholder="Ej: Ajuste y torsión"></td>
+                <td class="tw-px-3 tw-py-2 lg:tw-px-4"><input class="form-input tw-min-w-[190px] tw-w-full" data-col="descripcion" placeholder="Opcional"></td>
+                <td class="tw-px-3 tw-py-2 lg:tw-px-4">
+                  <div class="tw-flex tw-items-center tw-justify-start tw-gap-2 tw-whitespace-nowrap">
+                    <button type="button" class="tw-inline-flex tw-h-11 tw-w-11 tw-items-center tw-justify-center tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-text-xl tw-font-bold tw-text-slate-700 hover:tw-bg-slate-50" id="wiz-remove-row" title="Eliminar fila">-</button>
+                    <button type="button" class="tw-inline-flex tw-h-11 tw-w-11 tw-items-center tw-justify-center tw-rounded-xl tw-border tw-border-slate-900 tw-bg-slate-900 tw-text-xl tw-font-bold tw-text-white hover:tw-bg-slate-800" id="wiz-add-row" title="Agregar fila">+</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+
+          <div class="tw-space-y-3">
+            <div class="tw-flex tw-items-center tw-justify-between tw-gap-3">
+              <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Confirmación de estructura</p>
+              <span class="tw-text-[11px] tw-font-medium tw-text-slate-400">macro/categoría/subcategoría</span>
+            </div>
+            <div class="tw-rounded-2xl tw-border tw-border-dashed tw-border-slate-300 tw-bg-slate-50 tw-p-4">
+              <div class="tw-space-y-2" id="wiz-subcat-preview"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal__actions tw-flex tw-justify-between tw-gap-2 tw-border-t tw-border-slate-200 tw-bg-slate-50/80 tw-p-5" id="wizard-actions">
+      <button type="button" id="wiz-back" class="cat-btn cat-btn--ghost tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-4 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50 disabled:tw-opacity-50" disabled>Atrás</button>
+      <div class="tw-flex tw-gap-2">
+        <button type="button" class="cat-btn cat-btn--ghost tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-4 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50" data-modal-close>Cancelar</button>
+        <button type="button" id="wiz-next" class="cat-btn cat-btn--primary tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-gap-2 tw-rounded-xl tw-border tw-border-slate-900 tw-bg-slate-900 tw-px-5 tw-text-sm tw-font-semibold tw-text-white hover:tw-bg-slate-800">Siguiente</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -36,12 +36,12 @@
 {% endblock %}
 
 {% block header_center %}
-<div class="inventario-toolbar">
-    <form class="inventario-searchbar" method="get" action="{% url 'inventario_panel' %}">
-        <input type="search" name="q" value="{{ q }}" placeholder="Buscar producto" aria-label="Buscar en inventario">
+<div class="inventario-toolbar tw-flex tw-flex-col tw-gap-3 lg:tw-flex-row lg:tw-items-center lg:tw-justify-between">
+    <form class="inventario-searchbar tw-flex tw-w-full tw-max-w-2xl tw-overflow-hidden tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-shadow-sm" method="get" action="{% url 'inventario_panel' %}">
+        <input type="search" name="q" value="{{ q }}" placeholder="Buscar por nombre o código (macro/categoría/subcategoría/producto)" aria-label="Buscar en inventario" class="tw-h-12 tw-flex-1 tw-border-0 tw-bg-transparent tw-px-4 tw-text-sm tw-text-slate-700 focus:tw-outline-none focus:tw-ring-0">
         {% if categoria_activa %}<input type="hidden" name="categoria" value="{{ categoria_activa }}">{% endif %}
         {% if bajo_stock %}<input type="hidden" name="bajo_stock" value="1">{% endif %}
-        <button type="submit" aria-label="Buscar">
+        <button type="submit" aria-label="Buscar" class="tw-inline-flex tw-h-12 tw-w-12 tw-items-center tw-justify-center tw-bg-lime-500 hover:tw-bg-lime-600">
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="10" cy="10" r="7" stroke="#fff" stroke-width="2"/>
                 <line x1="16.0607" y1="16.4749" x2="20" y2="20.4142" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
@@ -49,13 +49,13 @@
         </button>
     </form>
 
-    <form class="inventario-categoria-form" method="get" action="{% url 'inventario_panel' %}">
+    <form class="inventario-categoria-form tw-w-full lg:tw-w-auto" method="get" action="{% url 'inventario_panel' %}">
         {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
         {% if bajo_stock %}<input type="hidden" name="bajo_stock" value="1">{% endif %}
         <input type="hidden" name="categoria" id="categoriaInput" value="{{ categoria_activa }}">
 
-        <div class="custom-select" id="customCatalogSelect" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-label="Filtrar por categoría">
-            <button type="button" class="custom-select__selected" id="customSelectSelected">
+        <div class="custom-select tw-min-w-[250px]" id="customCatalogSelect" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-label="Filtrar por categoría">
+            <button type="button" class="custom-select__selected tw-h-12 tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-px-4 tw-text-sm tw-font-semibold tw-text-slate-700 tw-shadow-sm" id="customSelectSelected">
                 <span class="custom-select__text" id="customSelectText">
                     {% if categoria_activa %}
                         {% for cat in catalogos %}
@@ -67,12 +67,12 @@
                 </span>
                 <ion-icon name="chevron-down-outline"></ion-icon>
             </button>
-            <div class="custom-select__options" id="customSelectOptions" role="listbox">
-                <button type="button" class="custom-select__option {% if not categoria_activa %}is-active{% endif %}" data-value="" role="option" aria-selected="{% if not categoria_activa %}true{% else %}false{% endif %}">
+            <div class="custom-select__options tw-overflow-hidden tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-1.5 tw-shadow-xl" id="customSelectOptions" role="listbox">
+                <button type="button" class="custom-select__option tw-flex tw-w-full tw-items-center tw-rounded-xl tw-px-3 tw-py-2 tw-text-left tw-text-sm tw-font-medium tw-text-slate-700 hover:tw-bg-slate-100 {% if not categoria_activa %}is-active{% endif %}" data-value="" role="option" aria-selected="{% if not categoria_activa %}true{% else %}false{% endif %}">
                     Todas las categorías
                 </button>
                 {% for cat in catalogos %}
-                <button type="button" class="custom-select__option {% if categoria_activa == cat.id_cat|stringformat:"s" %}is-active{% endif %}" data-value="{{ cat.id_cat }}" role="option" aria-selected="{% if categoria_activa == cat.id_cat|stringformat:"s" %}true{% else %}false{% endif %}">
+                <button type="button" class="custom-select__option tw-flex tw-w-full tw-items-center tw-rounded-xl tw-px-3 tw-py-2 tw-text-left tw-text-sm tw-font-medium tw-text-slate-700 hover:tw-bg-slate-100 {% if categoria_activa == cat.id_cat|stringformat:"s" %}is-active{% endif %}" data-value="{{ cat.id_cat }}" role="option" aria-selected="{% if categoria_activa == cat.id_cat|stringformat:"s" %}true{% else %}false{% endif %}">
                     {{ cat.nombre_catalogo }}
                 </button>
                 {% endfor %}
@@ -83,12 +83,12 @@
 {% endblock %}
 
 {% block content %}
-<section class="inventario-inventory-grid">
+<section class="inventario-inventory-grid tw-space-y-4 tw-pb-6">
 
     {% if productos %}
-    <div class="inventario-grid">
+    <div class="inventario-grid tw-grid tw-grid-cols-1 tw-gap-4 sm:tw-grid-cols-2 xl:tw-grid-cols-3">
         {% for p in productos %}
-        <button type="button" class="inventario-card inventario-card-btn" data-open-modal="producto-{{ p.id_prod }}" title="Ver detalles de {{ p.nombre_producto }}">
+        <button type="button" class="inventario-card inventario-card-btn tw-overflow-hidden tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-shadow-sm hover:tw-border-lime-300 hover:tw-shadow-md" data-open-modal="producto-{{ p.id_prod }}" title="Ver detalles de {{ p.nombre_producto }}">
             <span class="inventario-card__media">
                 {% if p.fot_prod %}
                 <img src="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}" loading="lazy" decoding="async">
@@ -98,9 +98,9 @@
                 </span>
                 {% endif %}
             </span>
-            <span class="inventario-card__body">
-                <h3 class="inventario-card__name">{{ p.nombre_producto }}</h3>
-                <p class="inventario-card__cat">{{ p.id_cat_fk.nombre_catalogo }}</p>
+            <span class="inventario-card__body tw-flex tw-flex-col tw-gap-2 tw-p-4">
+                <h3 class="inventario-card__name tw-line-clamp-2 tw-text-base tw-font-bold tw-text-slate-900">{{ p.nombre_producto }}</h3>
+                <p class="inventario-card__cat tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">{{ p.id_cat_fk.nombre_catalogo }}</p>
                 {% if p.subcategoria_trazas %}
                 <div class="inventario-card__trace" aria-label="Trazabilidad en subcategorías">
                     {% for trace in p.subcategoria_trazas %}
@@ -110,35 +110,35 @@
                 {% else %}
                 <p class="inventario-card__trace-empty">Raíz del catálogo</p>
                 {% endif %}
-                <p class="inventario-card__desc">{% if p.descripcion %}{{ p.descripcion|truncatechars:70 }}{% else %}Sin descripción registrada.{% endif %}</p>
-                <span class="inventario-card__meta">
-                    <span><ion-icon name="archive-outline"></ion-icon> Stock: {{ p.stock_actual|default:'0' }}</span>
-                    <span><ion-icon name="layers-outline"></ion-icon> Cantidad: {{ p.cantidad_actual|default:'0' }}</span>
+                <p class="inventario-card__desc tw-text-sm tw-text-slate-600">{% if p.descripcion %}{{ p.descripcion|truncatechars:70 }}{% else %}Sin descripción registrada.{% endif %}</p>
+                <span class="inventario-card__meta tw-mt-1 tw-flex tw-flex-wrap tw-gap-2">
+                    <span class="tw-inline-flex tw-items-center tw-gap-1 tw-rounded-full tw-bg-slate-100 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-slate-700"><ion-icon name="archive-outline"></ion-icon> Stock: {{ p.stock_actual|default:'0' }}</span>
+                    <span class="tw-inline-flex tw-items-center tw-gap-1 tw-rounded-full tw-bg-lime-50 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-lime-700"><ion-icon name="layers-outline"></ion-icon> Cantidad: {{ p.cantidad_actual|default:'0' }}</span>
                 </span>
             </span>
         </button>
-        <div class="product-modal-backdrop" id="producto-{{ p.id_prod }}" aria-hidden="true">
-            <div class="product-modal" role="dialog" aria-modal="true" aria-labelledby="producto-title-{{ p.id_prod }}">
-                <div class="product-modal__header">
-                    <h2 class="product-modal__title" id="producto-title-{{ p.id_prod }}">{{ p.nombre_producto }}</h2>
-                    <button class="product-modal__close" type="button" data-close-modal aria-label="Cerrar detalle">
+        <div class="product-modal-backdrop tw-fixed tw-inset-0 tw-z-[1400] tw-bg-black/45 tw-p-3 sm:tw-p-6" id="producto-{{ p.id_prod }}" aria-hidden="true">
+            <div class="product-modal tw-mx-auto tw-w-full tw-max-w-4xl tw-overflow-hidden tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="producto-title-{{ p.id_prod }}">
+                <div class="product-modal__header tw-flex tw-items-center tw-justify-between tw-gap-3 tw-border-b tw-border-slate-200 tw-p-4">
+                    <h2 class="product-modal__title tw-text-lg tw-font-bold tw-text-slate-900" id="producto-title-{{ p.id_prod }}">{{ p.nombre_producto }}</h2>
+                    <button class="product-modal__close tw-inline-flex tw-h-9 tw-w-9 tw-items-center tw-justify-center tw-rounded-full tw-border tw-border-slate-200 tw-bg-white tw-text-slate-500 hover:tw-bg-slate-100" type="button" data-close-modal aria-label="Cerrar detalle">
                         <ion-icon name="close-outline"></ion-icon>
                     </button>
                 </div>
-                <div class="product-modal__media">
+                <div class="product-modal__media tw-bg-slate-50 tw-p-4">
                     {% with fotos_adic=p.fotos.all %}
                     {% if p.fot_prod or fotos_adic %}
                     <div class="mini-carousel" data-carousel>
                         <div class="mini-carousel__track">
                             {% if p.fot_prod %}
                             <div class="mini-carousel__slide">
-                                <img data-lazy="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}" style="width:100%;height:220px;object-fit:contain;display:block;border-radius:10px;background:var(--color-bg-alt,#f4f6f8);" loading="lazy">
-                                <div style="text-align:center;margin-top:4px;"><span style="font-size:.7rem;background:rgba(0,150,80,.13);color:var(--color-primary,#39b54a);padding:1px 8px;border-radius:10px;">Principal</span></div>
+                                <img data-lazy="{{ p.fot_prod.url }}" alt="{{ p.nombre_producto }}" class="tw-block tw-h-[220px] tw-w-full tw-rounded-[10px] tw-bg-slate-100 tw-object-contain" loading="lazy">
+                                <div class="tw-mt-1 tw-text-center"><span class="tw-inline-block tw-rounded-full tw-bg-lime-100 tw-px-2 tw-py-0.5 tw-text-[11px] tw-font-semibold tw-text-lime-700">Principal</span></div>
                             </div>
                             {% endif %}
                             {% for foto in fotos_adic %}
                             <div class="mini-carousel__slide">
-                                <img data-lazy="{{ foto.foto.url }}" alt="Foto {{ forloop.counter }}" style="width:100%;height:220px;object-fit:contain;display:block;border-radius:10px;background:var(--color-bg-alt,#f4f6f8);" loading="lazy">
+                                <img data-lazy="{{ foto.foto.url }}" alt="Foto {{ forloop.counter }}" class="tw-block tw-h-[220px] tw-w-full tw-rounded-[10px] tw-bg-slate-100 tw-object-contain" loading="lazy">
                             </div>
                             {% endfor %}
                         </div>
@@ -149,27 +149,27 @@
                         {% endif %}
                     </div>
                     {% else %}
-                    <div class="product-modal__placeholder"><ion-icon name="image-outline"></ion-icon></div>
+                    <div class="product-modal__placeholder tw-flex tw-h-56 tw-items-center tw-justify-center tw-rounded-xl tw-border tw-border-dashed tw-border-slate-300 tw-text-4xl tw-text-slate-400"><ion-icon name="image-outline"></ion-icon></div>
                     {% endif %}
                     {% endwith %}
                 </div>
-                <div class="product-modal__content">
-                    <div class="product-detail-quick">
-                        <div class="product-detail-quick__item">
-                            <span class="product-detail-quick__label">Stock fijo</span>
-                            <span class="product-detail-quick__value">{{ p.stock_actual|default:'0' }}</span>
+                <div class="product-modal__content tw-space-y-4 tw-p-4">
+                    <div class="product-detail-quick tw-grid tw-grid-cols-1 tw-gap-3 sm:tw-grid-cols-3">
+                        <div class="product-detail-quick__item tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-p-3">
+                            <span class="product-detail-quick__label tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Stock fijo</span>
+                            <span class="product-detail-quick__value tw-mt-1 tw-block tw-text-2xl tw-font-black tw-text-slate-800">{{ p.stock_actual|default:'0' }}</span>
                         </div>
-                        <div class="product-detail-quick__item">
-                            <span class="product-detail-quick__label">Cantidad actual</span>
-                            <span class="product-detail-quick__value">{{ p.cantidad_actual|default:'0' }}</span>
+                        <div class="product-detail-quick__item tw-rounded-xl tw-border tw-border-lime-200 tw-bg-lime-50/50 tw-p-3">
+                            <span class="product-detail-quick__label tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-lime-700">Cantidad actual</span>
+                            <span class="product-detail-quick__value tw-mt-1 tw-block tw-text-2xl tw-font-black tw-text-lime-700">{{ p.cantidad_actual|default:'0' }}</span>
                         </div>
-                        <div class="product-detail-quick__item">
-                            <span class="product-detail-quick__label">Catálogo</span>
-                            <span class="product-detail-quick__value">{{ p.id_cat_fk.nombre_catalogo }}</span>
+                        <div class="product-detail-quick__item tw-rounded-xl tw-border tw-border-sky-200 tw-bg-sky-50/50 tw-p-3">
+                            <span class="product-detail-quick__label tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-sky-700">Catálogo</span>
+                            <span class="product-detail-quick__value tw-mt-1 tw-block tw-text-sm tw-font-bold tw-text-sky-800">{{ p.id_cat_fk.nombre_catalogo }}</span>
                         </div>
                     </div>
-                    <div class="product-detail-block">
-                        <p class="product-detail-label">Trazabilidad en subcategorías</p>
+                    <div class="product-detail-block tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-p-3">
+                        <p class="product-detail-label tw-mb-2 tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Trazabilidad en subcategorías</p>
                         {% if p.subcategoria_trazas %}
                         <div class="product-detail-routes">
                             {% for trace in p.subcategoria_trazas %}
@@ -180,9 +180,9 @@
                         <p class="product-detail-value">Este producto está en la raíz del catálogo.</p>
                         {% endif %}
                     </div>
-                    <div class="product-detail-block">
-                        <p class="product-detail-label">Descripción del producto</p>
-                        <p class="product-detail-value product-detail-value--preserve">{% if p.descripcion %}{{ p.descripcion }}{% else %}Sin descripción.{% endif %}</p>
+                    <div class="product-detail-block tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-p-3">
+                        <p class="product-detail-label tw-mb-2 tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-slate-500">Descripción del producto</p>
+                        <p class="product-detail-value product-detail-value--preserve tw-text-sm tw-leading-relaxed tw-text-slate-700">{% if p.descripcion %}{{ p.descripcion }}{% else %}Sin descripción.{% endif %}</p>
                     </div>
                 </div>
             </div>
@@ -190,7 +190,7 @@
         {% endfor %}
     </div>
     {% else %}
-    <p class="inventory-empty">No hay productos con los filtros actuales.</p>
+    <p class="inventory-empty tw-rounded-xl tw-border tw-border-dashed tw-border-slate-300 tw-bg-white tw-p-6 tw-text-center tw-text-sm tw-font-semibold tw-text-slate-500">No hay productos con los filtros actuales.</p>
     {% endif %}
 
 </section>

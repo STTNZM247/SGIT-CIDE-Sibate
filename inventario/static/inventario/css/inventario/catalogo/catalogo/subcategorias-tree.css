@@ -6,14 +6,32 @@
     padding: 0;
 }
 
+.subcat-workspace {
+    border-radius: 28px;
+    background:
+        radial-gradient(circle at top left, rgba(241, 194, 50, .08), transparent 0 26%),
+        linear-gradient(180deg, #ffffff 0%, #fbfdfb 100%);
+    box-shadow: 0 12px 30px rgba(15,23,42,.05);
+    position: relative;
+    z-index: 40;
+    overflow: visible;
+}
+
 .subcat-breadcrumb {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: .35rem;
-    margin: -.15rem 0 .9rem;
+    gap: .45rem;
+    margin: 0 0 .9rem;
+    padding: .45rem .75rem;
+    border: 1px solid #e7ecf2;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .95);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, .06);
     font-size: .9rem;
     color: #5f6b63;
+    position: relative;
+    z-index: 22;
 }
 
 .subcat-breadcrumb__link {
@@ -33,15 +51,19 @@
 .subcat-breadcrumb__current {
     color: #1f2e24;
     font-weight: 700;
+    background: linear-gradient(180deg, #f0f9e8 0%, #e6f5d8 100%);
+    border: 1px solid #d5eabf;
+    border-radius: 999px;
+    padding: .15rem .62rem;
 }
 
 .subcat-tree {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: .95rem;
     min-height: 120px;
     align-items: start;
-    justify-items: center;
+    justify-content: flex-start;
 }
 
 .subcat-workspace--compact .subcat-tree {
@@ -74,61 +96,72 @@
 
 .subcat-node {
     position: relative;
-    width: 100px;
+    width: 100%;
+    max-width: none;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     justify-content: flex-start;
+    gap: .5rem;
+    z-index: 1;
+}
+
+.subcat-node:hover,
+.subcat-node:focus-within {
+    z-index: 10;
 }
 
 .subcat-node__row {
     position: relative;
-    width: 100px;
+    width: 100%;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    border: 1px solid transparent;
-    background: transparent;
-    border-radius: 10px;
-    padding: 10px;
+    justify-content: flex-start;
+    gap: .75rem;
+    border: 1px solid #e8edf3;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfdfb 100%);
+    border-radius: 22px;
+    padding: .9rem 1rem;
     font-family: inherit;
     color: #1f2e24;
     cursor: pointer;
-    text-align: center;
-    transition: background .14s, border-color .14s;
+    text-align: left;
+    transition: background .16s, border-color .16s, box-shadow .16s, transform .16s;
+    box-shadow: 0 10px 24px rgba(15,23,42,.04);
+    max-width: 280px;
 }
 
 .subcat-node__tip {
     position: absolute;
-    top: calc(100% + 6px);
-    left: 50%;
-    transform: translateX(-50%) scale(.74);
+    top: 8px;
+    right: 46px;
+    transform: translateY(-6px) scale(.92);
     display: inline-flex;
     align-items: center;
     gap: .22rem;
-    padding: .08rem .62rem;
+    padding: .18rem .58rem;
     border-radius: 999px;
-    background: rgba(18, 27, 21, .94);
-    color: #fff;
-    font-size: 12px;
+    background: rgba(255, 255, 255, .92);
+    color: #334155;
+    border: 1px solid rgba(148, 163, 184, .35);
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: .01em;
     white-space: nowrap;
-    min-width: 132px;
+    min-width: 56px;
     justify-content: center;
     pointer-events: none;
     opacity: 0;
     visibility: hidden;
-    box-shadow: 0 10px 24px rgba(0,0,0,.18);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, .12);
     transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
-    z-index: 4;
+    z-index: 16;
 }
 
 .subcat-node__tip ion-icon {
-    font-size: 8px;
-    color: #8ef08d;
+    font-size: 9px;
+    color: #39A900;
     flex-shrink: 0;
 }
 
@@ -136,25 +169,14 @@
 .subcat-node__row:focus-visible .subcat-node__tip {
     opacity: 1;
     visibility: visible;
-    transform: translateX(-50%) scale(1);
-}
-
-.subcat-node__row:hover .subcat-node__tip::after,
-.subcat-node__row:focus-visible .subcat-node__tip::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: -3px;
-    transform: translateX(-50%);
-    width: 5px;
-    height: 5px;
-    background: rgba(18, 27, 21, .94);
-    rotate: 45deg;
+    transform: translateY(0) scale(1);
 }
 
 .subcat-node__row:hover {
-    background: rgba(241, 194, 50, .14);
-    border-color: rgba(241, 194, 50, .5);
+    background: linear-gradient(180deg, #fff9e8 0%, #fffdf3 100%);
+    border-color: rgba(241, 194, 50, .45);
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(241,194,50,.12);
 }
 
 .subcat-node__row.is-drop-target {
@@ -170,15 +192,65 @@
 .subcat-node__icon,
 .subcat-node__row ion-icon {
     color: #f1c232;
-    font-size: 3rem;
+    font-size: 1.55rem;
     line-height: 1;
     flex-shrink: 0;
     filter: drop-shadow(0 1px 0 rgba(0,0,0,.15));
 }
 
+.subcat-node__icon-wrap {
+    flex-shrink: 0;
+    box-shadow: 0 8px 18px rgba(241,194,50,.14);
+}
+
+.subcat-node__content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+}
+
+.subcat-node__code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #4d7c0f;
+}
+
+.subcat-node__kind {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    padding: .14rem .52rem;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .01em;
+}
+
+.subcat-node__kind--categoria {
+    color: #92400e;
+    background: #fff3c4;
+}
+
+.subcat-node__kind--subcategoria {
+    color: #0f5132;
+    background: #dff8ea;
+}
+
+.subcat-node--categoria > .subcat-node__row {
+    border-color: rgba(241, 194, 50, .48);
+    background: linear-gradient(180deg, #fffdf6 0%, #fff9eb 100%);
+}
+
+.subcat-node--subcategoria > .subcat-node__row {
+    border-color: #dbe3ec;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
 .subcat-node__name {
-    margin-top: 8px;
-    font-size: .85rem;
+    margin-top: 0;
+    font-size: .93rem;
     font-weight: 600;
     line-height: 1.2;
     max-width: 100%;
@@ -222,18 +294,38 @@
 
 .subcat-node__children {
     width: 100%;
-    margin-top: 10px;
-    padding-top: 8px;
+    margin-top: 4px;
+    padding-top: 2px;
     border-top: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 16px;
-    justify-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: .9rem;
+}
+
+.subcat-node__children > .subcat-node {
+    width: min(100%, 280px);
+}
+
+.subcat-node__delete {
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #111827;
+    transition: background .16s ease, border-color .16s ease;
+}
+
+.subcat-node__delete:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.subcat-node__delete ion-icon {
+    color: #111827;
 }
 
 .subcat-context-menu {
     position: fixed;
-    z-index: 2100;
+    z-index: 12000;
     min-width: 210px;
     background: #fff;
     border: 1px solid rgba(27,45,30,.14);
@@ -280,21 +372,23 @@
 }
 
 .subcat-composer {
-    width: 100px;
+    width: 100%;
+    max-width: 220px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    background: rgba(57,169,0,.09);
-    border: 1px solid rgba(57,169,0,.18);
-    border-radius: 9px;
-    padding: 10px;
+    gap: .75rem;
+    background: rgba(57,169,0,.07);
+    border: 1px solid rgba(57,169,0,.16);
+    border-radius: 22px;
+    padding: .9rem 1rem;
+    box-shadow: 0 10px 24px rgba(15,23,42,.04);
 }
 
 .subcat-composer__icon {
     color: #f1c232;
-    font-size: 3rem;
+    font-size: 1.55rem;
     flex-shrink: 0;
 }
 
@@ -303,13 +397,13 @@
     min-width: 0;
     border: none;
     background: rgba(255,255,255,.8);
-    border-radius: 6px;
-    padding: 4px 6px;
+    border-radius: 999px;
+    padding: .45rem .75rem;
     font: inherit;
     font-size: .82rem;
     color: #17351b;
     outline: none;
-    text-align: center;
+    text-align: left;
 }
 
 .subcat-composer__hint {

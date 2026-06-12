@@ -85,6 +85,29 @@ html[data-theme="dark"] .edit-float-bar{
                     </div>
 
                     <div class="mf-group">
+                        <label class="mf-label">Código del producto</label>
+                        <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-2">
+                            <input
+                                type="text"
+                                name="codigo_producto_visible"
+                                class="form-input tw-flex-1"
+                                value="{{ producto.codigo_producto|default:'' }}"
+                                placeholder="Sin código asignado"
+                                readonly
+                            >
+                            {% if not producto.codigo_producto %}
+                            <button type="submit" form="prod-edit-form" name="generar_codigo_producto" value="1" class="cat-btn cat-btn--secondary">
+                                <ion-icon name="sparkles-outline"></ion-icon>
+                                Generar código
+                            </button>
+                            {% else %}
+                            <span class="tw-inline-flex tw-items-center tw-rounded-full tw-bg-lime-100 tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-text-lime-700">Código activo</span>
+                            {% endif %}
+                        </div>
+                        <p class="tw-mt-1 tw-text-xs tw-text-slate-500">Este código se puede usar para buscar el producto en Inventario.</p>
+                    </div>
+
+                    <div class="mf-group">
                         <label class="mf-label">Nombre del producto *</label>
                         <input type="text" name="nombre_producto" class="form-input" value="{{ producto.nombre_producto }}" required>
                     </div>
@@ -119,7 +142,15 @@ html[data-theme="dark"] .edit-float-bar{
                         </div>
                         <div class="mf-group">
                             <label class="mf-label">Ubicación (estante/zona) *</label>
-                            <input type="text" name="ubicacion" class="form-input" value="{{ producto.ubicacion|default:'' }}" placeholder="Ej: Estante B2 - Zona eléctrica" required>
+                            <select name="id_ubicacion_fk" class="form-input form-select" required>
+                                <option value="">Selecciona una ubicación</option>
+                                {% for ubic in ubicaciones_producto %}
+                                <option value="{{ ubic.id_ubicacion }}" {% if producto.ubicacion == ubic.nombre %}selected{% endif %}>{{ ubic.nombre }}</option>
+                                {% endfor %}
+                                {% if producto.ubicacion and not ubicacion_actual_en_lista %}
+                                <option value="" selected>{{ producto.ubicacion }} (actual, no registrada)</option>
+                                {% endif %}
+                            </select>
                         </div>
                     </div>
 
@@ -171,7 +202,7 @@ html[data-theme="dark"] .edit-float-bar{
 
             <aside class="product-edit-card product-edit-card--aside">
                 <div class="product-edit-card__head">
-                    <h2>Fotos del producto <span style="font-size:.75rem;font-weight:400;color:var(--color-muted,#888);">({{ total_fotos }}/5)</span></h2>
+                    <h2>Fotos del producto <span class="tw-text-xs tw-font-normal tw-text-slate-500">({{ total_fotos }}/5)</span></h2>
                 </div>
 
                 <!-- CARRUSEL DE TODAS LAS FOTOS -->
@@ -181,7 +212,7 @@ html[data-theme="dark"] .edit-float-bar{
                         {% if producto.fot_prod %}
                         <div class="mini-carousel__slide">
                             <img src="{{ producto.fot_prod.url }}" alt="{{ producto.nombre_producto }}" loading="lazy">
-                            <div style="text-align:center;margin-top:4px;"><span style="font-size:.7rem;background:rgba(0,150,80,.13);color:var(--color-primary,#39b54a);padding:1px 8px;border-radius:10px;">Principal</span></div>
+                            <div class="tw-mt-1 tw-text-center"><span class="tw-inline-block tw-rounded-full tw-bg-lime-100 tw-px-2 tw-py-0.5 tw-text-[11px] tw-font-semibold tw-text-lime-700">Principal</span></div>
                         </div>
                         {% endif %}
                         {% for foto in fotos_extra %}
@@ -197,29 +228,28 @@ html[data-theme="dark"] .edit-float-bar{
                     {% endif %}
                 </div>
                 {% else %}
-                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;border:2px dashed var(--color-border,#e5e7eb);border-radius:10px;margin-bottom:10px;">
-                    <ion-icon name="image-outline" style="font-size:2.2rem;color:var(--color-muted,#888);"></ion-icon>
-                    <span style="color:var(--color-muted,#888);font-size:.85rem;margin-top:6px;">Sin fotografía</span>
+                <div class="tw-mb-2.5 tw-flex tw-flex-col tw-items-center tw-justify-center tw-rounded-xl tw-border-2 tw-border-dashed tw-border-slate-300 tw-p-7">
+                    <ion-icon name="image-outline" class="tw-text-[2.2rem] tw-text-slate-400"></ion-icon>
+                    <span class="tw-mt-1.5 tw-text-sm tw-text-slate-500">Sin fotografía</span>
                 </div>
                 {% endif %}
 
                 {% if producto.fot_prod %}
-                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-                    <label class="file-upload-zone product-edit-upload-zone" style="flex:1;min-width:0;">
+                <div class="tw-mb-2.5 tw-flex tw-flex-wrap tw-gap-2">
+                    <label class="file-upload-zone product-edit-upload-zone tw-min-w-0 tw-flex-1">
                         <ion-icon name="swap-horizontal-outline"></ion-icon>
                         <span class="file-upload-zone__text">Cambiar foto principal</span>
                         <input type="file" name="fot_prod" class="form-file" accept="image/*" form="prod-edit-form">
                     </label>
                     <button type="submit" name="clear_fot_prod" value="1" form="prod-edit-form"
-                        class="cat-btn cat-btn--ghost"
-                        style="border-color:var(--color-error,#ef4444);color:var(--color-error,#ef4444);"
+                        class="cat-btn cat-btn--ghost tw-border-rose-500 tw-text-rose-600"
                         onclick="return confirm('¿Eliminar la foto principal?');"
                         title="Eliminar foto principal">
                         <ion-icon name="trash-outline"></ion-icon>
                     </button>
                 </div>
                 {% else %}
-                <label class="file-upload-zone product-edit-upload-zone" style="margin-bottom:10px;">
+                <label class="file-upload-zone product-edit-upload-zone tw-mb-2.5">
                     <ion-icon name="cloud-upload-outline"></ion-icon>
                     <span class="file-upload-zone__text">Subir foto principal</span>
                     <span class="file-upload-zone__hint">JPG, PNG o WEBP</span>
@@ -229,20 +259,19 @@ html[data-theme="dark"] .edit-float-bar{
 
                 <!-- FOTOS ADICIONALES -->
                 {% if fotos_extra %}
-                <p class="mf-label" style="margin-top:12px;margin-bottom:6px;">Fotos adicionales</p>
-                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;">
+                <p class="mf-label tw-mb-1.5 tw-mt-3">Fotos adicionales</p>
+                <div class="tw-mb-2.5 tw-grid tw-grid-cols-2 tw-gap-2">
                     {% for foto in fotos_extra %}
-                    <div style="position:relative;border-radius:10px;overflow:hidden;border:1.5px solid var(--color-border,#e5e7eb);">
+                    <div class="tw-relative tw-overflow-hidden tw-rounded-xl tw-border tw-border-slate-300">
                         <img src="{{ foto.foto.url }}" alt="Foto {{ forloop.counter }}" loading="lazy"
-                             style="width:100%;height:90px;object-fit:cover;display:block;">
-                        <form method="post" action="{% url 'eliminar_foto_producto' producto.id_prod foto.id_foto %}" class="delete-foto-form" style="position:absolute;top:4px;right:4px;">
+                             class="tw-block tw-h-[90px] tw-w-full tw-object-cover">
+                        <form method="post" action="{% url 'eliminar_foto_producto' producto.id_prod foto.id_foto %}" class="delete-foto-form tw-absolute tw-right-1 tw-top-1">
                             {% csrf_token %}
                             <button type="submit"
-                                class="cat-btn"
-                                style="width:28px;height:28px;padding:0;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;"
+                                class="cat-btn tw-flex tw-h-7 tw-w-7 tw-items-center tw-justify-center tw-rounded-full tw-border-0 tw-bg-black/55 tw-p-0 tw-text-white"
                                 onclick="return confirm('¿Eliminar esta foto?');"
                                 title="Eliminar foto">
-                                <ion-icon name="close-outline" style="font-size:1rem;"></ion-icon>
+                                <ion-icon name="close-outline" class="tw-text-base"></ion-icon>
                             </button>
                         </form>
                     </div>
@@ -252,14 +281,14 @@ html[data-theme="dark"] .edit-float-bar{
 
                 <!-- AGREGAR MÁS FOTOS -->
                 {% if cupo_fotos > 0 %}
-                <p class="mf-label" style="margin-top:4px;margin-bottom:6px;">Agregar fotos <span style="font-weight:400;color:var(--color-muted,#888);">(hasta {{ cupo_fotos }} más)</span></p>
+                <p class="mf-label tw-mb-1.5 tw-mt-1">Agregar fotos <span class="tw-font-normal tw-text-slate-500">(hasta {{ cupo_fotos }} más)</span></p>
                 <label class="file-upload-zone product-edit-upload-zone">
                     <ion-icon name="images-outline"></ion-icon>
                     <span class="file-upload-zone__text">Seleccionar imágenes</span>
                     <span class="file-upload-zone__hint">Máx. {{ cupo_fotos }} archivo{{ cupo_fotos|pluralize }}</span>
                     <input type="file" name="fotos_nuevas" id="id_fotos_nuevas" class="form-file" accept="image/*" multiple form="prod-edit-form">
                 </label>
-                <div id="nuevas-preview" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;"></div>
+                <div id="nuevas-preview" class="tw-mt-1.5 tw-flex tw-flex-wrap tw-gap-1.5"></div>
                 {% else %}
                 <div class="product-edit-note">
                     <ion-icon name="checkmark-circle-outline"></ion-icon>
@@ -283,7 +312,7 @@ html[data-theme="dark"] .edit-float-bar{
                 <ion-icon name="save-outline"></ion-icon>
                 Guardar y salir
             </button>
-            <a href="{% url 'productos_catalogo' producto.id_cat_fk.id_cat %}" class="cat-btn" id="unsaved-leave" style="background:transparent;border:1.5px solid var(--bg-border,#e5e7eb);color:var(--text-secondary,#555);">Salir sin guardar</a>
+            <a href="{% url 'productos_catalogo' producto.id_cat_fk.id_cat %}" class="cat-btn tw-border tw-border-slate-300 tw-bg-transparent tw-text-slate-600" id="unsaved-leave">Salir sin guardar</a>
         </div>
     </div>
 </div>
@@ -368,12 +397,12 @@ html[data-theme="dark"] .edit-float-bar{
         fotosPreview.innerHTML = '';
         Array.from(accum.files).forEach(function(file, idx) {
             var wrap = document.createElement('div');
-            wrap.style.cssText = 'position:relative;width:64px;height:64px;';
+            wrap.className = 'tw-relative tw-h-16 tw-w-16';
             var img = document.createElement('img');
-            img.style.cssText = 'width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid var(--color-border,#e5e7eb);display:block;';
+            img.className = 'tw-block tw-h-16 tw-w-16 tw-rounded-lg tw-border tw-border-slate-300 tw-object-cover';
             var rmBtn = document.createElement('button');
             rmBtn.type = 'button'; rmBtn.title = 'Quitar'; rmBtn.textContent = '×';
-            rmBtn.style.cssText = 'position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;line-height:1;padding:0;';
+            rmBtn.className = 'tw-absolute tw-right-0.5 tw-top-0.5 tw-flex tw-h-[18px] tw-w-[18px] tw-items-center tw-justify-center tw-rounded-full tw-border-0 tw-bg-black/60 tw-p-0 tw-text-[0.85rem] tw-leading-none tw-text-white';
             rmBtn.addEventListener('click', function() {
                 var newDT = new DataTransfer();
                 Array.from(accum.files).forEach(function(f, i) { if (i !== idx) newDT.items.add(f); });

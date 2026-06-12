@@ -12,7 +12,7 @@ from datetime import date, timedelta
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import Exists, OuterRef
 from django.http import Http404, HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -26,6 +26,74 @@ from .forms import ProductoForm
 DEVOLUCION_CODIGO_SEGUNDOS = 60
 VALIDACION_MANUAL_VENCE_HORAS = 4
 SUBCAT_MAX_WORD_LENGTH = 20
+
+
+def _safe_code_fragment(raw_value, fallback_id):
+    value = (raw_value or '').strip().upper()
+    if value:
+        return re.sub(r'[^A-Z0-9]+', '', value)
+    return str(fallback_id).zfill(4)
+
+
+def _generar_codigo_producto(subcategoria):
+    categoria = subcategoria.subcategoria_padre
+    catalogo = subcategoria.id_cat_fk
+
+    macro_code = _safe_code_fragment(catalogo.codigo_macro, catalogo.id_cat)
+    categoria_code = _safe_code_fragment(getattr(categoria, 'codigo_clasificacion', ''), categoria.id_subcat)
+    subcategoria_code = _safe_code_fragment(subcategoria.codigo_clasificacion, subcategoria.id_subcat)
+    prefix = f'{macro_code}-{categoria_code}-{subcategoria_code}'
+
+    last_codigo = (
+        Producto.objects
+        .filter(codigo_producto__startswith=f'{prefix}-')
+        .order_by('-codigo_producto')
+        .values_list('codigo_producto', flat=True)
+        .first()
+    )
+
+    consecutivo = 1
+    if last_codigo:
+        tail = (last_codigo or '').split('-')[-1]
+        if tail.isdigit():
+            consecutivo = int(tail) + 1
+
+    return f'{prefix}-{str(consecutivo).zfill(4)}'
+
+
+def _generar_codigo_producto_aleatorio():
+    # Fallback para productos sin subcategoría válida: código corto, legible y único.
+    for _ in range(20):
+        candidate = f"PRD-{secrets.token_hex(3).upper()}"
+        if not Producto.objects.filter(codigo_producto__iexact=candidate).exists():
+            return candidate
+    return None
+
+
+def _asignar_codigo_producto_si_falta(producto):
+    if (producto.codigo_producto or '').strip():
+        return producto.codigo_producto
+
+    subcategoria = producto.subcategorias.order_by('id_subcat').first()
+    if subcategoria:
+        for _ in range(5):
+            try:
+                codigo = _generar_codigo_producto(subcategoria)
+                producto.codigo_producto = codigo
+                producto.fch_ult_act = timezone.now()
+                producto.save(update_fields=['codigo_producto', 'fch_ult_act'])
+                return codigo
+            except IntegrityError:
+                continue
+
+    codigo_aleatorio = _generar_codigo_producto_aleatorio()
+    if not codigo_aleatorio:
+        return None
+
+    producto.codigo_producto = codigo_aleatorio
+    producto.fch_ult_act = timezone.now()
+    producto.save(update_fields=['codigo_producto', 'fch_ult_act'])
+    return codigo_aleatorio
 
 
 def _expirar_solicitudes_validacion_manual():
@@ -424,12 +492,10 @@ def _subcategoria_delete_state(subcategoria):
         .count()
     )
 
-    can_delete = child_count == 0 and products_count == 0
+    can_delete = products_count == 0
     reason = ''
-    if child_count > 0:
-        reason = 'No se puede eliminar porque tiene subcategorías hijas.'
-    elif products_count > 0:
-        reason = 'No se puede eliminar porque tiene productos asociados.'
+    if products_count > 0:
+        reason = 'No se puede eliminar porque tiene productos asociados en esta rama.'
 
     return {
         'can_delete': can_delete,
@@ -472,7 +538,7 @@ def subcategoria_crear_rapida(request, cat_id):
     try:
         leaf = Subcategoria.ensure_path(catalogo, ruta, parent=parent)
     except ValidationError as exc:
-        error_msg = 'Se ha alcanzado el límite máximo de 12 niveles de profundidad.'
+        error_msg = 'Se ha alcanzado el límite máximo de 30 niveles de profundidad.'
         if hasattr(exc, 'messages') and exc.messages:
             error_msg = exc.messages[0]
         return JsonResponse({'ok': False, 'error': error_msg}, status=400)
@@ -584,18 +650,33 @@ def subcategoria_delete_estado(request, cat_id, subcat_id):
 
 @login_required
 def subcategoria_eliminar(request, cat_id, subcat_id):
+    wants_json = (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        or request.headers.get('sec-fetch-dest') == 'empty'
+        or 'application/json' in (request.headers.get('accept') or '')
+    )
+
     if not _is_admin(request):
-        return JsonResponse({'ok': False, 'error': 'No autorizado.'}, status=403)
+        if wants_json:
+            return JsonResponse({'ok': False, 'error': 'No autorizado.'}, status=403)
+        messages.error(request, 'No autorizado.')
+        return redirect('productos_catalogo', cat_id=cat_id)
 
     if request.method not in ['POST', 'DELETE']:
-        return JsonResponse({'ok': False, 'error': 'Método no permitido.'}, status=405)
+        if wants_json:
+            return JsonResponse({'ok': False, 'error': 'Método no permitido.'}, status=405)
+        messages.error(request, 'Método no permitido.')
+        return redirect('productos_catalogo', cat_id=cat_id)
 
     catalogo = get_object_or_404(Catalogo, pk=cat_id)
     subcategoria = get_object_or_404(Subcategoria, pk=subcat_id, id_cat_fk=catalogo)
 
     state = _subcategoria_delete_state(subcategoria)
     if not state['can_delete']:
-        return JsonResponse({'ok': False, 'error': state['reason']}, status=400)
+        if wants_json:
+            return JsonResponse({'ok': False, 'error': state['reason']}, status=400)
+        messages.error(request, state['reason'])
+        return redirect('productos_catalogo', cat_id=cat_id)
 
     deleted_id = subcategoria.id_subcat
     deleted_name = subcategoria.nombre_subcategoria
@@ -613,13 +694,17 @@ def subcategoria_eliminar(request, cat_id, subcat_id):
         ),
     )
 
-    return JsonResponse({
-        'ok': True,
-        'subcategoria': {
-            'id': deleted_id,
-            'nombre': deleted_name,
-        },
-    })
+    if wants_json:
+        return JsonResponse({
+            'ok': True,
+            'subcategoria': {
+                'id': deleted_id,
+                'nombre': deleted_name,
+            },
+        })
+
+    messages.success(request, f'Subcategoría "{deleted_name}" eliminada correctamente.')
+    return redirect('productos_catalogo', cat_id=cat_id)
 
 
 @login_required
@@ -794,6 +879,7 @@ def producto_editar(request, prod_id):
 
     producto = get_object_or_404(Producto, pk=prod_id)
     catalogos = Catalogo.objects.all().order_by('nombre_catalogo')
+    ubicaciones_producto = UbicacionProducto.objects.order_by('nombre')
     subcategorias = Subcategoria.objects.select_related('id_cat_fk').order_by('id_cat_fk__nombre_catalogo', 'nombre_subcategoria')
     disp = (
         Disponibilidad.objects
@@ -802,11 +888,35 @@ def producto_editar(request, prod_id):
         .first()
     )
     if request.method == 'POST':
+        if request.POST.get('generar_codigo_producto') == '1':
+            if (producto.codigo_producto or '').strip():
+                messages.info(request, f'El producto ya tiene código: {producto.codigo_producto}.')
+            else:
+                codigo_generado = _asignar_codigo_producto_si_falta(producto)
+                if codigo_generado:
+                    _registrar_auditoria(
+                        request,
+                        accion='editar',
+                        entidad='producto',
+                        entidad_id=producto.id_prod,
+                        descripcion=(
+                            f'Se generó código para el producto "{producto.nombre_producto}": {codigo_generado}.'
+                        ),
+                    )
+                    messages.success(request, f'Código generado correctamente: {codigo_generado}.')
+                else:
+                    messages.error(request, 'No se pudo generar un código único en este momento. Intenta de nuevo.')
+            return redirect('producto_editar', prod_id=producto.id_prod)
+
         nombre = request.POST.get('nombre_producto', '').strip()
         descripcion = request.POST.get('descripcion', '').strip()
         id_cat_fk = request.POST.get('id_cat_fk')
         unidad_medida = request.POST.get('unidad_medida', 'unidad').strip() or 'unidad'
-        ubicacion = request.POST.get('ubicacion', '').strip()
+        id_ubicacion_fk = (request.POST.get('id_ubicacion_fk') or '').strip()
+        ubicacion_obj = None
+        if id_ubicacion_fk.isdigit():
+            ubicacion_obj = UbicacionProducto.objects.filter(pk=int(id_ubicacion_fk)).first()
+        ubicacion = (ubicacion_obj.nombre if ubicacion_obj else request.POST.get('ubicacion', '').strip())
         tipo_bien = request.POST.get('tipo_bien', 'devolutivo').strip() or 'devolutivo'
         numero_placa = request.POST.get('numero_placa', '').strip()
         cuentadante = request.POST.get('cuentadante', '').strip()
@@ -843,6 +953,10 @@ def producto_editar(request, prod_id):
             producto.fch_ult_act = timezone.now()
             producto.save()
 
+            # Completa código histórico ausente para productos viejos.
+            if not (producto.codigo_producto or '').strip():
+                _asignar_codigo_producto_si_falta(producto)
+
             # Fotos adicionales nuevas (respetando máximo de 5 total)
             fotos_nuevas = request.FILES.getlist('fotos_nuevas')
             if fotos_nuevas:
@@ -873,9 +987,12 @@ def producto_editar(request, prod_id):
 
     fotos_extra = producto.fotos.all()
     total_fotos = fotos_extra.count() + (1 if producto.fot_prod else 0)
+    ubicacion_actual_en_lista = ubicaciones_producto.filter(nombre=producto.ubicacion).exists()
     return render(request, 'inventario/catalogo/producto_editar.html', {
         'producto': producto,
         'catalogos': catalogos,
+        'ubicaciones_producto': ubicaciones_producto,
+        'ubicacion_actual_en_lista': ubicacion_actual_en_lista,
         'subcategorias': subcategorias,
         'disponibilidad': disp,
         'fotos_extra': fotos_extra,
@@ -944,6 +1061,7 @@ from django.utils import timezone
 from .db_compat import usuario_supports_tipo_doc
 from .forms import CambioPasswordPerfilForm, CatalogoForm, ProductoForm, UbicacionProductoForm, UsuarioPerfilForm
 from .models import AuditoriaLog, Catalogo, DetallePedido, Disponibilidad, Pedido, PedidoEvidencia, Producto, ProductoFoto, Subcategoria, UbicacionProducto, Usuario, Rol, VerificacionSenaToken
+from .views_catalogo_panel import build_catalogo_cards, build_catalogo_tree
 
 
 def _user_role(request):
@@ -981,20 +1099,24 @@ def catalogo(request):
         .annotate(total_productos=models.Count('producto'))
         .order_by('nombre_catalogo')
     )
+    macro_cards = build_catalogo_cards(catalogos)
     catalogo_ubicaciones_map = {
         str(cat.id_cat): (cat.id_ubicacion_fk.nombre if cat.id_ubicacion_fk else '')
         for cat in catalogos
     }
     cat_form = CatalogoForm()
     ubi_form = UbicacionProductoForm()
+    ubicaciones_producto = UbicacionProducto.objects.order_by('nombre')
     prod_form = ProductoForm()
     return render(
         request,
         'inventario/catalogo/catalogo.html',
         {
             'catalogos': catalogos,
+            'macro_cards': macro_cards,
             'cat_form': cat_form,
             'ubi_form': ubi_form,
+            'ubicaciones_producto': ubicaciones_producto,
             'prod_form': prod_form,
             'catalogo_ubicaciones_map': catalogo_ubicaciones_map,
             'puede_gestionar_catalogo': _is_admin(request),
@@ -1029,6 +1151,48 @@ def registrar_catalogo(request):
 
 
 @login_required
+def editar_catalogo(request):
+    if not _is_admin(request):
+        messages.error(request, 'Solo el administrador puede editar catalogos.')
+        return redirect('catalogo')
+
+    if request.method != 'POST':
+        return redirect('catalogo')
+
+    cat_id = (request.POST.get('cat_id') or '').strip()
+    if not cat_id.isdigit():
+        messages.error(request, 'No se pudo identificar la macro categoría a editar.')
+        return redirect('catalogo')
+
+    catalogo = get_object_or_404(Catalogo, pk=int(cat_id))
+    codigo_actual = (catalogo.codigo_macro or '').strip().upper()
+    codigo_enviado = (request.POST.get('codigo_macro') or '').strip().upper()
+
+    # Si la macro ya tiene código, ese código queda inmutable.
+    if codigo_actual and codigo_enviado != codigo_actual:
+        messages.error(request, 'El código de una macro ya registrada no se puede modificar.')
+        return redirect('catalogo')
+
+    form = CatalogoForm(request.POST, instance=catalogo)
+    if form.is_valid():
+        obj = form.save(commit=False)
+        obj.fch_ult_act = timezone.now()
+        obj.save()
+        _registrar_auditoria(
+            request,
+            accion='editar',
+            entidad='catalogo',
+            entidad_id=obj.id_cat,
+            descripcion=f'Se editó la macro categoría "{obj.nombre_catalogo}".',
+        )
+        messages.success(request, f'Macro categoría "{obj.nombre_catalogo}" actualizada correctamente.')
+    else:
+        messages.error(request, 'Error al editar la macro categoría. Revisa los campos.')
+
+    return redirect('catalogo')
+
+
+@login_required
 def registrar_ubicacion_producto(request):
     if not _is_admin(request):
         messages.error(request, 'Solo el administrador puede registrar ubicaciones de productos.')
@@ -1056,6 +1220,35 @@ def registrar_ubicacion_producto(request):
 
 
 @login_required
+def editar_ubicacion_producto(request, ubicacion_id):
+    if not _is_admin(request):
+        messages.error(request, 'Solo el administrador puede editar ubicaciones de productos.')
+        return redirect('catalogo')
+
+    if request.method != 'POST':
+        return redirect('catalogo')
+
+    ubicacion = get_object_or_404(UbicacionProducto, pk=ubicacion_id)
+    form = UbicacionProductoForm(request.POST, instance=ubicacion)
+    if form.is_valid():
+        obj = form.save(commit=False)
+        obj.fch_ult_act = timezone.now()
+        obj.save()
+        _registrar_auditoria(
+            request,
+            accion='editar',
+            entidad='ubicacion_producto',
+            entidad_id=obj.id_ubicacion,
+            descripcion=f'Se editó la ubicación "{obj.nombre}".',
+        )
+        messages.success(request, f'Ubicación "{obj.nombre}" actualizada correctamente.')
+    else:
+        messages.error(request, 'No se pudo editar la ubicación. Verifica el nombre (único y válido).')
+
+    return redirect('catalogo')
+
+
+@login_required
 def registrar_producto(request):
     if not _is_admin(request):
         messages.error(request, 'Solo el administrador puede registrar productos.')
@@ -1064,6 +1257,7 @@ def registrar_producto(request):
     if request.method == 'POST':
         form = ProductoForm(request.POST, request.FILES)
         if form.is_valid():
+            subcategoria_seleccionada = form.cleaned_data.get('subcategoria')
             obj = form.save(commit=False)
             obj.fch_registro = timezone.now()
             obj.fch_ult_act = timezone.now()
@@ -1073,13 +1267,24 @@ def registrar_producto(request):
             if fotos:
                 obj.fot_prod = fotos[0]
 
-            obj.save()
-            _sync_subcategorias_producto(
-                obj,
-                obj.id_cat_fk_id,
-                [str(s.pk) for s in (form.cleaned_data.get('subcategorias') or [])],
-                '',
-            )
+            with transaction.atomic():
+                obj.save()
+                if subcategoria_seleccionada:
+                    _sync_subcategorias_producto(
+                        obj,
+                        obj.id_cat_fk_id,
+                        [str(subcategoria_seleccionada.pk)],
+                        '',
+                    )
+
+                    # Se genera al final para garantizar prefijo correcto por macro/categoría/subcategoría.
+                    for _ in range(3):
+                        try:
+                            obj.codigo_producto = _generar_codigo_producto(subcategoria_seleccionada)
+                            obj.save(update_fields=['codigo_producto'])
+                            break
+                        except IntegrityError:
+                            continue
 
             # Fotos adicionales (índices 1-4)
             for i, f in enumerate(fotos[1:], start=1):
@@ -1092,7 +1297,7 @@ def registrar_producto(request):
                 entidad_id=obj.id_prod,
                 descripcion=(
                     f'Se creó el producto "{obj.nombre_producto}" '
-                    f'({obj.get_tipo_bien_display()}, unidad: {obj.get_unidad_medida_display()}, ubicación: {obj.ubicacion}).'
+                    f'({obj.get_tipo_bien_display()}, unidad: {obj.get_unidad_medida_display()}, ubicación: {obj.ubicacion}, código: {obj.codigo_producto or "N/A"}).'
                 ),
             )
 
@@ -1179,26 +1384,7 @@ def productos_catalogo(request, cat_id):
         # a carpetas sea real (no se vea como copia).
         productos = productos_qs.filter(subcategorias__isnull=True).distinct()
 
-    # Renderiza solo el nivel actual: raíz (sin padre) o hijas directas del nodo seleccionado.
-    subcats_for_level = (
-        Subcategoria.objects
-        .filter(
-            id_cat_fk=catalogo,
-            subcategoria_padre=selected_subcat,
-        )
-        .select_related('id_cat_fk', 'subcategoria_padre')
-        .order_by('nombre_subcategoria')
-    )
-    subcategoria_tree = [
-        {
-            'id': subcat.id_subcat,
-            'nombre': subcat.nombre_subcategoria,
-            'ruta': subcat.ruta_completa,
-            'padre_id': subcat.subcategoria_padre_id,
-            'children': [],
-        }
-        for subcat in subcats_for_level
-    ]
+    subcategoria_tree = build_catalogo_tree(catalogo, selected_subcat)
     breadcrumb_subcats = []
     if selected_subcat:
         node = selected_subcat
@@ -1206,6 +1392,13 @@ def productos_catalogo(request, cat_id):
             breadcrumb_subcats.append(node)
             node = node.subcategoria_padre
         breadcrumb_subcats.reverse()
+
+    if selected_subcat and selected_subcat.subcategoria_padre_id:
+        back_url = f"{reverse('productos_catalogo', kwargs={'cat_id': catalogo.id_cat})}?subcat={selected_subcat.subcategoria_padre_id}"
+    elif selected_subcat:
+        back_url = reverse('productos_catalogo', kwargs={'cat_id': catalogo.id_cat})
+    else:
+        back_url = reverse('catalogo')
 
     return render(
         request,
@@ -1216,6 +1409,7 @@ def productos_catalogo(request, cat_id):
             'subcategoria_tree': subcategoria_tree,
             'selected_subcat_id': selected_subcat.id_subcat if selected_subcat else None,
             'breadcrumb_subcats': breadcrumb_subcats,
+            'back_url': back_url,
             'puede_gestionar_catalogo': _is_admin(request),
         },
     )
@@ -1825,7 +2019,13 @@ def inventario_panel(request):
         productos_qs = productos_qs.filter(
             models.Q(nombre_producto__icontains=q)
             | models.Q(id_cat_fk__nombre_catalogo__icontains=q)
-        )
+            | models.Q(codigo_producto__icontains=q)
+            | models.Q(id_cat_fk__codigo_macro__icontains=q)
+            | models.Q(subcategorias__nombre_subcategoria__icontains=q)
+            | models.Q(subcategorias__codigo_clasificacion__icontains=q)
+            | models.Q(subcategorias__subcategoria_padre__nombre_subcategoria__icontains=q)
+            | models.Q(subcategorias__subcategoria_padre__codigo_clasificacion__icontains=q)
+        ).distinct()
 
     if bajo_stock:
         productos_qs = productos_qs.filter(stock_actual__lte=5)

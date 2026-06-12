@@ -9,6 +9,8 @@
 
 {% block content %}
 
+<div class="tw-mx-auto tw-max-w-[1660px] tw-space-y-5 tw-pb-6 tw-px-2 sm:tw-px-4 lg:tw-px-6">
+
 {% if messages %}
 <div class="catalogo-messages" role="alert">
     {% for msg in messages %}
@@ -22,22 +24,22 @@
 {% endif %}
 
 <!-- ENCABEZADO ------------------------------------------- -->
-<header class="cat-header">
-    <div class="cat-header__text">
-        <h1 class="cat-header__title">Catálogo de Equipos</h1>
-        <p class="cat-header__sub">Equipos y materiales disponibles en el CIDE Sibaté</p>
+<header class="cat-header tw-flex tw-flex-col tw-gap-4 tw-rounded-[28px] tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-sm lg:tw-flex-row lg:tw-items-center lg:tw-justify-between">
+    <div class="cat-header__text tw-space-y-1.5">
+        <h1 class="cat-header__title tw-text-2xl tw-font-bold tw-text-slate-900">Catálogo de Equipos</h1>
+        <p class="cat-header__sub tw-text-sm tw-text-slate-600">Equipos y materiales disponibles en el CIDE Sibaté</p>
     </div>
     {% if puede_gestionar_catalogo %}
-    <div class="cat-header__actions">
-        <button class="cat-btn cat-btn--ghost" type="button" data-modal="modal-ubicacion">
+    <div class="cat-header__actions tw-grid tw-grid-cols-1 tw-gap-2 sm:tw-grid-cols-2 lg:tw-flex lg:tw-items-center lg:tw-gap-2">
+        <button class="cat-btn cat-btn--ghost tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-gap-2 tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-4 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50" type="button" data-modal="modal-ubicacion">
             <ion-icon name="location-outline"></ion-icon>
             Ubicaciones de productos
         </button>
-        <button class="cat-btn cat-btn--secondary" type="button" data-modal="modal-catalogo">
+        <button class="cat-btn cat-btn--secondary tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-gap-2 tw-rounded-xl tw-border tw-border-emerald-200 tw-bg-emerald-50 tw-px-4 tw-text-sm tw-font-semibold tw-text-emerald-700 hover:tw-bg-emerald-100" type="button" data-modal="modal-catalogo">
             <ion-icon name="albums-outline"></ion-icon>
-            Nuevo catálogo
+            Nueva macro categoría
         </button>
-        <button class="cat-btn cat-btn--primary" type="button" data-modal="modal-producto">
+        <button class="cat-btn cat-btn--primary tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-gap-2 tw-rounded-xl tw-border tw-border-lime-200 tw-bg-lime-100 tw-px-4 tw-text-sm tw-font-semibold tw-text-lime-800 hover:tw-bg-lime-200" type="button" data-modal="modal-producto">
             <ion-icon name="add-circle-outline"></ion-icon>
             Nuevo producto
         </button>
@@ -46,83 +48,25 @@
 </header>
 
 <!-- ESTADÍSTICAS RÁPIDAS --------------------------------- -->
-<div class="cat-stats">
-    <div class="stat-chip">
+<div class="cat-stats tw-flex tw-flex-wrap tw-gap-2">
+    <div class="stat-chip tw-inline-flex tw-items-center tw-gap-2 tw-rounded-full tw-border tw-border-slate-200 tw-bg-white tw-px-3 tw-py-1.5 tw-text-sm tw-font-semibold tw-text-slate-700 tw-shadow-sm">
         <ion-icon name="albums-outline"></ion-icon>
-        <span><strong>{{ catalogos|length }}</strong> categoría{{ catalogos|length|pluralize }}</span>
+        <span><strong>{{ macro_cards|length }}</strong> macro categoría{{ macro_cards|length|pluralize }}</span>
     </div>
 </div>
 
 <!-- GRID DE CATÁLOGOS ------------------------------------ -->
 {% if catalogos %}
 <section class="cat-grid-section">
-    <div class="cat-grid">
-        {% for cat in catalogos %}
-        <article class="cat-card cat-card--catalogo" data-href="{% url 'productos_catalogo' cat.id_cat %}" style="cursor:pointer;">
-            {% if puede_gestionar_catalogo %}
-            <form
-                method="post"
-                action="{% url 'eliminar_catalogo' cat.id_cat %}"
-                class="cat-delete-form"
-                onsubmit="return confirm('¿Seguro que deseas eliminar el catálogo {{ cat.nombre_catalogo }}?');"
-            >
-                {% csrf_token %}
-                <button
-                    class="cat-card__delete"
-                    type="submit"
-                    {% if cat.total_productos %}disabled{% endif %}
-                    title="{% if cat.total_productos %}No se puede eliminar porque tiene productos{% else %}Eliminar catálogo{% endif %}"
-                    aria-label="Eliminar catálogo {{ cat.nombre_catalogo }}"
-                >
-                    <ion-icon name="trash-outline"></ion-icon>
-                </button>
-            </form>
-            {% endif %}
-            <div class="cat-card__icon-wrap">
-                <ion-icon name="albums-outline"></ion-icon>
-            </div>
-            <div class="cat-card__body">
-                <h3 class="cat-card__name">{{ cat.nombre_catalogo }}</h3>
-                {% if cat.descripcion %}
-                <p class="cat-card__desc">{{ cat.descripcion|truncatechars:70 }}</p>
-                {% endif %}
-                <div class="cat-card__footer">
-                    <div class="cat-card__actions">
-                        <a
-                            class="cat-btn-mini cat-btn-mini--view"
-                            href="{% url 'productos_catalogo' cat.id_cat %}"
-                            title="Ver productos de {{ cat.nombre_catalogo }}"
-                        >
-                            <ion-icon name="eye-outline"></ion-icon>
-                            Ver productos
-                        </a>
-                        {% if puede_gestionar_catalogo %}
-                        <button
-                            class="cat-btn-mini"
-                            type="button"
-                            data-modal="modal-producto"
-                            data-cat-id="{{ cat.id_cat }}"
-                            data-cat-name="{{ cat.nombre_catalogo }}"
-                            title="Agregar producto a {{ cat.nombre_catalogo }}"
-                        >
-                            <ion-icon name="add-outline"></ion-icon>
-                            Agregar
-                        </button>
-                        {% endif %}
-                    </div>
-                    <span class="cat-card__count cat-card__count--below">
-                        <ion-icon name="cube-outline"></ion-icon>
-                        {{ cat.total_productos }} producto{{ cat.total_productos|pluralize }}
-                    </span>
-                </div>
-            </div>
-        </article>
+    <div class="cat-grid tw-grid tw-grid-cols-1 tw-gap-5 md:tw-grid-cols-2 xl:tw-grid-cols-3 2xl:tw-grid-cols-4">
+        {% for card in macro_cards %}
+            {% include "inventario/catalogo/_macro_card.html" with card=card puede_gestionar_catalogo=puede_gestionar_catalogo %}
         {% endfor %}
     </div>
 </section>
 {% else %}
-<section class="cat-empty">
-    <div class="cat-empty__inner">
+<section class="cat-empty tw-rounded-2xl tw-border tw-border-dashed tw-border-slate-300 tw-bg-white tw-p-8 tw-text-center">
+    <div class="cat-empty__inner tw-mx-auto tw-max-w-md tw-space-y-2 tw-text-slate-600">
         <ion-icon name="albums-outline"></ion-icon>
         <h2>Sin categorías aún</h2>
         {% if puede_gestionar_catalogo %}
@@ -138,46 +82,62 @@
      MODAL: Registrar catálogo
      ==================================================== -->
 {% if puede_gestionar_catalogo %}
-<div class="modal-backdrop" id="modal-catalogo" role="dialog" aria-modal="true" aria-labelledby="modal-cat-title" aria-hidden="true">
-    <div class="modal">
-        <div class="modal__header">
-            <span class="modal__icon"><ion-icon name="albums-outline"></ion-icon></span>
-            <h2 class="modal__title" id="modal-cat-title">Nuevo catálogo</h2>
-            <button class="modal__close" type="button" data-modal-close aria-label="Cerrar">
+{% include "inventario/catalogo/_modal_catalogo_wizard.html" %}
+
+<div class="modal-backdrop tw-fixed tw-inset-0 tw-z-[1400] tw-bg-black/45 tw-p-4" id="modal-editar-macro" role="dialog" aria-modal="true" aria-labelledby="modal-editar-macro-title" aria-hidden="true">
+    <div class="modal modal--small tw-mx-auto tw-w-full tw-max-w-xl tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-shadow-2xl">
+        <div class="modal__header tw-flex tw-items-center tw-justify-between tw-gap-3 tw-border-b tw-border-slate-200 tw-p-4">
+            <span class="modal__icon"><ion-icon name="create-outline"></ion-icon></span>
+            <h2 class="modal__title tw-text-lg tw-font-bold tw-text-slate-900" id="modal-editar-macro-title">Editar macro categoría</h2>
+            <button class="modal__close tw-inline-flex tw-h-9 tw-w-9 tw-items-center tw-justify-center tw-rounded-full tw-border tw-border-slate-200 tw-bg-white tw-text-slate-500 hover:tw-bg-slate-100" type="button" data-modal-close aria-label="Cerrar">
                 <ion-icon name="close-outline"></ion-icon>
             </button>
         </div>
-        <form method="post" action="{% url 'registrar_catalogo' %}" class="modal__form">
+        <form method="post" action="{% url 'editar_catalogo' %}" class="modal__form tw-space-y-3 tw-p-4" id="editar-macro-form" data-code-url="{% url 'wizard_codigo_api' %}">
             {% csrf_token %}
+            <input type="hidden" name="cat_id" id="editar-macro-cat-id">
+
             <div class="mf-group">
-                <label for="{{ cat_form.nombre_catalogo.id_for_label }}" class="mf-label">
-                    Nombre del catálogo <span class="mf-required">*</span>
-                </label>
-                {{ cat_form.nombre_catalogo }}
-                {% if cat_form.nombre_catalogo.errors %}
-                <span class="mf-error">{{ cat_form.nombre_catalogo.errors|join:", " }}</span>
-                {% endif %}
+                <div class="tw-flex tw-items-end tw-justify-between tw-gap-2">
+                    <label for="editar-macro-codigo" class="mf-label">Código macro</label>
+                    <button type="button" id="editar-macro-generate-code" class="tw-inline-flex tw-items-center tw-gap-2 tw-rounded-full tw-border tw-border-slate-200 tw-bg-white tw-px-3 tw-py-1 tw-text-[11px] tw-font-semibold tw-text-slate-600 hover:tw-bg-slate-50" title="Generar código automático">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" class="tw-h-3.5 tw-w-3.5 tw-shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 3-6.708" />
+                            <path d="M3 4v5h5" />
+                        </svg>
+                        Generar código
+                    </button>
+                </div>
+                <input type="text" name="codigo_macro" id="editar-macro-codigo" class="form-input" placeholder="Ej: 1000" autocomplete="off" maxlength="20" inputmode="numeric" pattern="[0-9]*">
+                <p id="editar-macro-codigo-status" class="tw-mt-1 tw-text-xs tw-font-medium tw-text-slate-500"></p>
+                <small class="mf-hint" id="editar-macro-codigo-hint">Si no tiene código, puedes asignarlo ahora.</small>
             </div>
+
             <div class="mf-group">
-                <label for="{{ cat_form.descripcion.id_for_label }}" class="mf-label">Descripción</label>
-                {{ cat_form.descripcion }}
+                <label for="editar-macro-nombre" class="mf-label">Nombre macro <span class="mf-required">*</span></label>
+                <input type="text" name="nombre_catalogo" id="editar-macro-nombre" class="form-input" placeholder="Ej: Equipos audiovisuales" autocomplete="off" required>
             </div>
-            <div class="mf-group mf-group--stack" id="catalogo-ubicacion-group">
-                <label for="{{ cat_form.id_ubicacion_fk.id_for_label }}" class="mf-label">
-                    Agregar ubicación <span class="mf-required">*</span>
-                </label>
-                {{ cat_form.id_ubicacion_fk }}
-                <div id="catalogo-ubicacion-picker" class="subcat-folder-picker" role="listbox" aria-multiselectable="false"></div>
-                <small class="mf-hint" id="catalogo-ubicacion-hint">Selecciona la ubicación predeterminada de este catálogo.</small>
-                {% if cat_form.id_ubicacion_fk.errors %}
-                <span class="mf-error">{{ cat_form.id_ubicacion_fk.errors|join:", " }}</span>
-                {% endif %}
+
+            <div class="mf-group">
+                <label for="editar-macro-descripcion" class="mf-label">Descripción</label>
+                <textarea name="descripcion" id="editar-macro-descripcion" class="form-input form-textarea" rows="3" placeholder="Opcional"></textarea>
             </div>
-            <div class="modal__actions">
-                <button type="button" class="cat-btn cat-btn--ghost" data-modal-close>Cancelar</button>
-                <button type="submit" class="cat-btn cat-btn--primary">
+
+            <div class="mf-group">
+                <label for="editar-macro-ubicacion" class="mf-label">Ubicación predeterminada <span class="mf-required">*</span></label>
+                <select name="id_ubicacion_fk" id="editar-macro-ubicacion" class="form-input form-select" required>
+                    <option value="">Selecciona ubicación</option>
+                    {% for opt in cat_form.fields.id_ubicacion_fk.queryset %}
+                    <option value="{{ opt.id_ubicacion }}">{{ opt.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="modal__actions tw-flex tw-justify-end tw-gap-2 tw-border-t tw-border-slate-200 tw-pt-3">
+                <button type="button" class="cat-btn cat-btn--ghost tw-inline-flex tw-h-10 tw-items-center tw-justify-center tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-4 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50" data-modal-close>Cancelar</button>
+                <button type="submit" class="cat-btn cat-btn--primary tw-inline-flex tw-h-10 tw-items-center tw-justify-center tw-gap-2 tw-rounded-xl tw-border tw-border-lime-200 tw-bg-lime-100 tw-px-4 tw-text-sm tw-font-semibold tw-text-lime-800 hover:tw-bg-lime-200">
                     <ion-icon name="save-outline"></ion-icon>
-                    Guardar catálogo
+                    Guardar cambios
                 </button>
             </div>
         </form>
@@ -187,16 +147,16 @@
 <!-- ====================================================
      MODAL: Registrar ubicación de productos
      ==================================================== -->
-<div class="modal-backdrop" id="modal-ubicacion" role="dialog" aria-modal="true" aria-labelledby="modal-ubicacion-title" aria-hidden="true">
-    <div class="modal modal--small">
-        <div class="modal__header">
+<div class="modal-backdrop tw-fixed tw-inset-0 tw-z-[1400] tw-bg-black/45 tw-p-4" id="modal-ubicacion" role="dialog" aria-modal="true" aria-labelledby="modal-ubicacion-title" aria-hidden="true">
+    <div class="modal modal--small tw-mx-auto tw-w-full tw-max-w-lg tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-shadow-2xl">
+        <div class="modal__header tw-flex tw-items-center tw-justify-between tw-gap-3 tw-border-b tw-border-slate-200 tw-p-4">
             <span class="modal__icon"><ion-icon name="location-outline"></ion-icon></span>
-            <h2 class="modal__title" id="modal-ubicacion-title">Ubicaciones de productos</h2>
-            <button class="modal__close" type="button" data-modal-close aria-label="Cerrar">
+            <h2 class="modal__title tw-text-lg tw-font-bold tw-text-slate-900" id="modal-ubicacion-title">Ubicaciones de productos</h2>
+            <button class="modal__close tw-inline-flex tw-h-9 tw-w-9 tw-items-center tw-justify-center tw-rounded-full tw-border tw-border-slate-200 tw-bg-white tw-text-slate-500 hover:tw-bg-slate-100" type="button" data-modal-close aria-label="Cerrar">
                 <ion-icon name="close-outline"></ion-icon>
             </button>
         </div>
-        <form method="post" action="{% url 'registrar_ubicacion_producto' %}" class="modal__form">
+        <form method="post" action="{% url 'registrar_ubicacion_producto' %}" class="modal__form tw-space-y-3 tw-p-4">
             {% csrf_token %}
             <div class="mf-group">
                 <label for="{{ ubi_form.nombre.id_for_label }}" class="mf-label">
@@ -207,14 +167,47 @@
                 <span class="mf-error">{{ ubi_form.nombre.errors|join:", " }}</span>
                 {% endif %}
             </div>
-            <div class="modal__actions">
-                <button type="button" class="cat-btn cat-btn--ghost" data-modal-close>Cancelar</button>
-                <button type="submit" class="cat-btn cat-btn--primary">
+            <div class="modal__actions tw-flex tw-justify-end tw-gap-2 tw-border-t tw-border-slate-200 tw-pt-3">
+                <button type="button" class="cat-btn cat-btn--ghost tw-inline-flex tw-h-10 tw-items-center tw-justify-center tw-rounded-xl tw-border tw-border-slate-300 tw-bg-white tw-px-4 tw-text-sm tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50" data-modal-close>Cancelar</button>
+                <button type="submit" class="cat-btn cat-btn--primary tw-inline-flex tw-h-10 tw-items-center tw-justify-center tw-gap-2 tw-rounded-xl tw-border tw-border-lime-200 tw-bg-lime-100 tw-px-4 tw-text-sm tw-font-semibold tw-text-lime-800 hover:tw-bg-lime-200">
                     <ion-icon name="save-outline"></ion-icon>
                     Guardar ubicación
                 </button>
             </div>
         </form>
+
+        <section class="ubicaciones-existentes tw-border-t tw-border-slate-200 tw-p-4">
+            <div class="tw-mb-2 tw-flex tw-items-center tw-justify-between tw-gap-2">
+                <h3 class="tw-text-sm tw-font-bold tw-text-slate-800">Ubicaciones existentes</h3>
+                <span class="tw-text-xs tw-font-medium tw-text-slate-500">{{ ubicaciones_producto|length }} registro{{ ubicaciones_producto|length|pluralize }}</span>
+            </div>
+            {% if ubicaciones_producto %}
+            <div class="ubicaciones-lista">
+                {% for ubic in ubicaciones_producto %}
+                <form method="post" action="{% url 'editar_ubicacion_producto' ubic.id_ubicacion %}" class="ubicacion-item-form">
+                    {% csrf_token %}
+                    <input
+                        type="text"
+                        name="nombre"
+                        class="form-input ubicacion-item-input"
+                        value="{{ ubic.nombre }}"
+                        maxlength="120"
+                        autocomplete="off"
+                        readonly
+                        data-original-value="{{ ubic.nombre|escape }}"
+                        required
+                    >
+                    <button type="button" class="cat-btn-mini cat-btn-mini--edit-location" title="Editar ubicación" data-role="edit-toggle">
+                        <ion-icon name="create-outline"></ion-icon>
+                        <span data-edit-label>Editar</span>
+                    </button>
+                </form>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="tw-text-sm tw-text-slate-500">Aún no hay ubicaciones registradas.</p>
+            {% endif %}
+        </section>
     </div>
 </div>
 
@@ -232,6 +225,7 @@
         </div>
         <form method="post" action="{% url 'registrar_producto' %}" enctype="multipart/form-data" class="modal__form modal__form--producto">
             {% csrf_token %}
+            {{ prod_form.id_cat_fk }}
             <div class="mf-row">
                 <div class="mf-group">
                     <label for="{{ prod_form.nombre_producto.id_for_label }}" class="mf-label">
@@ -243,14 +237,52 @@
                     {% endif %}
                 </div>
                 <div class="mf-group">
-                    <label for="{{ prod_form.id_cat_fk.id_for_label }}" class="mf-label">
-                        Catálogo <span class="mf-required">*</span>
+                    <label for="{{ prod_form.macro_categoria.id_for_label }}" class="mf-label">
+                        Macro categoría <span class="mf-required">*</span>
                     </label>
-                    {{ prod_form.id_cat_fk }}
-                    {% if prod_form.id_cat_fk.errors %}
-                    <span class="mf-error">{{ prod_form.id_cat_fk.errors|join:", " }}</span>
+                    {{ prod_form.macro_categoria }}
+                    {% if prod_form.macro_categoria.errors %}
+                    <span class="mf-error">{{ prod_form.macro_categoria.errors|join:", " }}</span>
                     {% endif %}
                 </div>
+            </div>
+            <div class="mf-row">
+                <div class="mf-group">
+                    <label for="{{ prod_form.categoria.id_for_label }}" class="mf-label">
+                        Categoría <span class="mf-required">*</span>
+                    </label>
+                    <select name="categoria" id="{{ prod_form.categoria.id_for_label }}" class="form-input form-select">
+                        <option value="">Selecciona una categoría</option>
+                        {% with selected_categoria=prod_form.categoria.value %}
+                            {% for cat in prod_form.categoria.field.queryset %}
+                                <option value="{{ cat.pk }}" data-cat-id="{{ cat.id_cat_fk_id }}" {% if selected_categoria and selected_categoria|stringformat:"s" == cat.pk|stringformat:"s" %}selected{% endif %}>{{ cat.codigo_clasificacion|default:'SIN-COD' }} · {{ cat.nombre_subcategoria }}</option>
+                            {% endfor %}
+                        {% endwith %}
+                    </select>
+                    {% if prod_form.categoria.errors %}
+                    <span class="mf-error">{{ prod_form.categoria.errors|join:", " }}</span>
+                    {% endif %}
+                </div>
+                <div class="mf-group">
+                    <label for="{{ prod_form.subcategoria.id_for_label }}" class="mf-label">
+                        Subcategoría <span class="mf-required">*</span>
+                    </label>
+                    <select name="subcategoria" id="{{ prod_form.subcategoria.id_for_label }}" class="form-input form-select">
+                        <option value="">Selecciona una subcategoría</option>
+                        {% with selected_subcategoria=prod_form.subcategoria.value %}
+                            {% for sc in prod_form.subcategoria.field.queryset %}
+                                <option value="{{ sc.pk }}" data-cat-id="{{ sc.id_cat_fk_id }}" data-parent-id="{{ sc.subcategoria_padre_id }}" {% if selected_subcategoria and selected_subcategoria|stringformat:"s" == sc.pk|stringformat:"s" %}selected{% endif %}>{{ sc.codigo_clasificacion|default:'SIN-COD' }} · {{ sc.subcategoria_padre.nombre_subcategoria }} / {{ sc.nombre_subcategoria }}</option>
+                            {% endfor %}
+                        {% endwith %}
+                    </select>
+                    {% if prod_form.subcategoria.errors %}
+                    <span class="mf-error">{{ prod_form.subcategoria.errors|join:", " }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="product-route-preview" id="producto-ruta-preview">
+                <p class="product-route-preview__label">Ruta de clasificación</p>
+                <p class="product-route-preview__value" id="producto-ruta-preview-value">Selecciona macro, categoría y subcategoría para continuar.</p>
             </div>
             <div class="mf-group">
                 <label for="{{ prod_form.descripcion.id_for_label }}" class="mf-label">Descripción</label>
@@ -271,36 +303,17 @@
                     <small class="mf-hint">Se completa automáticamente con la ubicación predeterminada del catálogo.</small>
                 </div>
             </div>
-            <div class="mf-row mf-row--tipo-subcat" id="tipo-subcat-row">
+            <div class="mf-row" id="tipo-subcat-row">
                 <div class="mf-group">
                     <label for="{{ prod_form.tipo_bien.id_for_label }}" class="mf-label">
                         {{ prod_form.tipo_bien.label }} <span class="mf-required">*</span>
                     </label>
                     {{ prod_form.tipo_bien }}
                 </div>
-                <div class="mf-group mf-group--stack" id="subcategorias-group">
-                    <label for="{{ prod_form.subcategorias.id_for_label }}" class="mf-label">Subcategorías</label>
-                    <select
-                        name="subcategorias"
-                        id="{{ prod_form.subcategorias.id_for_label }}"
-                        class="form-input form-select form-select-multiple subcat-native-select"
-                        multiple
-                        size="7"
-                    >
-                        {% with selected_subcats=prod_form.subcategorias.value %}
-                            {% for sc in prod_form.subcategorias.field.queryset %}
-                                <option
-                                    value="{{ sc.pk }}"
-                                    data-cat-id="{{ sc.id_cat_fk_id }}"
-                                    {% if selected_subcats and sc.pk|stringformat:"s" in selected_subcats %}selected{% endif %}
-                                >
-                                    {{ sc.ruta_completa }}
-                                </option>
-                            {% endfor %}
-                        {% endwith %}
-                    </select>
-                    <div id="subcategorias-picker" class="subcat-folder-picker" role="listbox" aria-multiselectable="true"></div>
-                    <small class="mf-hint" id="subcategorias-hint">Puedes seleccionar varias subcategorías existentes del catálogo elegido.</small>
+                <div class="mf-group">
+                    <label class="mf-label">Código del producto</label>
+                    <input type="text" class="form-input" value="Se genera automáticamente al guardar" readonly>
+                    <small class="mf-hint">Formato: Macro-Categoría-Subcategoría-Consecutivo.</small>
                 </div>
             </div>
             <div class="mf-row" id="devolutivo-fields-create">
@@ -353,6 +366,8 @@
 
 {{ catalogo_ubicaciones_map|json_script:"catalogo-ubicaciones-map" }}
 
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -369,72 +384,49 @@ const initCatalogoPage = () => {
         }
     })();
 
+    const getCsrfToken = () => {
+        const cookie = document.cookie.split('; ').find((x) => x.startsWith('csrftoken='));
+        if (cookie) {
+            return decodeURIComponent(cookie.split('=')[1]);
+        }
+        const hiddenInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (hiddenInput && hiddenInput.value) {
+            return hiddenInput.value;
+        }
+        const metaToken = document.querySelector('meta[name="csrf-token"]');
+        return metaToken ? (metaToken.getAttribute('content') || '') : '';
+    };
+
     const tipoBienSelect = document.querySelector('#modal-producto select[name="tipo_bien"]');
-    const catalogoSelect = document.querySelector('#modal-producto select[name="id_cat_fk"]');
+    const macroSelect = document.querySelector('#modal-producto select[name="macro_categoria"]');
+    const categoriaSelect = document.querySelector('#modal-producto select[name="categoria"]');
+    const subcategoriaSelect = document.querySelector('#modal-producto select[name="subcategoria"]');
+    const catalogoHiddenInput = document.querySelector('#modal-producto input[name="id_cat_fk"]');
     const ubicacionProductoInput = document.querySelector('#modal-producto input[name="ubicacion"]');
-    const subcategoriasSelect = document.querySelector('#modal-producto select[name="subcategorias"]');
-    const subcategoriasPicker = document.getElementById('subcategorias-picker');
-    const subcategoriasGroup = document.getElementById('subcategorias-group');
     const tipoSubcatRow = document.getElementById('tipo-subcat-row');
-    const subcategoriasHint = document.getElementById('subcategorias-hint');
     const catalogoUbicacionSelect = document.querySelector('#modal-catalogo select[name="id_ubicacion_fk"]');
     const catalogoUbicacionPicker = document.getElementById('catalogo-ubicacion-picker');
     const catalogoUbicacionHint = document.getElementById('catalogo-ubicacion-hint');
     const placaInput = document.querySelector('#modal-producto input[name="numero_placa"]');
     const cuentadanteInput = document.querySelector('#modal-producto input[name="cuentadante"]');
     const devolutivoWrap = document.getElementById('devolutivo-fields-create');
-    const allSubcatOptions = subcategoriasSelect
-        ? Array.from(subcategoriasSelect.options).map(opt => opt.cloneNode(true))
+    const productoRutaPreviewValue = document.getElementById('producto-ruta-preview-value');
+    const editarMacroModalTitle = document.getElementById('modal-editar-macro-title');
+    const editarMacroForm = document.getElementById('editar-macro-form');
+    const editarMacroCatIdInput = document.getElementById('editar-macro-cat-id');
+    const editarMacroCodigoInput = document.getElementById('editar-macro-codigo');
+    const editarMacroCodigoStatus = document.getElementById('editar-macro-codigo-status');
+    const editarMacroCodigoHint = document.getElementById('editar-macro-codigo-hint');
+    const editarMacroGenerateCodeBtn = document.getElementById('editar-macro-generate-code');
+    const editarMacroNombreInput = document.getElementById('editar-macro-nombre');
+    const editarMacroDescripcionInput = document.getElementById('editar-macro-descripcion');
+    const editarMacroUbicacionSelect = document.getElementById('editar-macro-ubicacion');
+    const allCategoriaOptions = categoriaSelect
+        ? Array.from(categoriaSelect.options).map(opt => opt.cloneNode(true))
         : [];
-
-    const renderSubcategoriasPicker = () => {
-        if (!subcategoriasSelect || !subcategoriasPicker) return;
-
-        const selectedValues = new Set(
-            Array.from(subcategoriasSelect.selectedOptions).map(opt => opt.value)
-        );
-
-        subcategoriasPicker.innerHTML = '';
-        const opcionesActuales = Array.from(subcategoriasSelect.options);
-
-        if (!opcionesActuales.length) {
-            subcategoriasPicker.classList.add('is-empty');
-            return;
-        }
-
-        subcategoriasPicker.classList.remove('is-empty');
-
-        opcionesActuales.forEach(option => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'subcat-folder-item';
-            btn.dataset.value = option.value;
-
-            const isSelected = selectedValues.has(option.value);
-            if (isSelected) {
-                btn.classList.add('is-selected');
-            }
-            btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
-
-            const iconWrap = document.createElement('span');
-            iconWrap.className = 'subcat-folder-item__icon';
-            iconWrap.innerHTML = '<ion-icon name="folder-open-outline"></ion-icon>';
-
-            const text = document.createElement('span');
-            text.className = 'subcat-folder-item__text';
-            text.textContent = option.textContent.trim();
-
-            btn.appendChild(iconWrap);
-            btn.appendChild(text);
-
-            btn.addEventListener('click', () => {
-                option.selected = !option.selected;
-                renderSubcategoriasPicker();
-            });
-
-            subcategoriasPicker.appendChild(btn);
-        });
-    };
+    const allSubcategoriaOptions = subcategoriaSelect
+        ? Array.from(subcategoriaSelect.options).map(opt => opt.cloneNode(true))
+        : [];
 
     const renderCatalogoUbicacionPicker = () => {
         if (!catalogoUbicacionSelect || !catalogoUbicacionPicker) return;
@@ -488,45 +480,168 @@ const initCatalogoPage = () => {
         });
     };
 
-    const syncUbicacionProductoPorCatalogo = () => {
-        if (!catalogoSelect || !ubicacionProductoInput) return;
-        const catId = (catalogoSelect.value || '').toString();
+    const syncUbicacionProductoPorMacro = () => {
+        if (!macroSelect || !ubicacionProductoInput) return;
+        const catId = (macroSelect.value || '').toString();
         const ubicacion = catId ? (catalogoUbicacionesMap[catId] || '') : '';
         ubicacionProductoInput.value = ubicacion;
     };
 
-    const syncSubcategoriasPorCatalogo = () => {
-        if (!catalogoSelect || !subcategoriasSelect || !subcategoriasGroup) return;
+    const syncCategoriasPorMacro = () => {
+        if (!macroSelect || !categoriaSelect || !subcategoriaSelect) return;
+        const macroId = (macroSelect.value || '').toString();
+        const categoriaActual = (categoriaSelect.value || '').toString();
 
-        const catalogoId = (catalogoSelect.value || '').toString();
-        const selectedValues = new Set(Array.from(subcategoriasSelect.selectedOptions).map(opt => opt.value));
-
-        subcategoriasSelect.innerHTML = '';
-
-        const opcionesFiltradas = allSubcatOptions.filter(opt => {
+        categoriaSelect.innerHTML = '<option value="">Selecciona una categoría</option>';
+        allCategoriaOptions.forEach(opt => {
+            const value = (opt.value || '').toString();
+            if (!value) return;
             const catId = (opt.getAttribute('data-cat-id') || '').toString();
-            return catalogoId && catId === catalogoId;
+            if (macroId && catId === macroId) {
+                const clone = opt.cloneNode(true);
+                clone.selected = value === categoriaActual;
+                categoriaSelect.appendChild(clone);
+            }
         });
 
-        opcionesFiltradas.forEach(opt => {
-            const clone = opt.cloneNode(true);
-            clone.selected = selectedValues.has(clone.value);
-            subcategoriasSelect.appendChild(clone);
+        categoriaSelect.disabled = !macroId || categoriaSelect.options.length <= 1;
+
+        syncSubcategoriasPorCategoria();
+        refreshProductoRutaPreview();
+    };
+
+    const syncSubcategoriasPorCategoria = () => {
+        if (!macroSelect || !categoriaSelect || !subcategoriaSelect) return;
+        const macroId = (macroSelect.value || '').toString();
+        const categoriaId = (categoriaSelect.value || '').toString();
+        const subcatActual = (subcategoriaSelect.value || '').toString();
+
+        subcategoriaSelect.innerHTML = '<option value="">Selecciona una subcategoría</option>';
+        allSubcategoriaOptions.forEach(opt => {
+            const value = (opt.value || '').toString();
+            if (!value) return;
+            const catId = (opt.getAttribute('data-cat-id') || '').toString();
+            const parentId = (opt.getAttribute('data-parent-id') || '').toString();
+            if (macroId && categoriaId && catId === macroId && parentId === categoriaId) {
+                const clone = opt.cloneNode(true);
+                clone.selected = value === subcatActual;
+                subcategoriaSelect.appendChild(clone);
+            }
         });
 
-        const hasSubcategorias = opcionesFiltradas.length > 0;
-        subcategoriasGroup.style.display = hasSubcategorias ? '' : 'none';
-        subcategoriasSelect.disabled = !hasSubcategorias;
         if (tipoSubcatRow) {
-            tipoSubcatRow.classList.toggle('is-subcat-empty', !hasSubcategorias);
+            tipoSubcatRow.classList.toggle('is-subcat-empty', subcategoriaSelect.options.length <= 1);
         }
-        renderSubcategoriasPicker();
 
-        if (!hasSubcategorias && subcategoriasHint) {
-            subcategoriasHint.textContent = 'Este catálogo no tiene subcategorías creadas aún.';
-        } else if (hasSubcategorias && subcategoriasHint) {
-            subcategoriasHint.textContent = 'Puedes seleccionar varias subcategorías existentes del catálogo elegido.';
+        subcategoriaSelect.disabled = !categoriaId || subcategoriaSelect.options.length <= 1;
+        refreshProductoRutaPreview();
+    };
+
+    const getSelectedOptionText = (selectEl) => {
+        if (!selectEl) return '';
+        const option = selectEl.options[selectEl.selectedIndex];
+        if (!option || !option.value) return '';
+        return (option.textContent || '').trim();
+    };
+
+    const refreshProductoRutaPreview = () => {
+        if (!productoRutaPreviewValue) return;
+        const macroName = getSelectedOptionText(macroSelect);
+        const categoriaName = getSelectedOptionText(categoriaSelect);
+        const subcategoriaName = getSelectedOptionText(subcategoriaSelect);
+
+        if (!macroName) {
+            productoRutaPreviewValue.textContent = 'Selecciona macro, categoría y subcategoría para continuar.';
+            return;
         }
+
+        const parts = [macroName];
+        if (categoriaName) parts.push(categoriaName);
+        if (subcategoriaName) parts.push(subcategoriaName);
+        productoRutaPreviewValue.textContent = parts.join(' / ');
+    };
+
+    const prepEditarMacroModal = (button) => {
+        if (!button) return;
+        const catId = (button.dataset.catId || '').toString();
+        const catName = button.dataset.catName || '';
+        const catCodigo = (button.dataset.catCodigo || '').toString();
+        const catDesc = button.dataset.catDescripcion || '';
+        const catUbiId = (button.dataset.catUbicacionId || '').toString();
+        const codigoBloqueado = (button.dataset.catCodigoBloqueado || '') === '1';
+
+        if (editarMacroCatIdInput) editarMacroCatIdInput.value = catId;
+        if (editarMacroNombreInput) editarMacroNombreInput.value = catName;
+        if (editarMacroCodigoInput) {
+            editarMacroCodigoInput.value = catCodigo;
+            editarMacroCodigoInput.readOnly = codigoBloqueado;
+            editarMacroCodigoInput.classList.toggle('tw-bg-slate-100', codigoBloqueado);
+            editarMacroCodigoInput.classList.toggle('tw-cursor-not-allowed', codigoBloqueado);
+        }
+        if (editarMacroGenerateCodeBtn) {
+            editarMacroGenerateCodeBtn.disabled = codigoBloqueado;
+            editarMacroGenerateCodeBtn.classList.toggle('tw-opacity-50', codigoBloqueado);
+            editarMacroGenerateCodeBtn.classList.toggle('tw-cursor-not-allowed', codigoBloqueado);
+        }
+        if (editarMacroCodigoStatus) {
+            editarMacroCodigoStatus.textContent = '';
+            editarMacroCodigoStatus.classList.remove('tw-text-emerald-600', 'tw-text-rose-600');
+            editarMacroCodigoStatus.classList.add('tw-text-slate-500');
+        }
+        if (editarMacroDescripcionInput) editarMacroDescripcionInput.value = catDesc;
+        if (editarMacroUbicacionSelect) editarMacroUbicacionSelect.value = catUbiId;
+        if (editarMacroModalTitle) {
+            editarMacroModalTitle.textContent = catName
+                ? `Editar macro categoría: ${catName}`
+                : 'Editar macro categoría';
+        }
+        if (editarMacroCodigoHint) {
+            editarMacroCodigoHint.textContent = codigoBloqueado
+                ? 'Este código ya existe y no se puede cambiar.'
+                : 'Si no tiene código, puedes asignarlo ahora.';
+        }
+    };
+
+    const syncCatalogoHidden = () => {
+        if (!catalogoHiddenInput || !macroSelect) return;
+        catalogoHiddenInput.value = macroSelect.value || '';
+    };
+
+    const normalizeDigits = (value) => (value || '').replace(/\D+/g, '');
+
+    const setEditarCodigoState = (valid, message) => {
+        if (!editarMacroCodigoStatus) return;
+        editarMacroCodigoStatus.textContent = message || '';
+        editarMacroCodigoStatus.classList.remove('tw-text-emerald-600', 'tw-text-rose-600', 'tw-text-slate-500');
+        if (valid === true) {
+            editarMacroCodigoStatus.classList.add('tw-text-emerald-600');
+        } else if (valid === false) {
+            editarMacroCodigoStatus.classList.add('tw-text-rose-600');
+        } else {
+            editarMacroCodigoStatus.classList.add('tw-text-slate-500');
+        }
+    };
+
+    const postEditarMacroCode = async (modo, codigo = '') => {
+        if (!editarMacroForm) return { ok: false, error: 'Formulario no disponible.' };
+        const endpoint = editarMacroForm.dataset.codeUrl || '';
+        if (!endpoint) return { ok: false, error: 'Endpoint de códigos no disponible.' };
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            },
+            body: new URLSearchParams({
+                modo,
+                nivel: 'macro',
+                codigo,
+            }),
+        });
+        const payload = await response.json().catch(() => ({}));
+        return payload;
     };
 
     const toggleDevolutivoFields = () => {
@@ -548,13 +663,57 @@ const initCatalogoPage = () => {
         toggleDevolutivoFields();
     }
 
-    if (catalogoSelect) {
-        catalogoSelect.addEventListener('change', () => {
-            syncSubcategoriasPorCatalogo();
-            syncUbicacionProductoPorCatalogo();
+    if (macroSelect) {
+        macroSelect.addEventListener('change', () => {
+            syncCatalogoHidden();
+            syncCategoriasPorMacro();
+            syncUbicacionProductoPorMacro();
         });
-        syncSubcategoriasPorCatalogo();
-        syncUbicacionProductoPorCatalogo();
+    }
+
+    if (editarMacroCodigoInput) {
+        editarMacroCodigoInput.addEventListener('input', () => {
+            editarMacroCodigoInput.value = normalizeDigits(editarMacroCodigoInput.value);
+            setEditarCodigoState(null, '');
+        });
+    }
+
+    if (editarMacroGenerateCodeBtn) {
+        editarMacroGenerateCodeBtn.addEventListener('click', async () => {
+            if (!editarMacroCodigoInput || editarMacroCodigoInput.readOnly) return;
+            editarMacroGenerateCodeBtn.disabled = true;
+            editarMacroGenerateCodeBtn.classList.add('tw-opacity-70');
+            setEditarCodigoState(null, 'Generando código...');
+            try {
+                const payload = await postEditarMacroCode('generar');
+                if (payload.ok && payload.codigo) {
+                    editarMacroCodigoInput.value = normalizeDigits(payload.codigo);
+                    setEditarCodigoState(true, 'Código generado automáticamente.');
+                } else {
+                    setEditarCodigoState(false, payload.error || 'No fue posible generar el código.');
+                }
+            } catch (_error) {
+                setEditarCodigoState(false, 'No fue posible generar el código.');
+            } finally {
+                editarMacroGenerateCodeBtn.disabled = false;
+                editarMacroGenerateCodeBtn.classList.remove('tw-opacity-70');
+            }
+        });
+    }
+
+    if (categoriaSelect) {
+        categoriaSelect.addEventListener('change', () => {
+            syncSubcategoriasPorCategoria();
+        });
+    }
+
+    syncCatalogoHidden();
+    syncCategoriasPorMacro();
+    syncUbicacionProductoPorMacro();
+    refreshProductoRutaPreview();
+
+    if (catalogoHiddenInput && macroSelect) {
+        catalogoHiddenInput.value = macroSelect.value || '';
     }
 
     if (catalogoUbicacionSelect) {
@@ -582,25 +741,29 @@ const initCatalogoPage = () => {
     document.querySelectorAll('[data-modal]').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = btn.dataset.modal;
-            // Si viene desde la tarjeta de catálogo, preseleccionar
-            const catId   = btn.dataset.catId;
+            const catId = btn.dataset.catId;
             const catName = btn.dataset.catName;
-            if (catId) {
-                const sel = document.querySelector('#modal-producto select[name="id_cat_fk"]');
-                if (sel) sel.value = catId;
+
+            if (id === 'modal-producto') {
+                if (macroSelect) {
+                    macroSelect.value = catId || '';
+                }
                 const title = document.getElementById('modal-prod-title');
-                if (title && catName) title.textContent = `Nuevo producto en "${catName}"`;
-                syncSubcategoriasPorCatalogo();
-                syncUbicacionProductoPorCatalogo();
-            } else {
-                // Reset title cuando se abre desde el botón general
-                const title = document.getElementById('modal-prod-title');
-                if (title) title.textContent = 'Nuevo producto';
+                if (title) {
+                    title.textContent = (catId && catName)
+                        ? `Nuevo producto en "${catName}"`
+                        : 'Nuevo producto';
+                }
+                syncCatalogoHidden();
+                syncCategoriasPorMacro();
+                syncUbicacionProductoPorMacro();
+                refreshProductoRutaPreview();
             }
 
-            if (id === 'modal-catalogo') {
-                renderCatalogoUbicacionPicker();
+            if (id === 'modal-editar-macro') {
+                prepEditarMacroModal(btn);
             }
+
             openModal(id);
         });
     });
@@ -615,8 +778,9 @@ const initCatalogoPage = () => {
                 if (form) {
                     form.reset();
                 }
-                syncSubcategoriasPorCatalogo();
-                syncUbicacionProductoPorCatalogo();
+                syncCatalogoHidden();
+                syncCategoriasPorMacro();
+                syncUbicacionProductoPorMacro();
                 // Limpiar fotos acumuladas
                 fotosAccum = new DataTransfer();
                 const fotosIn = modal.querySelector('#id_fotos');
@@ -625,13 +789,7 @@ const initCatalogoPage = () => {
                 if (prev) prev.innerHTML = '';
                 const msg = modal.querySelector('#fotos-count-msg');
                 if (msg) msg.textContent = '';
-            }
-            if (modal && modal.id === 'modal-catalogo') {
-                const form = modal.querySelector('form');
-                if (form) {
-                    form.reset();
-                }
-                renderCatalogoUbicacionPicker();
+                refreshProductoRutaPreview();
             }
             closeAll();
         });
@@ -744,6 +902,48 @@ const initCatalogoPage = () => {
         });
     }
 
+    document.querySelectorAll('.ubicacion-item-form').forEach((formEl) => {
+        const inputEl = formEl.querySelector('.ubicacion-item-input');
+        const btnEl = formEl.querySelector('[data-role="edit-toggle"]');
+        const labelEl = formEl.querySelector('[data-edit-label]');
+        if (!inputEl || !btnEl || !labelEl) return;
+
+        const getOriginal = () => (inputEl.dataset.originalValue || '').trim();
+        const getCurrent = () => (inputEl.value || '').trim();
+
+        const refreshButtonLabel = () => {
+            const changed = getCurrent().toUpperCase() !== getOriginal().toUpperCase();
+            labelEl.textContent = changed ? 'Guardar' : 'Editar';
+            btnEl.classList.toggle('is-ready-save', changed);
+        };
+
+        inputEl.addEventListener('input', refreshButtonLabel);
+
+        btnEl.addEventListener('click', () => {
+            const isLocked = inputEl.hasAttribute('readonly');
+
+            if (isLocked) {
+                inputEl.removeAttribute('readonly');
+                inputEl.focus();
+                inputEl.select();
+                refreshButtonLabel();
+                return;
+            }
+
+            const changed = getCurrent().toUpperCase() !== getOriginal().toUpperCase();
+            if (changed) {
+                formEl.submit();
+                return;
+            }
+
+            inputEl.setAttribute('readonly', 'readonly');
+            inputEl.value = getOriginal();
+            refreshButtonLabel();
+        });
+
+        refreshButtonLabel();
+    });
+
     /* ---- Limpiar previews al cerrar modal --------------- */
 };
 
@@ -765,4 +965,5 @@ document.querySelectorAll('.cat-card--catalogo[data-href]').forEach(function(car
     });
 });
 </script>
+<script src="{% static 'inventario/js/catalogo/catalogo_wizard.js' %}?v=20260612c" defer></script>
 {% endblock %}

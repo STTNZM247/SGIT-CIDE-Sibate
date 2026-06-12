@@ -4,7 +4,6 @@
 {% block title %}Panel de carga de inventario{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% css_asset 'inventario/css/dashboard/dashboard.css' %}" data-page-style="true">
 <style data-page-style="true">
 .import-shell {
     display: grid;
@@ -78,56 +77,56 @@
 {% endblock %}
 
 {% block content %}
-<section class="import-shell">
-    <article class="import-card">
-        <h2>Cargar inventario desde Excel</h2>
-        <p>Desde aquí puedes revisar el historial de importaciones y abrir la pantalla de carga de archivo para alimentar el inventario.</p>
-        <div class="import-card__actions">
-            <a href="{% url 'importar_inventario_carga' %}" class="import-btn">
+<section class="import-shell tw-space-y-4 tw-pb-6">
+    <article class="import-card tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-sm">
+        <h2 class="tw-text-2xl tw-font-bold tw-text-slate-900">Cargar inventario desde Excel</h2>
+        <p class="tw-mt-1 tw-text-sm tw-text-slate-600">Desde aquí puedes revisar el historial de importaciones y abrir la pantalla de carga de archivo para alimentar el inventario.</p>
+        <div class="import-card__actions tw-mt-3">
+            <a href="{% url 'importar_inventario_carga' %}" class="import-btn tw-inline-flex tw-h-11 tw-items-center tw-justify-center tw-gap-2 tw-rounded-xl tw-bg-lime-500 tw-px-4 tw-text-sm tw-font-semibold tw-text-white hover:tw-bg-lime-600">
                 <ion-icon name="cloud-upload-outline"></ion-icon>
                 Ir a cargar archivo Excel
             </a>
         </div>
     </article>
 
-    <article class="import-card">
-        <h2>Historial de subidas</h2>
-        <p>Bitácora de las últimas importaciones ejecutadas desde este módulo.</p>
-        <div class="import-table-wrap">
-            <table class="import-history-table">
+    <article class="import-card tw-rounded-2xl tw-border tw-border-slate-200 tw-bg-white tw-p-5 tw-shadow-sm">
+        <h2 class="tw-text-xl tw-font-bold tw-text-slate-900">Historial de subidas</h2>
+        <p class="tw-mt-1 tw-text-sm tw-text-slate-600">Bitácora de las últimas importaciones ejecutadas desde este módulo.</p>
+        <div class="import-table-wrap tw-mt-3 tw-overflow-x-auto tw-rounded-xl tw-border tw-border-slate-200">
+            <table class="import-history-table tw-min-w-[980px] tw-w-full tw-border-collapse">
                 <thead>
                     <tr>
-                        <th>Fecha</th>
-                        <th>Archivo</th>
-                        <th>Estado</th>
-                        <th>Productos</th>
-                        <th>Creados</th>
-                        <th>Actualizados</th>
-                        <th>Imgs Ppal</th>
-                        <th>Imgs Sec</th>
-                        <th>Errores</th>
-                        <th>Resumen</th>
+                        <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Fecha</th>
+                        <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Archivo</th>
+                        <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Estado</th>
+                        <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Productos</th>
+                        <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Creados</th>
+                        <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Actualizados</th>
+                        <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Imgs Ppal</th>
+                        <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Imgs Sec</th>
+                        <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Errores</th>
+                        <th class="tw-bg-slate-50 tw-px-3 tw-py-3 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-slate-600">Resumen</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for log in logs_importacion %}
-                    <tr>
-                        <td>{{ log.fch_registro|date:'d/m/Y H:i' }}</td>
-                        <td>{{ log.nombre_archivo }}</td>
-                        <td>
-                            <span class="import-badge {% if log.estado != 'ok' %}import-badge--warn{% endif %}">{{ log.estado }}</span>
+                    <tr class="tw-border-t tw-border-slate-100">
+                        <td class="tw-px-3 tw-py-2.5 tw-text-sm tw-text-slate-700">{{ log.fch_registro|date:'d/m/Y H:i' }}</td>
+                        <td class="tw-px-3 tw-py-2.5 tw-text-sm tw-text-slate-700">{{ log.nombre_archivo }}</td>
+                        <td class="tw-px-3 tw-py-2.5">
+                            <span class="import-badge tw-inline-flex tw-rounded-full tw-px-2.5 tw-py-1 tw-text-xs tw-font-semibold tw-bg-lime-100 tw-text-lime-700 {% if log.estado != 'ok' %}import-badge--warn tw-bg-amber-100 tw-text-amber-700{% endif %}">{{ log.estado }}</span>
                         </td>
-                        <td>{{ log.total_productos }}</td>
-                        <td>{{ log.total_creados }}</td>
-                        <td>{{ log.total_actualizados }}</td>
-                        <td>{{ log.total_imagenes_principales }}</td>
-                        <td>{{ log.total_imagenes_secundarias }}</td>
-                        <td>{{ log.total_errores }}</td>
-                        <td>{{ log.resumen|default:'-' }}</td>
+                        <td class="tw-px-3 tw-py-2.5 tw-text-sm tw-text-slate-700">{{ log.total_productos }}</td>
+                        <td class="tw-px-3 tw-py-2.5 tw-text-sm tw-text-slate-700">{{ log.total_creados }}</td>
+                        <td class="tw-px-3 tw-py-2.5 tw-text-sm tw-text-slate-700">{{ log.total_actualizados }}</td>
+                        <td class="tw-px-3 tw-py-2.5 tw-text-sm tw-text-slate-700">{{ log.total_imagenes_principales }}</td>
+                        <td class="tw-px-3 tw-py-2.5 tw-text-sm tw-text-slate-700">{{ log.total_imagenes_secundarias }}</td>
+                        <td class="tw-px-3 tw-py-2.5 tw-text-sm tw-text-slate-700">{{ log.total_errores }}</td>
+                        <td class="tw-px-3 tw-py-2.5 tw-text-sm tw-text-slate-600">{{ log.resumen|default:'-' }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="10">Aún no hay historial de importaciones.</td>
+                        <td colspan="10" class="tw-p-10 tw-text-center tw-text-sm tw-font-medium tw-text-slate-500">Aún no hay historial de importaciones.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
