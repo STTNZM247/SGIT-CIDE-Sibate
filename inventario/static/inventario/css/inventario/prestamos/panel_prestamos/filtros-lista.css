@@ -335,3 +335,5 @@
 }
 
 .prestamo-modal-overlay.is-open {
+  display: flex;
+}
