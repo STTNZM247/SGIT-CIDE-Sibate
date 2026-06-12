@@ -478,16 +478,16 @@
 }
 
 .catalogo-layout__rail {
-    position: sticky;
-    top: 1rem;
+    position: relative;
+    top: auto;
     align-self: start;
-    z-index: 30;
+    z-index: 1;
 }
 
 .catalogo-layout__content {
     min-width: 0;
     position: relative;
-    z-index: 1;
+    z-index: auto;
 }
 
 .subcat-workspace {

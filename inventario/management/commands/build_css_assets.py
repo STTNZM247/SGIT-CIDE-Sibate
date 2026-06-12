@@ -12,6 +12,7 @@ IMPORT_PATTERN = re.compile(
     re.IGNORECASE,
 )
 COMMENT_PATTERN = re.compile(r"/\*[^*]*\*+(?:[^/*][^*]*\*+)*/", re.DOTALL)
+PRESERVED_BUILD_FILES = {"tailwind.css"}
 
 
 class Command(BaseCommand):
@@ -51,6 +52,9 @@ class Command(BaseCommand):
 
         if build_root.exists() and not keep_old:
             for path in sorted(build_root.rglob("*"), reverse=True):
+                rel_path = path.relative_to(build_root).as_posix()
+                if rel_path in PRESERVED_BUILD_FILES:
+                    continue
                 if path.is_file():
                     path.unlink()
                 elif path.is_dir():
