@@ -58,3 +58,27 @@ npm run tw:build
 npm run tw:watch
 ```
 
+## Correo transaccional con Resend (Django)
+
+El proyecto soporta proveedores SMTP por variable de entorno (`EMAIL_PROVIDER`).
+Por defecto queda `resend`.
+
+Variables recomendadas:
+
+```bash
+EMAIL_PROVIDER=resend
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.resend.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=resend
+EMAIL_HOST_PASSWORD=re_xxxxxxxxxxxxxxxxx
+DEFAULT_FROM_EMAIL=Inventario SENA <notificaciones@tu-dominio.com>
+```
+
+Notas:
+
+- `EMAIL_HOST_PASSWORD` debe ser tu API Key SMTP de Resend.
+- Configura SPF/DKIM/DMARC en tu dominio para mejor entregabilidad.
+- En local puedes usar un `DEFAULT_FROM_EMAIL` temporal (por ejemplo `onboarding@resend.dev`) mientras verificas dominio.
+

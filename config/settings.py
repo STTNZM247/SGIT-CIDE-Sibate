@@ -178,11 +178,33 @@ CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = IS_PYTHONANYWHERE
 CSRF_COOKIE_SECURE = IS_PYTHONANYWHERE
 
-# Email - Brevo SMTP (transaccional)
+# Email (SMTP transaccional)
+# Proveedor por variable: resend | brevo
+EMAIL_PROVIDER = os.getenv('EMAIL_PROVIDER', 'resend').strip().lower()
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp-relay.brevo.com')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'aab260001@smtp-brevo.com')
+
+EMAIL_PROVIDER_DEFAULTS = {
+    'resend': {
+        'host': 'smtp.resend.com',
+        'port': '587',
+        'tls': 'True',
+        'user': 'resend',
+        'from_email': 'onboarding@resend.dev',
+    },
+    'brevo': {
+        'host': 'smtp-relay.brevo.com',
+        'port': '587',
+        'tls': 'True',
+        'user': '',
+        'from_email': '',
+    },
+}
+
+_email_defaults = EMAIL_PROVIDER_DEFAULTS.get(EMAIL_PROVIDER, EMAIL_PROVIDER_DEFAULTS['resend'])
+
+EMAIL_HOST = os.getenv('EMAIL_HOST', _email_defaults['host'])
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', _email_defaults['port']))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', _email_defaults['tls']).lower() == 'true'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', _email_defaults['user'])
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', _email_defaults['from_email'] or EMAIL_HOST_USER)
