@@ -342,7 +342,7 @@ html[data-theme="dark"] .prestamo-dias--ok {
                 <a href="{% url 'pedido_detalle_panel' prestamo.id_pedido %}" class="prestamo-btn prestamo-btn--detail tw-inline-flex tw-h-10 tw-items-center tw-justify-center tw-gap-1 tw-rounded-lg tw-border tw-border-slate-300 tw-bg-white tw-px-3 tw-text-xs tw-font-semibold tw-text-slate-700 hover:tw-bg-slate-50">
                     <ion-icon name="eye-outline"></ion-icon> Ver detalle
                 </a>
-                {% if prestamo.estado == 'entregado' %}
+                {% if prestamo.estado == 'entregado' or prestamo.estado == 'vencido' %}
                 <form method="post" action="{% url 'pedido_marcar_devuelto' prestamo.id_pedido %}" class="prestamo-action-form">
                     {% csrf_token %}
                     <button type="button" class="prestamo-btn prestamo-btn--return tw-inline-flex tw-h-10 tw-items-center tw-justify-center tw-gap-1 tw-rounded-lg tw-bg-lime-600 tw-px-3 tw-text-xs tw-font-semibold tw-text-white hover:tw-bg-lime-700"

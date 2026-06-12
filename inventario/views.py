@@ -389,6 +389,17 @@ def _renovar_codigo_devolucion(pedido, now):
     pedido.save(update_fields=['codigo_entrega', 'codigo_expira_en', 'fch_ult_act'])
 
 
+def _estado_pedido_canonico(estado):
+    estado_limpio = (estado or '').strip().lower().replace('_', ' ')
+    aliases = {
+        'deuelto': 'devuelto',
+        'debuelto': 'devuelto',
+        'devolvido': 'devuelto',
+        'esperandoentrega': 'esperando entrega',
+    }
+    return aliases.get(estado_limpio, estado_limpio)
+
+
 def _parse_subcategorias_text(raw_text):
     text = (raw_text or '').replace('\n', ',').replace(';', ',')
     values = []
@@ -3970,6 +3981,18 @@ def prestamos_panel(request):
     )
 
     for prestamo in prestamos:
+        estado_canonico = _estado_pedido_canonico(prestamo.estado)
+        if estado_canonico and estado_canonico != prestamo.estado:
+            prestamo.estado = estado_canonico
+            prestamo.fch_ult_act = ahora
+            prestamo.save(update_fields=['estado', 'fch_ult_act'])
+
+        if prestamo.estado == 'devuelto' and (prestamo.codigo_entrega or prestamo.codigo_expira_en):
+            prestamo.codigo_entrega = None
+            prestamo.codigo_expira_en = None
+            prestamo.fch_ult_act = ahora
+            prestamo.save(update_fields=['codigo_entrega', 'codigo_expira_en', 'fch_ult_act'])
+
         detalles = list(prestamo.detalles.all())
         prestamo.detalles_entregados = [
             detalle for detalle in detalles
@@ -4647,11 +4670,34 @@ def pedido_marcar_devuelto(request, pedido_id):
             pk=pedido_id,
         )
 
+        now = timezone.now()
+        estado_canonico = _estado_pedido_canonico(pedido.estado)
+        if estado_canonico and estado_canonico != pedido.estado:
+            pedido.estado = estado_canonico
+            pedido.fch_ult_act = now
+            pedido.save(update_fields=['estado', 'fch_ult_act'])
+
+        if pedido.estado == 'devuelto':
+            if pedido.codigo_entrega or pedido.codigo_expira_en:
+                pedido.codigo_entrega = None
+                pedido.codigo_expira_en = None
+                pedido.fch_ult_act = now
+                pedido.save(update_fields=['codigo_entrega', 'codigo_expira_en', 'fch_ult_act'])
+
+            DetallePedido.objects.filter(
+                id_pedido_fk=pedido,
+                estado_detalle__in=['entregado', 'vencido', 'deuelto', 'debuelto'],
+            ).update(
+                estado_detalle='devuelto',
+                fch_ult_act=now,
+            )
+
+            messages.info(request, f'El préstamo #{pedido.id_pedido} ya estaba marcado como devuelto.')
+            return redirect('prestamos_panel')
+
         if pedido.estado not in ('entregado', 'vencido'):
             messages.error(request, 'Solo puedes marcar como devuelto un préstamo actualmente entregado.')
             return redirect('prestamos_panel')
-
-        now = timezone.now()
 
         if not pedido.codigo_entrega or not pedido.codigo_expira_en:
             _renovar_codigo_devolucion(pedido, now)

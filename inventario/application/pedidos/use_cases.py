@@ -41,6 +41,17 @@ def _estado_ui_normalizado(estado_real: str) -> str:
     return estado_real
 
 
+def _estado_pedido_canonico(estado: str) -> str:
+    estado_limpio = (estado or "").strip().lower().replace("_", " ")
+    aliases = {
+        "deuelto": "devuelto",
+        "debuelto": "devuelto",
+        "devolvido": "devuelto",
+        "esperandoentrega": "esperando entrega",
+    }
+    return aliases.get(estado_limpio, estado_limpio)
+
+
 def obtener_contexto_pedidos_usuario(request) -> dict:
     legacy_usuario._auto_cancelar_pedidos_pendientes_vencidos()
 
@@ -55,6 +66,18 @@ def obtener_contexto_pedidos_usuario(request) -> dict:
     ventana_cancelacion = timedelta(minutes=10)
 
     for pedido in pedidos:
+        estado_canonico = _estado_pedido_canonico(pedido.estado)
+        if estado_canonico and estado_canonico != pedido.estado:
+            pedido.estado = estado_canonico
+            pedido.fch_ult_act = ahora
+            pedido.save(update_fields=["estado", "fch_ult_act"])
+
+        if pedido.estado == "devuelto" and (pedido.codigo_entrega or pedido.codigo_expira_en):
+            pedido.codigo_entrega = None
+            pedido.codigo_expira_en = None
+            pedido.fch_ult_act = ahora
+            pedido.save(update_fields=["codigo_entrega", "codigo_expira_en", "fch_ult_act"])
+
         detalles_pedido = list(pedido.detalles.all())
         if pedido.estado in ("entregado", "vencido"):
             pedido.detalles_usuario = [
@@ -67,6 +90,8 @@ def obtener_contexto_pedidos_usuario(request) -> dict:
 
         pedido.estado_ui = _estado_ui_normalizado(pedido.estado)
         pedido.estado_ui_label = "Cancelado" if pedido.estado_ui == "cancelado" else pedido.estado.title()
+
+        pedido.puede_mostrar_codigo_devolucion = pedido.estado in ("entregado", "vencido")
 
         if pedido.estado == "esperando entrega":
             codigo_vigente = bool(

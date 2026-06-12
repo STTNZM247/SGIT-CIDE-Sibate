@@ -140,7 +140,7 @@
             </div>
             {% endif %}
 
-            {% if pedido.estado == 'entregado' %}
+              {% if pedido.puede_mostrar_codigo_devolucion %}
             <div class="pedidos-usuario-devolucion-box"
                  data-devolucion-codigo
                  data-pedido-id="{{ pedido.id_pedido }}"
