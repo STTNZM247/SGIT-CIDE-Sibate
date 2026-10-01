@@ -1,5 +1,10 @@
-from django.contrib.auth.views import LogoutView
-from .views_login import RolRedirectLoginView, recuperar_acceso, registro_publico, restablecer_password
+from .views_login import (
+    CustomLogoutView,
+    RolRedirectLoginView,
+    recuperar_acceso,
+    registro_publico,
+    restablecer_password,
+)
 from django.urls import path
 
 from .views import (
@@ -86,7 +91,7 @@ urlpatterns = [
     ),
     path(
         'logout/',
-        LogoutView.as_view(next_page='login'),
+        CustomLogoutView.as_view(next_page='login'),
         name='logout',
     ),
     path('login/recuperar/', recuperar_acceso, name='recuperar_acceso'),

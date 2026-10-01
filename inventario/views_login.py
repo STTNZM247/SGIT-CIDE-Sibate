@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, LogoutView
 from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.shortcuts import redirect, render
@@ -105,6 +105,14 @@ class RolRedirectLoginView(LoginView):
         if rol in {'almacenista', 'almacen'}:
             return reverse('inventario_panel')
         return reverse('panel_usuario')
+
+
+class CustomLogoutView(LogoutView):
+    """Permite cerrar sesión tanto por POST como por enlace GET tradicional sin arrojar 405 Method Not Allowed."""
+    http_method_names = ['get', 'post', 'options']
+
+    def get(self, request, *args, **kwargs):
+        return self.post(request, *args, **kwargs)
 
 
 def registro_publico(request):
